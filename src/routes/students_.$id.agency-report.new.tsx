@@ -45,6 +45,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
+import { Switch } from '@/components/ui/switch'
 import { cn } from '@/lib/utils'
 import { getStudentById } from '@/data/mock-students'
 import type { SectionAssignment, Staff } from '@/data/mock-agency-reports'
@@ -871,6 +872,11 @@ function SectionPanel({
     </Button>
   )
 
+  // Counsellor's Input is restricted from the YH's view — the section is
+  // visible in the form (so the YH knows it exists) but the contents are
+  // never shown to anyone other than the assignee themselves.
+  const isRestrictedCounsellor = section.role === 'counsellor' && !isMine
+
   return (
     <section
       id={`sec-${section.id}`}
@@ -883,7 +889,16 @@ function SectionPanel({
         <AssignmentChip assignedTo={assignedTo} onChange={onAssignedChange} />
       </div>
 
-      {isMine ? (
+      {isRestrictedCounsellor ? (
+        <div className="flex items-center gap-3 rounded-lg border border-dashed bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+          <Lock className="h-4 w-4 shrink-0" />
+          <p>
+            <span className="font-medium text-foreground">Restricted.</span>{' '}
+            This section is completed by the School Counsellor and is not
+            visible to you.
+          </p>
+        </div>
+      ) : isMine ? (
         <div className="space-y-5">
           {section.fields.map((field) => (
             <FieldRow
@@ -1382,6 +1397,24 @@ function ReportForm({
             <nav className="flex flex-col gap-1">
               {template.sections.map((s) => {
                 const done = completedSections.has(s.id)
+                const restricted =
+                  s.role === 'counsellor' &&
+                  !isSameStaff(
+                    assignments[s.id] ?? CURRENT_USER,
+                    CURRENT_USER,
+                  )
+                if (restricted) {
+                  return (
+                    <span
+                      key={s.id}
+                      aria-disabled
+                      className="flex cursor-not-allowed items-center gap-1.5 rounded-full bg-muted px-3 py-1.5 text-sm text-muted-foreground/70"
+                    >
+                      <Lock className="h-3 w-3 shrink-0" />
+                      <span className="truncate">{s.title}</span>
+                    </span>
+                  )
+                }
                 return (
                   <a
                     key={s.id}
@@ -1428,6 +1461,8 @@ function ExportPassword({
 }) {
   const [showPw, setShowPw] = useState(false)
   const [pw, setPw] = useState('')
+  const [encrypt, setEncrypt] = useState(false)
+  const asset = templateReferenceAsset(template)
 
   return (
     <div className="space-y-5">
@@ -1443,61 +1478,95 @@ function ExportPassword({
         </Badge>
       </div>
 
-      {/* PDF thumbnail */}
-      <div className="flex flex-col items-center gap-3 rounded-xl border bg-muted/30 py-8">
-        <div className="flex h-28 w-20 items-center justify-center rounded border bg-white shadow">
-          <FileText className="h-8 w-8 text-muted-foreground" />
-        </div>
-        <p className="font-medium">{template.name}.pdf</p>
-        <p className="text-sm text-muted-foreground">
-          {template.pages} pages · Password protected
-        </p>
-      </div>
-
-      {/* Password protect this report */}
-      <div className="rounded-xl border bg-white p-5 space-y-4">
-        <div className="flex items-center gap-2">
-          <Lock className="h-4 w-4 text-muted-foreground" />
-          <span className="font-semibold">Password protect this report</span>
-          <Badge className="ml-1 gap-1 bg-purple-50 text-purple-700 hover:bg-purple-50 text-[11px]">
-            <Lock className="h-2.5 w-2.5" />
-            YH, DM &amp; SLs only
-          </Badge>
-        </div>
-
-        <div className="space-y-1.5">
-          <label
-            htmlFor="report-password"
-            className="block text-sm font-medium"
-          >
-            Enter a password for this PDF.
-          </label>
-          <div className="flex items-center gap-2">
-            <input
-              id="report-password"
-              type={showPw ? 'text' : 'password'}
-              value={pw}
-              onChange={(e) => setPw(e.target.value)}
-              placeholder="Enter password"
-              className="flex-1 rounded-lg border px-3 py-2 font-mono text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-            />
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowPw((p) => !p)}
-            >
-              {showPw ? (
-                <EyeOff className="h-4 w-4" />
-              ) : (
-                <Eye className="h-4 w-4" />
-              )}
-              {showPw ? 'Hide' : 'Show'}
-            </Button>
-          </div>
+      {/* Full report preview */}
+      <div className="overflow-hidden rounded-xl border bg-slate-2">
+        <div className="border-b bg-slate-50 px-5 py-3">
+          <p className="text-sm font-semibold">Preview</p>
           <p className="text-xs text-muted-foreground">
-            TW will remember this password for future reference.
+            {template.name} for {studentName}
           </p>
         </div>
+        <div className="max-h-[640px] overflow-auto p-6">
+          {asset?.kind === 'pdf' ? (
+            <iframe
+              src={`${asset.src}#toolbar=0&navpanes=0&view=FitH`}
+              title={`${template.name} preview`}
+              className="mx-auto block h-[900px] w-full max-w-[820px] rounded-md border-0 bg-card shadow-lg"
+            />
+          ) : asset?.kind === 'image' ? (
+            <img
+              src={asset.src}
+              alt={`${template.name} preview`}
+              className="mx-auto block w-full max-w-[820px] rounded-md bg-card shadow-lg"
+            />
+          ) : (
+            <div className="rounded-lg bg-card p-10 text-center text-sm text-muted-foreground">
+              No preview available.
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Encryption toggle + (conditional) password */}
+      <div className="space-y-4 rounded-xl border bg-white p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <Lock className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-semibold">Encrypt this file?</span>
+              <Badge className="gap-1 bg-purple-50 text-purple-700 hover:bg-purple-50 text-[11px]">
+                <Lock className="h-2.5 w-2.5" />
+                YH, DM &amp; SLs only
+              </Badge>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Add a password so only authorised recipients can open the PDF.
+            </p>
+          </div>
+          <Switch
+            checked={encrypt}
+            onCheckedChange={(v) => {
+              setEncrypt(v)
+              if (!v) setPw('')
+            }}
+          />
+        </div>
+
+        {encrypt && (
+          <div className="space-y-1.5">
+            <label
+              htmlFor="report-password"
+              className="block text-sm font-medium"
+            >
+              Set a password for this PDF.
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                id="report-password"
+                type={showPw ? 'text' : 'password'}
+                value={pw}
+                onChange={(e) => setPw(e.target.value)}
+                placeholder="Enter password"
+                className="flex-1 rounded-lg border px-3 py-2 font-mono text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowPw((p) => !p)}
+              >
+                {showPw ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+                {showPw ? 'Hide' : 'Show'}
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              TW will save this password for future reference.
+            </p>
+          </div>
+        )}
       </div>
 
       <Button className="w-full" onClick={onDownload}>
@@ -1535,16 +1604,20 @@ function Confirmation({
         </p>
       </div>
       <div className="mt-4 flex w-full max-w-xs flex-col gap-3">
-        <Button onClick={onStartNext} className="w-full justify-center">
-          Start next report
-          <ChevronRight className="ml-1 h-4 w-4" />
+        <Button
+          variant="outline"
+          className="w-full justify-center"
+          render={<Link to="/students/$id" params={{ id: studentId }} />}
+        >
+          Back to student profile
         </Button>
         <Button
           variant="ghost"
           className="w-full justify-center text-muted-foreground"
-          render={<Link to="/students/$id" params={{ id: studentId }} />}
+          onClick={onStartNext}
         >
-          Return to student profile
+          Start another report
+          <ChevronRight className="ml-1 h-4 w-4" />
         </Button>
       </div>
     </div>
@@ -1696,10 +1769,22 @@ function AgencyReportWizardPage() {
             principalNote={principalNote}
             onBack={() => setStep('templates')}
             onSubmittedForReview={() => {
-              toast.success('Report submitted for Principal review.')
               navigate({
                 to: '/students/$id',
                 params: { id: student.id },
+              })
+              toast.success('Report submitted for Principal review.', {
+                action: {
+                  label: 'Start another report',
+                  onClick: () => {
+                    setSelectedTemplates([])
+                    setStep('templates')
+                    navigate({
+                      to: '/students/$id/agency-report/new',
+                      params: { id: student.id },
+                    })
+                  },
+                },
               })
             }}
           />

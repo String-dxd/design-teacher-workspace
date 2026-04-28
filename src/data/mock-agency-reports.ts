@@ -315,7 +315,7 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
       },
       {
         id: 'principal',
-        title: "Principal's Remarks",
+        title: "Principal's Comments",
         role: 'principal',
         fields: [
           {
@@ -1732,12 +1732,12 @@ export const mockAgencyReports: Array<AgencyReport> = [
   {
     id: 'ar-draft',
     studentId: '1',
-    templateId: 'spf',
-    templateName: 'SPF Annex F',
-    agency: 'Singapore Police Force',
+    templateId: 'children-home',
+    templateName: "MSF Children's Home School Report",
+    agency: "Children's Home",
     status: 'draft',
-    createdAt: new Date('2026-04-18'),
-    startedAt: new Date('2026-04-18'),
+    createdAt: new Date('2026-04-23'),
+    startedAt: new Date('2026-04-23'),
     passwordSaved: false,
   },
   {
@@ -1751,7 +1751,7 @@ export const mockAgencyReports: Array<AgencyReport> = [
     startedAt: new Date('2026-04-20'),
     passwordSaved: false,
     principalNote:
-      'Please expand the Behavioural Observations narrative — flag specific incidents from Term 1 and add the most recent counselling notes. Also double-check the housing details under Family Background; the records you cited may be outdated.',
+      'Please verify the attendance figures for Term 2 and add more detail to the behavioural observations section.',
   },
   {
     id: 'ar-approved',
