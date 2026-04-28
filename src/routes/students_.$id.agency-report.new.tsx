@@ -33,6 +33,14 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -55,9 +63,16 @@ import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
 
 export const Route = createFileRoute('/students_/$id/agency-report/new')({
   component: AgencyReportWizardPage,
-  validateSearch: (search): { resume?: string } => ({
+  validateSearch: (search): {
+    resume?: string
+    reportId?: string
+  } => ({
     resume:
       typeof search.resume === 'string' ? (search.resume as string) : undefined,
+    reportId:
+      typeof search.reportId === 'string'
+        ? (search.reportId as string)
+        : undefined,
   }),
   loader: ({ params }) => {
     const student = getStudentById(params.id)
@@ -68,13 +83,7 @@ export const Route = createFileRoute('/students_/$id/agency-report/new')({
 
 // ── Types ──────────────────────────────────────────────────────
 
-type WizardStep =
-  | 'templates'
-  | 'form'
-  | 'review'
-  | 'submitted'
-  | 'export'
-  | 'done'
+type WizardStep = 'templates' | 'form' | 'export' | 'done'
 
 // ── Step bar ──────────────────────────────────────────────────
 
@@ -82,8 +91,6 @@ const STEP_LABELS = ['Template', 'Fill Report', 'Export']
 const STEP_MAP: Record<WizardStep, number> = {
   templates: 0,
   form: 1,
-  review: 1,
-  submitted: 2,
   export: 2,
   done: 2,
 }
@@ -1050,14 +1057,16 @@ function ReportForm({
   template,
   studentName,
   studentClass,
+  principalNote,
   onBack,
-  onSubmitForReview,
+  onSubmittedForReview,
 }: {
   template: AgencyTemplate
   studentName: string
   studentClass: string
+  principalNote?: string
   onBack: () => void
-  onSubmitForReview: () => void
+  onSubmittedForReview: () => void
 }) {
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({})
   const [aiFlags, setAiFlags] = useState<Record<string, boolean>>({})
@@ -1067,6 +1076,8 @@ function ReportForm({
   const [previewOpen, setPreviewOpen] = useState(false)
   const [previewScale, setPreviewScale] = useState<number>(0.68)
   const [savedStatus, setSavedStatus] = useState<'saved' | 'saving'>('saved')
+  const [submitOpen, setSubmitOpen] = useState(false)
+  const [noteToPrincipal, setNoteToPrincipal] = useState('')
 
   // Per-section assignments. Defaults: yh → current user; counsellor → SC
   // (with Mock data marked completed); principal → P (awaiting).
@@ -1280,6 +1291,17 @@ function ReportForm({
             </span>
           </div>
 
+          {principalNote && (
+            <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
+              <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-amber-700">
+                Principal has requested edits
+              </p>
+              <p className="text-sm leading-relaxed text-amber-900">
+                {principalNote}
+              </p>
+            </div>
+          )}
+
           <div className="space-y-4 pb-16">
             {template.sections.map((s) => (
               <SectionPanel
@@ -1297,13 +1319,59 @@ function ReportForm({
             ))}
 
             <div className="flex justify-end pt-2">
-              <Button onClick={onSubmitForReview}>
+              <Button onClick={() => setSubmitOpen(true)}>
                 Submit for P Review
                 <ChevronRight className="ml-1 h-4 w-4" />
               </Button>
             </div>
           </div>
         </div>
+
+        <Dialog open={submitOpen} onOpenChange={setSubmitOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Submit for Principal Review</DialogTitle>
+              <DialogDescription>
+                Once submitted, the Principal will be notified to review this
+                report. You'll be returned to the student profile.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-2">
+              <label
+                htmlFor="note-to-principal"
+                className="block text-sm font-medium"
+              >
+                Note to Principal{' '}
+                <span className="text-xs font-normal text-muted-foreground">
+                  (optional)
+                </span>
+              </label>
+              <textarea
+                id="note-to-principal"
+                value={noteToPrincipal}
+                onChange={(e) => setNoteToPrincipal(e.target.value)}
+                placeholder="e.g. Counselling details needed in Section 5. Housing info may be outdated."
+                className="min-h-[100px] w-full resize-none rounded-lg border px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary"
+              />
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setSubmitOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  setSubmitOpen(false)
+                  onSubmittedForReview()
+                }}
+              >
+                Submit
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* Section nav — sticky pill list */}
         <aside className="hidden w-48 shrink-0 overflow-y-auto border-x bg-white py-5 lg:block">
@@ -1344,172 +1412,6 @@ function ReportForm({
   )
 }
 
-// ── S6/S7 Review & Submit ─────────────────────────────────────
-
-function ReviewSubmit({
-  template,
-  studentName,
-  onBack,
-  onSubmit,
-}: {
-  template: AgencyTemplate
-  studentName: string
-  onBack: () => void
-  onSubmit: () => void
-}) {
-  const [note, setNote] = useState('')
-  const asset = templateReferenceAsset(template)
-
-  return (
-    <div className="flex h-[calc(100vh-120px)] flex-col overflow-hidden rounded-xl border bg-white">
-      <div className="flex shrink-0 items-center gap-3 border-b px-5 py-3">
-        <div className="flex-1 min-w-0">
-          <h2 className="text-base font-semibold truncate">Review &amp; Submit</h2>
-          <p className="text-xs text-muted-foreground truncate">
-            {template.name} · {studentName}
-          </p>
-        </div>
-        <Button size="sm" onClick={onSubmit}>
-          Submit for Principal Review
-          <ChevronRight className="ml-1 h-4 w-4" />
-        </Button>
-      </div>
-
-      <div className="flex min-h-0 flex-1">
-        {/* Full-width document preview */}
-        <div className="flex-1 overflow-auto bg-slate-2 p-6">
-          {asset?.kind === 'pdf' ? (
-            <iframe
-              src={`${asset.src}#toolbar=0&navpanes=0&view=FitH`}
-              title={`${template.name} blank template`}
-              className="mx-auto block h-full min-h-[900px] w-full max-w-[820px] rounded-md border-0 bg-card shadow-lg"
-            />
-          ) : asset?.kind === 'image' ? (
-            <img
-              src={asset.src}
-              alt={`${template.name} blank template`}
-              className="mx-auto block w-full max-w-[820px] rounded-md bg-card shadow-lg"
-            />
-          ) : (
-            <div className="rounded-lg bg-white p-10 text-center text-sm text-muted-foreground">
-              No template preview available.
-            </div>
-          )}
-        </div>
-
-        {/* Sidebar: compact checklist + Note to Principal */}
-        <aside className="w-80 shrink-0 overflow-y-auto border-l bg-white">
-          <div className="border-b px-4 py-3">
-            <h3 className="text-sm font-semibold">Completion checklist</h3>
-          </div>
-          <div className="divide-y">
-            {template.sections.map((s) => (
-              <div key={s.id} className="flex items-center gap-2 px-4 py-2.5">
-                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-muted">
-                  {s.role === 'yh' ? (
-                    <Check className="h-3 w-3 text-green-600" />
-                  ) : s.role === 'principal' ? (
-                    <Lock className="h-3 w-3 text-purple-500" />
-                  ) : (
-                    <Check className="h-3 w-3 text-blue-500" />
-                  )}
-                </div>
-                <span className="flex-1 truncate text-xs">{s.title}</span>
-                {s.role === 'yh' && (
-                  <Badge className="bg-green-50 text-green-700 hover:bg-green-50 text-[10px] px-1.5">
-                    Done
-                  </Badge>
-                )}
-                {s.role === 'principal' && (
-                  <Badge className="bg-purple-50 text-purple-700 hover:bg-purple-50 text-[10px] px-1.5">
-                    P
-                  </Badge>
-                )}
-                {s.role === 'counsellor' && (
-                  <Badge className="bg-blue-50 text-blue-700 hover:bg-blue-50 text-[10px] px-1.5">
-                    SC
-                  </Badge>
-                )}
-              </div>
-            ))}
-          </div>
-
-          <div className="space-y-2 border-t p-4">
-            <label
-              htmlFor="note-to-principal"
-              className="block text-sm font-semibold"
-            >
-              Note to Principal{' '}
-              <span className="text-xs font-normal text-muted-foreground">
-                (optional)
-              </span>
-            </label>
-            <p className="text-xs text-muted-foreground">
-              Flag anything specific before they review.
-            </p>
-            <textarea
-              id="note-to-principal"
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder="e.g. Counselling details needed in Section 5. Housing info may be outdated."
-              className="min-h-[100px] w-full resize-none rounded-lg border px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary"
-            />
-          </div>
-        </aside>
-      </div>
-    </div>
-  )
-}
-
-// ── S8 Submitted Status (replaces PrincipalReview) ────────────
-
-function SubmittedStatus({
-  template,
-  studentName,
-  onDownload,
-}: {
-  template: AgencyTemplate
-  studentName: string
-  onDownload: () => void
-}) {
-  return (
-    <div className="flex flex-col items-center gap-5 py-10 text-center">
-      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-amber-50">
-        <Clock className="h-7 w-7 text-amber-600" />
-      </div>
-      <div>
-        <h2 className="text-xl font-semibold">
-          Submitted for Principal Review
-        </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {template.name} · {studentName}
-        </p>
-      </div>
-      <div className="w-full max-w-sm rounded-xl border bg-white p-5 text-left">
-        <div className="flex items-center gap-3">
-          <AgencyIcon abbrev={template.abbrev} color={template.color} />
-          <div className="flex-1">
-            <Badge className="gap-1 bg-amber-50 text-amber-700 hover:bg-amber-50">
-              <Clock className="h-3 w-3" />
-              Pending Principal Review
-            </Badge>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Submitted 20 Apr 2026. You'll be notified once approved.
-            </p>
-          </div>
-        </div>
-      </div>
-      <p className="max-w-sm text-sm text-muted-foreground">
-        Once the Principal has reviewed and approved the report, you can
-        download and send it.
-      </p>
-      <Button onClick={onDownload}>
-        Continue to Export
-        <ChevronRight className="ml-1 h-4 w-4" />
-      </Button>
-    </div>
-  )
-}
 
 // ── S10 Export & Password ─────────────────────────────────────
 
@@ -1657,17 +1559,34 @@ function AgencyReportWizardPage() {
   const navigate = useNavigate()
   const agencyReportsEnabled = useFeatureFlag('agency-reports')
 
+  // Resolve entry from search params:
+  //  ?reportId=X        → look up the report; route by status
+  //                       (approved → export, edits_requested → form,
+  //                        draft → form, default → form)
+  //  ?resume=templateId → form step with that template selected
+  //  (none)             → start at templates
+  const resumedReport = search.reportId
+    ? mockAgencyReports.find((r) => r.id === search.reportId)
+    : undefined
   const resumeTemplateId =
-    search.resume && AGENCY_TEMPLATES.some((t) => t.id === search.resume)
+    resumedReport?.templateId ??
+    (search.resume && AGENCY_TEMPLATES.some((t) => t.id === search.resume)
       ? search.resume
-      : undefined
+      : undefined)
 
-  const [step, setStep] = useState<WizardStep>(
-    resumeTemplateId ? 'form' : 'templates',
-  )
+  const initialStep: WizardStep = resumedReport
+    ? resumedReport.status === 'approved'
+      ? 'export'
+      : 'form'
+    : resumeTemplateId
+      ? 'form'
+      : 'templates'
+
+  const [step, setStep] = useState<WizardStep>(initialStep)
   const [selectedTemplates, setSelectedTemplates] = useState<Array<string>>(
     resumeTemplateId ? [resumeTemplateId] : [],
   )
+  const principalNote = resumedReport?.principalNote
 
   useSetBreadcrumbs([
     { label: 'Home', href: '/' },
@@ -1724,9 +1643,7 @@ function AgencyReportWizardPage() {
           canGoBack={step !== 'templates'}
           onBack={() => {
             if (step === 'form') setStep('templates')
-            else if (step === 'review') setStep('form')
-            else if (step === 'submitted') setStep('review')
-            else if (step === 'export') setStep('submitted')
+            else if (step === 'export') setStep('form')
           }}
           onStepClick={(i) => {
             // Only allow jumping back (or staying on the current step).
@@ -1741,7 +1658,7 @@ function AgencyReportWizardPage() {
       <main
         className={cn(
           'mx-auto w-full flex-1 py-6',
-          step === 'form' || step === 'review'
+          step === 'form'
             ? 'max-w-full px-6'
             : step === 'templates'
               ? 'max-w-5xl px-6'
@@ -1771,25 +1688,15 @@ function AgencyReportWizardPage() {
             template={activeTemplate}
             studentName={student.name}
             studentClass={student.class}
+            principalNote={principalNote}
             onBack={() => setStep('templates')}
-            onSubmitForReview={() => setStep('review')}
-          />
-        )}
-
-        {step === 'review' && (
-          <ReviewSubmit
-            template={activeTemplate}
-            studentName={student.name}
-            onBack={() => setStep('form')}
-            onSubmit={() => setStep('submitted')}
-          />
-        )}
-
-        {step === 'submitted' && (
-          <SubmittedStatus
-            template={activeTemplate}
-            studentName={student.name}
-            onDownload={() => setStep('export')}
+            onSubmittedForReview={() => {
+              toast.success('Report submitted for Principal review.')
+              navigate({
+                to: '/students/$id',
+                params: { id: student.id },
+              })
+            }}
           />
         )}
 
@@ -1797,7 +1704,7 @@ function AgencyReportWizardPage() {
           <ExportPassword
             template={activeTemplate}
             studentName={student.name}
-            onBack={() => setStep('submitted')}
+            onBack={() => setStep('form')}
             onDownload={() => setStep('done')}
           />
         )}
@@ -1808,8 +1715,8 @@ function AgencyReportWizardPage() {
             studentName={student.name}
             studentId={student.id}
             onStartNext={() => {
-              setSelectedTemplates(['nuh'])
-              setStep('form')
+              setSelectedTemplates([])
+              setStep('templates')
             }}
           />
         )}

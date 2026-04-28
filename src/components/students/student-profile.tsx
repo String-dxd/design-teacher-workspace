@@ -344,7 +344,11 @@ function AgencyReportRow({ report }: { report: AgencyReport }) {
     }
   }
 
-  const isResumable = status === 'draft' || status === 'edits_requested'
+  // Click target: drafts/edits resume the form; approved jumps to Export.
+  const isClickable =
+    status === 'draft' ||
+    status === 'edits_requested' ||
+    status === 'approved'
 
   // Mock per-section completion summary for in-progress reports
   // (Counsellor's Input + Principal's Remarks are typical "awaiting" sections.)
@@ -392,11 +396,11 @@ function AgencyReportRow({ report }: { report: AgencyReport }) {
   return (
     <div className="group flex flex-col gap-1.5 rounded-lg border transition-colors hover:border-primary/40 hover:bg-muted/20">
       <div className="flex items-center gap-3 px-4 py-3">
-        {isResumable ? (
+        {isClickable ? (
           <Link
             to="/students/$id/agency-report/new"
             params={{ id: report.studentId }}
-            search={{ resume: report.templateId }}
+            search={{ reportId: report.id }}
             className="flex-1 min-w-0 text-left"
           >
             {titleContent}

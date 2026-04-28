@@ -85,6 +85,7 @@ export interface AgencyReport {
   startedAt?: Date
   passwordSaved: boolean
   password?: string
+  principalNote?: string
 }
 
 export interface DataSource {
@@ -1729,48 +1730,29 @@ export const DATA_SOURCES: Array<DataSource> = [
 
 export const mockAgencyReports: Array<AgencyReport> = [
   {
-    id: 'ar-002',
-    studentId: '1',
-    templateId: 'reach',
-    templateName: 'NUH REACH Referral Response',
-    agency: 'National University Hospital',
-    status: 'pending_review',
-    createdAt: new Date('2026-04-16'),
-    startedAt: new Date('2026-04-16'),
-    passwordSaved: false,
-  },
-  {
-    id: 'ar-004',
+    id: 'ar-edits',
     studentId: '1',
     templateId: 'cps',
-    templateName: 'MSF CPS Annex A',
+    templateName: 'CPS School Report',
     agency: 'Child Protective Service',
-    status: 'draft',
+    status: 'edits_requested',
     createdAt: new Date('2026-04-20'),
     startedAt: new Date('2026-04-20'),
     passwordSaved: false,
+    principalNote:
+      'Please expand the Behavioural Observations narrative — flag specific incidents from Term 1 and add the most recent counselling notes. Also double-check the housing details under Family Background; the records you cited may be outdated.',
   },
   {
-    id: 'ar-005',
+    id: 'ar-approved',
     studentId: '1',
-    templateId: 'msf-probation',
-    templateName: 'MSF Probation School Report',
-    agency: 'Probation Service, MSF',
+    templateId: 'intake',
+    templateName: 'MSF CPS Intake Assessment (Part 1)',
+    agency: 'Child Protective Service',
     status: 'approved',
-    createdAt: new Date('2026-04-15'),
+    createdAt: new Date('2026-04-22'),
+    startedAt: new Date('2026-04-22'),
     passwordSaved: true,
-    password: 'MSF2026Apr',
-  },
-  {
-    id: 'ar-006',
-    studentId: '1',
-    templateId: 'spf',
-    templateName: 'SPF Annex F',
-    agency: 'Singapore Police Force',
-    status: 'edits_requested',
-    createdAt: new Date('2026-04-18'),
-    startedAt: new Date('2026-04-18'),
-    passwordSaved: false,
+    password: 'SCRUBBED',
   },
 ]
 
