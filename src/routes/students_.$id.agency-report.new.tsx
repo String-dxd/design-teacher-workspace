@@ -22,6 +22,7 @@ import {
   RefreshCw,
   Search,
   Sparkles,
+  X,
 } from 'lucide-react'
 
 import type {
@@ -48,12 +49,18 @@ import {
 import { Switch } from '@/components/ui/switch'
 import { cn } from '@/lib/utils'
 import { getStudentById } from '@/data/mock-students'
-import type { SectionAssignment, Staff } from '@/data/mock-agency-reports'
+import type {
+  AgencyReport,
+  AiSourceItem,
+  SectionAssignment,
+  Staff,
+} from '@/data/mock-agency-reports'
 import {
   AGENCY_TEMPLATES,
   AI_DRAFTS,
   AI_DRAFT_CITATIONS,
   CURRENT_USER,
+  MOCK_AI_SOURCES,
   MOCK_COUNSELLOR,
   MOCK_STAFF,
   mockAgencyReports,
@@ -633,19 +640,121 @@ function TemplateSelection({
 
 // ── S4/S5 Report Form ─────────────────────────────────────────
 
+function AiSourcePanel({
+  selectedIds,
+  onChange,
+  onGenerate,
+  onCancel,
+}: {
+  selectedIds: Set<string>
+  onChange: (next: Set<string>) => void
+  onGenerate: () => void
+  onCancel: () => void
+}) {
+  const grouped = MOCK_AI_SOURCES.reduce<Record<string, Array<AiSourceItem>>>(
+    (acc, item) => {
+      acc[item.system] = acc[item.system] || []
+      acc[item.system].push(item)
+      return acc
+    },
+    {},
+  )
+  const toggle = (id: string) => {
+    const next = new Set(selectedIds)
+    if (next.has(id)) next.delete(id)
+    else next.add(id)
+    onChange(next)
+  }
+  return (
+    <div className="mt-2 rounded-lg border bg-muted/20 p-3">
+      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        Select sources for AI draft
+      </p>
+      <div className="space-y-3">
+        {Object.entries(grouped).map(([system, items]) => (
+          <div key={system}>
+            <p className="mb-1 text-[11px] font-semibold text-foreground">
+              {system}
+            </p>
+            <div className="space-y-1">
+              {items.map((it) => {
+                const checked = selectedIds.has(it.id)
+                return (
+                  <label
+                    key={it.id}
+                    className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 text-xs hover:bg-muted/50"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => toggle(it.id)}
+                      className="h-3.5 w-3.5 cursor-pointer accent-primary"
+                    />
+                    <span className="flex-1">
+                      {it.label}
+                      {it.date ? ` — ${it.date}` : ''}
+                    </span>
+                    <a
+                      href={it.href}
+                      onClick={(e) => e.preventDefault()}
+                      className="text-blue-600 underline underline-offset-2 hover:text-blue-700"
+                    >
+                      View in {it.system}
+                    </a>
+                  </label>
+                )
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="mt-3 flex items-center justify-between">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="text-xs text-muted-foreground hover:text-foreground"
+        >
+          Cancel
+        </button>
+        <Button
+          size="sm"
+          onClick={onGenerate}
+          disabled={selectedIds.size === 0}
+        >
+          <Sparkles className="mr-1.5 h-3.5 w-3.5" />
+          Generate draft from {selectedIds.size} selected source
+          {selectedIds.size !== 1 ? 's' : ''}
+        </Button>
+      </div>
+    </div>
+  )
+}
+
 function FieldRow({
   field,
   value,
   aiFlag,
+  prefilledFromLabel,
+  selectedAiSourceIds,
+  onAiSourcesChange,
   onValueChange,
   onAiDraft,
 }: {
   field: ReportField
   value: string
   aiFlag: boolean
+  prefilledFromLabel?: string
+  selectedAiSourceIds?: Set<string>
+  onAiSourcesChange?: (next: Set<string>) => void
   onValueChange: (v: string) => void
   onAiDraft: () => void
 }) {
+  const [aiPanelOpen, setAiPanelOpen] = useState(false)
+  const selectedIds =
+    selectedAiSourceIds ??
+    new Set(
+      MOCK_AI_SOURCES.filter((s) => s.defaultSelected).map((s) => s.id),
+    )
   return (
     <div className="space-y-1.5">
       <div className="flex flex-wrap items-center gap-1.5">
@@ -686,13 +795,28 @@ function FieldRow({
               'min-h-[120px]',
             )}
           />
-          {field.aiDraftable && (
+          {field.aiDraftable && !aiFlag && !aiPanelOpen && (
             <div className="mt-2 flex gap-2">
-              <Button variant="outline" size="sm" onClick={onAiDraft}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setAiPanelOpen(true)}
+              >
                 <Sparkles className="mr-1.5 h-3.5 w-3.5" />
-                {aiFlag ? 'Redraft' : 'AI Draft'}
+                AI Draft
               </Button>
             </div>
+          )}
+          {field.aiDraftable && aiPanelOpen && (
+            <AiSourcePanel
+              selectedIds={selectedIds}
+              onChange={(next) => onAiSourcesChange?.(next)}
+              onGenerate={() => {
+                onAiDraft()
+                setAiPanelOpen(false)
+              }}
+              onCancel={() => setAiPanelOpen(false)}
+            />
           )}
           {aiFlag &&
             (
@@ -713,30 +837,51 @@ function FieldRow({
                       | Array<{ num: number; source: string; detail: string }>
                       | undefined
                     >
-                  )[field.id]!.map((c) => (
-                    <div
-                      key={c.num}
-                      className="flex items-start gap-2 text-xs text-muted-foreground"
-                    >
-                      <sup className="mt-0.5 font-semibold text-primary">
-                        {c.num}
-                      </sup>
-                      <span>
-                        <span className="font-medium text-foreground">
-                          {c.source}
-                        </span>{' '}
-                        —{' '}
-                        <a
-                          href="#"
-                          onClick={(e) => e.preventDefault()}
-                          className="text-blue-600 underline underline-offset-2 hover:text-blue-700"
+                  )[field.id]!
+                    .filter((c) => {
+                      // Filter to only show selected canonical sources.
+                      const matched = MOCK_AI_SOURCES.find(
+                        (s) => s.citationNum === c.num,
+                      )
+                      if (!matched) return true
+                      return selectedIds.has(matched.id)
+                    })
+                    .map((c) => {
+                      const matched = MOCK_AI_SOURCES.find(
+                        (s) => s.citationNum === c.num,
+                      )
+                      return (
+                        <div
+                          key={c.num}
+                          className="flex items-start gap-2 text-xs text-muted-foreground"
                         >
-                          {c.detail}
-                        </a>
-                      </span>
-                    </div>
-                  ))}
+                          <sup className="mt-0.5 font-semibold text-primary">
+                            {c.num}
+                          </sup>
+                          <span>
+                            <span className="font-medium text-foreground">
+                              {c.source}
+                            </span>{' '}
+                            —{' '}
+                            <a
+                              href={matched?.href ?? '#'}
+                              onClick={(e) => e.preventDefault()}
+                              className="text-blue-600 underline underline-offset-2 hover:text-blue-700"
+                            >
+                              {c.detail}
+                            </a>
+                          </span>
+                        </div>
+                      )
+                    })}
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setAiPanelOpen(true)}
+                  className="mt-2 text-xs text-primary underline underline-offset-2 hover:text-primary/80"
+                >
+                  Edit sources
+                </button>
               </div>
             )}
         </div>
@@ -804,6 +949,11 @@ function FieldRow({
             <p className="text-xs text-muted-foreground">{field.helper}</p>
           )}
         </>
+      )}
+      {prefilledFromLabel && (
+        <p className="text-xs text-muted-foreground">
+          Pre-filled from {prefilledFromLabel}
+        </p>
       )}
     </div>
   )
@@ -874,6 +1024,9 @@ function SectionPanel({
   section,
   fieldValues,
   aiFlags,
+  prefilledFrom,
+  aiSourceSelections,
+  onAiSourceChange,
   assignedTo,
   onAssignedChange,
   onValueChange,
@@ -884,6 +1037,9 @@ function SectionPanel({
   section: ReportSection
   fieldValues: Record<string, string>
   aiFlags: Record<string, boolean>
+  prefilledFrom: Record<string, string>
+  aiSourceSelections: Record<string, Set<string>>
+  onAiSourceChange: (fieldId: string, next: Set<string>) => void
   assignedTo: SectionAssignment
   onAssignedChange: (s: Staff) => void
   onValueChange: (fieldId: string, v: string) => void
@@ -962,6 +1118,9 @@ function SectionPanel({
                 ''
               }
               aiFlag={!!aiFlags[field.id]}
+              prefilledFromLabel={prefilledFrom[field.id]}
+              selectedAiSourceIds={aiSourceSelections[field.id]}
+              onAiSourcesChange={(next) => onAiSourceChange(field.id, next)}
               onValueChange={(v) => onValueChange(field.id, v)}
               onAiDraft={() => onAiDraft(field.id)}
             />
@@ -1124,19 +1283,24 @@ function ReportForm({
   template,
   studentName,
   studentClass,
+  studentId,
   principalNote,
+  currentReportId,
   onBack,
   onSubmittedForReview,
 }: {
   template: AgencyTemplate
   studentName: string
   studentClass: string
+  studentId: string
   principalNote?: string
+  currentReportId?: string
   onBack: () => void
   onSubmittedForReview: () => void
 }) {
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({})
   const [aiFlags, setAiFlags] = useState<Record<string, boolean>>({})
+  const [prefilledFrom, setPrefilledFrom] = useState<Record<string, string>>({})
   const [completedSections, setCompletedSections] = useState<Set<string>>(
     new Set(),
   )
@@ -1145,6 +1309,43 @@ function ReportForm({
   const [savedStatus, setSavedStatus] = useState<'saved' | 'saving'>('saved')
   const [submitOpen, setSubmitOpen] = useState(false)
   const [noteToPrincipal, setNoteToPrincipal] = useState('')
+  const [prefillBannerDismissed, setPrefillBannerDismissed] = useState(false)
+  const [aiSourceSelections, setAiSourceSelections] = useState<
+    Record<string, Set<string>>
+  >({})
+
+  // Available source reports — Approved and on the same student.
+  const prefillSources = mockAgencyReports.filter(
+    (r) =>
+      r.studentId === studentId &&
+      r.status === 'approved' &&
+      r.id !== currentReportId &&
+      r.prefillData,
+  )
+
+  const prefillFromReport = (source: AgencyReport) => {
+    if (!source.prefillData) return
+    let count = 0
+    const newValues: Record<string, string> = {}
+    const newPrefilledFrom: Record<string, string> = {}
+    for (const section of template.sections) {
+      for (const f of section.fields) {
+        if (!f.prefillKey) continue
+        const sourceVal = source.prefillData[f.prefillKey]
+        if (!sourceVal) continue
+        // Don't overwrite if the field already has a non-default user value.
+        const existing = fieldValues[f.id]
+        if (existing && existing.trim().length > 0) continue
+        newValues[f.id] = sourceVal
+        newPrefilledFrom[f.id] = source.templateName
+        count++
+      }
+    }
+    setFieldValues((prev) => ({ ...prev, ...newValues }))
+    setPrefilledFrom((prev) => ({ ...prev, ...newPrefilledFrom }))
+    setPrefillBannerDismissed(true)
+    toast.success(`${count} fields pre-filled from ${source.templateName}.`)
+  }
 
   // Per-section assignments. Defaults: yh → current user; counsellor → SC
   // (with Mock data marked completed); principal → P (awaiting).
@@ -1369,6 +1570,62 @@ function ReportForm({
             </div>
           )}
 
+          {!prefillBannerDismissed && prefillSources.length > 0 && (
+            <div className="mb-4 rounded-xl border border-primary/20 bg-primary/5 p-4">
+              <div className="mb-2 flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold">
+                    {studentName} has {prefillSources.length} completed report
+                    {prefillSources.length !== 1 ? 's' : ''}.
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Pre-fill matching fields to save time. You can still edit
+                    every field afterwards.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setPrefillBannerDismissed(true)}
+                  className="-mr-1 rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                  aria-label="Dismiss"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="space-y-1.5">
+                {prefillSources.map((src) => {
+                  const date = src.createdAt.toLocaleDateString('en-SG', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric',
+                  })
+                  return (
+                    <div
+                      key={src.id}
+                      className="flex items-center gap-3 rounded-lg border bg-card px-3 py-2"
+                    >
+                      <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium">
+                          {src.templateName}
+                        </p>
+                        <p className="truncate text-xs text-muted-foreground">
+                          {src.agency} · {date}
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => prefillFromReport(src)}
+                      >
+                        Pre-fill from this report
+                      </Button>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
           <div className="space-y-4 pb-16">
             {template.sections.map((s) => (
               <SectionPanel
@@ -1376,6 +1633,14 @@ function ReportForm({
                 section={s}
                 fieldValues={fieldValues}
                 aiFlags={aiFlags}
+                prefilledFrom={prefilledFrom}
+                aiSourceSelections={aiSourceSelections}
+                onAiSourceChange={(fieldId, next) =>
+                  setAiSourceSelections((prev) => ({
+                    ...prev,
+                    [fieldId]: next,
+                  }))
+                }
                 assignedTo={assignments[s.id]}
                 onAssignedChange={(staff) => reassignSection(s.id, staff)}
                 onValueChange={updateField}
@@ -1818,7 +2083,9 @@ function AgencyReportWizardPage() {
             template={activeTemplate}
             studentName={student.name}
             studentClass={student.class}
+            studentId={student.id}
             principalNote={principalNote}
+            currentReportId={resumedReport?.id}
             onBack={() => setStep('templates')}
             onSubmittedForReview={() => {
               navigate({

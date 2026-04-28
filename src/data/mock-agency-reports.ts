@@ -25,6 +25,9 @@ export interface ReportField {
   restrictedMsg?: string
   options?: Array<string>
   helper?: string
+  // Stable cross-template key. When the user pre-fills from a prior
+  // report, fields with the same prefillKey copy values across.
+  prefillKey?: string
 }
 
 export type StaffRole = 'YH' | 'SC' | 'P' | 'VP' | 'FT'
@@ -93,6 +96,21 @@ export interface AgencyReport {
   passwordSaved: boolean
   password?: string
   principalNote?: string
+  // Snapshot of cross-template values keyed by prefillKey. Approved/Sent
+  // reports expose this so future reports can be pre-filled from them.
+  prefillData?: Record<string, string>
+}
+
+export interface AiSourceItem {
+  id: string
+  system: 'Case Sync' | 'TCI' | 'School Cockpit'
+  label: string
+  date?: string
+  defaultSelected: boolean
+  // Maps to AI_DRAFT_CITATIONS[fieldId][num] when this source corresponds
+  // to one of the canonical citations.
+  citationNum?: number
+  href: string
 }
 
 export interface DataSource {
@@ -990,6 +1008,7 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             type: 'text',
             source: 'EduHub',
             value: 'Chen Jun Kai',
+            prefillKey: 'studentName',
           },
           {
             id: 'ch-nric',
@@ -997,6 +1016,7 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             type: 'text',
             source: 'EduHub',
             value: 'S9101B',
+            prefillKey: 'nric',
           },
           {
             id: 'ch-class',
@@ -1004,6 +1024,7 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             type: 'text',
             source: 'School Cockpit',
             value: '3A',
+            prefillKey: 'class',
           },
           {
             id: 'ch-school',
@@ -1011,6 +1032,7 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             type: 'text',
             source: 'EduHub',
             value: 'Bandung Secondary School',
+            prefillKey: 'school',
           },
           {
             id: 'ch-school-address',
@@ -1088,6 +1110,7 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             label: 'Secondary 3 — Attendance rating (current)',
             type: 'radio',
             options: ['Very Regular', 'Regular', 'Irregular'],
+            prefillKey: 'attendanceRating',
           },
           {
             id: 'ch-att-present-sec3',
@@ -1208,6 +1231,7 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             label: 'Secondary 3 — Overall conduct',
             type: 'radio',
             options: ['Excellent', 'Good', 'Fair', 'Poor'],
+            prefillKey: 'overallConduct',
           },
           {
             id: 'ch-cond-comments',
@@ -1239,6 +1263,7 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             label: 'Secondary 3 — Academic performance',
             type: 'radio',
             options: ['Good', 'Satisfactory', 'Poor'],
+            prefillKey: 'academicPerformance',
           },
           {
             id: 'ch-acad-remarks',
@@ -2140,6 +2165,97 @@ export const mockAgencyReports: Array<AgencyReport> = [
     startedAt: new Date('2026-04-22'),
     passwordSaved: true,
     password: 'SCRUBBED',
+    prefillData: {
+      studentName: 'Chen Jun Kai',
+      nric: 'S9101B',
+      class: '3A',
+      school: 'Bandung Secondary School',
+      attendanceRating: 'Regular',
+      overallConduct: 'Fair',
+      academicPerformance: 'Satisfactory',
+    },
+  },
+  {
+    id: 'ar-completed-cps',
+    studentId: '1',
+    templateId: 'cps',
+    templateName: 'CPS School Report',
+    agency: 'Child Protective Service',
+    status: 'approved',
+    createdAt: new Date('2026-02-12'),
+    startedAt: new Date('2026-02-10'),
+    passwordSaved: true,
+    password: 'SCRUBBED',
+    prefillData: {
+      studentName: 'Chen Jun Kai',
+      nric: 'S9101B',
+      class: '3A',
+      school: 'Bandung Secondary School',
+      attendanceRating: 'Regular',
+      overallConduct: 'Fair',
+      academicPerformance: 'Satisfactory',
+    },
+  },
+]
+
+export const MOCK_AI_SOURCES: Array<AiSourceItem> = [
+  {
+    id: 'cs-1',
+    system: 'Case Sync',
+    label: 'Case note',
+    date: '12 Mar 2026',
+    defaultSelected: true,
+    citationNum: 2,
+    href: '#',
+  },
+  {
+    id: 'cs-2',
+    system: 'Case Sync',
+    label: 'Case note',
+    date: '5 Jan 2026',
+    defaultSelected: true,
+    href: '#',
+  },
+  {
+    id: 'cs-3',
+    system: 'Case Sync',
+    label: 'Referral record',
+    date: '15 Nov 2025',
+    defaultSelected: false,
+    href: '#',
+  },
+  {
+    id: 'tci-1',
+    system: 'TCI',
+    label: 'Term 1 wellbeing check-in',
+    date: '15 Apr 2026',
+    defaultSelected: true,
+    citationNum: 3,
+    href: '#',
+  },
+  {
+    id: 'tci-2',
+    system: 'TCI',
+    label: 'Term 4 2025 wellbeing check-in',
+    date: '10 Oct 2025',
+    defaultSelected: false,
+    href: '#',
+  },
+  {
+    id: 'sc-1',
+    system: 'School Cockpit',
+    label: 'Attendance record, Term 2 2026',
+    defaultSelected: true,
+    citationNum: 1,
+    href: '#',
+  },
+  {
+    id: 'sc-2',
+    system: 'School Cockpit',
+    label: 'Behavioural incident',
+    date: '3 Mar 2026',
+    defaultSelected: true,
+    href: '#',
   },
 ]
 
