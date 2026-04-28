@@ -740,18 +740,70 @@ function FieldRow({
               </div>
             )}
         </div>
-      ) : (
-        <input
-          type="text"
-          value={value}
-          onChange={(e) => onValueChange(e.target.value)}
-          placeholder="Enter details..."
-          className={cn(
-            'w-full rounded-lg border px-3.5 py-2 text-sm outline-none transition-colors',
-            'focus:border-primary focus:ring-1 focus:ring-primary',
-            field.stale ? 'border-amber-300 bg-amber-50' : '',
+      ) : field.type === 'radio' ? (
+        <div className="flex flex-wrap gap-3">
+          {(field.options ?? []).map((opt) => (
+            <label
+              key={opt}
+              className="flex cursor-pointer items-center gap-2 text-sm"
+            >
+              <input
+                type="radio"
+                name={field.id}
+                value={opt}
+                checked={value === opt}
+                onChange={() => onValueChange(opt)}
+                className="h-4 w-4 cursor-pointer accent-primary"
+              />
+              {opt}
+            </label>
+          ))}
+          {field.helper && (
+            <p className="basis-full text-xs text-muted-foreground">
+              {field.helper}
+            </p>
           )}
-        />
+        </div>
+      ) : field.type === 'yesnona' ? (
+        <div className="flex flex-wrap gap-3">
+          {['Yes', 'No', 'NA'].map((opt) => (
+            <label
+              key={opt}
+              className="flex cursor-pointer items-center gap-2 text-sm"
+            >
+              <input
+                type="radio"
+                name={field.id}
+                value={opt}
+                checked={value === opt}
+                onChange={() => onValueChange(opt)}
+                className="h-4 w-4 cursor-pointer accent-primary"
+              />
+              {opt}
+            </label>
+          ))}
+        </div>
+      ) : field.type === 'signature' ? (
+        <div className="rounded-lg border border-dashed bg-muted/30 px-3.5 py-2.5 text-sm text-muted-foreground">
+          Digital signature will be applied on export.
+        </div>
+      ) : (
+        <>
+          <input
+            type="text"
+            value={value}
+            onChange={(e) => onValueChange(e.target.value)}
+            placeholder="Enter details..."
+            className={cn(
+              'w-full rounded-lg border px-3.5 py-2 text-sm outline-none transition-colors',
+              'focus:border-primary focus:ring-1 focus:ring-primary',
+              field.stale ? 'border-amber-300 bg-amber-50' : '',
+            )}
+          />
+          {field.helper && (
+            <p className="text-xs text-muted-foreground">{field.helper}</p>
+          )}
+        </>
       )}
     </div>
   )

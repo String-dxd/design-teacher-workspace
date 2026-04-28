@@ -5,7 +5,12 @@ export type AgencyReportStatus =
   | 'approved'
 
 export type FieldRole = 'yh' | 'principal' | 'counsellor'
-export type FieldType = 'text' | 'narrative'
+export type FieldType =
+  | 'text'
+  | 'narrative'
+  | 'radio'
+  | 'yesnona'
+  | 'signature'
 
 export interface ReportField {
   id: string
@@ -18,6 +23,8 @@ export interface ReportField {
   staleMsg?: string
   restricted?: boolean
   restrictedMsg?: string
+  options?: Array<string>
+  helper?: string
 }
 
 export type StaffRole = 'YH' | 'SC' | 'P' | 'VP' | 'FT'
@@ -943,52 +950,53 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
     abbrev: 'CH',
     color: '#d97706',
     category: 'Care & Placement',
-    totalFields: 38,
-    autoFilled: 24,
-    pages: 6,
+    totalFields: 70,
+    autoFilled: 16,
+    pages: 8,
     turnaroundDays: 10,
     pdfPreview: '/report-previews/children-home.pdf',
     templateFile: '/report-templates/children-home.pdf',
     sections: [
       {
         id: 'ch-purpose',
-        title: 'Purpose of Report',
+        title: 'Purpose',
         role: 'yh',
         fields: [
           {
-            id: 'ch-purpose',
-            label: 'Purpose (Pre-FGO / FGO Social Investigation)',
+            id: 'ch-purpose-type',
+            label: 'Purpose of report',
+            type: 'radio',
+            options: [
+              'Pre-FGO Screening',
+              'FGO Social Investigation',
+              'Others',
+            ],
+          },
+          {
+            id: 'ch-purpose-other',
+            label: 'If Others, please specify',
             type: 'text',
-            source: null,
-            value: '',
           },
         ],
       },
       {
         id: 'ch-particulars',
-        title: 'Student Particulars',
+        title: "Student's Personal Particulars",
         role: 'yh',
         fields: [
           {
             id: 'ch-name',
-            label: 'Full Name',
+            label: 'Name',
             type: 'text',
             source: 'EduHub',
             value: 'Chen Jun Kai',
           },
           {
             id: 'ch-nric',
-            label: 'NRIC / FIN',
+            label: 'NRIC / BC No.',
             type: 'text',
             source: 'EduHub',
             value: 'S9101B',
-          },
-          {
-            id: 'ch-dob',
-            label: 'Date of Birth',
-            type: 'text',
-            source: 'EduHub',
-            value: '4 Jan 2010',
           },
           {
             id: 'ch-class',
@@ -998,72 +1006,338 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             value: '3A',
           },
           {
-            id: 'ch-address',
-            label: 'Home Address',
+            id: 'ch-school',
+            label: 'School',
+            type: 'text',
+            source: 'EduHub',
+            value: 'Bandung Secondary School',
+          },
+          {
+            id: 'ch-school-address',
+            label: "School's Address",
+            type: 'text',
+            source: 'EduHub',
+            value: '21 Jurong West Avenue 1, Singapore 649520',
+          },
+        ],
+      },
+      {
+        id: 'ch-attendance',
+        title: 'Attendance',
+        role: 'yh',
+        fields: [
+          // Sec 1
+          {
+            id: 'ch-att-rating-sec1',
+            label: 'Secondary 1 — Attendance rating',
+            type: 'radio',
+            options: ['Very Regular', 'Regular', 'Irregular'],
+          },
+          {
+            id: 'ch-att-present-sec1',
+            label: 'Sec 1 — Days present / total',
             type: 'text',
             source: 'School Cockpit',
-            value: '',
+            value: '186 / 190',
+          },
+          {
+            id: 'ch-att-late-sec1',
+            label: 'Sec 1 — Days late',
+            type: 'text',
+            source: 'School Cockpit',
+            value: '4',
+          },
+          {
+            id: 'ch-att-absent-sec1',
+            label: 'Sec 1 — Days absent without valid reasons',
+            type: 'text',
+            source: 'School Cockpit',
+            value: '0',
+          },
+          // Sec 2
+          {
+            id: 'ch-att-rating-sec2',
+            label: 'Secondary 2 — Attendance rating',
+            type: 'radio',
+            options: ['Very Regular', 'Regular', 'Irregular'],
+          },
+          {
+            id: 'ch-att-present-sec2',
+            label: 'Sec 2 — Days present / total',
+            type: 'text',
+            source: 'School Cockpit',
+            value: '178 / 190',
+          },
+          {
+            id: 'ch-att-late-sec2',
+            label: 'Sec 2 — Days late',
+            type: 'text',
+            source: 'School Cockpit',
+            value: '8',
+          },
+          {
+            id: 'ch-att-absent-sec2',
+            label: 'Sec 2 — Days absent without valid reasons',
+            type: 'text',
+            source: 'School Cockpit',
+            value: '2',
+          },
+          // Sec 3 (current year)
+          {
+            id: 'ch-att-rating-sec3',
+            label: 'Secondary 3 — Attendance rating (current)',
+            type: 'radio',
+            options: ['Very Regular', 'Regular', 'Irregular'],
+          },
+          {
+            id: 'ch-att-present-sec3',
+            label: 'Sec 3 — Days present / total',
+            type: 'text',
+            source: 'School Cockpit',
+            value: '39 / 47',
+          },
+          {
+            id: 'ch-att-late-sec3',
+            label: 'Sec 3 — Days late',
+            type: 'text',
+            source: 'School Cockpit',
+            value: '12',
+          },
+          {
+            id: 'ch-att-absent-sec3',
+            label: 'Sec 3 — Days absent without valid reasons',
+            type: 'text',
+            source: 'School Cockpit',
+            value: '5',
+          },
+          // Final year only — leaving info
+          {
+            id: 'ch-att-date-left',
+            label: 'Date left school (for ex-students)',
+            type: 'text',
+          },
+          {
+            id: 'ch-att-reason-leaving',
+            label: 'Reason for leaving school',
+            type: 'narrative',
+          },
+          {
+            id: 'ch-att-withdrawn-by',
+            label: 'Withdrawn by (if applicable)',
+            type: 'text',
+          },
+        ],
+      },
+      {
+        id: 'ch-conduct',
+        title: 'Conduct',
+        role: 'yh',
+        fields: [
+          // Positive
+          { id: 'ch-cond-responsive', label: 'Responsive', type: 'yesnona' },
+          { id: 'ch-cond-responsible', label: 'Responsible', type: 'yesnona' },
+          { id: 'ch-cond-polite', label: 'Polite', type: 'yesnona' },
+          { id: 'ch-cond-honest', label: 'Honest', type: 'yesnona' },
+          { id: 'ch-cond-helpful', label: 'Helpful', type: 'yesnona' },
+          { id: 'ch-cond-attentive', label: 'Attentive', type: 'yesnona' },
+          {
+            id: 'ch-cond-hardworking',
+            label: 'Hardworking',
+            type: 'yesnona',
+          },
+          { id: 'ch-cond-respectful', label: 'Respectful', type: 'yesnona' },
+          {
+            id: 'ch-cond-peers',
+            label: 'Problems with peers',
+            type: 'yesnona',
+          },
+          {
+            id: 'ch-cond-teachers',
+            label: 'Problems with teachers',
+            type: 'yesnona',
+          },
+          // Negative
+          {
+            id: 'ch-cond-gangs',
+            label: 'Associates with gangs',
+            type: 'yesnona',
+          },
+          { id: 'ch-cond-truancy', label: 'Truancy', type: 'yesnona' },
+          {
+            id: 'ch-cond-fights',
+            label: 'Engages in fights',
+            type: 'yesnona',
+          },
+          {
+            id: 'ch-cond-pilfers',
+            label: 'Pilfers / steals',
+            type: 'yesnona',
+          },
+          { id: 'ch-cond-smokes', label: 'Smokes', type: 'yesnona' },
+          {
+            id: 'ch-cond-substances',
+            label: 'Abuses other substances',
+            type: 'yesnona',
+          },
+          {
+            id: 'ch-cond-defies',
+            label: 'Defies authority',
+            type: 'yesnona',
+          },
+          {
+            id: 'ch-cond-resists-counselling',
+            label: 'Resists school counselling',
+            type: 'yesnona',
+          },
+          { id: 'ch-cond-bullies', label: 'Bullies', type: 'yesnona' },
+          // Overall conduct per year
+          {
+            id: 'ch-cond-overall-sec1',
+            label: 'Secondary 1 — Overall conduct',
+            type: 'radio',
+            options: ['Excellent', 'Good', 'Fair', 'Poor'],
+          },
+          {
+            id: 'ch-cond-overall-sec2',
+            label: 'Secondary 2 — Overall conduct',
+            type: 'radio',
+            options: ['Excellent', 'Good', 'Fair', 'Poor'],
+          },
+          {
+            id: 'ch-cond-overall-sec3',
+            label: 'Secondary 3 — Overall conduct',
+            type: 'radio',
+            options: ['Excellent', 'Good', 'Fair', 'Poor'],
+          },
+          {
+            id: 'ch-cond-comments',
+            label: 'Comments, if any',
+            type: 'narrative',
+            aiDraftable: true,
           },
         ],
       },
       {
         id: 'ch-academic',
-        title: 'Academic Performance & Conduct',
+        title: 'Academic Performance & CCA',
         role: 'yh',
         fields: [
           {
-            id: 'ch-attendance-y1',
-            label: 'Attendance Rate (Year 1)',
-            type: 'text',
-            source: 'School Cockpit',
-            value: '',
+            id: 'ch-acad-sec1',
+            label: 'Secondary 1 — Academic performance',
+            type: 'radio',
+            options: ['Good', 'Satisfactory', 'Poor'],
           },
           {
-            id: 'ch-attendance-y2',
-            label: 'Attendance Rate (Year 2)',
-            type: 'text',
-            source: 'School Cockpit',
-            value: '83%',
+            id: 'ch-acad-sec2',
+            label: 'Secondary 2 — Academic performance',
+            type: 'radio',
+            options: ['Good', 'Satisfactory', 'Poor'],
           },
           {
-            id: 'ch-conduct',
-            label: 'Conduct Grade',
-            type: 'text',
-            source: 'School Cockpit',
-            value: 'Poor',
+            id: 'ch-acad-sec3',
+            label: 'Secondary 3 — Academic performance',
+            type: 'radio',
+            options: ['Good', 'Satisfactory', 'Poor'],
           },
           {
-            id: 'ch-cca',
-            label: 'CCA',
-            type: 'text',
-            source: 'School Cockpit',
-            value: '',
-          },
-          {
-            id: 'ch-academic-perf',
-            label: 'Academic Performance',
+            id: 'ch-acad-remarks',
+            label: 'Other remarks pertaining to academic performance',
             type: 'narrative',
-            aiDraftable: true,
+          },
+          {
+            id: 'ch-cca-activities',
+            label: 'CCA / Activities student participated in',
+            type: 'narrative',
+          },
+          {
+            id: 'ch-cca-positions',
+            label: 'Positions held',
+            type: 'text',
+          },
+          {
+            id: 'ch-cca-attendance',
+            label: 'CCA attendance',
+            type: 'text',
+          },
+          {
+            id: 'ch-cca-behaviour',
+            label: 'Behaviour at CCA',
+            type: 'narrative',
           },
         ],
       },
       {
-        id: 'ch-family',
-        title: 'Family Background & Care Arrangements',
+        id: 'ch-other-comments',
+        title: 'Other Comments',
+        role: 'yh',
+        fields: [
+          // Parents/Guardians
+          {
+            id: 'ch-par-cooperative',
+            label: 'Parents / guardians are co-operative',
+            type: 'yesnona',
+          },
+          {
+            id: 'ch-par-control',
+            label: 'Parents / guardians are able to exert control',
+            type: 'yesnona',
+          },
+          {
+            id: 'ch-par-acknowledge',
+            label: "Parents / guardians acknowledge the offender's wrongdoing",
+            type: 'yesnona',
+          },
+          {
+            id: 'ch-par-inconsistent',
+            label:
+              'Parents / guardians are inconsistent in their approach to discipline',
+            type: 'yesnona',
+          },
+          {
+            id: 'ch-par-other',
+            label: 'Other parental observations (please provide details)',
+            type: 'narrative',
+          },
+          // Other Information — adverse family records
+          {
+            id: 'ch-fam-criminal',
+            label: 'An immediate family member has a criminal record',
+            type: 'yesnona',
+          },
+          {
+            id: 'ch-fam-drug',
+            label: 'There is information of drug abuse in the family',
+            type: 'yesnona',
+          },
+          {
+            id: 'ch-fam-sexual',
+            label: 'There is information of sexual abuse in the family',
+            type: 'yesnona',
+          },
+          {
+            id: 'ch-fam-physical',
+            label: 'There is information of physical abuse in the family',
+            type: 'yesnona',
+          },
+          {
+            id: 'ch-fam-other',
+            label: 'Other family observations (please provide details)',
+            type: 'narrative',
+            helper: 'NA — Information is not available to the school.',
+          },
+        ],
+      },
+      {
+        id: 'ch-care',
+        title: 'Care Arrangements',
         role: 'yh',
         fields: [
           {
-            id: 'ch-family-bg',
-            label: 'Family Background',
+            id: 'ch-care-arrangements',
+            label:
+              "The student's care arrangements, if known to the school (e.g. whether the student is staying with someone with whom he shares a strong emotional bond)",
             type: 'narrative',
-            aiDraftable: true,
-          },
-          {
-            id: 'ch-care',
-            label: 'Current Care Arrangements',
-            type: 'text',
-            source: 'School Cockpit',
-            value: 'Both Parents',
           },
         ],
       },
@@ -1073,18 +1347,42 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
         role: 'yh',
         fields: [
           {
-            id: 'ch-medical',
-            label: 'Medical Conditions',
-            type: 'text',
-            source: null,
-            value: '',
+            id: 'ch-health-medical',
+            label: 'Any known medical problems (please provide details)',
+            type: 'narrative',
           },
           {
-            id: 'ch-psychiatric',
-            label: 'Psychiatric / Mental Health History',
-            type: 'text',
-            source: null,
-            value: '',
+            id: 'ch-health-bizarre',
+            label:
+              'Extremely bizarre behaviour (hallucinations, delusions, etc.)',
+            type: 'yesnona',
+          },
+          {
+            id: 'ch-health-violent',
+            label: 'Extremely violent behaviour',
+            type: 'yesnona',
+          },
+          {
+            id: 'ch-health-suicidal',
+            label:
+              'Suicidal inclinations / attempt or clear plan to commit suicide',
+            type: 'yesnona',
+          },
+          {
+            id: 'ch-health-substance',
+            label: 'Obvious addiction to substances',
+            type: 'yesnona',
+          },
+          {
+            id: 'ch-health-depression',
+            label: 'Depression',
+            type: 'yesnona',
+          },
+          {
+            id: 'ch-health-other',
+            label: 'Other psychiatric concerns (please provide details)',
+            type: 'narrative',
+            helper: 'NA — Information is not available to the school.',
           },
         ],
       },
@@ -1093,26 +1391,104 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
         title: 'Counselling',
         role: 'counsellor',
         fields: [
+          { id: 'ch-couns-programme', label: 'Name / type of programme', type: 'text' },
           {
-            id: 'ch-programme',
-            label: 'Counselling Programme Details',
-            type: 'narrative',
+            id: 'ch-couns-duration',
+            label: 'Duration / frequency (start–end date)',
+            type: 'text',
           },
           {
-            id: 'ch-sessions',
-            label: 'Number of Sessions',
+            id: 'ch-couns-persons',
+            label: 'Persons involved (e.g. parent, friend)',
             type: 'text',
-            source: 'Case Sync',
-            value: '8',
+          },
+          { id: 'ch-couns-name', label: 'Name of counsellor', type: 'text' },
+          {
+            id: 'ch-couns-quals',
+            label: 'Qualifications of counsellor',
+            type: 'text',
+          },
+          {
+            id: 'ch-couns-contact',
+            label: "Counsellor's contact details",
+            type: 'text',
+          },
+          {
+            id: 'ch-couns-other',
+            label: 'Any other details which will be of assistance',
+            type: 'narrative',
+          },
+        ],
+      },
+      {
+        id: 'ch-other',
+        title: 'Other Information',
+        role: 'yh',
+        fields: [
+          {
+            id: 'ch-other-info',
+            label:
+              'Any other information which may assist the student and the person in charge of the present investigation',
+            type: 'narrative',
+          },
+        ],
+      },
+      {
+        id: 'ch-teacher',
+        title: 'Teacher / Person Preparing the Report',
+        role: 'yh',
+        fields: [
+          {
+            id: 'ch-teacher-name',
+            label: 'Name',
+            type: 'text',
+            value: 'Mr Daniel Tan',
+          },
+          {
+            id: 'ch-teacher-appointment',
+            label: 'Appointment',
+            type: 'text',
+            value: 'Year Head, Secondary 3',
+          },
+          {
+            id: 'ch-teacher-years',
+            label: 'No. of years student known',
+            type: 'text',
+          },
+          {
+            id: 'ch-teacher-signature',
+            label: 'Signature',
+            type: 'signature',
+          },
+          {
+            id: 'ch-teacher-date',
+            label: 'Date',
+            type: 'text',
+            value: '24 Apr 2026',
           },
         ],
       },
       {
         id: 'ch-principal',
-        title: "Principal's Signature",
+        title: "Principal's Comments",
         role: 'principal',
         fields: [
-          { id: 'ch-comments', label: 'Other Comments', type: 'narrative' },
+          { id: 'ch-principal-name', label: 'Name', type: 'text' },
+          {
+            id: 'ch-principal-tel',
+            label: 'Tel / Fax numbers',
+            type: 'text',
+          },
+          {
+            id: 'ch-principal-comments',
+            label: 'Comments on report, if any',
+            type: 'narrative',
+          },
+          {
+            id: 'ch-principal-signature',
+            label: 'Signature and date',
+            type: 'signature',
+          },
         ],
       },
     ],
