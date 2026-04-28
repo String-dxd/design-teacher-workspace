@@ -1730,6 +1730,17 @@ export const DATA_SOURCES: Array<DataSource> = [
 
 export const mockAgencyReports: Array<AgencyReport> = [
   {
+    id: 'ar-draft',
+    studentId: '1',
+    templateId: 'spf',
+    templateName: 'SPF Annex F',
+    agency: 'Singapore Police Force',
+    status: 'draft',
+    createdAt: new Date('2026-04-18'),
+    startedAt: new Date('2026-04-18'),
+    passwordSaved: false,
+  },
+  {
     id: 'ar-edits',
     studentId: '1',
     templateId: 'cps',
