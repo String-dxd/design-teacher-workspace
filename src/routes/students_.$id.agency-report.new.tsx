@@ -1640,9 +1640,14 @@ function AgencyReportWizardPage() {
       {showStepBar && (
         <StepBar
           step={step}
-          canGoBack={step !== 'templates'}
+          canGoBack
           onBack={() => {
-            if (step === 'form') setStep('templates')
+            if (step === 'templates')
+              navigate({
+                to: '/students/$id',
+                params: { id: student.id },
+              })
+            else if (step === 'form') setStep('templates')
             else if (step === 'export') setStep('form')
           }}
           onStepClick={(i) => {
