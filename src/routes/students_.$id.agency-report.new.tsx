@@ -1170,25 +1170,20 @@ function SectionPanel({
               Send reminder
             </Button>
           </div>
-          <div className="space-y-5">
+          <div className="pointer-events-none space-y-5 select-none opacity-70">
             {section.fields.map((f) => (
               <div key={f.id} className="space-y-1.5">
-                <label
-                  className={cn(
-                    'text-sm font-medium',
-                    !f.value && 'text-muted-foreground',
-                  )}
-                >
+                <label className="text-sm font-medium text-muted-foreground">
                   {f.label}
                 </label>
                 {f.value ? (
-                  <p className="rounded-lg border bg-muted/30 px-3.5 py-2 text-sm text-foreground">
+                  <p className="rounded-lg border bg-muted px-3.5 py-2 text-sm text-muted-foreground">
                     {f.value}
                   </p>
                 ) : f.type === 'narrative' ? (
-                  <div className="min-h-[120px] rounded-lg border bg-muted/30 opacity-50" />
+                  <div className="min-h-[120px] rounded-lg border bg-muted" />
                 ) : (
-                  <div className="h-10 rounded-lg border bg-muted/30 opacity-50" />
+                  <div className="h-10 rounded-lg border bg-muted" />
                 )}
               </div>
             ))}
