@@ -363,13 +363,17 @@ function TemplateSelection({
                       : r.status === 'edits_requested'
                         ? 'EDITS REQUESTED'
                         : 'PENDING REVIEW'
-                  // Mock completion fraction for demo
-                  const pct =
-                    r.status === 'draft'
-                      ? 40
-                      : r.status === 'edits_requested'
-                        ? 70
-                        : 100
+                  // Completion %: same calculation the Fill Report top bar
+                  // uses — fraction of non-principal fields with a value.
+                  const allFields = tpl.sections
+                    .filter((s) => s.role !== 'principal')
+                    .flatMap((s) => s.fields)
+                  const filledCount = allFields.filter(
+                    (f) => !!f.value,
+                  ).length
+                  const pct = allFields.length
+                    ? Math.round((filledCount / allFields.length) * 100)
+                    : 0
                   return (
                     <button
                       key={r.id}
