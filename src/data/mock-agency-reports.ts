@@ -2277,16 +2277,20 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             id: 'ms-att-date-left',
             label: 'Date left school (for ex-students)',
             type: 'text',
+            value: 'N/A — current student',
           },
           {
             id: 'ms-att-reason-leaving',
             label: 'Reason for leaving school',
             type: 'narrative',
+            aiDraftable: true,
+            value: 'N/A',
           },
           {
             id: 'ms-att-withdrawn-by',
             label: 'Withdrawn by (if applicable)',
             type: 'text',
+            value: 'N/A',
           },
         ],
       },
@@ -2333,8 +2337,6 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             label: 'Comments, if any',
             type: 'narrative',
             aiDraftable: true,
-            value:
-              "Jun Kai's conduct has declined over Secondary 3. He has been involved in two fighting incidents this term and has shown increasing truancy. He was issued a verbal warning in January and a 2-day suspension in March.",
           },
         ],
       },
@@ -2356,8 +2358,6 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             label: 'Other Remarks Pertaining to Academic Performance',
             type: 'narrative',
             aiDraftable: true,
-            value:
-              'Academic performance has declined alongside behavioural issues. Jun Kai struggles particularly in Mathematics and English. He shows more engagement in Physical Education and Design & Technology.',
           },
         ],
       },
@@ -2376,7 +2376,7 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
           {
             id: 'ms-cca-activities',
             label: 'Activity/ies',
-            type: 'narrative',
+            type: 'text',
             value: 'Football (School Team)',
           },
           {
@@ -2396,8 +2396,6 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             label: 'Behaviour at CCA',
             type: 'narrative',
             aiDraftable: true,
-            value:
-              'Generally cooperative during CCA. Responds well to the football coach. Attendance dropped in recent months.',
           },
         ],
       },
@@ -2442,8 +2440,6 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
               "The student's care arrangements, if known to the school (e.g. whether the student is staying with someone with whom he shares a strong emotional bond)",
             type: 'narrative',
             aiDraftable: true,
-            value:
-              'Jun Kai stays with both parents at their HDB flat. He shares a close bond with his mother, Mdm Tan Siew Lee. Father, Mr Chen Wei Ming, works long hours and has limited involvement in day-to-day care.',
           },
         ],
       },
@@ -2457,7 +2453,6 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             label: 'Any known medical problems (please provide details)',
             type: 'narrative',
             aiDraftable: true,
-            value: 'No known medical problems.',
           },
           { id: 'ms-health-bizarre', label: 'Extremely bizarre behaviour (hallucinations, delusions, etc.)', type: 'yesnona', value: 'No' },
           { id: 'ms-health-violent', label: 'Extremely violent behaviour', type: 'yesnona', value: 'No' },
