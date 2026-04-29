@@ -689,7 +689,6 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
     abbrev: 'IMH',
     color: '#7c3aed',
     category: 'Mental Health',
-    locked: true,
     totalFields: 26,
     autoFilled: 16,
     pages: 3,
@@ -2389,13 +2388,16 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             id: 'ms-cca-attendance',
             label: 'Attendance',
             type: 'text',
-            value: 'Regular until Term 2 2026, then irregular',
+            value:
+              'Regular until Term 2 2026, then irregular (attended 12 of last 16 sessions)',
           },
           {
             id: 'ms-cca-behaviour',
             label: 'Behaviour at CCA',
             type: 'narrative',
             aiDraftable: true,
+            value:
+              'Jun Kai is generally cooperative during football training and responds well to instructions from the coach. He works well in team drills and shows natural leadership when organising warm-ups. However, his attendance has become irregular since March 2026, missing 4 out of the last 8 sessions without explanation. When present, his attitude remains positive, but the inconsistency has affected his place on the starting team.',
           },
         ],
       },
@@ -2404,22 +2406,22 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
         title: 'Other Comments',
         role: 'yh',
         fields: [
-          // Parents/Guardians
-          { id: 'ms-par-cooperative', label: 'The parents/guardians are co-operative', type: 'yesnona', value: 'Yes' },
-          { id: 'ms-par-control', label: 'The parents/guardians are able to exert control', type: 'yesnona', value: 'No' },
-          { id: 'ms-par-acknowledge', label: "The parents/guardians acknowledge the offender's wrongdoing", type: 'yesnona', value: 'Yes' },
-          { id: 'ms-par-inconsistent', label: 'The parents/guardians are inconsistent in their approach to discipline', type: 'yesnona', value: 'Yes' },
+          // Parents/Guardians — left unchecked for the YH to fill
+          { id: 'ms-par-cooperative', label: 'The parents/guardians are co-operative', type: 'yesnona' },
+          { id: 'ms-par-control', label: 'The parents/guardians are able to exert control', type: 'yesnona' },
+          { id: 'ms-par-acknowledge', label: "The parents/guardians acknowledge the offender's wrongdoing", type: 'yesnona' },
+          { id: 'ms-par-inconsistent', label: 'The parents/guardians are inconsistent in their approach to discipline', type: 'yesnona' },
           {
             id: 'ms-par-other',
             label: 'Others (please provide details)',
             type: 'narrative',
             aiDraftable: true,
           },
-          // Adverse family records
-          { id: 'ms-fam-criminal', label: 'An immediate family member/members has a criminal record', type: 'yesnona', value: 'NA' },
-          { id: 'ms-fam-drug', label: 'There is information of drug abuse in the family', type: 'yesnona', value: 'NA' },
-          { id: 'ms-fam-sexual', label: 'There is information of sexual abuse in the family', type: 'yesnona', value: 'No' },
-          { id: 'ms-fam-physical', label: 'There is information of physical abuse in the family', type: 'yesnona', value: 'No' },
+          // Adverse family records — left unchecked for the YH to fill
+          { id: 'ms-fam-criminal', label: 'An immediate family member/members has a criminal record', type: 'yesnona' },
+          { id: 'ms-fam-drug', label: 'There is information of drug abuse in the family', type: 'yesnona' },
+          { id: 'ms-fam-sexual', label: 'There is information of sexual abuse in the family', type: 'yesnona' },
+          { id: 'ms-fam-physical', label: 'There is information of physical abuse in the family', type: 'yesnona' },
           {
             id: 'ms-fam-other',
             label: 'Others (please provide details)',
@@ -2550,6 +2552,118 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
       },
     ],
   },
+  // ── Placeholder templates ─────────────────────────────────────
+  // Listed in the picker so the YH can select them; the Fill Report
+  // form opens with a generic 'Details' section. Full field structure
+  // not yet built out.
+  {
+    id: 'fam-fsc',
+    agency: 'Family Service Centre',
+    name: 'FAM@FSC Interagency Referral Form',
+    abbrev: 'FSC',
+    color: '#0064ff',
+    category: 'Family & Social Services',
+    totalFields: 0,
+    autoFilled: 0,
+    pages: 1,
+    turnaroundDays: 7,
+    sections: [
+      {
+        id: 'fsc-details',
+        title: 'Referral Details',
+        role: 'yh',
+        fields: [
+          {
+            id: 'fsc-notes',
+            label: 'Referral notes',
+            type: 'narrative',
+            aiDraftable: true,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'reach-north',
+    agency: 'National University Hospital (REACH North)',
+    name: 'NUH REACH North Forms',
+    abbrev: 'REACH',
+    color: '#059669',
+    category: 'Mental Health',
+    totalFields: 0,
+    autoFilled: 0,
+    pages: 1,
+    turnaroundDays: 7,
+    sections: [
+      {
+        id: 'rn-details',
+        title: 'Referral Details',
+        role: 'yh',
+        fields: [
+          {
+            id: 'rn-notes',
+            label: 'Referral notes',
+            type: 'narrative',
+            aiDraftable: true,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'asn',
+    agency: 'School',
+    name: 'Assessment of Student Needs Form',
+    abbrev: 'ASN',
+    color: '#9333ea',
+    category: 'Mental Health',
+    totalFields: 0,
+    autoFilled: 0,
+    pages: 1,
+    turnaroundDays: 5,
+    sections: [
+      {
+        id: 'asn-details',
+        title: 'Assessment Notes',
+        role: 'yh',
+        fields: [
+          {
+            id: 'asn-notes',
+            label: 'Assessment notes',
+            type: 'narrative',
+            aiDraftable: true,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'court-order',
+    agency: 'Youth Court',
+    name: 'School Report for Court Order',
+    abbrev: 'COURT',
+    color: '#374151',
+    category: 'Care & Placement',
+    totalFields: 0,
+    autoFilled: 0,
+    pages: 1,
+    turnaroundDays: 7,
+    sections: [
+      {
+        id: 'co-details',
+        title: 'Report Details',
+        role: 'yh',
+        fields: [
+          {
+            id: 'co-notes',
+            label: 'Court report notes',
+            type: 'narrative',
+            aiDraftable: true,
+          },
+        ],
+      },
+    ],
+  },
 ]
 
 export const AI_DRAFTS: Record<string, string> = {
@@ -2605,6 +2719,27 @@ export const AI_DRAFTS: Record<string, string> = {
     'Jun Kai demonstrates periodic withdrawal and mood fluctuations at school. He is generally cooperative with trusted adults but struggles with group interactions. His attendance has declined to 83% this term.',
   'nric-remarks':
     'Jun Kai is a Secondary 3 student with an attendance rate of 83% and a conduct grade of Poor. He is receiving school counselling and is on MOE FAS. He responds positively to pastoral engagement.',
+  // MSF School Report — narrative AI drafts
+  'ms-cond-comments':
+    "Jun Kai's conduct has deteriorated notably since the start of Secondary 3¹. He has been involved in two physical altercations with peers, both occurring during unstructured break periods². A 2-day suspension was issued in March 2026 following the second incident³. He responds positively to one-on-one conversations with his Year Head but can become disengaged in larger group settings¹.",
+  'ms-acad-remarks':
+    "Jun Kai's academic performance has trended downward across his Secondary 3 papers, with the weakest results in Mathematics and English¹. His Term 2 attendance pattern correlates with the dip²; teacher feedback in counselling notes describes stronger engagement in practical subjects³.",
+  'ms-par-other':
+    'School outreach indicates the parents are responsive to communication but report limited day-to-day capacity to enforce routines¹. Counselling notes suggest the mother is the primary anchor for Jun Kai at home². Termly Check-In responses do not flag escalated conflict at home³.',
+  'ms-fam-other':
+    'There are no school records indicating adverse family circumstances¹. Termly Check-In responses do not flag family-related risk². Case Sync entries reflect cooperative engagement from the family during prior interventions³.',
+  'ms-care-arrangements':
+    'Jun Kai resides with both parents in the family home¹. School counselling notes describe a strong emotional bond with his mother, who is the main point of contact for school matters². Father involvement is more limited based on caregiver records on file³.',
+  'ms-health-medical':
+    'School records show no chronic medical conditions or known allergies for Jun Kai¹. Attendance data does not show illness-related absence patterns². No medical alerts are currently flagged in his profile³.',
+  'ms-health-other':
+    'Termly Check-In responses do not flag acute psychiatric concerns¹. School counselling notes mention occasional low-mood episodes but no suicidal ideation or violent behaviour². Behavioural incident records have been disciplinary rather than psychiatric in nature³.',
+  'ms-other-info':
+    'Jun Kai has been receiving regular school counselling support since January 2026¹. The school is aware of escalating peer-related concerns and has engaged the family proactively². Termly Check-In data suggests ongoing low mood that warrants continued external support³.',
+  'ms-att-reason-leaving':
+    'Not applicable — student is currently enrolled¹. School records confirm continued enrolment². Attendance data is up to date as of the current term³.',
+  'ms-cca-behaviour':
+    'Jun Kai is generally cooperative during football training and responds well to instructions from the coach¹. He works well in team drills and shows natural leadership when organising warm-ups². Attendance has become irregular since March 2026, missing a noticeable share of recent sessions³.',
 }
 
 export const DATA_SOURCES: Array<DataSource> = [
@@ -2812,6 +2947,179 @@ export const AI_DRAFT_CITATIONS: Record<
       num: 2,
       source: 'School Cockpit',
       detail: 'MOE FAS, attendance 83%, late-coming 12×',
+    },
+  ],
+  // MSF School Report — per-field citations. Numbers correspond to the
+  // superscript markers in AI_DRAFTS[fieldId]. Each detail is rendered
+  // as a clickable hyperlink in the SOURCES block.
+  'ms-cond-comments': [
+    {
+      num: 1,
+      source: 'Case Sync',
+      detail: 'Case notes, Jan–Apr 2026',
+    },
+    {
+      num: 2,
+      source: 'School Cockpit',
+      detail: 'Disciplinary records, 2026',
+    },
+    {
+      num: 3,
+      source: 'School Cockpit',
+      detail: 'Suspension record, Mar 2026',
+    },
+  ],
+  'ms-acad-remarks': [
+    {
+      num: 1,
+      source: 'School Cockpit',
+      detail: 'Academic results, Sec 1–3',
+    },
+    {
+      num: 2,
+      source: 'School Cockpit',
+      detail: 'Attendance record, Term 2 2026',
+    },
+    {
+      num: 3,
+      source: 'Case Sync',
+      detail: 'Counselling notes, Apr 2026',
+    },
+  ],
+  'ms-par-other': [
+    {
+      num: 1,
+      source: 'Case Sync',
+      detail: 'Parent communication log, 2026',
+    },
+    {
+      num: 2,
+      source: 'Case Sync',
+      detail: 'Counselling notes, Apr 2026',
+    },
+    {
+      num: 3,
+      source: 'TCI',
+      detail: 'Term 1 wellbeing check-in',
+    },
+  ],
+  'ms-fam-other': [
+    {
+      num: 1,
+      source: 'School Cockpit',
+      detail: 'Family records, EduHub',
+    },
+    {
+      num: 2,
+      source: 'TCI',
+      detail: 'Term 1 wellbeing check-in',
+    },
+    {
+      num: 3,
+      source: 'Case Sync',
+      detail: 'Case notes, Jan–Apr 2026',
+    },
+  ],
+  'ms-care-arrangements': [
+    {
+      num: 1,
+      source: 'School Cockpit',
+      detail: 'Caregiver records, EduHub',
+    },
+    {
+      num: 2,
+      source: 'Case Sync',
+      detail: 'Counselling notes, Apr 2026',
+    },
+    {
+      num: 3,
+      source: 'School Cockpit',
+      detail: 'Family contact log, 2026',
+    },
+  ],
+  'ms-health-medical': [
+    {
+      num: 1,
+      source: 'School Cockpit',
+      detail: 'Medical alerts, EduHub',
+    },
+    {
+      num: 2,
+      source: 'School Cockpit',
+      detail: 'Attendance record, Term 2 2026',
+    },
+    {
+      num: 3,
+      source: 'School Cockpit',
+      detail: 'Student health profile',
+    },
+  ],
+  'ms-health-other': [
+    {
+      num: 1,
+      source: 'TCI',
+      detail: 'Term 1 wellbeing check-in',
+    },
+    {
+      num: 2,
+      source: 'Case Sync',
+      detail: 'Counselling notes, Apr 2026',
+    },
+    {
+      num: 3,
+      source: 'School Cockpit',
+      detail: 'Behavioural incident records, 2026',
+    },
+  ],
+  'ms-other-info': [
+    {
+      num: 1,
+      source: 'Case Sync',
+      detail: 'Counselling sessions, Jan 2026 onwards',
+    },
+    {
+      num: 2,
+      source: 'Case Sync',
+      detail: 'Family engagement log',
+    },
+    {
+      num: 3,
+      source: 'TCI',
+      detail: 'Term 1 wellbeing check-in',
+    },
+  ],
+  'ms-att-reason-leaving': [
+    {
+      num: 1,
+      source: 'EduHub',
+      detail: 'Enrolment status, 2026',
+    },
+    {
+      num: 2,
+      source: 'School Cockpit',
+      detail: 'Enrolment record',
+    },
+    {
+      num: 3,
+      source: 'School Cockpit',
+      detail: 'Attendance record, Term 2 2026',
+    },
+  ],
+  'ms-cca-behaviour': [
+    {
+      num: 1,
+      source: 'School Cockpit',
+      detail: 'CCA attendance log, 2026',
+    },
+    {
+      num: 2,
+      source: 'Case Sync',
+      detail: 'CCA teacher feedback',
+    },
+    {
+      num: 3,
+      source: 'School Cockpit',
+      detail: 'CCA attendance log, Mar 2026',
     },
   ],
 }
