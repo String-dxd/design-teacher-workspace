@@ -969,7 +969,7 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
     color: '#d97706',
     category: 'Care & Placement',
     totalFields: 70,
-    autoFilled: 16,
+    autoFilled: 60,
     pages: 8,
     turnaroundDays: 10,
     pdfPreview: '/report-previews/children-home.pdf',
@@ -989,6 +989,7 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
               'FGO Social Investigation',
               'Others',
             ],
+            value: 'FGO Social Investigation',
           },
           {
             id: 'ch-purpose-other',
@@ -1015,7 +1016,7 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             label: 'NRIC / BC No.',
             type: 'text',
             source: 'EduHub',
-            value: 'S9101B',
+            value: 'T1234567A',
             prefillKey: 'nric',
           },
           {
@@ -1031,7 +1032,7 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             label: 'School',
             type: 'text',
             source: 'EduHub',
-            value: 'Bandung Secondary School',
+            value: 'Temasek Secondary School',
             prefillKey: 'school',
           },
           {
@@ -1039,7 +1040,7 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             label: "School's Address",
             type: 'text',
             source: 'EduHub',
-            value: '21 Jurong West Avenue 1, Singapore 649520',
+            value: '2 Bedok South Road, Singapore 469296',
           },
         ],
       },
@@ -1048,92 +1049,95 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
         title: 'Attendance',
         role: 'yh',
         fields: [
-          // Sec 1
+          // Secondary 1
           {
             id: 'ch-att-rating-sec1',
             label: 'Secondary 1 — Attendance rating',
             type: 'radio',
             options: ['Very Regular', 'Regular', 'Irregular'],
+            value: 'Regular',
           },
           {
             id: 'ch-att-present-sec1',
-            label: 'Sec 1 — Days present / total',
+            label: 'Secondary 1 — No. of days present during the year (e.g. 90/100)',
             type: 'text',
             source: 'School Cockpit',
             value: '186 / 190',
           },
           {
             id: 'ch-att-late-sec1',
-            label: 'Sec 1 — Days late',
+            label: 'Secondary 1 — No. of days late for school',
             type: 'text',
             source: 'School Cockpit',
             value: '4',
           },
           {
             id: 'ch-att-absent-sec1',
-            label: 'Sec 1 — Days absent without valid reasons',
+            label: 'Secondary 1 — No. of days absent without valid reasons',
             type: 'text',
             source: 'School Cockpit',
             value: '0',
           },
-          // Sec 2
+          // Secondary 2
           {
             id: 'ch-att-rating-sec2',
             label: 'Secondary 2 — Attendance rating',
             type: 'radio',
             options: ['Very Regular', 'Regular', 'Irregular'],
+            value: 'Regular',
           },
           {
             id: 'ch-att-present-sec2',
-            label: 'Sec 2 — Days present / total',
+            label: 'Secondary 2 — No. of days present during the year (e.g. 90/100)',
             type: 'text',
             source: 'School Cockpit',
             value: '178 / 190',
           },
           {
             id: 'ch-att-late-sec2',
-            label: 'Sec 2 — Days late',
+            label: 'Secondary 2 — No. of days late for school',
             type: 'text',
             source: 'School Cockpit',
             value: '8',
           },
           {
             id: 'ch-att-absent-sec2',
-            label: 'Sec 2 — Days absent without valid reasons',
+            label: 'Secondary 2 — No. of days absent without valid reasons',
             type: 'text',
             source: 'School Cockpit',
             value: '2',
           },
-          // Sec 3 (current year)
+          // Secondary 3 (current)
           {
             id: 'ch-att-rating-sec3',
             label: 'Secondary 3 — Attendance rating (current)',
             type: 'radio',
             options: ['Very Regular', 'Regular', 'Irregular'],
+            value: 'Irregular',
             prefillKey: 'attendanceRating',
           },
           {
             id: 'ch-att-present-sec3',
-            label: 'Sec 3 — Days present / total',
+            label: 'Secondary 3 — No. of days present during the year (e.g. 90/100)',
             type: 'text',
             source: 'School Cockpit',
             value: '39 / 47',
           },
           {
             id: 'ch-att-late-sec3',
-            label: 'Sec 3 — Days late',
+            label: 'Secondary 3 — No. of days late for school',
             type: 'text',
             source: 'School Cockpit',
             value: '12',
           },
           {
             id: 'ch-att-absent-sec3',
-            label: 'Sec 3 — Days absent without valid reasons',
+            label: 'Secondary 3 — No. of days absent without valid reasons',
             type: 'text',
             source: 'School Cockpit',
-            value: '5',
+            value: '3',
           },
-          // Final year only — leaving info
+          // Final-year-only fields (left blank — not applicable)
           {
             id: 'ch-att-date-left',
             label: 'Date left school (for ex-students)',
@@ -1156,81 +1160,143 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
         title: 'Conduct',
         role: 'yh',
         fields: [
-          // Positive
-          { id: 'ch-cond-responsive', label: 'Responsive', type: 'yesnona' },
-          { id: 'ch-cond-responsible', label: 'Responsible', type: 'yesnona' },
-          { id: 'ch-cond-polite', label: 'Polite', type: 'yesnona' },
-          { id: 'ch-cond-honest', label: 'Honest', type: 'yesnona' },
-          { id: 'ch-cond-helpful', label: 'Helpful', type: 'yesnona' },
-          { id: 'ch-cond-attentive', label: 'Attentive', type: 'yesnona' },
+          // Positive behaviours
+          {
+            id: 'ch-cond-responsive',
+            label: 'Responsive',
+            type: 'yesnona',
+            value: 'Yes',
+          },
+          {
+            id: 'ch-cond-responsible',
+            label: 'Responsible',
+            type: 'yesnona',
+            value: 'No',
+          },
+          {
+            id: 'ch-cond-polite',
+            label: 'Polite',
+            type: 'yesnona',
+            value: 'Yes',
+          },
+          {
+            id: 'ch-cond-honest',
+            label: 'Honest',
+            type: 'yesnona',
+            value: 'Yes',
+          },
+          {
+            id: 'ch-cond-helpful',
+            label: 'Helpful',
+            type: 'yesnona',
+            value: 'Yes',
+          },
+          {
+            id: 'ch-cond-attentive',
+            label: 'Attentive',
+            type: 'yesnona',
+            value: 'No',
+          },
           {
             id: 'ch-cond-hardworking',
             label: 'Hardworking',
             type: 'yesnona',
+            value: 'No',
           },
-          { id: 'ch-cond-respectful', label: 'Respectful', type: 'yesnona' },
+          {
+            id: 'ch-cond-respectful',
+            label: 'Respectful',
+            type: 'yesnona',
+            value: 'Yes',
+          },
           {
             id: 'ch-cond-peers',
             label: 'Problems with peers',
             type: 'yesnona',
+            value: 'Yes',
           },
           {
             id: 'ch-cond-teachers',
             label: 'Problems with teachers',
             type: 'yesnona',
+            value: 'No',
           },
-          // Negative
+          // Negative behaviours
           {
             id: 'ch-cond-gangs',
-            label: 'Associates with gangs',
+            label: 'Associates with Gangs',
             type: 'yesnona',
+            value: 'No',
           },
-          { id: 'ch-cond-truancy', label: 'Truancy', type: 'yesnona' },
+          {
+            id: 'ch-cond-truancy',
+            label: 'Truancy',
+            type: 'yesnona',
+            value: 'Yes',
+          },
           {
             id: 'ch-cond-fights',
-            label: 'Engages in fights',
+            label: 'Engages in Fights',
             type: 'yesnona',
+            value: 'Yes',
           },
           {
             id: 'ch-cond-pilfers',
-            label: 'Pilfers / steals',
+            label: 'Pilfers/Steals',
             type: 'yesnona',
+            value: 'No',
           },
-          { id: 'ch-cond-smokes', label: 'Smokes', type: 'yesnona' },
+          {
+            id: 'ch-cond-smokes',
+            label: 'Smokes',
+            type: 'yesnona',
+            value: 'No',
+          },
           {
             id: 'ch-cond-substances',
-            label: 'Abuses other substances',
+            label: 'Abuses other Substances',
             type: 'yesnona',
+            value: 'No',
           },
           {
             id: 'ch-cond-defies',
-            label: 'Defies authority',
+            label: 'Defies Authority',
             type: 'yesnona',
+            value: 'Yes',
           },
           {
             id: 'ch-cond-resists-counselling',
-            label: 'Resists school counselling',
+            label: 'Resists School counselling',
             type: 'yesnona',
+            value: 'No',
           },
-          { id: 'ch-cond-bullies', label: 'Bullies', type: 'yesnona' },
+          {
+            id: 'ch-cond-bullies',
+            label: 'Bullies',
+            type: 'yesnona',
+            value: 'No',
+          },
           // Overall conduct per year
           {
             id: 'ch-cond-overall-sec1',
             label: 'Secondary 1 — Overall conduct',
             type: 'radio',
             options: ['Excellent', 'Good', 'Fair', 'Poor'],
+            value: 'Good',
           },
           {
             id: 'ch-cond-overall-sec2',
             label: 'Secondary 2 — Overall conduct',
             type: 'radio',
             options: ['Excellent', 'Good', 'Fair', 'Poor'],
+            value: 'Fair',
           },
           {
             id: 'ch-cond-overall-sec3',
             label: 'Secondary 3 — Overall conduct',
             type: 'radio',
             options: ['Excellent', 'Good', 'Fair', 'Poor'],
+            value: 'Poor',
             prefillKey: 'overallConduct',
           },
           {
@@ -1238,6 +1304,8 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             label: 'Comments, if any',
             type: 'narrative',
             aiDraftable: true,
+            value:
+              "Jun Kai's conduct has declined over Secondary 3. He has been involved in two fighting incidents this term and has shown increasing truancy.",
           },
         ],
       },
@@ -1251,44 +1319,54 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             label: 'Secondary 1 — Academic performance',
             type: 'radio',
             options: ['Good', 'Satisfactory', 'Poor'],
+            value: 'Satisfactory',
           },
           {
             id: 'ch-acad-sec2',
             label: 'Secondary 2 — Academic performance',
             type: 'radio',
             options: ['Good', 'Satisfactory', 'Poor'],
+            value: 'Satisfactory',
           },
           {
             id: 'ch-acad-sec3',
             label: 'Secondary 3 — Academic performance',
             type: 'radio',
             options: ['Good', 'Satisfactory', 'Poor'],
+            value: 'Poor',
             prefillKey: 'academicPerformance',
           },
           {
             id: 'ch-acad-remarks',
             label: 'Other remarks pertaining to academic performance',
             type: 'narrative',
+            value:
+              'Academic performance has declined alongside behavioural issues. Jun Kai struggles particularly in Mathematics and English.',
           },
           {
             id: 'ch-cca-activities',
             label: 'CCA / Activities student participated in',
             type: 'narrative',
+            value: 'Football (School Team)',
           },
           {
             id: 'ch-cca-positions',
             label: 'Positions held',
             type: 'text',
+            value: 'Member',
           },
           {
             id: 'ch-cca-attendance',
             label: 'CCA attendance',
             type: 'text',
+            value: 'Regular until Term 2 2026, then irregular',
           },
           {
             id: 'ch-cca-behaviour',
             label: 'Behaviour at CCA',
             type: 'narrative',
+            value:
+              'Generally cooperative during CCA. Responds well to the football coach. Attendance dropped in recent months.',
           },
         ],
       },
@@ -1302,22 +1380,26 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             id: 'ch-par-cooperative',
             label: 'Parents / guardians are co-operative',
             type: 'yesnona',
+            value: 'Yes',
           },
           {
             id: 'ch-par-control',
             label: 'Parents / guardians are able to exert control',
             type: 'yesnona',
+            value: 'No',
           },
           {
             id: 'ch-par-acknowledge',
             label: "Parents / guardians acknowledge the offender's wrongdoing",
             type: 'yesnona',
+            value: 'Yes',
           },
           {
             id: 'ch-par-inconsistent',
             label:
               'Parents / guardians are inconsistent in their approach to discipline',
             type: 'yesnona',
+            value: 'Yes',
           },
           {
             id: 'ch-par-other',
@@ -1329,21 +1411,25 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             id: 'ch-fam-criminal',
             label: 'An immediate family member has a criminal record',
             type: 'yesnona',
+            value: 'NA',
           },
           {
             id: 'ch-fam-drug',
             label: 'There is information of drug abuse in the family',
             type: 'yesnona',
+            value: 'NA',
           },
           {
             id: 'ch-fam-sexual',
             label: 'There is information of sexual abuse in the family',
             type: 'yesnona',
+            value: 'No',
           },
           {
             id: 'ch-fam-physical',
             label: 'There is information of physical abuse in the family',
             type: 'yesnona',
+            value: 'No',
           },
           {
             id: 'ch-fam-other',
@@ -1363,6 +1449,8 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             label:
               "The student's care arrangements, if known to the school (e.g. whether the student is staying with someone with whom he shares a strong emotional bond)",
             type: 'narrative',
+            value:
+              'Jun Kai stays with both parents. He shares a close bond with his mother, Mdm Tan Siew Lee.',
           },
         ],
       },
@@ -1375,33 +1463,39 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             id: 'ch-health-medical',
             label: 'Any known medical problems (please provide details)',
             type: 'narrative',
+            value: 'No known medical problems.',
           },
           {
             id: 'ch-health-bizarre',
             label:
               'Extremely bizarre behaviour (hallucinations, delusions, etc.)',
             type: 'yesnona',
+            value: 'No',
           },
           {
             id: 'ch-health-violent',
             label: 'Extremely violent behaviour',
             type: 'yesnona',
+            value: 'No',
           },
           {
             id: 'ch-health-suicidal',
             label:
               'Suicidal inclinations / attempt or clear plan to commit suicide',
             type: 'yesnona',
+            value: 'No',
           },
           {
             id: 'ch-health-substance',
             label: 'Obvious addiction to substances',
             type: 'yesnona',
+            value: 'No',
           },
           {
             id: 'ch-health-depression',
             label: 'Depression',
             type: 'yesnona',
+            value: 'NA',
           },
           {
             id: 'ch-health-other',
@@ -1455,6 +1549,8 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             label:
               'Any other information which may assist the student and the person in charge of the present investigation',
             type: 'narrative',
+            value:
+              'Jun Kai has been known to the Case Management Team since January 2026. The school is supportive of continued intervention and monitoring.',
           },
         ],
       },
@@ -1473,12 +1569,13 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             id: 'ch-teacher-appointment',
             label: 'Appointment',
             type: 'text',
-            value: 'Year Head, Secondary 3',
+            value: 'Year Head',
           },
           {
             id: 'ch-teacher-years',
             label: 'No. of years student known',
             type: 'text',
+            value: '3',
           },
           {
             id: 'ch-teacher-signature',
@@ -1489,7 +1586,7 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             id: 'ch-teacher-date',
             label: 'Date',
             type: 'text',
-            value: '24 Apr 2026',
+            value: '29 Apr 2026',
           },
         ],
       },
