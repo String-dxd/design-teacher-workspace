@@ -30,7 +30,7 @@ export interface ReportField {
   prefillKey?: string
 }
 
-export type StaffRole = 'YH' | 'SC' | 'P' | 'VP' | 'FT'
+export type StaffRole = 'YH' | 'SC' | 'P' | 'VP' | 'FT' | 'CCA Teacher'
 
 export interface Staff {
   name: string
@@ -57,6 +57,7 @@ export const MOCK_STAFF: Array<Staff> = [
   { name: 'Mrs Jenny Lim', role: 'P', initials: 'JL' },
   { name: 'Mr Ahmad Rizal', role: 'FT', initials: 'AR' },
   { name: 'Ms Priya Nair', role: 'VP', initials: 'PN' },
+  { name: 'Mr Lee Wei Kiat', role: 'CCA Teacher', initials: 'LW' },
 ]
 
 export const CURRENT_USER: Staff = MOCK_STAFF[0]
@@ -2338,8 +2339,8 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
         ],
       },
       {
-        id: 'ms-academic',
-        title: 'Academic Performance & CCA',
+        id: 'ms-academic-perf',
+        title: 'Academic Performance',
         role: 'yh',
         fields: [
           {
@@ -2354,9 +2355,24 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             id: 'ms-acad-remarks',
             label: 'Other Remarks Pertaining to Academic Performance',
             type: 'narrative',
+            aiDraftable: true,
             value:
               'Academic performance has declined alongside behavioural issues. Jun Kai struggles particularly in Mathematics and English. He shows more engagement in Physical Education and Design & Technology.',
           },
+        ],
+      },
+      {
+        id: 'ms-cca',
+        title: 'Co-Curricular Activities',
+        role: 'yh',
+        assignedTo: {
+          name: 'Mr Lee Wei Kiat',
+          role: 'CCA Teacher',
+          initials: 'LW',
+          completed: true,
+          completedDate: '21 Apr 2026',
+        },
+        fields: [
           {
             id: 'ms-cca-activities',
             label: 'Activity/ies',
@@ -2379,6 +2395,7 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             id: 'ms-cca-behaviour',
             label: 'Behaviour at CCA',
             type: 'narrative',
+            aiDraftable: true,
             value:
               'Generally cooperative during CCA. Responds well to the football coach. Attendance dropped in recent months.',
           },
@@ -2398,6 +2415,7 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             id: 'ms-par-other',
             label: 'Others (please provide details)',
             type: 'narrative',
+            aiDraftable: true,
           },
           // Adverse family records
           { id: 'ms-fam-criminal', label: 'An immediate family member/members has a criminal record', type: 'yesnona', value: 'NA' },
@@ -2408,6 +2426,7 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             id: 'ms-fam-other',
             label: 'Others (please provide details)',
             type: 'narrative',
+            aiDraftable: true,
             helper: 'NA — Information is not available to the school.',
           },
         ],
@@ -2422,6 +2441,7 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             label:
               "The student's care arrangements, if known to the school (e.g. whether the student is staying with someone with whom he shares a strong emotional bond)",
             type: 'narrative',
+            aiDraftable: true,
             value:
               'Jun Kai stays with both parents at their HDB flat. He shares a close bond with his mother, Mdm Tan Siew Lee. Father, Mr Chen Wei Ming, works long hours and has limited involvement in day-to-day care.',
           },
@@ -2436,6 +2456,7 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             id: 'ms-health-medical',
             label: 'Any known medical problems (please provide details)',
             type: 'narrative',
+            aiDraftable: true,
             value: 'No known medical problems.',
           },
           { id: 'ms-health-bizarre', label: 'Extremely bizarre behaviour (hallucinations, delusions, etc.)', type: 'yesnona', value: 'No' },
@@ -2447,6 +2468,7 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             id: 'ms-health-other',
             label: 'Others (please provide details)',
             type: 'narrative',
+            aiDraftable: true,
             helper: 'NA — Information is not available to the school.',
           },
         ],
@@ -2500,19 +2522,34 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
         title: "Principal's Comments",
         role: 'principal',
         fields: [
-          { id: 'ms-principal-name', label: 'Name', type: 'text' },
-          { id: 'ms-principal-school', label: 'School / Institution', type: 'text' },
-          { id: 'ms-principal-address', label: 'Address', type: 'text' },
-          { id: 'ms-principal-tel', label: 'Tel / Fax numbers', type: 'text' },
+          {
+            id: 'ms-principal-name',
+            label: 'Name',
+            type: 'text',
+            value: 'Mrs Jenny Lim',
+          },
+          {
+            id: 'ms-principal-school',
+            label: 'School / Institution',
+            type: 'text',
+            value: 'Temasek Secondary School',
+          },
+          {
+            id: 'ms-principal-address',
+            label: 'Address',
+            type: 'text',
+            value: '2 Bedok South Road, Singapore 469296',
+          },
+          {
+            id: 'ms-principal-tel',
+            label: 'Tel / Fax numbers',
+            type: 'text',
+            value: '6441 3143',
+          },
           {
             id: 'ms-principal-comments',
             label: 'Comments on report, if any',
             type: 'narrative',
-          },
-          {
-            id: 'ms-principal-signature',
-            label: 'Signature of Principal / Head of Institution and Date',
-            type: 'signature',
           },
         ],
       },

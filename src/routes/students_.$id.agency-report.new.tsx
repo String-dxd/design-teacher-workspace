@@ -1166,17 +1166,33 @@ function SectionPanel({
               Send reminder
             </Button>
           </div>
-          <div className="space-y-5 opacity-50">
+          <div className="space-y-5">
             {section.fields.map((f) => (
               <div key={f.id} className="space-y-1.5">
-                <label className="text-sm font-medium">{f.label}</label>
-                {f.type === 'narrative' ? (
-                  <div className="min-h-[120px] rounded-lg border bg-muted/30" />
+                <label
+                  className={cn(
+                    'text-sm font-medium',
+                    !f.value && 'text-muted-foreground',
+                  )}
+                >
+                  {f.label}
+                </label>
+                {f.value ? (
+                  <p className="rounded-lg border bg-muted/30 px-3.5 py-2 text-sm text-foreground">
+                    {f.value}
+                  </p>
+                ) : f.type === 'narrative' ? (
+                  <div className="min-h-[120px] rounded-lg border bg-muted/30 opacity-50" />
                 ) : (
-                  <div className="h-10 rounded-lg border bg-muted/30" />
+                  <div className="h-10 rounded-lg border bg-muted/30 opacity-50" />
                 )}
               </div>
             ))}
+            {section.role === 'principal' && (
+              <p className="text-xs italic text-muted-foreground">
+                Principal's signature will be applied to the exported PDF.
+              </p>
+            )}
           </div>
         </div>
       )}
