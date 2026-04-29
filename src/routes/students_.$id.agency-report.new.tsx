@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Link,
   createFileRoute,
@@ -1948,6 +1948,13 @@ function AgencyReportWizardPage() {
   const search = Route.useSearch()
   const navigate = useNavigate()
   const agencyReportsEnabled = useFeatureFlag('agency-reports')
+
+  // Reset scroll on mount — TanStack Router can land mid-page when
+  // the previous route was scrolled. The app's main scroll container
+  // is the [data-scroll-container] in __root.tsx.
+  useEffect(() => {
+    document.querySelector('[data-scroll-container]')?.scrollTo({ top: 0 })
+  }, [])
 
   // Resolve entry from search params:
   //  ?reportId=X        → look up the report; route by status
