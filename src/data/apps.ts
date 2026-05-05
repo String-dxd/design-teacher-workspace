@@ -55,8 +55,7 @@ export const appCategories: Array<AppCategory> = [
       {
         id: 'sls',
         name: 'SLS',
-        description:
-          'MOE\u2019s core teaching and learning platform for curriculum aligned resources',
+        description: 'Teaching and learning platform for curriculum aligned resources',
         icon: '/logos/sls-logo.svg',
         color: 'green',
         href: 'https://vle.learning.moe.edu.sg/login',
@@ -192,12 +191,12 @@ export const appCategories: Array<AppCategory> = [
       },
       {
         id: 'hrp-portal',
-        name: 'HRP Portal',
+        name: 'HR and Payroll portal (HRP)',
         description:
           'One-stop platform for staff to manage leave, claims, and HR admin tasks',
         icon: '/logos/hrp-logo.svg',
         color: 'blue',
-        href: 'https://intranet.hpr.gov.sg',
+        href: 'https://www.hrp.gov.sg',
       },
     ],
   },
