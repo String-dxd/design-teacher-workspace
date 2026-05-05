@@ -22,7 +22,7 @@ export interface AppCategory {
 export const featuredApp: App = {
   id: 'featured-students',
   name: 'Students',
-  description: 'Holistic Insights that help every Student thrive',
+  description: 'Holistic insights that help every student thrive',
   icon: '/logos/students-logo.svg',
   color: 'purple',
   href: '/students',
@@ -32,8 +32,8 @@ export const featuredApp: App = {
 export const appCategories: Array<AppCategory> = [
   {
     id: 'daily-recommended',
-    title: 'Essentials',
-    description: 'Your most essential daily tools and recommended apps',
+    title: 'Frequently used',
+    description: 'Your most frequently used daily tools',
     apps: [
       {
         id: 'school-cockpit',
@@ -56,7 +56,7 @@ export const appCategories: Array<AppCategory> = [
         id: 'sls',
         name: 'SLS',
         description:
-          'MOE\u2019s core teaching and learning platform for curriculum aligned resources, digital tools, AI & data',
+          'MOE\u2019s core teaching and learning platform for curriculum aligned resources',
         icon: '/logos/sls-logo.svg',
         color: 'green',
         href: 'https://vle.learning.moe.edu.sg/login',
@@ -79,7 +79,7 @@ export const appCategories: Array<AppCategory> = [
       {
         id: 'sdt-data-tool',
         name: 'Students',
-        description: 'Holistic Insights that help every Student thrive',
+        description: 'Holistic insights that help every student thrive',
         icon: '/logos/students-logo.svg',
         color: 'blue',
         href: '/students',
@@ -95,7 +95,8 @@ export const appCategories: Array<AppCategory> = [
       {
         id: 'sdis',
         name: 'SDIS',
-        description: 'One-Stop Platform for MOE student development programmes',
+        description:
+          'One-stop platform for National School Games, Singapore Youth Festival, Outdoor Adventure Learning Centre, and MOE OBS Challenge.',
         icon: '/logos/sdis-logo.svg',
         color: 'blue',
         href: 'https://www.sdis.moe.gov.sg/oalc/s/login',
@@ -104,8 +105,8 @@ export const appCategories: Array<AppCategory> = [
   },
   {
     id: 'student-wellbeing',
-    title: 'Student Well-being',
-    description: 'Tools for social-emotional learning and student well-being',
+    title: 'Social-Emotional & Mental Wellbeing (SEConnect)',
+    description: 'Tools for social-emotional learning and student wellbeing',
     apps: [
       {
         id: 'mysei',
@@ -169,7 +170,7 @@ export const appCategories: Array<AppCategory> = [
         id: 'langbuddy',
         name: 'LangBuddy',
         description:
-          'AI conversational chatbot for Mother Tongue Language learning',
+          'AI conversational chatbot for Mother Tongue Language learning for Secondary Schools',
         icon: '/logos/langbuddy-logo.svg',
         color: 'blue',
         href: 'https://langbuddy.moe.edu.sg/',
@@ -189,6 +190,15 @@ export const appCategories: Array<AppCategory> = [
         color: 'blue',
         href: 'https://app.workpal.gov.sg/',
       },
+      {
+        id: 'hrp-portal',
+        name: 'HRP Portal',
+        description:
+          'One-stop platform for staff to manage leave, claims, and HR admin tasks',
+        icon: '/logos/hrp-logo.svg',
+        color: 'blue',
+        href: 'https://intranet.hpr.gov.sg',
+      },
     ],
   },
   {
@@ -198,7 +208,7 @@ export const appCategories: Array<AppCategory> = [
     apps: [
       {
         id: 'opal',
-        name: 'OPAL',
+        name: 'OPAL 2.0',
         description: 'One-stop portal for professional learning',
         icon: '/logos/opal-logo.svg',
         color: 'blue',
