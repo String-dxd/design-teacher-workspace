@@ -458,12 +458,20 @@ function ReportRow({ report }: { report: HolisticReport }) {
   )
 }
 
-function formatTermList(terms: Array<string>): string {
-  if (terms.length === 0) return 'None'
-  const numbers = terms
-    .map((t) => parseInt(t.replace('Term ', '')))
-    .sort((a, b) => a - b)
-  return `Term ${numbers.join(', ')}`
+function formatTermList(
+  records: Array<{ year: number; terms: Array<string> }>,
+): string {
+  if (records.length === 0) return 'None'
+  return records
+    .slice()
+    .sort((a, b) => b.year - a.year)
+    .map(({ year, terms }) => {
+      const numbers = terms
+        .map((t) => parseInt(t.replace('Term ', '')))
+        .sort((a, b) => a - b)
+      return `${year} (Term ${numbers.join(', ')})`
+    })
+    .join(', ')
 }
 
 export function StudentProfile({
@@ -1050,9 +1058,7 @@ export function StudentProfile({
                 sideSheetContent={
                   <div className="space-y-5">
                     <div>
-                      <p className="mb-1 text-sm font-medium">
-                        TCI risk indicators
-                      </p>
+                      <p className="mb-1 text-sm font-medium">Latest term</p>
                       <p className="mb-2 text-xs text-muted-foreground">
                         No. of risk indicators flagged in latest Termly Check-In
                         Survey
@@ -1069,7 +1075,9 @@ export function StudentProfile({
                     {student.riskIndicatorHistory &&
                       student.riskIndicatorHistory.length > 0 && (
                         <div>
-                          <p className="mb-2 text-sm font-medium">Remarks</p>
+                          <p className="mb-2 text-sm font-medium">
+                            Past 4 terms (if any)
+                          </p>
                           <div className="rounded-lg bg-muted px-4 py-3 space-y-4 text-sm">
                             {student.riskIndicatorHistory.map((record, i) => (
                               <div key={i}>
@@ -1110,18 +1118,39 @@ export function StudentProfile({
                   <div className="space-y-5">
                     <div>
                       <p className="mb-1 text-sm font-medium">
-                        TCI risk indicators
+                        Past 4 terms (if any)
                       </p>
                       <p className="mb-2 text-xs text-muted-foreground">
-                        Flagged in at least 2 terms in the past year, based on
-                        Termly Check-In Survey (All Ears).
+                        Flagged in at least 2 terms in the past 4 terms, based
+                        on Termly Check-In Survey (All Ears).
                       </p>
                       <div className="rounded-lg bg-muted px-4 py-3">
                         <ul className="space-y-1 text-sm">
-                          <li className="flex items-center gap-2">
-                            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-foreground" />
-                            {lowMoodValue}
-                          </li>
+                          {student.lowMoodTerms &&
+                          student.lowMoodTerms.length > 0 ? (
+                            student.lowMoodTerms
+                              .slice()
+                              .sort((a, b) => b.year - a.year)
+                              .map(({ year, terms }) => {
+                                const numbers = terms
+                                  .map((t) => parseInt(t.replace('Term ', '')))
+                                  .sort((a, b) => a - b)
+                                return (
+                                  <li
+                                    key={year}
+                                    className="flex items-center gap-2"
+                                  >
+                                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-foreground" />
+                                    {year} (Term {numbers.join(', ')})
+                                  </li>
+                                )
+                              })
+                          ) : (
+                            <li className="flex items-center gap-2">
+                              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-foreground" />
+                              {lowMoodValue}
+                            </li>
+                          )}
                         </ul>
                       </div>
                     </div>

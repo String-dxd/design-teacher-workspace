@@ -57,7 +57,7 @@ export interface Student {
   riskIndicators: number
   riskIndicatorHistory?: Array<RiskIndicatorRecord>
   lowMoodFlagged: string | null
-  lowMoodTerms?: Array<string>
+  lowMoodTerms?: Array<{ year: number; terms: Array<string> }>
   socialLinks: number
   selectedBy?: Array<SocialLinkPerson>
   selectedFriends?: Array<SocialLinkPerson>
