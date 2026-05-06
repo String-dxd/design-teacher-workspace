@@ -236,7 +236,55 @@ function NewFormPage() {
       <div className="mx-auto w-full max-w-2xl px-6 py-8">
         <div className="space-y-6">
           {/* -------------------------------------------------------------- */}
-          {/* Section 1: Content                                              */}
+          {/* Section 1: Recipients                                           */}
+          {/* -------------------------------------------------------------- */}
+          <section className="rounded-xl border bg-white p-6">
+            <h2 className="mb-5 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              Recipients
+            </h2>
+            <div className="space-y-5">
+              <div className="space-y-1.5">
+                <Label>
+                  Students <span className="text-destructive">*</span>
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Parents of the selected students will receive this form via
+                  Parents Gateway.
+                </p>
+                <StudentRecipientSelector
+                  value={recipients}
+                  onChange={setRecipients}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label>Staff-in-charge</Label>
+                <p className="text-xs text-muted-foreground">
+                  These staff will be able to view responses and manage this
+                  form.
+                </p>
+                <StaffSelector
+                  value={staffInCharge}
+                  onChange={setStaffInCharge}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label>Enquiry email</Label>
+                <p className="text-xs text-muted-foreground">
+                  Select the preferred email address to receive enquiries from
+                  parents.
+                </p>
+                <EnquiryEmailSelector
+                  value={enquiryEmail}
+                  onChange={setEnquiryEmail}
+                />
+              </div>
+            </div>
+          </section>
+
+          {/* -------------------------------------------------------------- */}
+          {/* Section 2: Content                                               */}
           {/* -------------------------------------------------------------- */}
           <section className="rounded-xl border bg-white p-6">
             <h2 className="mb-5 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
@@ -291,7 +339,7 @@ function NewFormPage() {
           </section>
 
           {/* -------------------------------------------------------------- */}
-          {/* Section 2: Questions                                            */}
+          {/* Section 3: Questions                                            */}
           {/* -------------------------------------------------------------- */}
           <section className="rounded-xl border bg-white p-6">
             <h2 className="mb-5 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
@@ -508,7 +556,7 @@ function NewFormPage() {
           </section>
 
           {/* -------------------------------------------------------------- */}
-          {/* Section 3: Settings                                             */}
+          {/* Section 4: Settings                                             */}
           {/* -------------------------------------------------------------- */}
           <section className="rounded-xl border bg-white p-6">
             <h2 className="mb-5 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
@@ -556,54 +604,6 @@ function NewFormPage() {
                     </label>
                   ))}
                 </div>
-              </div>
-            </div>
-          </section>
-
-          {/* -------------------------------------------------------------- */}
-          {/* Section 4: Recipients                                           */}
-          {/* -------------------------------------------------------------- */}
-          <section className="rounded-xl border bg-white p-6">
-            <h2 className="mb-5 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              Recipients
-            </h2>
-            <div className="space-y-5">
-              <div className="space-y-1.5">
-                <Label>
-                  Students <span className="text-destructive">*</span>
-                </Label>
-                <p className="text-xs text-muted-foreground">
-                  Parents of the selected students will receive this form via
-                  Parents Gateway.
-                </p>
-                <StudentRecipientSelector
-                  value={recipients}
-                  onChange={setRecipients}
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label>Staff in charge</Label>
-                <p className="text-xs text-muted-foreground">
-                  These staff will be able to view responses and manage this
-                  form.
-                </p>
-                <StaffSelector
-                  value={staffInCharge}
-                  onChange={setStaffInCharge}
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label>Enquiry email</Label>
-                <p className="text-xs text-muted-foreground">
-                  Select the preferred email address to receive enquiries from
-                  parents.
-                </p>
-                <EnquiryEmailSelector
-                  value={enquiryEmail}
-                  onChange={setEnquiryEmail}
-                />
               </div>
             </div>
           </section>

@@ -7,6 +7,7 @@ import {
   DEFAULT_FEATURE_FLAGS,
   FEATURE_FLAGS_STORAGE_KEY,
 } from '@/lib/feature-flags'
+import { useFeatureFlag } from '@/hooks/use-feature-flag'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { MonitoringAcademicAnalytics } from '@/components/students/academic-analytics'
 import { AttendanceLevelAnalytics } from '@/components/students/attendance-analytics'
@@ -26,7 +27,8 @@ export const Route = createFileRoute('/student-analytics')({
     const flags = stored
       ? { ...DEFAULT_FEATURE_FLAGS, ...JSON.parse(stored) }
       : DEFAULT_FEATURE_FLAGS
-    if (!flags['student-analytics']) throw redirect({ to: '/' })
+    if (!flags['student-analytics'] && !flags['student-analytics-basic'])
+      throw redirect({ to: '/' })
   },
   component: StudentAnalyticsPage,
 })
@@ -53,6 +55,7 @@ function StudentAnalyticsPage() {
   useSetBreadcrumbs([{ label: 'Analytics', href: '/student-analytics' }])
 
   const [academicView, setAcademicView] = useState<AcademicView>('monitoring')
+  const studentAnalyticsEnabled = useFeatureFlag('student-analytics')
 
   return (
     <div className="flex flex-col p-6">
@@ -144,7 +147,9 @@ function StudentAnalyticsPage() {
       </div>
 
       {/* Insight Buddy — floating FAB + overlay (does not affect page layout) */}
-      <InsightBuddy examplePrompts={ANALYTICS_PROMPTS} floating />
+      {studentAnalyticsEnabled && (
+        <InsightBuddy examplePrompts={ANALYTICS_PROMPTS} floating />
+      )}
     </div>
   )
 }

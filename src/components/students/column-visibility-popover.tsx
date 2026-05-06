@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Columns3, RotateCcw } from 'lucide-react'
 
-import type { FilterField } from '@/types/student'
+import type { FilterField, TemporalType } from '@/types/student'
+import { useFeatureFlags } from '@/lib/feature-flags'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -26,7 +27,17 @@ export interface ColumnConfig {
   filterField?: FilterField
   source?: string
   lastUpdated?: string
+  /** Optional override for the "Last synced:" / "Last uploaded:" label */
+  dateLabel?: string
+  temporalType?: TemporalType
+  /** True for columns added via the Import Data wizard */
+  imported?: boolean
 }
+
+export const CURRENT_TERM_KEY = 'T1 2026'
+export const CURRENT_TERM_LABEL = 'Current term'
+export const PREV_TERM_KEY = 'T4 2025'
+export const PREV_TERM_LABEL = 'Previous term (Term 4, 2025)'
 
 export const defaultColumns: Array<ColumnConfig> = [
   {
@@ -44,7 +55,7 @@ export const defaultColumns: Array<ColumnConfig> = [
     filterable: true,
     filterField: 'name',
     source: 'School Cockpit, RE_SDT_041',
-    lastUpdated: '16 Sep 2025 by Ang Wei Pan',
+    lastUpdated: '16 Sep 2025',
   },
   {
     id: 'class',
@@ -54,7 +65,7 @@ export const defaultColumns: Array<ColumnConfig> = [
     filterable: true,
     filterField: 'class',
     source: 'School Cockpit, RE_SDT_041',
-    lastUpdated: '16 Sep 2025 by Ang Wei Pan',
+    lastUpdated: '16 Sep 2025',
   },
   {
     id: 'cca',
@@ -63,7 +74,7 @@ export const defaultColumns: Array<ColumnConfig> = [
     sortable: true,
     filterable: false,
     source: 'School Cockpit, RE_SDT_041',
-    lastUpdated: '16 Sep 2025 by Ang Wei Pan',
+    lastUpdated: '16 Sep 2025',
   },
   {
     id: 'attentionTags',
@@ -76,8 +87,11 @@ export const defaultColumns: Array<ColumnConfig> = [
     id: 'attendance',
     label: 'Attendance(%)',
     visible: true,
-    sortable: false,
+    sortable: true,
     filterable: false,
+    source: 'School Cockpit, RE_AT_002',
+    lastUpdated: '16 Sep 2025',
+    temporalType: 'accumulating',
   },
   {
     id: 'lateComing',
@@ -87,7 +101,8 @@ export const defaultColumns: Array<ColumnConfig> = [
     filterable: true,
     filterField: 'lateComing',
     source: 'School Cockpit, RE_AT_002',
-    lastUpdated: '16 Sep 2025 by Ang Wei Pan',
+    lastUpdated: '16 Sep 2025',
+    temporalType: 'accumulating',
   },
   {
     id: 'absences',
@@ -97,7 +112,8 @@ export const defaultColumns: Array<ColumnConfig> = [
     filterable: true,
     filterField: 'absences',
     source: 'School Cockpit, RE_AT_002',
-    lastUpdated: '16 Sep 2025 by Ang Wei Pan',
+    lastUpdated: '16 Sep 2025',
+    temporalType: 'accumulating',
   },
   {
     id: 'ccaMissed',
@@ -107,7 +123,8 @@ export const defaultColumns: Array<ColumnConfig> = [
     filterable: true,
     filterField: 'ccaMissed',
     source: 'School Cockpit, RE_AT_002',
-    lastUpdated: '16 Sep 2025 by Ang Wei Pan',
+    lastUpdated: '16 Sep 2025',
+    temporalType: 'accumulating',
   },
   {
     id: 'offences',
@@ -117,7 +134,8 @@ export const defaultColumns: Array<ColumnConfig> = [
     filterable: true,
     filterField: 'offences',
     source: 'School Cockpit, RE_DI_003',
-    lastUpdated: '16 Sep 2025 by Ang Wei Pan',
+    lastUpdated: '16 Sep 2025',
+    temporalType: 'accumulating',
   },
   {
     id: 'counsellingSessions',
@@ -127,7 +145,8 @@ export const defaultColumns: Array<ColumnConfig> = [
     filterable: true,
     filterField: 'counsellingSessions',
     source: 'School Cockpit, RE_WB_004',
-    lastUpdated: '16 Sep 2025 by Ang Wei Pan',
+    lastUpdated: '16 Sep 2025',
+    temporalType: 'accumulating',
   },
   {
     id: 'sen',
@@ -137,7 +156,8 @@ export const defaultColumns: Array<ColumnConfig> = [
     filterable: true,
     filterField: 'sen',
     source: 'School Cockpit, RE_WB_004',
-    lastUpdated: '16 Sep 2025 by Ang Wei Pan',
+    lastUpdated: '16 Sep 2025',
+    temporalType: 'fixed',
   },
   {
     id: 'conduct',
@@ -146,28 +166,20 @@ export const defaultColumns: Array<ColumnConfig> = [
     sortable: true,
     filterable: true,
     filterField: 'conduct',
-    source: 'School Cockpit, RE_DI_003',
-    lastUpdated: '16 Sep 2025 by Ang Wei Pan',
-  },
-  {
-    id: 'socialLinks',
-    label: 'Social links',
-    visible: true,
-    sortable: true,
-    filterable: true,
-    filterField: 'socialLinks',
-    source: 'School Cockpit, RE_WB_004',
-    lastUpdated: '16 Sep 2025 by Ang Wei Pan',
+    source: 'School Cockpit, RE_SDT_041, Latest available (Term 4, 2025)',
+    lastUpdated: '16 Sep 2025',
+    temporalType: 'event-based',
   },
   {
     id: 'riskIndicators',
-    label: 'Risk indicators',
+    label: 'TCI risk indicators',
     visible: true,
     sortable: true,
     filterable: true,
     filterField: 'riskIndicators',
-    source: 'School Cockpit, RE_WB_004',
-    lastUpdated: '16 Sep 2025 by Ang Wei Pan',
+    source: 'School Cockpit, RE_SDT_041, Latest available (Term 4, 2025)',
+    lastUpdated: '16 Sep 2025',
+    temporalType: 'event-based',
   },
   {
     id: 'lowMoodFlagged',
@@ -177,7 +189,19 @@ export const defaultColumns: Array<ColumnConfig> = [
     filterable: true,
     filterField: 'lowMoodFlagged',
     source: 'School Cockpit, RE_WB_004',
-    lastUpdated: '16 Sep 2025 by Ang Wei Pan',
+    lastUpdated: '16 Sep 2025',
+    temporalType: 'cross-term',
+  },
+  {
+    id: 'socialLinks',
+    label: 'Social links',
+    visible: true,
+    sortable: true,
+    filterable: true,
+    filterField: 'socialLinks',
+    source: 'School Cockpit, RE_SDT_041, Latest available (Term 4, 2025)',
+    lastUpdated: '16 Sep 2025',
+    temporalType: 'event-based',
   },
   {
     id: 'overallPercentage',
@@ -186,8 +210,9 @@ export const defaultColumns: Array<ColumnConfig> = [
     sortable: true,
     filterable: true,
     filterField: 'overallPercentage',
-    source: 'School Cockpit, RE_AC_005',
-    lastUpdated: '16 Sep 2025 by Ang Wei Pan',
+    source: 'School Cockpit, RE_SDT_041, Latest available (Term 4, 2025)',
+    lastUpdated: '16 Sep 2025',
+    temporalType: 'event-based',
   },
   {
     id: 'approvedMtl',
@@ -196,7 +221,7 @@ export const defaultColumns: Array<ColumnConfig> = [
     sortable: true,
     filterable: false,
     source: 'School Cockpit, RE_AC_005',
-    lastUpdated: '16 Sep 2025 by Ang Wei Pan',
+    lastUpdated: '16 Sep 2025',
   },
   {
     id: 'learningSupport',
@@ -206,7 +231,7 @@ export const defaultColumns: Array<ColumnConfig> = [
     filterable: true,
     filterField: 'learningSupport',
     source: 'School Cockpit, RE_AC_005',
-    lastUpdated: '16 Sep 2025 by Ang Wei Pan',
+    lastUpdated: '16 Sep 2025',
   },
   {
     id: 'postSecEligibility',
@@ -216,65 +241,7 @@ export const defaultColumns: Array<ColumnConfig> = [
     filterable: true,
     filterField: 'postSecEligibility',
     source: 'School Cockpit, RE_AC_005',
-    lastUpdated: '16 Sep 2025 by Ang Wei Pan',
-  },
-  {
-    id: 'fas',
-    label: 'FAS',
-    visible: true,
-    sortable: true,
-    filterable: true,
-    filterField: 'fas',
-    source: 'School Cockpit, RE_FA_006',
-    lastUpdated: '16 Sep 2025 by Ang Wei Pan',
-  },
-  {
-    id: 'housing',
-    label: 'Housing',
-    visible: true,
-    sortable: true,
-    filterable: true,
-    filterField: 'housing',
-    source: 'School Cockpit, RE_FA_006',
-    lastUpdated: '16 Sep 2025 by Ang Wei Pan',
-  },
-  {
-    id: 'housingType',
-    label: 'Housing ownership',
-    visible: true,
-    sortable: true,
-    filterable: true,
-    filterField: 'housingType',
-    source: 'School Cockpit, RE_FA_006',
-    lastUpdated: '16 Sep 2025 by Ang Wei Pan',
-  },
-  {
-    id: 'custody',
-    label: 'Custody',
-    visible: true,
-    sortable: true,
-    filterable: true,
-    filterField: 'custody',
-    source: 'School Cockpit, RE_FA_006',
-    lastUpdated: '16 Sep 2025 by Ang Wei Pan',
-  },
-  {
-    id: 'commuterStatus',
-    label: 'Commuter status',
-    visible: true,
-    sortable: true,
-    filterable: false,
-    source: 'School Cockpit, RE_FA_006',
-    lastUpdated: '16 Sep 2025 by Ang Wei Pan',
-  },
-  {
-    id: 'afterSchoolArrangement',
-    label: 'After-school arrangement',
-    visible: true,
-    sortable: true,
-    filterable: false,
-    source: 'School Cockpit, RE_FA_006',
-    lastUpdated: '16 Sep 2025 by Ang Wei Pan',
+    lastUpdated: '16 Sep 2025',
   },
   {
     id: 'siblings',
@@ -284,7 +251,97 @@ export const defaultColumns: Array<ColumnConfig> = [
     filterable: true,
     filterField: 'siblings',
     source: 'School Cockpit, RE_FA_006',
-    lastUpdated: '16 Sep 2025 by Ang Wei Pan',
+    lastUpdated: '16 Sep 2025',
+    temporalType: 'fixed',
+  },
+  {
+    id: 'fas',
+    label: 'FAS',
+    visible: true,
+    sortable: true,
+    filterable: true,
+    filterField: 'fas',
+    source: 'School Cockpit, RE_FA_006',
+    lastUpdated: '16 Sep 2025',
+    temporalType: 'fixed',
+  },
+  {
+    id: 'housing',
+    label: 'Housing',
+    visible: true,
+    sortable: true,
+    filterable: true,
+    filterField: 'housing',
+    source: 'School Cockpit, RE_FA_006',
+    lastUpdated: '16 Sep 2025',
+    temporalType: 'fixed',
+  },
+  {
+    id: 'housingType',
+    label: 'Housing ownership',
+    visible: true,
+    sortable: true,
+    filterable: true,
+    filterField: 'housingType',
+    source: 'School Cockpit, RE_FA_006',
+    lastUpdated: '16 Sep 2025',
+    temporalType: 'fixed',
+  },
+  {
+    id: 'supportedByComLink',
+    label: 'Supported by ComLink+',
+    visible: true,
+    sortable: true,
+    filterable: true,
+    filterField: 'supportedByComLink',
+    source: 'MSF UPLIFT',
+    lastUpdated: 'As of 19 Sep 2025',
+    dateLabel: 'Date:',
+    temporalType: 'fixed',
+  },
+  {
+    id: 'supportedByFsc',
+    label: 'Supported by FSC in the past 2 years',
+    visible: true,
+    sortable: true,
+    filterable: true,
+    filterField: 'supportedByFsc',
+    source: 'MSF UPLIFT',
+    lastUpdated: 'As of 19 Sep 2025',
+    dateLabel: 'Date:',
+    temporalType: 'fixed',
+  },
+  {
+    id: 'nonIntactFamily',
+    label: 'From Non-Intact Family',
+    visible: true,
+    sortable: true,
+    filterable: true,
+    filterField: 'nonIntactFamily',
+    source: 'School Cockpit, MSF UPLIFT',
+    lastUpdated: 'As of 1 May 2026',
+    dateLabel: 'Date:',
+    temporalType: 'fixed',
+  },
+  {
+    id: 'commuterStatus',
+    label: 'Commuter status',
+    visible: true,
+    sortable: true,
+    filterable: false,
+    source: 'School Cockpit, RE_FA_006',
+    lastUpdated: '16 Sep 2025',
+    temporalType: 'fixed',
+  },
+  {
+    id: 'afterSchoolArrangement',
+    label: 'After-school arrangement',
+    visible: true,
+    sortable: true,
+    filterable: false,
+    source: 'School Cockpit, RE_FA_006',
+    lastUpdated: '16 Sep 2025',
+    temporalType: 'fixed',
   },
 ]
 
@@ -299,6 +356,10 @@ export function ColumnVisibilityPopover({
   onColumnsChange,
   className,
 }: ColumnVisibilityPopoverProps) {
+  const { isEnabled } = useFeatureFlags()
+  const isStudentInsightsView =
+    !isEnabled('student-analytics') && !isEnabled('student-analytics-basic')
+  const msfUpliftEnabled = isEnabled('msf-uplift-data')
   const [open, setOpen] = useState(false)
 
   const visibleCount = columns.filter((c) => c.visible).length
@@ -312,7 +373,20 @@ export function ColumnVisibilityPopover({
   }
 
   const handleReset = () => {
-    onColumnsChange(defaultColumns)
+    const baseReset = isStudentInsightsView
+      ? defaultColumns.filter(
+          (c) => c.id !== 'approvedMtl' && c.id !== 'postSecEligibility',
+        )
+      : defaultColumns
+    const resetColumns = msfUpliftEnabled
+      ? baseReset
+      : baseReset.filter(
+          (c) =>
+            c.id !== 'supportedByComLink' &&
+            c.id !== 'supportedByFsc' &&
+            c.id !== 'nonIntactFamily',
+        )
+    onColumnsChange(resetColumns)
   }
 
   const handleShowAll = () => {

@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react'
 import {
-  Check,
   CheckCircle2,
   Clock,
   Columns2,
   Download,
+  RotateCcw,
   Search,
   SlidersHorizontal,
   ThumbsDown,
@@ -13,6 +13,9 @@ import {
 } from 'lucide-react'
 import type { PGQuestion, PGRecipient } from '@/types/pg-announcement'
 import type { ResponseType } from '@/types/form'
+import { Badge } from '@/components/ui/badge'
+import { Checkbox } from '@/components/ui/checkbox'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import {
@@ -45,8 +48,8 @@ type ColumnKey = 'indexNo' | 'readAt' | 'readBy' | 'pgStatus'
 
 const COLUMN_LABELS: Record<ColumnKey, string> = {
   indexNo: 'Index No.',
-  readAt: 'Timestamp',
-  readBy: 'Parent / Guardian',
+  readAt: 'Read at',
+  readBy: 'Read by',
   pgStatus: 'PG Status',
 }
 
@@ -429,30 +432,64 @@ export function RecipientReadTable({
               Columns
             </Button>
           </PopoverTrigger>
-          <PopoverContent align="end" className="w-52 p-2">
-            <p className="mb-1.5 px-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Show / hide columns
-            </p>
-            {(Object.keys(COLUMN_LABELS) as Array<ColumnKey>).map((col) => (
-              <button
-                key={col}
-                type="button"
-                onClick={() => toggleCol(col)}
-                className="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-slate-100"
+          <PopoverContent align="end" className="w-[280px] p-0">
+            {/* Quick actions */}
+            <div className="flex items-center gap-2 border-b p-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  setVisibleCols(
+                    new Set(Object.keys(COLUMN_LABELS) as Array<ColumnKey>),
+                  )
+                }
               >
-                <span
-                  className={cn(
-                    'flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors',
-                    show(col)
-                      ? 'border-twblue-9 bg-twblue-9 text-white'
-                      : 'border-input',
-                  )}
-                >
-                  {show(col) && <Check className="h-2.5 w-2.5" />}
-                </span>
-                {col === 'readAt' ? timestampColLabel : COLUMN_LABELS[col]}
+                Show all
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setVisibleCols(new Set())}
+              >
+                Hide all
+              </Button>
+            </div>
+            {/* Column list */}
+            <ScrollArea className="max-h-[300px]">
+              <div className="p-2">
+                {(Object.keys(COLUMN_LABELS) as Array<ColumnKey>).map((col) => (
+                  <label
+                    key={col}
+                    className="flex cursor-pointer items-center gap-3 rounded-md px-3 py-2 hover:bg-accent"
+                  >
+                    <Checkbox
+                      checked={show(col)}
+                      onCheckedChange={() => toggleCol(col)}
+                    />
+                    <span className="text-sm">
+                      {col === 'readAt'
+                        ? timestampColLabel
+                        : COLUMN_LABELS[col]}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </ScrollArea>
+            {/* Reset */}
+            <div className="border-t p-3">
+              <button
+                type="button"
+                onClick={() =>
+                  setVisibleCols(
+                    new Set(['indexNo', 'readAt', 'readBy', 'pgStatus']),
+                  )
+                }
+                className="flex items-center gap-2 text-sm text-primary hover:underline"
+              >
+                <RotateCcw className="h-4 w-4" />
+                Reset to default
               </button>
-            ))}
+            </div>
           </PopoverContent>
         </Popover>
 
@@ -511,13 +548,6 @@ export function RecipientReadTable({
           )}
         </div>
       )}
-
-      {/* Result count */}
-      <p className="text-xs text-muted-foreground">
-        {filtered.length === recipients.length
-          ? `${recipients.length} recipient${recipients.length !== 1 ? 's' : ''}`
-          : `${filtered.length} of ${recipients.length} recipients`}
-      </p>
 
       {/* ── Table ── */}
       <div className="overflow-x-auto">
@@ -578,49 +608,44 @@ export function RecipientReadTable({
                         {r.indexNo ?? '—'}
                       </TableCell>
                     )}
-                    <TableCell className="text-muted-foreground">
-                      {r.classLabel}
+                    <TableCell>
+                      <Badge variant="outline" className="text-xs">
+                        {r.classLabel}
+                      </Badge>
                     </TableCell>
 
                     {/* Status cell — adapts to responseType */}
                     <TableCell>
                       {responseType === 'acknowledge' ? (
                         status === 'acknowledged' ? (
-                          <span className="inline-flex items-center gap-1.5 text-sm font-medium text-green-700">
-                            <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                          <span className="text-sm font-medium text-green-700">
                             Acknowledged
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1.5 text-sm font-medium text-amber-600">
-                            <Clock className="h-3.5 w-3.5 shrink-0" />
+                          <span className="text-sm font-medium text-foreground">
                             Pending
                           </span>
                         )
                       ) : responseType === 'yes-no' ? (
                         status === 'yes' ? (
-                          <span className="inline-flex items-center gap-1.5 text-sm font-medium text-green-700">
-                            <ThumbsUp className="h-3.5 w-3.5 shrink-0" />
+                          <span className="text-sm font-medium text-green-700">
                             Yes
                           </span>
                         ) : status === 'no' ? (
-                          <span className="inline-flex items-center gap-1.5 text-sm font-medium text-rose-600">
-                            <ThumbsDown className="h-3.5 w-3.5 shrink-0" />
+                          <span className="text-sm font-medium text-rose-600">
                             No
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1.5 text-sm font-medium text-amber-600">
-                            <Clock className="h-3.5 w-3.5 shrink-0" />
+                          <span className="text-sm font-medium text-foreground">
                             No Response
                           </span>
                         )
                       ) : r.readStatus === 'read' ? (
-                        <span className="inline-flex items-center gap-1.5 text-sm font-medium text-green-700">
-                          <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                        <span className="text-sm font-medium text-green-700">
                           Read
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 text-sm font-medium text-amber-600">
-                          <Clock className="h-3.5 w-3.5 shrink-0" />
+                        <span className="text-sm font-medium text-foreground">
                           Unread
                         </span>
                       )}

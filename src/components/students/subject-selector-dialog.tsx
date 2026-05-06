@@ -117,6 +117,7 @@ export function SubjectSelectorDialog({
   }
 
   const handleReset = () => {
+    setDraft(new Set(ALL_SUBJECTS))
     onApply(null)
     onOpenChange(false)
   }
@@ -133,7 +134,7 @@ export function SubjectSelectorDialog({
             Select subjects for Overall %
           </DialogTitle>
           <p className="text-sm text-muted-foreground">
-            Pick the subjects you want to include in the calculation.
+            Choose subjects to include in the calculation
           </p>
         </DialogHeader>
 

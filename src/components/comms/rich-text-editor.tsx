@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect } from 'react'
+import { memo, useCallback, useEffect, useRef, useState } from 'react'
 import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
@@ -9,9 +9,11 @@ import TaskItem from '@tiptap/extension-task-item'
 import Highlight from '@tiptap/extension-highlight'
 import {
   AlignCenter,
+  AlignJustify,
   AlignLeft,
   AlignRight,
   Bold,
+  ChevronDown,
   Code,
   Heading1,
   Heading2,
@@ -36,6 +38,7 @@ interface RichTextEditorProps {
   className?: string
   onBlur?: () => void
   minHeight?: string
+  toolbar?: 'full' | 'simple'
 }
 
 interface ToolbarButtonProps {
@@ -82,7 +85,12 @@ export const RichTextEditor = memo(function RichTextEditor({
   className,
   onBlur,
   minHeight = '120px',
+  toolbar = 'full',
 }: RichTextEditorProps) {
+  const [alignOpen, setAlignOpen] = useState(false)
+  const [listOpen, setListOpen] = useState(false)
+  const alignRef = useRef<HTMLDivElement>(null)
+  const listRef = useRef<HTMLDivElement>(null)
   // With immediatelyRender: false, useEditor returns null on the first render pass (SSR-safe).
   const editor = useEditor({
     immediatelyRender: false,
@@ -152,7 +160,7 @@ export const RichTextEditor = memo(function RichTextEditor({
   // all hooks, before any editor.* access, so it is safe.
   if (!editor) return null
 
-  const showPlaceholder = editor.isEmpty && Boolean(placeholder)
+  const showPlaceholder = editor.isEmpty && !value && Boolean(placeholder)
 
   // Pre-compute active states for toolbar buttons
   const active = {
@@ -185,158 +193,311 @@ export const RichTextEditor = memo(function RichTextEditor({
         className,
       )}
     >
-      {/* Toolbar — scrolls horizontally on narrow viewports */}
+      {/* Toolbar */}
       <div className="flex items-center gap-0.5 overflow-x-auto border-b px-2 py-1 scrollbar-none">
-        {/* Group 1: inline marks */}
-        <ToolbarButton
-          onClick={() => cmd.toggleBold().run()}
-          isActive={active.bold}
-          title="Bold (Ctrl+B)"
-        >
-          <Bold className="h-3.5 w-3.5" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => cmd.toggleItalic().run()}
-          isActive={active.italic}
-          title="Italic (Ctrl+I)"
-        >
-          <Italic className="h-3.5 w-3.5" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => cmd.toggleUnderline().run()}
-          isActive={active.underline}
-          title="Underline (Ctrl+U)"
-        >
-          <UnderlineIcon className="h-3.5 w-3.5" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => cmd.toggleStrike().run()}
-          isActive={active.strike}
-          title="Strikethrough"
-        >
-          <Strikethrough className="h-3.5 w-3.5" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => cmd.toggleCode().run()}
-          isActive={active.code}
-          title="Inline code"
-        >
-          <Code className="h-3.5 w-3.5" />
-        </ToolbarButton>
+        {toolbar === 'simple' ? (
+          <>
+            {/* Bold */}
+            <ToolbarButton
+              onClick={() => cmd.toggleBold().run()}
+              isActive={active.bold}
+              title="Bold (Ctrl+B)"
+            >
+              <Bold className="h-3.5 w-3.5" />
+            </ToolbarButton>
+            {/* Italic */}
+            <ToolbarButton
+              onClick={() => cmd.toggleItalic().run()}
+              isActive={active.italic}
+              title="Italic (Ctrl+I)"
+            >
+              <Italic className="h-3.5 w-3.5" />
+            </ToolbarButton>
+            {/* Underline */}
+            <ToolbarButton
+              onClick={() => cmd.toggleUnderline().run()}
+              isActive={active.underline}
+              title="Underline (Ctrl+U)"
+            >
+              <UnderlineIcon className="h-3.5 w-3.5" />
+            </ToolbarButton>
 
-        <Divider />
+            <Divider />
 
-        {/* Group 2: headings */}
-        <ToolbarButton
-          onClick={() => cmd.toggleHeading({ level: 1 }).run()}
-          isActive={active.h1}
-          title="Heading 1"
-        >
-          <Heading1 className="h-3.5 w-3.5" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => cmd.toggleHeading({ level: 2 }).run()}
-          isActive={active.h2}
-          title="Heading 2"
-        >
-          <Heading2 className="h-3.5 w-3.5" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => cmd.toggleHeading({ level: 3 }).run()}
-          isActive={active.h3}
-          title="Heading 3"
-        >
-          <Heading3 className="h-3.5 w-3.5" />
-        </ToolbarButton>
+            {/* Alignment dropdown */}
+            <div className="relative" ref={alignRef}>
+              <button
+                type="button"
+                onMouseDown={(e) => {
+                  e.preventDefault()
+                  setAlignOpen((o) => !o)
+                  setListOpen(false)
+                }}
+                title="Text alignment"
+                className="flex h-7 items-center gap-0.5 rounded px-1 text-muted-foreground transition-colors hover:bg-slate-100 hover:text-foreground"
+              >
+                {active.alignCenter ? (
+                  <AlignCenter className="h-3.5 w-3.5" />
+                ) : active.alignRight ? (
+                  <AlignRight className="h-3.5 w-3.5" />
+                ) : (
+                  <AlignLeft className="h-3.5 w-3.5" />
+                )}
+                <ChevronDown className="h-3 w-3" />
+              </button>
+              {alignOpen && (
+                <div className="absolute left-0 top-full z-20 mt-0.5 flex flex-col rounded-md border bg-background shadow-md">
+                  <button
+                    type="button"
+                    onMouseDown={(e) => {
+                      e.preventDefault()
+                      cmd.setTextAlign('left').run()
+                      setAlignOpen(false)
+                    }}
+                    className="flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-slate-100"
+                  >
+                    <AlignLeft className="h-3.5 w-3.5" /> Left
+                  </button>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => {
+                      e.preventDefault()
+                      cmd.setTextAlign('center').run()
+                      setAlignOpen(false)
+                    }}
+                    className="flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-slate-100"
+                  >
+                    <AlignCenter className="h-3.5 w-3.5" /> Centre
+                  </button>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => {
+                      e.preventDefault()
+                      cmd.setTextAlign('right').run()
+                      setAlignOpen(false)
+                    }}
+                    className="flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-slate-100"
+                  >
+                    <AlignRight className="h-3.5 w-3.5" /> Right
+                  </button>
+                </div>
+              )}
+            </div>
 
-        <Divider />
+            {/* List dropdown */}
+            <div className="relative" ref={listRef}>
+              <button
+                type="button"
+                onMouseDown={(e) => {
+                  e.preventDefault()
+                  setListOpen((o) => !o)
+                  setAlignOpen(false)
+                }}
+                title="Lists"
+                className="flex h-7 items-center gap-0.5 rounded px-1 text-muted-foreground transition-colors hover:bg-slate-100 hover:text-foreground"
+              >
+                {active.orderedList ? (
+                  <ListOrdered className="h-3.5 w-3.5" />
+                ) : active.taskList ? (
+                  <ListChecks className="h-3.5 w-3.5" />
+                ) : (
+                  <List className="h-3.5 w-3.5" />
+                )}
+                <ChevronDown className="h-3 w-3" />
+              </button>
+              {listOpen && (
+                <div className="absolute left-0 top-full z-20 mt-0.5 flex flex-col rounded-md border bg-background shadow-md">
+                  <button
+                    type="button"
+                    onMouseDown={(e) => {
+                      e.preventDefault()
+                      cmd.toggleBulletList().run()
+                      setListOpen(false)
+                    }}
+                    className="flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-slate-100"
+                  >
+                    <List className="h-3.5 w-3.5" /> Bullet list
+                  </button>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => {
+                      e.preventDefault()
+                      cmd.toggleOrderedList().run()
+                      setListOpen(false)
+                    }}
+                    className="flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-slate-100"
+                  >
+                    <ListOrdered className="h-3.5 w-3.5" /> Numbered list
+                  </button>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => {
+                      e.preventDefault()
+                      cmd.toggleTaskList().run()
+                      setListOpen(false)
+                    }}
+                    className="flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-slate-100"
+                  >
+                    <ListChecks className="h-3.5 w-3.5" /> Checklist
+                  </button>
+                </div>
+              )}
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Group 1: inline marks */}
+            <ToolbarButton
+              onClick={() => cmd.toggleBold().run()}
+              isActive={active.bold}
+              title="Bold (Ctrl+B)"
+            >
+              <Bold className="h-3.5 w-3.5" />
+            </ToolbarButton>
+            <ToolbarButton
+              onClick={() => cmd.toggleItalic().run()}
+              isActive={active.italic}
+              title="Italic (Ctrl+I)"
+            >
+              <Italic className="h-3.5 w-3.5" />
+            </ToolbarButton>
+            <ToolbarButton
+              onClick={() => cmd.toggleUnderline().run()}
+              isActive={active.underline}
+              title="Underline (Ctrl+U)"
+            >
+              <UnderlineIcon className="h-3.5 w-3.5" />
+            </ToolbarButton>
+            <ToolbarButton
+              onClick={() => cmd.toggleStrike().run()}
+              isActive={active.strike}
+              title="Strikethrough"
+            >
+              <Strikethrough className="h-3.5 w-3.5" />
+            </ToolbarButton>
+            <ToolbarButton
+              onClick={() => cmd.toggleCode().run()}
+              isActive={active.code}
+              title="Inline code"
+            >
+              <Code className="h-3.5 w-3.5" />
+            </ToolbarButton>
 
-        {/* Group 3: alignment */}
-        <ToolbarButton
-          onClick={() => cmd.setTextAlign('left').run()}
-          isActive={active.alignLeft}
-          title="Align left"
-        >
-          <AlignLeft className="h-3.5 w-3.5" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => cmd.setTextAlign('center').run()}
-          isActive={active.alignCenter}
-          title="Align centre"
-        >
-          <AlignCenter className="h-3.5 w-3.5" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => cmd.setTextAlign('right').run()}
-          isActive={active.alignRight}
-          title="Align right"
-        >
-          <AlignRight className="h-3.5 w-3.5" />
-        </ToolbarButton>
+            <Divider />
 
-        <Divider />
+            {/* Group 2: headings */}
+            <ToolbarButton
+              onClick={() => cmd.toggleHeading({ level: 1 }).run()}
+              isActive={active.h1}
+              title="Heading 1"
+            >
+              <Heading1 className="h-3.5 w-3.5" />
+            </ToolbarButton>
+            <ToolbarButton
+              onClick={() => cmd.toggleHeading({ level: 2 }).run()}
+              isActive={active.h2}
+              title="Heading 2"
+            >
+              <Heading2 className="h-3.5 w-3.5" />
+            </ToolbarButton>
+            <ToolbarButton
+              onClick={() => cmd.toggleHeading({ level: 3 }).run()}
+              isActive={active.h3}
+              title="Heading 3"
+            >
+              <Heading3 className="h-3.5 w-3.5" />
+            </ToolbarButton>
 
-        {/* Group 4: lists */}
-        <ToolbarButton
-          onClick={() => cmd.toggleBulletList().run()}
-          isActive={active.bulletList}
-          title="Bullet list"
-        >
-          <List className="h-3.5 w-3.5" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => cmd.toggleOrderedList().run()}
-          isActive={active.orderedList}
-          title="Numbered list"
-        >
-          <ListOrdered className="h-3.5 w-3.5" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => cmd.toggleTaskList().run()}
-          isActive={active.taskList}
-          title="Checklist"
-        >
-          <ListChecks className="h-3.5 w-3.5" />
-        </ToolbarButton>
+            <Divider />
 
-        <Divider />
+            {/* Group 3: alignment */}
+            <ToolbarButton
+              onClick={() => cmd.setTextAlign('left').run()}
+              isActive={active.alignLeft}
+              title="Align left"
+            >
+              <AlignLeft className="h-3.5 w-3.5" />
+            </ToolbarButton>
+            <ToolbarButton
+              onClick={() => cmd.setTextAlign('center').run()}
+              isActive={active.alignCenter}
+              title="Align centre"
+            >
+              <AlignCenter className="h-3.5 w-3.5" />
+            </ToolbarButton>
+            <ToolbarButton
+              onClick={() => cmd.setTextAlign('right').run()}
+              isActive={active.alignRight}
+              title="Align right"
+            >
+              <AlignRight className="h-3.5 w-3.5" />
+            </ToolbarButton>
 
-        {/* Group 5: block */}
-        <ToolbarButton
-          onClick={() => cmd.toggleBlockquote().run()}
-          isActive={active.blockquote}
-          title="Blockquote"
-        >
-          <Quote className="h-3.5 w-3.5" />
-        </ToolbarButton>
+            <Divider />
 
-        <Divider />
+            {/* Group 4: lists */}
+            <ToolbarButton
+              onClick={() => cmd.toggleBulletList().run()}
+              isActive={active.bulletList}
+              title="Bullet list"
+            >
+              <List className="h-3.5 w-3.5" />
+            </ToolbarButton>
+            <ToolbarButton
+              onClick={() => cmd.toggleOrderedList().run()}
+              isActive={active.orderedList}
+              title="Numbered list"
+            >
+              <ListOrdered className="h-3.5 w-3.5" />
+            </ToolbarButton>
+            <ToolbarButton
+              onClick={() => cmd.toggleTaskList().run()}
+              isActive={active.taskList}
+              title="Checklist"
+            >
+              <ListChecks className="h-3.5 w-3.5" />
+            </ToolbarButton>
 
-        {/* Group 6: insert + highlight */}
-        <ToolbarButton
-          onClick={setLink}
-          isActive={active.link}
-          title="Insert / edit link"
-        >
-          <LinkIcon className="h-3.5 w-3.5" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => cmd.toggleHighlight().run()}
-          isActive={active.highlight}
-          title="Highlight"
-        >
-          <Highlighter className="h-3.5 w-3.5" />
-        </ToolbarButton>
+            <Divider />
 
-        <Divider />
+            {/* Group 5: block */}
+            <ToolbarButton
+              onClick={() => cmd.toggleBlockquote().run()}
+              isActive={active.blockquote}
+              title="Blockquote"
+            >
+              <Quote className="h-3.5 w-3.5" />
+            </ToolbarButton>
 
-        {/* Group 7: utilities */}
-        <ToolbarButton
-          onClick={() => cmd.unsetAllMarks().clearNodes().run()}
-          title="Clear formatting"
-        >
-          <RemoveFormatting className="h-3.5 w-3.5" />
-        </ToolbarButton>
+            <Divider />
+
+            {/* Group 6: insert + highlight */}
+            <ToolbarButton
+              onClick={setLink}
+              isActive={active.link}
+              title="Insert / edit link"
+            >
+              <LinkIcon className="h-3.5 w-3.5" />
+            </ToolbarButton>
+            <ToolbarButton
+              onClick={() => cmd.toggleHighlight().run()}
+              isActive={active.highlight}
+              title="Highlight"
+            >
+              <Highlighter className="h-3.5 w-3.5" />
+            </ToolbarButton>
+
+            <Divider />
+
+            {/* Group 7: utilities */}
+            <ToolbarButton
+              onClick={() => cmd.unsetAllMarks().clearNodes().run()}
+              title="Clear formatting"
+            >
+              <RemoveFormatting className="h-3.5 w-3.5" />
+            </ToolbarButton>
+          </>
+        )}
       </div>
 
       {/* Editable area with overlay placeholder */}

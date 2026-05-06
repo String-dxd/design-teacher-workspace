@@ -1,5 +1,7 @@
 import { CalendarClock, Send, Users, Zap } from 'lucide-react'
+import type { ResponseType } from '@/types/form'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import {
   Dialog,
   DialogContent,
@@ -17,6 +19,8 @@ interface SendConfirmationSheetProps {
   totalRecipients: number
   scheduledAt?: string // ISO string — if set, this is a scheduled send
   onConfirm: () => void
+  responseType?: ResponseType
+  dueDate?: string
 }
 
 function formatScheduledAt(iso: string): string {
@@ -37,15 +41,19 @@ export function SendConfirmationSheet({
   totalRecipients,
   scheduledAt,
   onConfirm,
+  responseType,
+  dueDate,
 }: SendConfirmationSheetProps) {
   const isScheduled = Boolean(scheduledAt)
+  const hasResponse =
+    responseType === 'acknowledge' || responseType === 'yes-no'
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>
-            {isScheduled ? 'Schedule announcement?' : 'Send announcement?'}
+            {isScheduled ? 'Schedule post?' : 'Send post?'}
           </DialogTitle>
           <DialogDescription>
             Review the details below before{' '}
@@ -54,10 +62,10 @@ export function SendConfirmationSheet({
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Announcement title */}
+          {/* Post title */}
           <div className="rounded-lg border bg-slate-50 px-4 py-3">
             <p className="text-sm font-medium text-slate-800">
-              {title || 'Untitled announcement'}
+              {title || 'Untitled post'}
             </p>
           </div>
 
@@ -106,6 +114,32 @@ export function SendConfirmationSheet({
                 : 'Immediately via Parents Gateway'}
             </p>
           </div>
+
+          {/* Response required — acknowledge / yes-no only */}
+          {hasResponse && (
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Response required
+              </p>
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary">
+                  {responseType === 'acknowledge'
+                    ? 'Acknowledgement'
+                    : 'Yes / No'}
+                </Badge>
+                {dueDate && (
+                  <span className="text-sm text-muted-foreground">
+                    · due{' '}
+                    {new Date(dueDate).toLocaleDateString('en-SG', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric',
+                    })}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         <DialogFooter>
@@ -116,12 +150,12 @@ export function SendConfirmationSheet({
             {isScheduled ? (
               <>
                 <CalendarClock className="mr-2 h-4 w-4" />
-                Confirm & Schedule
+                Confirm & schedule
               </>
             ) : (
               <>
                 <Send className="mr-2 h-4 w-4" />
-                Confirm & Send
+                Confirm & send
               </>
             )}
           </Button>

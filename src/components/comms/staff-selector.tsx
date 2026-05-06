@@ -1,4 +1,5 @@
 import { EntitySelector } from './entity-selector'
+import type React from 'react'
 import type {
   EntityItem,
   EntityScope,
@@ -7,6 +8,7 @@ import type {
   SelectedEntity,
 } from './entity-selector'
 import { MOCK_STAFF, MOCK_STAFF_GROUPS } from '@/data/mock-staff'
+import { stripSalutation } from '@/lib/utils'
 
 // Backward-compatible type alias
 export type { SelectedEntity as SelectedStaff }
@@ -14,11 +16,23 @@ export type { SelectedEntity as SelectedStaff }
 interface StaffSelectorProps {
   value: Array<SelectedEntity>
   onChange: (staff: Array<SelectedEntity>) => void
+  renderChipExtra?: (entity: SelectedEntity) => React.ReactNode
+  hideChips?: boolean
+  openOnFocus?: boolean
+  autoOpen?: boolean
+}
+
+/** "Sec 3A" → "3A", consistent with student class labels */
+function formatFormClass(cls: string | undefined): string | undefined {
+  return cls?.replace(/^Sec\s+/i, '')
 }
 
 function makeMemberNames(ids: Array<string>): Array<string> {
   return ids
-    .map((id) => MOCK_STAFF.find((s) => s.id === id)?.name)
+    .map((id) => {
+      const s = MOCK_STAFF.find((m) => m.id === id)
+      return s ? stripSalutation(s.name) : undefined
+    })
     .filter((n): n is string => Boolean(n))
 }
 
@@ -28,18 +42,20 @@ function makeMemberDetails(ids: Array<string>): Array<MemberDetail> {
     if (!s) return []
     return [
       {
-        name: s.name,
-        sublabel: [s.formClass, s.email].filter(Boolean).join(' · '),
+        name: stripSalutation(s.name),
+        sublabel: [formatFormClass(s.formClass), s.email]
+          .filter(Boolean)
+          .join(' · '),
       },
     ]
   })
 }
 
-// Individual staff — sublabel shows form class (if any) + email
+// Individual staff — label has salutation stripped; sublabel shows form class (if any) + email
 const STAFF_INDIVIDUAL_ITEMS: Array<EntityItem> = MOCK_STAFF.map((s) => ({
   id: s.id,
-  label: s.name,
-  sublabel: [s.formClass, s.email].filter(Boolean).join(' · '),
+  label: stripSalutation(s.name),
+  sublabel: [formatFormClass(s.formClass), s.email].filter(Boolean).join(' · '),
   type: 'individual' as const,
   count: 1,
 }))
@@ -58,9 +74,9 @@ const LEVEL_GROUP_ITEMS: Array<EntityItem> = MOCK_STAFF_GROUPS.filter(
   groupType: 'staff-group' as const,
 }))
 
-// School scope — departments + school-wide groups
+// School scope — school-wide groups only (departments are kept for search but not surfaced here)
 const SCHOOL_GROUP_ITEMS: Array<EntityItem> = MOCK_STAFF_GROUPS.filter(
-  (g) => g.groupType === 'department' || g.groupType === 'staff-group',
+  (g) => g.groupType === 'staff-group',
 ).map((g) => ({
   id: g.id,
   label: g.label,
@@ -104,7 +120,14 @@ function staffSearchFn(query: string): SearchResults {
   }
 }
 
-export function StaffSelector({ value, onChange }: StaffSelectorProps) {
+export function StaffSelector({
+  value,
+  onChange,
+  renderChipExtra,
+  hideChips,
+  openOnFocus,
+  autoOpen,
+}: StaffSelectorProps) {
   return (
     <EntitySelector
       value={value}
@@ -114,6 +137,12 @@ export function StaffSelector({ value, onChange }: StaffSelectorProps) {
       placeholder="Search staff by name or group…"
       searchPlaceholder="Search staff…"
       noResultsText="No staff found"
+      chipsBelow
+      maxVisibleTokens={2}
+      renderChipExtra={renderChipExtra}
+      hideChips={hideChips}
+      openOnFocus={openOnFocus}
+      autoOpen={autoOpen}
     />
   )
 }

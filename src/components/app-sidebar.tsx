@@ -101,6 +101,20 @@ const studentInsightItemsWithAnalytics: Array<MenuItem> = [
   },
 ]
 
+const studentInsightItemsBasicAnalytics: Array<MenuItem> = [
+  {
+    title: 'Analytics',
+    url: '/student-analytics',
+    icon: BarChart3,
+    stage: 'Experiment',
+  },
+  {
+    title: 'Profiles',
+    url: '/students',
+    icon: Users,
+  },
+]
+
 const studentInsightItemsWithoutAnalytics: Array<MenuItem> = [
   {
     title: 'Student Insights',
@@ -206,6 +220,7 @@ export function AppSidebar() {
   const holisticReportsEnabled = useFeatureFlag('holistic-reports')
   const parentsGatewayEnabled = useFeatureFlag('parents-gateway')
   const studentAnalyticsEnabled = useFeatureFlag('student-analytics')
+  const studentAnalyticsBasicEnabled = useFeatureFlag('student-analytics-basic')
   const studentGroupsEnabled = useFeatureFlag('student-groups')
 
   React.useEffect(() => {
@@ -256,7 +271,9 @@ export function AppSidebar() {
           ? studentAnalyticsEnabled
           : true,
       )
-    : studentInsightItemsWithoutAnalytics
+    : studentAnalyticsBasicEnabled
+      ? studentInsightItemsBasicAnalytics
+      : studentInsightItemsWithoutAnalytics
 
   return (
     <Sidebar collapsible="icon">
@@ -280,7 +297,7 @@ export function AppSidebar() {
             />
           </SidebarGroupContent>
           <>
-            {studentAnalyticsEnabled && (
+            {(studentAnalyticsEnabled || studentAnalyticsBasicEnabled) && (
               <SidebarGroupLabel className="mt-2 group-data-[collapsible=icon]:pointer-events-none">
                 Student Insights
               </SidebarGroupLabel>
@@ -321,8 +338,8 @@ export function AppSidebar() {
                       New! Parents Gateway posts are here
                     </PopoverTitle>
                     <PopoverDescription>
-                      Send announcements, collect responses, and manage all
-                      parent communications in one place.
+                      Send posts, collect responses, and manage all parent
+                      communications in one place.
                     </PopoverDescription>
                   </PopoverHeader>
                   <div className="flex justify-end">

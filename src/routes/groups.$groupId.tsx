@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   Link,
   createFileRoute,
@@ -9,23 +9,31 @@ import {
   ArrowLeft,
   ChevronLeft,
   ChevronRight,
+  Copy,
+  Download,
   Edit2,
+  ExternalLink,
+  Info,
   MoreHorizontal,
   Search,
   Share2,
   Trash2,
   UserMinus,
+  UserPlus,
+  Users,
   X,
 } from 'lucide-react'
 
 import type { GroupSharedWith, StudentGroup } from '@/types/student-group'
+import type { SelectedEntity } from '@/components/comms/entity-selector'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
 import { MOCK_GROUPS, getGroupById } from '@/data/mock-groups'
-import { MOCK_STAFF } from '@/data/mock-staff'
+import { MOCK_STAFF, MOCK_STAFF_GROUPS } from '@/data/mock-staff'
+import { StaffSelector } from '@/components/comms/staff-selector'
+import { cn, stripSalutation } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import {
   Table,
@@ -36,11 +44,13 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet'
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -66,7 +76,6 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { EmptyState } from '@/components/empty-state'
-import { cn } from '@/lib/utils'
 
 const CURRENT_USER_EMAIL = 'tanml@school.edu.sg'
 
@@ -81,7 +90,26 @@ export const Route = createFileRoute('/groups/$groupId')({
 
 const PAGE_SIZE = 10
 
-function SharingSheet({
+/** Initials avatar for a staff name */
+function StaffAvatar({ name, size = 8 }: { name: string; size?: number }) {
+  const initials = name
+    .split(' ')
+    .slice(-2)
+    .map((n) => n[0])
+    .join('')
+  return (
+    <div
+      className={cn(
+        'shrink-0 flex items-center justify-center rounded-full bg-muted text-xs font-medium',
+        `size-${size}`,
+      )}
+    >
+      {initials}
+    </div>
+  )
+}
+
+function SharingDialog({
   group,
   open,
   onOpenChange,
@@ -95,260 +123,222 @@ function SharingSheet({
     sharedWith: Array<GroupSharedWith>,
   ) => void
 }) {
-  const [visibility, setVisibility] = useState<'private' | 'school'>(
-    group.visibility,
+  // Seed StaffSelector value from existing sharedWith entries
+  const [selectedStaff, setSelectedStaff] = useState<Array<SelectedEntity>>(
+    () =>
+      group.sharedWith.map((sw) => ({
+        id: sw.staffId,
+        label: stripSalutation(sw.name),
+        type: 'individual' as const,
+        count: 1,
+      })),
   )
-  const [sharedWith, setSharedWith] = useState<Array<GroupSharedWith>>(
-    group.sharedWith,
+
+  // Role overrides per staffId — defaults to 'viewer' for newly added people
+  const [staffRoles, setStaffRoles] = useState<
+    Record<string, 'viewer' | 'editor'>
+  >(() =>
+    Object.fromEntries(group.sharedWith.map((sw) => [sw.staffId, sw.role])),
   )
-  const [addSearch, setAddSearch] = useState('')
-  const [drawerWidth, setDrawerWidth] = useState(480)
-  const dragRef = useRef<{ startX: number; startWidth: number } | null>(null)
 
-  const onDragStart = useCallback(
-    (e: React.MouseEvent) => {
-      e.preventDefault()
-      dragRef.current = { startX: e.clientX, startWidth: drawerWidth }
-
-      function onMouseMove(ev: MouseEvent) {
-        if (!dragRef.current) return
-        const delta = dragRef.current.startX - ev.clientX
-        setDrawerWidth(
-          Math.min(Math.max(dragRef.current.startWidth + delta, 360), 800),
-        )
+  // Expand the selectedStaff entities (groups → individual staff IDs)
+  const expandedStaffIds = useMemo<Array<string>>(() => {
+    const ids: Array<string> = []
+    const seen = new Set<string>()
+    for (const entity of selectedStaff) {
+      if (entity.type === 'individual') {
+        if (!seen.has(entity.id)) {
+          seen.add(entity.id)
+          ids.push(entity.id)
+        }
+      } else {
+        // Group — find and expand, respecting exclusions
+        const grp = MOCK_STAFF_GROUPS.find((g) => g.id === entity.id)
+        if (!grp) continue
+        const excluded = new Set(entity.excludedMemberNames ?? [])
+        for (const memberId of grp.memberIds) {
+          const member = MOCK_STAFF.find((s) => s.id === memberId)
+          if (!member) continue
+          const memberName = stripSalutation(member.name)
+          if (!excluded.has(memberName) && !seen.has(memberId)) {
+            seen.add(memberId)
+            ids.push(memberId)
+          }
+        }
       }
-      function onMouseUp() {
-        dragRef.current = null
-        document.removeEventListener('mousemove', onMouseMove)
-        document.removeEventListener('mouseup', onMouseUp)
-      }
-      document.addEventListener('mousemove', onMouseMove)
-      document.addEventListener('mouseup', onMouseUp)
-    },
-    [drawerWidth],
-  )
-
-  const staffResults = useMemo(() => {
-    if (!addSearch) return []
-    const q = addSearch.toLowerCase().trim()
-    // Match "sec 3" / "level 3" / "3" to formClass like "3A"
-    const levelMatch = q.match(
-      /(?:sec\s*|level\s*)?^(\d)$|(?:sec\s*|level\s*)(\d)/i,
-    )
-    const levelDigit = levelMatch?.[1] ?? levelMatch?.[2]
-    return MOCK_STAFF.filter((s) => {
-      if (sharedWith.some((sw) => sw.staffId === s.id)) return false
-      const fc = (s.formClass ?? '').toLowerCase()
-      return (
-        s.name.toLowerCase().includes(q) ||
-        s.email.toLowerCase().includes(q) ||
-        fc.includes(q) ||
-        (levelDigit !== undefined && fc.startsWith(levelDigit))
-      )
-    })
-  }, [addSearch, sharedWith])
-
-  function addStaff(staffId: string) {
-    const staff = MOCK_STAFF.find((s) => s.id === staffId)
-    if (!staff) return
-    setSharedWith((prev) => [
-      ...prev,
-      {
-        staffId: staff.id,
-        name: staff.name,
-        email: staff.email,
-        role: 'viewer',
-      },
-    ])
-    setAddSearch('')
-  }
+    }
+    return ids
+  }, [selectedStaff])
 
   function updateRole(staffId: string, role: 'viewer' | 'editor') {
-    setSharedWith((prev) =>
-      prev.map((sw) => (sw.staffId === staffId ? { ...sw, role } : sw)),
+    setStaffRoles((prev) => ({ ...prev, [staffId]: role }))
+  }
+
+  /** Remove an individual from the selection, even if they came from a group entity. */
+  function removeStaff(staffId: string) {
+    const member = MOCK_STAFF.find((s) => s.id === staffId)
+    if (!member) return
+    const memberName = stripSalutation(member.name)
+    setSelectedStaff((prev) =>
+      prev.flatMap((entity) => {
+        if (entity.type === 'individual' && entity.id === staffId) {
+          return [] // drop this individual
+        }
+        if (entity.type === 'group') {
+          const grp = MOCK_STAFF_GROUPS.find((g) => g.id === entity.id)
+          if (grp?.memberIds.includes(staffId)) {
+            // Exclude this member from the group entity
+            return [
+              {
+                ...entity,
+                excludedMemberNames: [
+                  ...(entity.excludedMemberNames ?? []),
+                  memberName,
+                ],
+              },
+            ]
+          }
+        }
+        return [entity]
+      }),
     )
   }
 
-  function removeStaff(staffId: string) {
-    setSharedWith((prev) => prev.filter((sw) => sw.staffId !== staffId))
-  }
+  // Derive final sharedWith for saving
+  const derivedSharedWith: Array<GroupSharedWith> = expandedStaffIds.flatMap(
+    (staffId) => {
+      const s = MOCK_STAFF.find((m) => m.id === staffId)
+      if (!s) return []
+      return [
+        {
+          staffId: s.id,
+          name: s.name,
+          email: s.email,
+          role: staffRoles[s.id] ?? 'viewer',
+        },
+      ]
+    },
+  )
+
+  // Detect whether any changes have been made vs the saved state
+  const hasChanges = useMemo(() => {
+    if (derivedSharedWith.length !== group.sharedWith.length) return true
+    const origMap = new Map(group.sharedWith.map((sw) => [sw.staffId, sw.role]))
+    return derivedSharedWith.some((sw) => origMap.get(sw.staffId) !== sw.role)
+  }, [derivedSharedWith, group.sharedWith])
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        side="right"
-        className="flex flex-col p-0"
-        style={{ width: drawerWidth, maxWidth: 'none' }}
-      >
-        {/* Resize handle */}
-        <div
-          className="absolute left-0 top-0 h-full w-1.5 cursor-col-resize hover:bg-border/60 transition-colors z-10"
-          onMouseDown={onDragStart}
-        />
-        <SheetHeader className="px-6 py-4 border-b">
-          <SheetTitle>Share this group</SheetTitle>
-        </SheetHeader>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="flex max-h-[85vh] max-w-md flex-col gap-0 p-0">
+        <DialogHeader className="border-b px-5 py-4">
+          <DialogTitle>Share this group</DialogTitle>
+        </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto space-y-6 px-6 pb-6 pt-4">
-          {/* Visibility toggle */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Visibility</Label>
-            <div className="inline-flex overflow-hidden rounded-md border">
-              <button
-                type="button"
-                onClick={() => setVisibility('private')}
-                className={cn(
-                  'px-4 py-1.5 text-sm font-medium transition-colors',
-                  visibility === 'private'
-                    ? 'bg-foreground text-background'
-                    : 'bg-background text-muted-foreground hover:bg-muted',
-                )}
-              >
-                Private
-              </button>
-              <div className="w-px bg-border" />
-              <button
-                type="button"
-                onClick={() => setVisibility('school')}
-                className={cn(
-                  'px-4 py-1.5 text-sm font-medium transition-colors',
-                  visibility === 'school'
-                    ? 'bg-foreground text-background'
-                    : 'bg-background text-muted-foreground hover:bg-muted',
-                )}
-              >
-                School-wide
-              </button>
-            </div>
+        <div className="flex flex-1 flex-col">
+          {/* Staff selector — only auto-opens dropdown when list is empty */}
+          <div className="px-5 pt-4">
+            <StaffSelector
+              key={String(open)}
+              value={selectedStaff}
+              onChange={setSelectedStaff}
+              hideChips
+              autoOpen={expandedStaffIds.length === 0}
+            />
           </div>
 
-          <Separator />
-
-          {/* People with access */}
-          <div className="space-y-3">
-            <Label className="text-sm font-medium">People with access</Label>
-            {sharedWith.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No one else has access.
-              </p>
+          {/* People with access — role management for each expanded individual */}
+          <div className="max-h-72 overflow-y-auto px-5 pb-4 pt-4">
+            {expandedStaffIds.length === 0 ? (
+              <div className="flex flex-col items-center gap-2 py-10 text-center">
+                <div className="flex size-12 items-center justify-center rounded-full bg-muted">
+                  <Users className="size-5 text-muted-foreground" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-foreground">
+                    No one added yet
+                  </p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    Search above to add staff
+                  </p>
+                </div>
+              </div>
             ) : (
-              <div className="space-y-2">
-                {sharedWith.map((sw) => {
-                  const staffMeta = MOCK_STAFF.find((s) => s.id === sw.staffId)
-                  const sublabel = [
-                    staffMeta?.formClass && `Form ${staffMeta.formClass}`,
-                    sw.email,
-                  ]
-                    .filter(Boolean)
-                    .join(' · ')
-                  return (
-                    <div
-                      key={sw.staffId}
-                      className="flex items-center gap-3 rounded-lg border px-3 py-2"
-                    >
-                      <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium">
-                        {sw.name
-                          .split(' ')
-                          .slice(-2)
-                          .map((n) => n[0])
-                          .join('')}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">
-                          {sw.name}
-                        </p>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {sublabel}
-                        </p>
-                      </div>
-                      <Select
-                        value={sw.role}
-                        onValueChange={(val) =>
-                          updateRole(sw.staffId, val as 'viewer' | 'editor')
-                        }
+              <>
+                <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  People with access
+                </p>
+                <div className="space-y-0.5">
+                  {derivedSharedWith.map((sw) => {
+                    const staffMeta = MOCK_STAFF.find(
+                      (s) => s.id === sw.staffId,
+                    )
+                    const sublabel = [
+                      staffMeta?.formClass && `Form ${staffMeta.formClass}`,
+                      sw.email,
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')
+                    return (
+                      <div
+                        key={sw.staffId}
+                        className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 hover:bg-muted/30"
                       >
-                        <SelectTrigger className="w-24 h-7 text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="viewer">Viewer</SelectItem>
-                          <SelectItem value="editor">Editor</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-7 text-muted-foreground hover:text-destructive"
-                        onClick={() => removeStaff(sw.staffId)}
-                      >
-                        <X className="size-3.5" />
-                      </Button>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* Add people */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Add people</Label>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Search by name, email or class…"
-                value={addSearch}
-                onChange={(e) => setAddSearch(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-            {staffResults.length > 0 && (
-              <div className="rounded-lg border divide-y">
-                {staffResults.map((s) => (
-                  <button
-                    key={s.id}
-                    type="button"
-                    onClick={() => addStaff(s.id)}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium">
-                      {s.name
-                        .split(' ')
-                        .slice(-2)
-                        .map((n) => n[0])
-                        .join('')}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium truncate">{s.name}</p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {[s.formClass && `Form ${s.formClass}`, s.email]
-                          .filter(Boolean)
-                          .join(' · ')}
-                      </p>
-                    </div>
-                  </button>
-                ))}
-              </div>
+                        <StaffAvatar name={sw.name} size={7} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">
+                            {sw.name}
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {sublabel}
+                          </p>
+                        </div>
+                        <Select
+                          value={sw.role}
+                          onValueChange={(val) =>
+                            updateRole(sw.staffId, val as 'viewer' | 'editor')
+                          }
+                        >
+                          <SelectTrigger className="w-24 h-7 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="viewer">Viewer</SelectItem>
+                            <SelectItem value="editor">Editor</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <button
+                          type="button"
+                          onClick={() => removeStaff(sw.staffId)}
+                          className="shrink-0 rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                        >
+                          <X className="size-3.5" />
+                        </button>
+                      </div>
+                    )
+                  })}
+                </div>
+              </>
             )}
           </div>
         </div>
 
-        <div className="border-t p-6 flex gap-2">
+        <DialogFooter className="border-t px-5 py-4">
+          {hasChanges && (
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+          )}
           <Button
-            className="flex-1"
             onClick={() => {
-              onSave(visibility, sharedWith)
+              if (hasChanges) onSave(group.visibility, derivedSharedWith)
               onOpenChange(false)
             }}
           >
-            Save
+            {hasChanges ? 'Save' : 'Done'}
           </Button>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-        </div>
-      </SheetContent>
-    </Sheet>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -473,17 +463,19 @@ function GroupDetailPage() {
                   <h1 className="text-2xl font-semibold truncate">
                     {group.name}
                   </h1>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="size-8 text-muted-foreground hover:text-foreground"
-                    onClick={() => {
-                      setNameInput(group.name)
-                      setEditingName(true)
-                    }}
-                  >
-                    <Edit2 className="size-4" />
-                  </Button>
+                  {canEdit && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-8 text-muted-foreground hover:text-foreground"
+                      onClick={() => {
+                        setNameInput(group.name)
+                        setEditingName(true)
+                      }}
+                    >
+                      <Edit2 className="size-4" />
+                    </Button>
+                  )}
                 </>
               )}
             </div>
@@ -521,7 +513,32 @@ function GroupDetailPage() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem render={<Link to="/groups/new" />}>
+                  <Copy className="mr-2 size-4" />
                   Duplicate group
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    const headers = ['#', 'Name', 'Class', 'NRIC']
+                    const rows = group.members.map((m, i) => [
+                      String(i + 1),
+                      m.name,
+                      m.class,
+                      m.nric ?? '',
+                    ])
+                    const csv = [headers, ...rows]
+                      .map((r) => r.map((c) => `"${c}"`).join(','))
+                      .join('\n')
+                    const blob = new Blob([csv], { type: 'text/csv' })
+                    const url = URL.createObjectURL(blob)
+                    const a = document.createElement('a')
+                    a.href = url
+                    a.download = `${group.name}.csv`
+                    a.click()
+                    URL.revokeObjectURL(url)
+                  }}
+                >
+                  <Download className="mr-2 size-4" />
+                  Export as CSV
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
@@ -543,44 +560,78 @@ function GroupDetailPage() {
 
       <Separator />
 
+      {/* Live group criteria banner */}
+      {group.listType === 'live' && (
+        <Alert className="border-blue-200 bg-blue-50/60 text-blue-900">
+          <Info className="size-4 text-blue-500" />
+          <AlertDescription className="text-blue-800">
+            Membership updates automatically based on selected criteria.{' '}
+            {group.criteriaSourceHref && (
+              <Link
+                to={group.criteriaSourceHref as '/students'}
+                className="inline-flex items-center gap-1 underline underline-offset-2 hover:text-blue-700"
+              >
+                Manage in source
+                <ExternalLink className="size-3" />
+              </Link>
+            )}
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Members section */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-semibold">
-            Members{' '}
+            Students{' '}
             <span className="text-muted-foreground font-normal">
               ({group.members.length})
             </span>
           </h2>
-          <div className="relative w-64">
-            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search members..."
-              value={memberSearch}
-              onChange={(e) => {
-                setMemberSearch(e.target.value)
-                setPage(1)
-              }}
-              className="pl-9"
-            />
+          <div className="flex items-center gap-2">
+            {canEdit && group.listType !== 'live' && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+                render={
+                  <Link to="/groups/new" search={{ editGroupId: group.id }} />
+                }
+              >
+                <UserPlus className="size-4" />
+                Add students
+              </Button>
+            )}
+            <div className="relative w-64">
+              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search students..."
+                value={memberSearch}
+                onChange={(e) => {
+                  setMemberSearch(e.target.value)
+                  setPage(1)
+                }}
+                className="pl-9"
+              />
+            </div>
           </div>
         </div>
 
         {filteredMembers.length === 0 ? (
           <EmptyState
-            title="No members found"
+            title="No students found"
             description="Try a different search term."
           />
         ) : (
           <>
             <div className="rounded-lg border overflow-hidden">
-              <Table>
+              <Table tableClassName="table-fixed w-full">
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
                     <TableHead className="w-12">#</TableHead>
                     <TableHead>Name</TableHead>
-                    <TableHead>Class</TableHead>
-                    <TableHead>NRIC</TableHead>
+                    <TableHead className="w-24">Class</TableHead>
+                    <TableHead className="w-36">NRIC</TableHead>
                     <TableHead className="w-12" />
                   </TableRow>
                 </TableHeader>
@@ -608,7 +659,7 @@ function GroupDetailPage() {
                         {member.nric ?? '—'}
                       </TableCell>
                       <TableCell>
-                        {canEdit && (
+                        {canEdit && group.listType !== 'live' && (
                           <Button
                             variant="ghost"
                             size="icon"
@@ -668,8 +719,8 @@ function GroupDetailPage() {
         )}
       </div>
 
-      {/* Sharing sheet */}
-      <SharingSheet
+      {/* Sharing dialog */}
+      <SharingDialog
         group={group}
         open={shareOpen}
         onOpenChange={setShareOpen}

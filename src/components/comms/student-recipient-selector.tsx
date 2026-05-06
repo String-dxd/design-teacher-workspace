@@ -46,6 +46,8 @@ export function StudentRecipientSelector({
         searchPlaceholder="Search by name, class, or group…"
         noResultsText="No students or groups found"
         emptyTabText="No items in this category"
+        chipsBelow
+        maxVisibleTokens={3}
       />
       {overlaps.map((w, i) => (
         <p key={i} className="mt-1.5 text-xs text-amber-600">

@@ -26,11 +26,10 @@ function nameHash(name: string): number {
 
 function fakeNric(name: string): string {
   const h = nameHash(name)
-  const prefix = h % 2 === 0 ? 'S' : 'T'
   const digits = String(h % 10_000_000).padStart(7, '0')
   const letters = 'ABCDEFGHJKLMNPQRSTUVWXYZ'
   const suffix = letters[h % letters.length]
-  return `${prefix}${digits}${suffix}`
+  return `T${digits}${suffix}`
 }
 
 const ALL_CLASS_LABELS = [
@@ -73,7 +72,7 @@ function deriveClassGroups(): Array<EntityItem> {
   >()
   for (const s of mockStudents) {
     if (s.schoolName !== 'Bandung Secondary School') continue
-    if (!/^\d+ /.test(s.class)) continue
+    if (!/^\d+[A-Z]/.test(s.class)) continue
     if (!classMap.has(s.class)) classMap.set(s.class, [])
     classMap.get(s.class)!.push({
       name: s.name,
@@ -88,15 +87,15 @@ function deriveClassGroups(): Array<EntityItem> {
   return [...classMap.entries()]
     .sort(([a], [b]) => {
       const parse = (label: string) => {
-        const m = label.match(/^(\d+)\s+(.+)/)
+        const m = label.match(/^(\d+)(.*)/)
         return m
-          ? { level: Number(m[1]), name: m[2] }
-          : { level: 99, name: label }
+          ? { level: Number(m[1]), suffix: m[2] }
+          : { level: 99, suffix: label }
       }
       const pa = parse(a),
         pb = parse(b)
       if (pa.level !== pb.level) return pa.level - pb.level
-      return pa.name.localeCompare(pb.name)
+      return pa.suffix.localeCompare(pb.suffix)
     })
     .map(([cls, members]) => ({
       id: `class:${cls}`,
@@ -156,7 +155,7 @@ function toCcaGroup(
 // ─── Sec 1 & 2 classes (hardcoded) ───────────────────────────────────────────
 
 const SEC1_CLASSES: Array<EntityItem> = [
-  toClassGroup('class:1 Diligence', '1 Diligence', [
+  toClassGroup('class:1A', '1A', [
     'Adeline Foo Jia En',
     'Bryan Ng Wei Liang',
     'Charlene Tay Xin Yi',
@@ -171,7 +170,7 @@ const SEC1_CLASSES: Array<EntityItem> = [
     'Liyana Binte Ramli',
     'Marcus Teo Jian Hao',
   ]),
-  toClassGroup('class:1 Integrity', '1 Integrity', [
+  toClassGroup('class:1B', '1B', [
     'Amirah Binte Hassan',
     'Benjamin Ong Kai Xiang',
     'Crystal Lim Hui Min',
@@ -185,7 +184,7 @@ const SEC1_CLASSES: Array<EntityItem> = [
     'Kevin Lim Zhi Wei',
     'Lisha Binte Rahmat',
   ]),
-  toClassGroup('class:1 Loyalty', '1 Loyalty', [
+  toClassGroup('class:1C', '1C', [
     'Aaron Tan Jun Hao',
     'Beatrice Chua Jia Ling',
     'Carmen Lim Wei Xuan',
@@ -201,7 +200,7 @@ const SEC1_CLASSES: Array<EntityItem> = [
 ]
 
 const SEC2_CLASSES: Array<EntityItem> = [
-  toClassGroup('class:2 Courage', '2 Courage', [
+  toClassGroup('class:2A', '2A', [
     'Alicia Tan Jia Yi',
     'Brandon Lim Kai Ming',
     'Celine Wong Shu Xian',
@@ -216,7 +215,7 @@ const SEC2_CLASSES: Array<EntityItem> = [
     'Lina Binte Aziz',
     'Matthew Foo Jian Hao',
   ]),
-  toClassGroup('class:2 Excellence', '2 Excellence', [
+  toClassGroup('class:2B', '2B', [
     'Amelia Lim Jia En',
     'Brendan Ong Wei Ming',
     'Clara Chan Xin Hui',
@@ -230,7 +229,7 @@ const SEC2_CLASSES: Array<EntityItem> = [
     'Leon Chua Wei Hao',
     'Mei Shan Binte Rashid',
   ]),
-  toClassGroup('class:2 Harmony', '2 Harmony', [
+  toClassGroup('class:2C', '2C', [
     'Aiden Teo Jia Le',
     'Brenda Lim Kai Xiang',
     'Clement Wong Jun Hao',
@@ -255,8 +254,8 @@ export const CLASS_GROUPS: Array<EntityItem> = [
 
 const sec1Names = SEC1_CLASSES.flatMap((c) => c.memberNames ?? [])
 const sec2Names = SEC2_CLASSES.flatMap((c) => c.memberNames ?? [])
-const sec3Students = bandungStudents.filter((s) => s.class.startsWith('3 '))
-const sec4Students = bandungStudents.filter((s) => s.class.startsWith('4 '))
+const sec3Students = bandungStudents.filter((s) => s.class.startsWith('3'))
+const sec4Students = bandungStudents.filter((s) => s.class.startsWith('4'))
 const sec3Names = sec3Students.map((s) => s.name)
 const sec4Names = sec4Students.map((s) => s.name)
 const allStudentNames = [...sec1Names, ...sec2Names, ...sec3Names, ...sec4Names]
@@ -334,105 +333,109 @@ export const SCHOOL_GROUP: EntityItem = {
   ],
 }
 
-// ─── CCA groups ───────────────────────────────────────────────────────────────
+// ─── CCA groups (derived from real student CCA field) ─────────────────────────
 
-export const CCA_GROUPS: Array<EntityItem> = [
-  toCcaGroup('cca:basketball', 'Basketball', [
-    'Chen Teo Jun Kai',
-    'Yusuf Koh Xin Yi',
-    'Bryan Tay Zhi Wei',
-    'Ahmad Bin Hassan',
-    'Kevin Ng Wei Ming',
-    'Ryan Lim Zhi Hao',
-    'Daniel Ong Jun Wei',
-  ]),
-  toCcaGroup('cca:choir', 'Choir', [
-    'Sarah Chan Jun Kai',
-    'Natalie Lim Jia Ying',
-    'Sophie Wong Xin Hui',
-    'Rachel Wong Mei Ling',
-    'Priya Sharma',
-    'Emily Tan Shu Wen',
-    'Nurul Izzah Binte Kamal',
-  ]),
-  toCcaGroup('cca:drama', 'Drama', [
-    'Vincent Koh Xin Yi',
-    'Jason Chua Jun Kai',
-    'Grace Tan Li Wen',
-    'Muhammad Farhan',
-    'Marcus Foo Jun Jie',
-    'Joshua Lee Wei Xuan',
-    'Cheryl Goh Hui Min',
-  ]),
-  toCcaGroup('cca:badminton', 'Badminton', [
-    'Xiao Lam Wei Jie',
-    'Harish Cheng Xin Yi',
-    'Liang Lim Wei Jie',
-    'Ethan Koh Ming Hao',
-    'Darren Lim Kai Xiang',
-    'Siti Aminah Binte Rahman',
-    'Arjun Krishnan',
-  ]),
-  toCcaGroup('cca:robotics', 'Robotics Club', [
-    'Sarah Tan Jun Kai',
-    'Tan Lam Wei Jie',
-    'Isabelle Chua Mei Xuan',
-    'Aisha Binte Mohamed',
-    'Michelle Teo Xin Yi',
-    'Hafiz Bin Abdullah',
-    'Lucas Ng Wei Jie',
-  ]),
+const CCA_LABELS: Array<string> = [
+  'Basketball',
+  'Choir',
+  'Drama',
+  'Badminton',
+  'Robotics',
 ]
+
+export const CCA_GROUPS: Array<EntityItem> = CCA_LABELS.map((ccaLabel) => {
+  const students = bandungStudents
+    .filter((s) => s.cca === ccaLabel)
+    .sort((a, b) => a.indexNumber - b.indexNumber)
+  return {
+    id: `cca:${ccaLabel.toLowerCase().replace(/\s+/g, '-')}`,
+    label: ccaLabel,
+    type: 'group' as const,
+    count: students.length,
+    groupType: 'cca' as const,
+    memberNames: students.map((s) => s.name),
+    memberDetails: students.map((s) => ({
+      name: s.name,
+      sublabel: s.class,
+      badge: s.nric,
+    })),
+  }
+})
 
 // ─── Teaching groups ──────────────────────────────────────────────────────────
 
-const sec3Details = sec3Students
+function toTeachingGroup(
+  id: string,
+  label: string,
+  details: Array<{ name: string; sublabel: string; badge: string }>,
+): EntityItem {
+  return {
+    id,
+    label,
+    type: 'group',
+    count: details.length,
+    groupType: 'teaching',
+    memberNames: details.map((d) => d.name),
+    memberDetails: details,
+  }
+}
+
+const sec1TeachingDetails = SEC1_CLASSES.flatMap(
+  (c) => c.memberDetails ?? [],
+).map((d) => ({
+  name: d.name,
+  sublabel: d.sublabel ?? '',
+  badge: d.badge ?? '',
+}))
+
+const sec2TeachingDetails = SEC2_CLASSES.flatMap(
+  (c) => c.memberDetails ?? [],
+).map((d) => ({
+  name: d.name,
+  sublabel: d.sublabel ?? '',
+  badge: d.badge ?? '',
+}))
+
+const sec3TeachingDetails = sec3Students
   .sort((a, b) => a.indexNumber - b.indexNumber)
-  .map((s) => ({
-    name: s.name,
-    nric: s.nric,
-    index: s.indexNumber,
-    class: s.class,
-  }))
-const scienceDetails = sec3Details.filter((_, i) => i % 5 !== 4)
+  .map((s) => ({ name: s.name, sublabel: s.class, badge: s.nric }))
+
+const sec4TeachingDetails = sec4Students
+  .sort((a, b) => a.indexNumber - b.indexNumber)
+  .map((s) => ({ name: s.name, sublabel: s.class, badge: s.nric }))
 
 export const TEACHING_GROUPS: Array<EntityItem> = [
-  {
-    id: 'tg:sec3-math',
-    label: 'Sec 3 Mathematics',
-    type: 'group',
-    count: sec3Details.length,
-    groupType: 'teaching',
-    memberNames: sec3Details.map((d) => d.name),
-    memberDetails: sec3Details,
-  },
-  {
-    id: 'tg:sec3-english',
-    label: 'Sec 3 English',
-    type: 'group',
-    count: sec3Details.length,
-    groupType: 'teaching',
-    memberNames: sec3Details.map((d) => d.name),
-    memberDetails: sec3Details,
-  },
-  {
-    id: 'tg:sec3-science',
-    label: 'Sec 3 Science',
-    type: 'group',
-    count: scienceDetails.length,
-    groupType: 'teaching',
-    memberNames: scienceDetails.map((d) => d.name),
-    memberDetails: scienceDetails,
-  },
-  {
-    id: 'tg:sec3-mother-tongue',
-    label: 'Sec 3 Mother Tongue',
-    type: 'group',
-    count: sec3Details.length,
-    groupType: 'teaching',
-    memberNames: sec3Details.map((d) => d.name),
-    memberDetails: sec3Details,
-  },
+  toTeachingGroup('tg:sec1-math', 'Sec 1 Mathematics', sec1TeachingDetails),
+  toTeachingGroup(
+    'tg:sec1-english',
+    'Sec 1 English',
+    sec1TeachingDetails.filter((_, i) => i % 6 !== 5),
+  ),
+  toTeachingGroup('tg:sec2-math', 'Sec 2 Mathematics', sec2TeachingDetails),
+  toTeachingGroup(
+    'tg:sec2-english',
+    'Sec 2 English',
+    sec2TeachingDetails.filter((_, i) => i % 6 !== 5),
+  ),
+  toTeachingGroup('tg:sec3-math', 'Sec 3 Mathematics', sec3TeachingDetails),
+  toTeachingGroup('tg:sec3-english', 'Sec 3 English', sec3TeachingDetails),
+  toTeachingGroup(
+    'tg:sec3-science',
+    'Sec 3 Science',
+    sec3TeachingDetails.filter((_, i) => i % 5 !== 4),
+  ),
+  toTeachingGroup(
+    'tg:sec3-mother-tongue',
+    'Sec 3 Mother Tongue',
+    sec3TeachingDetails,
+  ),
+  toTeachingGroup('tg:sec4-math', 'Sec 4 Mathematics', sec4TeachingDetails),
+  toTeachingGroup('tg:sec4-english', 'Sec 4 English', sec4TeachingDetails),
+  toTeachingGroup(
+    'tg:sec4-mother-tongue',
+    'Sec 4 Mother Tongue',
+    sec4TeachingDetails.filter((_, i) => i % 5 !== 4),
+  ),
 ]
 
 // ─── Custom groups ────────────────────────────────────────────────────────────
@@ -455,11 +458,14 @@ function groupToEntityItem(g: (typeof MOCK_GROUPS)[number]): EntityItem {
     type: 'group',
     count: g.members.length,
     groupType: 'custom',
+    listType: g.listType,
+    criteria: g.criteria,
     memberNames: g.members.map((m) => m.name),
     memberDetails: g.members.map((m) => ({
       name: m.name,
       sublabel: m.class,
       badge: m.nric,
+      isNew: m.isNew,
     })),
   }
 }
@@ -490,14 +496,34 @@ export const STUDENT_INDIVIDUAL_ITEMS: Array<EntityItem> = bandungStudents.map(
   }),
 )
 
+/** All students across Sec 1–4 (incl. hardcoded Sec 1/2) for the Groups picker. */
+export const ALL_PICKER_STUDENTS: Array<{
+  id: string
+  name: string
+  class: string
+  level: number
+  nric: string
+  indexNumber: number
+}> = CLASS_GROUPS.flatMap((group) =>
+  (group.memberDetails ?? []).map((d, i) => ({
+    id: `${group.id}::${i}::${d.name}`,
+    name: d.name,
+    class: group.label,
+    level: Number(group.label.match(/^(\d+)/)?.[1] ?? 0),
+    nric: d.badge ?? '',
+    indexNumber: i + 1,
+  })),
+)
+
 // ─── Teacher profile (simulated) ─────────────────────────────────────────────
-const MY_CLASS_ID = 'class:2 Courage'
+const MY_CLASS_ID = 'class:3A'
 const MY_CCA_ID = 'cca:badminton'
 
-const myClass = CLASS_GROUPS.find((g) => g.id === MY_CLASS_ID)!
-const otherClasses = CLASS_GROUPS.filter((g) => g.id !== MY_CLASS_ID)
-const myCCA = CCA_GROUPS.find((g) => g.id === MY_CCA_ID)!
-const otherCCAs = CCA_GROUPS.filter((g) => g.id !== MY_CCA_ID)
+const myClass =
+  CLASS_GROUPS.find((g) => g.id === MY_CLASS_ID) ?? CLASS_GROUPS[0]
+const otherClasses = CLASS_GROUPS.filter((g) => g.id !== myClass?.id)
+const myCCA = CCA_GROUPS.find((g) => g.id === MY_CCA_ID) ?? CCA_GROUPS[0]
+const otherCCAs = CCA_GROUPS.filter((g) => g.id !== myCCA?.id)
 
 // ─── Browse scopes ────────────────────────────────────────────────────────────
 // 5 tabs: Class · Level/School · CCA · Teaching Group · Custom Group

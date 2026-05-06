@@ -32,6 +32,7 @@ export interface MemberDetail {
   name: string
   sublabel?: string // e.g. "3A · tanml@school.edu.sg" for staff
   badge?: string // right-aligned label (e.g. NRIC for students)
+  isNew?: boolean // recently added by a criteria update (live groups only)
 }
 
 export interface EntityItem {
@@ -44,6 +45,8 @@ export interface EntityItem {
   memberNames?: Array<string> // plain names for chip tooltips
   memberDetails?: Array<MemberDetail> // richer per-member info for expanded list
   groupType?: GroupType
+  listType?: 'static' | 'live' // criteria-based groups auto-update membership
+  criteria?: string // human-readable criteria label (live groups only)
 }
 
 export interface SelectedEntity {
@@ -86,6 +89,18 @@ export interface EntitySelectorProps {
   noResultsText?: string
   emptyTabText?: string
   maxScrollHeight?: string
+  /** When set, collapses chips beyond this count behind a "+N more" badge. */
+  maxVisibleTokens?: number
+  /** Optional slot rendered inside each selected chip, after the label. */
+  renderChipExtra?: (entity: SelectedEntity) => React.ReactNode
+  /** When true, selected chips render below the search input instead of inline. */
+  chipsBelow?: boolean
+  /** When true, suppresses chip rendering entirely (use when the parent already shows selections elsewhere). */
+  hideChips?: boolean
+  /** When false, focusing the input won't open the dropdown — the user must type first. Defaults to true. */
+  openOnFocus?: boolean
+  /** When true, the dropdown opens immediately on mount (e.g. empty dialog). */
+  autoOpen?: boolean
 }
 
 // ---------------------------------------------------------------------------
@@ -236,7 +251,7 @@ function ResultRow({
       <div
         className={cn(
           'flex w-full transition-colors',
-          isSelected ? 'bg-twblue-1' : 'hover:bg-slate-50',
+          isSelected ? 'bg-twblue-1' : 'hover:bg-slate-100',
         )}
       >
         {/* Selection toggle — takes all available space */}
@@ -264,7 +279,14 @@ function ResultRow({
             )}
           </span>
           <div className="min-w-0 flex-1">
-            <p className="truncate font-semibold">{item.label}</p>
+            <p className="flex items-center gap-1.5 truncate font-semibold">
+              <span className="truncate">{item.label}</span>
+              {item.listType === 'live' && (
+                <span className="shrink-0 rounded border border-primary/30 bg-primary/10 px-1.5 py-px text-[9px] font-semibold text-primary">
+                  Criteria
+                </span>
+              )}
+            </p>
             {item.sublabel && (
               <p className="truncate text-xs text-muted-foreground">
                 {item.sublabel}
@@ -273,7 +295,16 @@ function ResultRow({
           </div>
           {item.type === 'group' && item.count !== undefined && (
             <span className="shrink-0 text-xs text-muted-foreground">
-              {item.count - excludedMemberNames.size}{' '}
+              {isSelected && excludedMemberNames.size > 0 ? (
+                <>
+                  <span className="font-medium text-blue-600">
+                    {item.count - excludedMemberNames.size}
+                  </span>
+                  /{item.count}
+                </>
+              ) : (
+                item.count - excludedMemberNames.size
+              )}{' '}
               {getCountUnit(
                 item.groupType,
                 item.count - excludedMemberNames.size,
@@ -312,15 +343,19 @@ function ResultRow({
       {/* Expanded member list */}
       {isExpanded && hasMembers && (
         <div className="border-b border-slate-100 bg-slate-50/60 px-4 pb-3 pt-2.5">
-          {/* Header: member count */}
+          {/* Header: member count + criteria note */}
           {(() => {
             const total = item.memberDetails?.length ?? item.memberNames!.length
-            const included = total - excludedMemberNames.size
+            const newCount =
+              item.memberDetails?.filter((d) => d.isNew).length ?? 0
             return (
               <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                {isSelected
-                  ? `${included} of ${total} included`
-                  : `${total} ${getCountUnit(item.groupType, total)}`}
+                {`${total} ${getCountUnit(item.groupType, total)}`}
+                {newCount > 0 && (
+                  <span className="ml-1.5 normal-case font-normal text-emerald-600">
+                    · {newCount} new
+                  </span>
+                )}
               </p>
             )
           })()}
@@ -341,17 +376,9 @@ function ResultRow({
                   key={detail.name}
                   type="button"
                   onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => isSelected && onMemberToggle?.(detail.name)}
-                  className={cn(
-                    'flex w-full items-center gap-2 rounded px-1.5 py-1 text-xs',
-                    isSelected
-                      ? 'cursor-pointer hover:bg-slate-100'
-                      : 'cursor-default',
-                  )}
+                  onClick={() => onMemberToggle?.(detail.name)}
+                  className="flex w-full cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-xs hover:bg-blue-50"
                 >
-                  <span className="w-5 shrink-0 text-right text-[10px] tabular-nums text-slate-400">
-                    #{index + 1}
-                  </span>
                   <span
                     className={cn(
                       'flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded border-2 transition-colors',
@@ -362,6 +389,9 @@ function ResultRow({
                   >
                     {isMemberIncluded && <Check className="h-3 w-3" />}
                   </span>
+                  <span className="w-5 shrink-0 text-right text-[10px] tabular-nums text-slate-400">
+                    #{index + 1}
+                  </span>
                   <span className="min-w-0 flex-1 text-left">
                     <span
                       className={cn(
@@ -371,9 +401,14 @@ function ResultRow({
                     >
                       {detail.name}
                     </span>
-                    {detail.sublabel && (
-                      <span className="ml-1 text-[10px] font-normal text-muted-foreground">
+                    {detail.sublabel && detail.sublabel !== item.label && (
+                      <span className="ml-1 shrink-0 rounded bg-slate-200 px-1 py-px text-[9px] font-medium text-slate-500">
                         {detail.sublabel}
+                      </span>
+                    )}
+                    {detail.isNew && (
+                      <span className="ml-1 shrink-0 rounded bg-emerald-100 px-1 py-px text-[9px] font-semibold text-emerald-700">
+                        New
                       </span>
                     )}
                   </span>
@@ -409,9 +444,15 @@ function ResultRow({
 function EntityChip({
   entity,
   onRemove,
+  extra,
+  large = false,
+  onChipClick,
 }: {
   entity: SelectedEntity
   onRemove: () => void
+  extra?: React.ReactNode
+  large?: boolean
+  onChipClick?: () => void
 }) {
   const names = entity.memberNames ?? []
   const tooltipTitle =
@@ -424,25 +465,74 @@ function EntityChip({
   return (
     <span
       title={tooltipTitle}
-      className="inline-flex max-w-[180px] shrink-0 items-center gap-1 rounded-md bg-twblue-2 px-2 py-0.5 text-xs font-medium text-twblue-9"
+      role={onChipClick ? 'button' : undefined}
+      tabIndex={onChipClick ? 0 : undefined}
+      onMouseDown={onChipClick ? (e) => e.preventDefault() : undefined}
+      onClick={onChipClick}
+      onKeyDown={
+        onChipClick
+          ? (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                onChipClick()
+              }
+            }
+          : undefined
+      }
+      className={cn(
+        'inline-flex shrink-0 items-center rounded-md font-medium',
+        large
+          ? 'gap-2 border border-input bg-background px-3 py-1.5 text-sm text-slate-700'
+          : cn(
+              'gap-1 bg-twblue-2 px-2 py-0.5 text-xs text-twblue-9',
+              extra ? 'max-w-[260px]' : 'max-w-[180px]',
+            ),
+        onChipClick && 'cursor-pointer hover:bg-slate-50',
+      )}
     >
       {entity.type === 'group' ? (
-        <Users className="h-3 w-3 shrink-0" />
+        <Users
+          className={cn(
+            'shrink-0',
+            large ? 'h-3.5 w-3.5 text-slate-400' : 'h-3 w-3',
+          )}
+        />
       ) : (
-        <User className="h-3 w-3 shrink-0" />
+        <User
+          className={cn(
+            'shrink-0',
+            large ? 'h-3.5 w-3.5 text-slate-400' : 'h-3 w-3',
+          )}
+        />
       )}
       <span className="truncate">{entity.label}</span>
       {entity.type === 'group' && (
-        <span className="shrink-0 opacity-60">· {entity.count}</span>
+        <span
+          className={cn('shrink-0', large ? 'text-slate-400' : 'opacity-60')}
+        >
+          · {entity.count}
+        </span>
+      )}
+      {extra != null && (
+        <span
+          className={cn('flex shrink-0 items-center', large ? 'ml-2' : 'ml-1')}
+        >
+          {extra}
+        </span>
       )}
       <button
         type="button"
         aria-label={`Remove ${entity.label}`}
         onMouseDown={(e) => e.preventDefault()}
         onClick={onRemove}
-        className="ml-0.5 shrink-0 rounded-full p-0.5 hover:bg-twblue-4 hover:text-twblue-9"
+        className={cn(
+          'shrink-0 rounded-full',
+          large
+            ? 'ml-1 p-0.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600'
+            : 'ml-0.5 p-0.5 hover:bg-twblue-4 hover:text-twblue-9',
+        )}
       >
-        <X className="h-2.5 w-2.5" />
+        <X className={cn(large ? 'h-3 w-3' : 'h-2.5 w-2.5')} />
       </button>
     </span>
   )
@@ -463,14 +553,28 @@ export function EntitySelector({
   noResultsText = 'No results found',
   emptyTabText = 'No items in this category',
   maxScrollHeight = '240px',
+  maxVisibleTokens,
+  renderChipExtra,
+  chipsBelow = false,
+  hideChips = false,
+  openOnFocus = true,
+  autoOpen = false,
 }: EntitySelectorProps) {
-  const [isOpen, setIsOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(autoOpen)
   const [query, setQuery] = useState('')
   const [activeScope, setActiveScope] = useState(scopes?.[0]?.id ?? '')
   const [expandedGroupId, setExpandedGroupId] = useState<string | null>(null)
   const [groupExclusions, setGroupExclusions] = useState<
     Map<string, Set<string>>
   >(new Map())
+  const [chipsExpanded, setChipsExpanded] = useState(false)
+
+  // Auto-collapse when enough chips have been removed
+  useEffect(() => {
+    if (maxVisibleTokens != null && value.length <= maxVisibleTokens) {
+      setChipsExpanded(false)
+    }
+  }, [value.length, maxVisibleTokens])
 
   const wrapperRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -534,16 +638,49 @@ export function EntitySelector({
     }
   }
 
-  function handleMemberToggle(groupId: string, memberName: string) {
+  function handleMemberToggle(item: EntityItem, memberName: string) {
+    const groupId = item.id
+    const allNames = item.memberNames ?? []
+    const isGroupSelected = value.some((e) => e.id === groupId)
+
+    if (!isGroupSelected) {
+      // Group not yet selected: add it, excluding all members except the clicked one
+      const exclusions = new Set(allNames.filter((n) => n !== memberName))
+      const next = new Map(groupExclusions)
+      if (exclusions.size > 0) next.set(groupId, exclusions)
+      setGroupExclusions(next)
+      const entity = toSelectedEntity(item)
+      onChange([
+        ...value,
+        {
+          ...entity,
+          excludedMemberNames:
+            exclusions.size > 0 ? [...exclusions] : undefined,
+        },
+      ])
+      return
+    }
+
+    // Group already selected: toggle this individual member
     const currentExcl = groupExclusions.get(groupId) ?? new Set<string>()
     const newExcl = new Set(currentExcl)
-    if (newExcl.has(memberName)) newExcl.delete(memberName)
-    else newExcl.add(memberName)
+    if (newExcl.has(memberName))
+      newExcl.delete(memberName) // re-include
+    else newExcl.add(memberName) // exclude
+
+    // If all members are now excluded, remove the group entirely
+    if (allNames.length > 0 && newExcl.size >= allNames.length) {
+      onChange(value.filter((e) => e.id !== groupId))
+      const next = new Map(groupExclusions)
+      next.delete(groupId)
+      setGroupExclusions(next)
+      return
+    }
+
     const next = new Map(groupExclusions)
     if (newExcl.size === 0) next.delete(groupId)
     else next.set(groupId, newExcl)
     setGroupExclusions(next)
-    // Propagate exclusions to parent value
     const updatedValue = value.map((e) =>
       e.id === groupId
         ? {
@@ -568,6 +705,23 @@ export function EntitySelector({
   function closePanel() {
     setIsOpen(false)
     setQuery('')
+  }
+
+  /** Open the dropdown and expand the given group so the user can (de)select members. */
+  function openGroup(entity: SelectedEntity) {
+    // Find which scope contains this group and switch to it
+    const owningScope = scopes?.find(
+      (s) =>
+        s.items?.some((item) => item.id === entity.id) ||
+        s.sections?.some((sec) =>
+          sec.items.some((item) => item.id === entity.id),
+        ),
+    )
+    if (owningScope) setActiveScope(owningScope.id)
+    setExpandedGroupId(entity.id)
+    setQuery('') // switch to browse mode, not search
+    setIsOpen(true)
+    setTimeout(() => inputRef.current?.focus(), 50)
   }
 
   // When no scopes (staff/search-only mode): always call searchFn so staff panel
@@ -602,7 +756,7 @@ export function EntitySelector({
           }
           selectedIndividualNames={selectedIndividualNames}
           excludedMemberNames={groupExclusions.get(item.id)}
-          onMemberToggle={(name) => handleMemberToggle(item.id, name)}
+          onMemberToggle={(name) => handleMemberToggle(item, name)}
         />
       ))
 
@@ -671,7 +825,7 @@ export function EntitySelector({
                 }
                 selectedIndividualNames={selectedIndividualNames}
                 excludedMemberNames={groupExclusions.get(item.id)}
-                onMemberToggle={(name) => handleMemberToggle(item.id, name)}
+                onMemberToggle={(name) => handleMemberToggle(item, name)}
               />
             ))}
           </>
@@ -696,7 +850,7 @@ export function EntitySelector({
                 }
                 selectedIndividualNames={selectedIndividualNames}
                 excludedMemberNames={groupExclusions.get(item.id)}
-                onMemberToggle={(name) => handleMemberToggle(item.id, name)}
+                onMemberToggle={(name) => handleMemberToggle(item, name)}
               />
             ))}
           </>
@@ -760,6 +914,7 @@ export function EntitySelector({
       aria-haspopup="listbox"
       onClick={() => {
         if (!isMobile) {
+          setIsOpen(true)
           inputRef.current?.focus()
         } else {
           setIsOpen(true)
@@ -771,14 +926,39 @@ export function EntitySelector({
         isOpen && 'border-ring ring-[3px] ring-ring/50',
       )}
     >
-      {/* Selected chips */}
-      {value.map((entity) => (
-        <EntityChip
-          key={entity.id}
-          entity={entity}
-          onRemove={() => handleRemove(entity)}
-        />
-      ))}
+      {/* Selected chips (inline mode only — skipped when chipsBelow) */}
+      {!chipsBelow &&
+        (maxVisibleTokens != null &&
+        !chipsExpanded &&
+        value.length > maxVisibleTokens
+          ? value.slice(0, maxVisibleTokens)
+          : value
+        ).map((entity) => (
+          <EntityChip
+            key={entity.id}
+            entity={entity}
+            onRemove={() => handleRemove(entity)}
+            extra={renderChipExtra?.(entity)}
+          />
+        ))}
+
+      {/* "+N more" overflow badge (inline mode only) */}
+      {!chipsBelow &&
+        maxVisibleTokens != null &&
+        !chipsExpanded &&
+        value.length > maxVisibleTokens && (
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={(e) => {
+              e.stopPropagation()
+              setChipsExpanded(true)
+            }}
+            className="inline-flex shrink-0 cursor-pointer items-center rounded-md border border-dashed border-slate-300 px-2 py-0.5 text-xs text-slate-500 hover:bg-slate-50"
+          >
+            +{value.length - maxVisibleTokens} more
+          </button>
+        )}
 
       {/* Desktop: inline search input (always present, flex-1 expands to fill row) */}
       {!isMobile && (
@@ -786,19 +966,28 @@ export function EntitySelector({
           ref={inputRef}
           type="text"
           value={query}
-          placeholder={value.length === 0 ? placeholder : undefined}
+          placeholder={
+            value.length === 0 || chipsBelow ? placeholder : undefined
+          }
           onChange={(e) => {
             setQuery(e.target.value)
             if (!isOpen) setIsOpen(true)
           }}
-          onFocus={() => setIsOpen(true)}
+          onFocus={() => {
+            if (openOnFocus) setIsOpen(true)
+          }}
           onKeyDown={(e) => {
             if (e.key === 'Escape') {
               if (query) setQuery('')
               else closePanel()
             }
-            // Backspace on empty input removes the last chip
-            if (e.key === 'Backspace' && !query && value.length > 0) {
+            // Backspace on empty input removes the last chip (inline mode only)
+            if (
+              !chipsBelow &&
+              e.key === 'Backspace' &&
+              !query &&
+              value.length > 0
+            ) {
               handleRemove(value[value.length - 1])
             }
           }}
@@ -806,8 +995,8 @@ export function EntitySelector({
         />
       )}
 
-      {/* Clear all — visible when ≥1 chip is selected */}
-      {value.length > 0 && (
+      {/* Clear all — visible when ≥1 chip is selected (inline mode only) */}
+      {!chipsBelow && value.length > 0 && (
         <button
           type="button"
           onMouseDown={(e) => e.preventDefault()}
@@ -838,86 +1027,114 @@ export function EntitySelector({
   )
 
   return (
-    <div ref={wrapperRef} className="relative">
-      {tokenContainer}
+    <>
+      <div ref={wrapperRef} className="relative">
+        {tokenContainer}
 
-      {/* Desktop: inline dropdown panel */}
-      {!isMobile && isOpen && (
-        <div className="absolute z-20 mt-1 w-full overflow-hidden rounded-lg border bg-white shadow-md">
-          {panelBody}
-        </div>
-      )}
+        {/* Desktop: inline dropdown panel */}
+        {!isMobile && isOpen && (
+          <div className="absolute z-20 mt-1 w-full overflow-hidden rounded-lg border bg-white shadow-md">
+            {panelBody}
+          </div>
+        )}
 
-      {/* Mobile: bottom Sheet */}
-      {isMobile && (
-        <Sheet
-          open={isOpen}
-          onOpenChange={(open) => {
-            setIsOpen(open)
-            if (!open) setQuery('')
-          }}
-        >
-          <SheetContent
-            side="bottom"
-            showCloseButton={false}
-            className="max-h-[85vh] rounded-t-xl px-0 pt-0"
+        {/* Mobile: bottom Sheet */}
+        {isMobile && (
+          <Sheet
+            open={isOpen}
+            onOpenChange={(open) => {
+              setIsOpen(open)
+              if (!open) setQuery('')
+            }}
           >
-            {/* Drag handle + title bar */}
-            <div className="flex items-center justify-between border-b px-4 py-3">
-              <div className="flex flex-col gap-1">
-                <div className="mx-auto h-1 w-12 rounded-full bg-slate-200" />
-              </div>
-              <span className="text-sm font-medium text-muted-foreground">
-                {placeholder}
-              </span>
-              <button
-                type="button"
-                onClick={closePanel}
-                className="rounded-md p-1 hover:bg-slate-100"
-              >
-                <X className="h-4 w-4 text-muted-foreground" />
-              </button>
-            </div>
-
-            {/* Search input inside Sheet */}
-            <div className="relative border-b">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder={searchPlaceholder}
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Escape') {
-                    if (query) setQuery('')
-                    else closePanel()
-                  }
-                }}
-                autoFocus
-                className="w-full border-0 bg-transparent py-2.5 pl-9 pr-8 text-sm outline-none placeholder:text-muted-foreground"
-              />
-              {query && (
+            <SheetContent
+              side="bottom"
+              showCloseButton={false}
+              className="max-h-[85vh] rounded-t-xl px-0 pt-0"
+            >
+              {/* Drag handle + title bar */}
+              <div className="flex items-center justify-between border-b px-4 py-3">
+                <div className="flex flex-col gap-1">
+                  <div className="mx-auto h-1 w-12 rounded-full bg-slate-200" />
+                </div>
+                <span className="text-sm font-medium text-muted-foreground">
+                  {placeholder}
+                </span>
                 <button
                   type="button"
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => setQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-0.5 hover:bg-slate-100"
+                  onClick={closePanel}
+                  className="rounded-md p-1 hover:bg-slate-100"
                 >
-                  <X className="h-3.5 w-3.5 text-muted-foreground" />
+                  <X className="h-4 w-4 text-muted-foreground" />
                 </button>
-              )}
-            </div>
+              </div>
 
-            {/* Panel body (tabs + results) */}
-            <div
-              className="overflow-y-auto"
-              style={{ maxHeight: 'calc(85vh - 108px)' }}
-            >
-              {panelBody}
-            </div>
-          </SheetContent>
-        </Sheet>
+              {/* Search input inside Sheet */}
+              <div className="relative border-b">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder={searchPlaceholder}
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') {
+                      if (query) setQuery('')
+                      else closePanel()
+                    }
+                  }}
+                  autoFocus
+                  className="w-full border-0 bg-transparent py-2.5 pl-9 pr-8 text-sm outline-none placeholder:text-muted-foreground"
+                />
+                {query && (
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => setQuery('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-0.5 hover:bg-slate-100"
+                  >
+                    <X className="h-3.5 w-3.5 text-muted-foreground" />
+                  </button>
+                )}
+              </div>
+
+              {/* Panel body (tabs + results) */}
+              <div
+                className="overflow-y-auto"
+                style={{ maxHeight: 'calc(85vh - 108px)' }}
+              >
+                {panelBody}
+              </div>
+            </SheetContent>
+          </Sheet>
+        )}
+      </div>
+
+      {/* Chips below area — rendered outside the relative wrapper so it's never clipped */}
+      {chipsBelow && !hideChips && value.length > 0 && (
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          {value.map((entity) => (
+            <EntityChip
+              key={entity.id}
+              entity={entity}
+              onRemove={() => handleRemove(entity)}
+              extra={renderChipExtra?.(entity)}
+              large
+              onChipClick={
+                entity.type === 'group' ? () => openGroup(entity) : undefined
+              }
+            />
+          ))}
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => onChange([])}
+            className="ml-auto shrink-0 text-xs text-muted-foreground transition-colors hover:text-rose-500"
+          >
+            Clear all
+          </button>
+        </div>
       )}
-    </div>
+    </>
   )
 }

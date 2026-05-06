@@ -19,6 +19,7 @@ export type FieldType = 'numeric' | 'text' | 'boolean' | 'enum' | 'multiselect'
 
 export type FieldGroup =
   | 'general'
+  | 'attendance'
   | 'academic'
   | 'behaviour'
   | 'wellbeing'
@@ -43,17 +44,19 @@ export interface FilterFieldOption {
 
 export const groupLabels: Record<FieldGroup, string> = {
   general: 'General',
-  academic: 'Academic Performance',
-  behaviour: 'Behaviour and Discipline',
+  attendance: 'Attendance',
+  academic: 'Academic',
+  behaviour: 'Behaviour',
   wellbeing: 'Wellbeing',
-  family: 'Family, Housing, Finance',
+  family: 'Family',
 }
 
 export const groupOrder: Array<FieldGroup> = [
   'general',
+  'attendance',
   'behaviour',
-  'academic',
   'wellbeing',
+  'academic',
   'family',
 ]
 
@@ -121,23 +124,32 @@ export const filterFieldConfigs: Array<FilterFieldConfig> = [
       'Visual arts',
     ],
   },
-  // Behaviour and Discipline
-  {
-    field: 'absences',
-    label: 'Non-VR absences(%)',
-    type: 'numeric',
-    group: 'behaviour',
-    defaultOperator: 'gte',
-    defaultValue: 5,
-  },
+  // Attendance
   {
     field: 'lateComing',
     label: 'Late-coming(%)',
     type: 'numeric',
-    group: 'behaviour',
+    group: 'attendance',
     defaultOperator: 'gte',
     defaultValue: 5,
   },
+  {
+    field: 'absences',
+    label: 'Non-VR absences(%)',
+    type: 'numeric',
+    group: 'attendance',
+    defaultOperator: 'gte',
+    defaultValue: 5,
+  },
+  {
+    field: 'ccaMissed',
+    label: 'CCA attendance(%)',
+    type: 'numeric',
+    group: 'attendance',
+    defaultOperator: 'gte',
+    defaultValue: 3,
+  },
+  // Behaviour
   {
     field: 'offences',
     label: 'Offences',
@@ -145,14 +157,6 @@ export const filterFieldConfigs: Array<FilterFieldConfig> = [
     group: 'behaviour',
     defaultOperator: 'gte',
     defaultValue: 1,
-  },
-  {
-    field: 'ccaMissed',
-    label: 'CCA attendance(%)',
-    type: 'numeric',
-    group: 'behaviour',
-    defaultOperator: 'gte',
-    defaultValue: 3,
   },
   {
     field: 'counsellingSessions',
@@ -179,7 +183,16 @@ export const filterFieldConfigs: Array<FilterFieldConfig> = [
       'Dyslexia',
     ],
   },
-  // Academic Performance
+  {
+    field: 'conduct',
+    label: 'Conduct grade',
+    type: 'multiselect',
+    group: 'behaviour',
+    defaultOperator: 'is',
+    defaultValue: '',
+    enumValues: ['Poor', 'Fair', 'Good', 'Very Good', 'Excellent'],
+  },
+  // Academic
   {
     field: 'overallPercentage',
     label: 'Overall % across selected subjects',
@@ -187,15 +200,6 @@ export const filterFieldConfigs: Array<FilterFieldConfig> = [
     group: 'academic',
     defaultOperator: 'lte',
     defaultValue: 50,
-  },
-  {
-    field: 'conduct',
-    label: 'Conduct grade',
-    type: 'multiselect',
-    group: 'academic',
-    defaultOperator: 'is',
-    defaultValue: '',
-    enumValues: ['Poor', 'Fair', 'Good', 'Very Good', 'Excellent'],
   },
   {
     field: 'approvedMtl',
@@ -225,10 +229,10 @@ export const filterFieldConfigs: Array<FilterFieldConfig> = [
   // Wellbeing
   {
     field: 'riskIndicators',
-    label: 'Risk indicators',
+    label: 'TCI risk indicators',
     type: 'numeric',
     group: 'wellbeing',
-    defaultOperator: 'gte',
+    defaultOperator: 'eq',
     defaultValue: 3,
   },
   {
@@ -238,7 +242,7 @@ export const filterFieldConfigs: Array<FilterFieldConfig> = [
     group: 'wellbeing',
     defaultOperator: 'is',
     defaultValue: '',
-    enumValues: ['Yes', 'No'],
+    enumValues: ['-', 'Yes', 'No'],
   },
   {
     field: 'socialLinks',
@@ -248,16 +252,24 @@ export const filterFieldConfigs: Array<FilterFieldConfig> = [
     defaultOperator: 'lte',
     defaultValue: 2,
   },
+  // Family, Housing, Finance
+  {
+    field: 'siblings',
+    label: 'Siblings',
+    type: 'numeric',
+    group: 'family',
+    defaultOperator: 'gte',
+    defaultValue: 3,
+  },
   {
     field: 'fas',
     label: 'FAS',
     type: 'multiselect',
-    group: 'wellbeing',
+    group: 'family',
     defaultOperator: 'is',
     defaultValue: '',
     enumValues: ['MOE FAS', 'School based FAS', '-'],
   },
-  // Family, Housing, Finance
   {
     field: 'housing',
     label: 'Housing',
@@ -289,13 +301,31 @@ export const filterFieldConfigs: Array<FilterFieldConfig> = [
     enumValues: ['Owner occupied', 'Rented'],
   },
   {
-    field: 'custody',
-    label: 'Custody',
+    field: 'supportedByComLink',
+    label: 'Supported by ComLink+',
     type: 'multiselect',
     group: 'family',
     defaultOperator: 'is',
     defaultValue: '',
-    enumValues: ['Father', 'Mother', 'Joint custody', 'Others'],
+    enumValues: ['Yes', 'No', '-'],
+  },
+  {
+    field: 'supportedByFsc',
+    label: 'Supported by FSC in the past 2 years',
+    type: 'multiselect',
+    group: 'family',
+    defaultOperator: 'is',
+    defaultValue: '',
+    enumValues: ['Yes', 'No', '-'],
+  },
+  {
+    field: 'nonIntactFamily',
+    label: 'From Non-Intact Family',
+    type: 'multiselect',
+    group: 'family',
+    defaultOperator: 'is',
+    defaultValue: '',
+    enumValues: ['Yes', 'No', '-'],
   },
   {
     field: 'commuterStatus',
@@ -308,22 +338,6 @@ export const filterFieldConfigs: Array<FilterFieldConfig> = [
   {
     field: 'afterSchoolArrangement',
     label: 'After-school arrangement',
-    type: 'text',
-    group: 'family',
-    defaultOperator: 'is_not_empty',
-    defaultValue: '',
-  },
-  {
-    field: 'siblings',
-    label: 'Siblings',
-    type: 'numeric',
-    group: 'family',
-    defaultOperator: 'gte',
-    defaultValue: 3,
-  },
-  {
-    field: 'externalAgencies',
-    label: 'External Agencies',
     type: 'text',
     group: 'family',
     defaultOperator: 'is_not_empty',

@@ -1,15 +1,22 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
+import {
+  Link,
+  createFileRoute,
+  useNavigate,
+  useSearch,
+} from '@tanstack/react-router'
 import { ArrowLeft, ChevronDown, ChevronRight, Search, X } from 'lucide-react'
 
 import { toast } from 'sonner'
 import type { StudentGroup } from '@/types/student-group'
 
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
-import { MOCK_GROUPS } from '@/data/mock-groups'
+import { MOCK_GROUPS, getGroupById } from '@/data/mock-groups'
 import {
+  ALL_PICKER_STUDENTS,
   CCA_GROUPS,
   CLASS_GROUPS,
+  LEVEL_GROUPS,
   TEACHING_GROUPS,
 } from '@/data/mock-student-groups'
 import { Button } from '@/components/ui/button'
@@ -21,6 +28,10 @@ import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/groups/new')({
   component: GroupsNew,
+  validateSearch: (search: Record<string, unknown>) => ({
+    editGroupId:
+      typeof search.editGroupId === 'string' ? search.editGroupId : undefined,
+  }),
 })
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -44,18 +55,7 @@ type PickerGroup = {
 
 // ─── Build student registry ───────────────────────────────────────────────────
 
-const ALL_STUDENTS: Array<PickerStudent> = CLASS_GROUPS.flatMap((group) =>
-  (group.memberDetails ?? []).map((d, i) => ({
-    id: `${group.label}::${i}::${d.name}`,
-    name: d.name,
-    class: group.label,
-    level: Number(group.label.match(/^(\d+)/)?.[1] ?? 0),
-    nric: d.badge ?? '',
-    indexNumber: i + 1,
-  })),
-)
-
-const studentsByName = new Map(ALL_STUDENTS.map((s) => [s.name, s]))
+const studentsByName = new Map(ALL_PICKER_STUDENTS.map((s) => [s.name, s]))
 
 function parseClassLabel(label: string): [number, string] {
   const m = label.match(/^(\d+)\s+(.+)/)
@@ -77,15 +77,13 @@ const CLASS_TAB_GROUPS: Array<PickerGroup> = CLASS_GROUPS.map((g) => ({
   return al !== bl ? al - bl : an.localeCompare(bn)
 })
 
-const LEVEL_TAB_GROUPS: Array<PickerGroup> = [1, 2, 3, 4]
-  .map((lvl) => ({
-    id: `level-${lvl}`,
-    label: `Sec ${lvl}`,
-    students: ALL_STUDENTS.filter((s) => s.level === lvl).sort(
-      (a, b) => a.class.localeCompare(b.class) || a.indexNumber - b.indexNumber,
-    ),
-  }))
-  .filter((g) => g.students.length > 0)
+const LEVEL_TAB_GROUPS: Array<PickerGroup> = LEVEL_GROUPS.map((g) => ({
+  id: g.id,
+  label: g.label,
+  students: (g.memberNames ?? [])
+    .map((name) => studentsByName.get(name))
+    .filter((s): s is PickerStudent => s !== undefined),
+}))
 
 const CCA_TAB_GROUPS: Array<PickerGroup> = CCA_GROUPS.map((g) => ({
   id: g.id,
@@ -114,17 +112,34 @@ const BROWSE_TABS: Array<{ id: BrowseTab; label: string }> = [
 // ─── Component ────────────────────────────────────────────────────────────────
 
 function GroupsNew() {
+  const { editGroupId } = useSearch({ from: '/groups/new' })
+  const editGroup = editGroupId ? getGroupById(editGroupId) : undefined
+  const isEditing = !!editGroup
+
   useSetBreadcrumbs([
     { label: 'Student Groups', href: '/groups' },
-    { label: 'New Group', href: '/groups/new' },
+    { label: isEditing ? editGroup.name : 'New Group', href: '/groups/new' },
   ])
 
   const navigate = useNavigate()
 
+  // Pre-select existing members when editing
+  const initialIds = useMemo(() => {
+    if (!editGroup) return new Set<string>()
+    const nameToId = new Map(ALL_PICKER_STUDENTS.map((s) => [s.name, s.id]))
+    return new Set(
+      editGroup.members
+        .map((m) => nameToId.get(m.name) ?? m.id)
+        .filter(Boolean),
+    )
+  }, [editGroup])
+
   // Form state
-  const [groupName, setGroupName] = useState('')
-  const [groupDescription, setGroupDescription] = useState('')
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [groupName, setGroupName] = useState(editGroup?.name ?? '')
+  const [groupDescription, setGroupDescription] = useState(
+    editGroup?.description ?? '',
+  )
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(initialIds)
 
   // Picker state
   const [activeTab, setActiveTab] = useState<BrowseTab>('class')
@@ -142,7 +157,7 @@ function GroupsNew() {
   // Selected students sorted by class → index
   const selectedStudents = useMemo(
     () =>
-      ALL_STUDENTS.filter((s) => selectedIds.has(s.id)).sort(
+      ALL_PICKER_STUDENTS.filter((s) => selectedIds.has(s.id)).sort(
         (a, b) =>
           a.class.localeCompare(b.class) || a.indexNumber - b.indexNumber,
       ),
@@ -286,28 +301,50 @@ function GroupsNew() {
 
   function handleSave() {
     if (!canSave) return
-    const newGroup: StudentGroup = {
-      id: `cg-${Date.now()}`,
-      kind: 'regular',
-      name: groupName.trim(),
-      description: groupDescription.trim() || undefined,
-      members: selectedStudents.map((s) => ({
-        id: s.id,
-        name: s.name,
-        class: s.class,
-        nric: s.nric,
-        indexNumber: s.indexNumber,
-      })),
-      staffInCharge: [],
-      visibility: 'private',
-      sharedWith: [],
-      createdBy: { name: 'Mrs Tan Mei Lin', email: 'tanml@school.edu.sg' },
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+    if (isEditing && editGroup) {
+      // Update existing group in-place
+      const idx = MOCK_GROUPS.findIndex((g) => g.id === editGroup.id)
+      if (idx !== -1) {
+        MOCK_GROUPS[idx] = {
+          ...MOCK_GROUPS[idx],
+          name: groupName.trim(),
+          description: groupDescription.trim() || undefined,
+          members: selectedStudents.map((s) => ({
+            id: s.id,
+            name: s.name,
+            class: s.class,
+            nric: s.nric,
+            indexNumber: s.indexNumber,
+          })),
+          updatedAt: new Date().toISOString(),
+        }
+      }
+      toast.success('Group updated')
+      navigate({ to: '/groups/$groupId', params: { groupId: editGroup.id } })
+    } else {
+      const newGroup: StudentGroup = {
+        id: `cg-${Date.now()}`,
+        kind: 'regular',
+        name: groupName.trim(),
+        description: groupDescription.trim() || undefined,
+        members: selectedStudents.map((s) => ({
+          id: s.id,
+          name: s.name,
+          class: s.class,
+          nric: s.nric,
+          indexNumber: s.indexNumber,
+        })),
+        staffInCharge: [],
+        visibility: 'private',
+        sharedWith: [],
+        createdBy: { name: 'Mrs Tan Mei Lin', email: 'tanml@school.edu.sg' },
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }
+      MOCK_GROUPS.push(newGroup)
+      toast.success('Group created')
+      navigate({ to: '/groups/$groupId', params: { groupId: newGroup.id } })
     }
-    MOCK_GROUPS.push(newGroup)
-    toast.success('Group created')
-    navigate({ to: '/groups/$groupId', params: { groupId: newGroup.id } })
   }
 
   const showClass =
@@ -326,12 +363,27 @@ function GroupsNew() {
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <h1 className="flex-1 text-base font-semibold">New Student Group</h1>
-          <Button variant="ghost" size="sm" render={<Link to="/groups" />}>
+          <h1 className="flex-1 text-base font-semibold">
+            {isEditing ? editGroup.name : 'New Group'}
+          </h1>
+          <Button
+            variant="ghost"
+            size="sm"
+            render={
+              isEditing ? (
+                <Link
+                  to="/groups/$groupId"
+                  params={{ groupId: editGroup.id }}
+                />
+              ) : (
+                <Link to="/groups" />
+              )
+            }
+          >
             Cancel
           </Button>
           <Button size="sm" disabled={!canSave} onClick={handleSave}>
-            Save Group
+            {isEditing ? 'Update Group' : 'Save Group'}
           </Button>
         </div>
       </div>
@@ -395,7 +447,7 @@ function GroupsNew() {
             <section className="rounded-xl border bg-white overflow-hidden">
               <div className="px-6 py-4 border-b">
                 <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                  Select members
+                  Select students
                 </h2>
               </div>
 
@@ -661,7 +713,7 @@ function GroupsNew() {
                 disabled={!canSave}
                 onClick={handleSave}
               >
-                Save Group
+                {isEditing ? 'Update Group' : 'Save Group'}
               </Button>
             </div>
           </div>

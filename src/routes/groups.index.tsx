@@ -24,7 +24,7 @@ import { getStructuredTypeLabel } from '@/types/student-group'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
 import { MOCK_GROUPS, MOCK_SHARED_GROUPS } from '@/data/mock-groups'
 import { TEACHER_STRUCTURED_GROUPS } from '@/data/mock-structured-groups'
-import { cn } from '@/lib/utils'
+import { cn, stripSalutation } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -42,15 +42,14 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Table,
   TableBody,
@@ -318,7 +317,11 @@ function GroupsIndex() {
   const [ownershipFilter, setOwnershipFilter] = useState<
     Set<'mine' | 'shared'>
   >(new Set())
-  const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [deleteMode, setDeleteMode] = useState<
+    'delete-for-self' | 'delete-for-everyone'
+  >('delete-for-self')
   const [assignedSearch, setAssignedSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState<
     Set<Exclude<GroupTypeFilterOption, 'regular'>>
@@ -338,9 +341,13 @@ function GroupsIndex() {
         : ownershipFilter.size === 1 && ownershipFilter.has('shared')
           ? shared
           : [...mine, ...shared]
-    if (!mySearch) return combined
+    const sorted = [...combined].sort(
+      (a, b) =>
+        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
+    )
+    if (!mySearch) return sorted
     const q = mySearch.toLowerCase()
-    return combined.filter((g) => g.name.toLowerCase().includes(q))
+    return sorted.filter((g) => g.name.toLowerCase().includes(q))
   }, [groups, mySearch, ownershipFilter])
 
   const filteredAssignedGroups = useMemo(
@@ -356,30 +363,80 @@ function GroupsIndex() {
     [assignedSearch, typeFilter],
   )
 
-  function confirmDelete() {
-    if (deleteId) {
-      setGroups((prev) => prev.filter((g) => g.id !== deleteId))
-      const idx = MOCK_GROUPS.findIndex((g) => g.id === deleteId)
-      if (idx !== -1) MOCK_GROUPS.splice(idx, 1)
-      setDeleteId(null)
+  const filteredGroupIds = filteredCombinedGroups.map((g) => g.id)
+  const allSelectedInView =
+    filteredGroupIds.length > 0 &&
+    filteredGroupIds.every((id) => selectedIds.has(id))
+  const someSelectedInView =
+    filteredGroupIds.some((id) => selectedIds.has(id)) && !allSelectedInView
+  const selectedGroups = filteredCombinedGroups.filter((g) =>
+    selectedIds.has(g.id),
+  )
+  // Two-option dialog when user is owner or editor of any selected group
+  const hasElevatedAccess = selectedGroups.some(
+    (g) =>
+      g._source === 'mine' ||
+      (
+        g as typeof g & { sharedWith?: Array<{ email: string; role: string }> }
+      ).sharedWith?.find((s) => s.email === CURRENT_USER_EMAIL)?.role ===
+        'editor',
+  )
+
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
+
+  function toggleSelectAll() {
+    if (allSelectedInView) {
+      setSelectedIds((prev) => {
+        const next = new Set(prev)
+        filteredGroupIds.forEach((id) => next.delete(id))
+        return next
+      })
+    } else {
+      setSelectedIds((prev) => new Set([...prev, ...filteredGroupIds]))
     }
   }
 
-  const deleteGroup = groups.find((g) => g.id === deleteId)
+  function openDeleteDialog(id?: string) {
+    if (id) setSelectedIds(new Set([id]))
+    setDeleteMode('delete-for-self')
+    setShowDeleteDialog(true)
+  }
+
+  function handleDeleteGroups() {
+    const count = selectedIds.size
+    setGroups((prev) => prev.filter((g) => !selectedIds.has(g.id)))
+    for (const id of selectedIds) {
+      const idx = MOCK_GROUPS.findIndex((g) => g.id === id)
+      if (idx !== -1) MOCK_GROUPS.splice(idx, 1)
+    }
+    setSelectedIds(new Set())
+    setShowDeleteDialog(false)
+    toast.success(
+      deleteMode === 'delete-for-self'
+        ? `${count} group${count > 1 ? 's' : ''} removed from your list`
+        : `${count} group${count > 1 ? 's' : ''} deleted`,
+    )
+  }
 
   return (
     <div className="flex flex-col">
       {/* ── Page header (matches forms.tsx pattern) ───────────────────────── */}
-      <div className="border-b px-4 py-4">
+      <div className="border-b px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-lg font-semibold md:text-2xl">Groups</h1>
+              <h1 className="text-2xl font-semibold">Groups</h1>
               <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-900">
                 Concept
               </span>
             </div>
-            <p className="mt-1 hidden text-sm text-muted-foreground md:block">
+            <p className="mt-1 text-sm text-muted-foreground">
               Organise students into reusable groups for announcements, forms,
               and reports.
             </p>
@@ -438,7 +495,7 @@ function GroupsIndex() {
 
         {/* ── My Groups table ─────────────────────────────────────────────── */}
         {tab === 'my-groups' && (
-          <div className="max-w-full overflow-x-auto bg-white">
+          <div className="max-w-full overflow-x-auto bg-background">
             {filteredCombinedGroups.length === 0 ? (
               <div className="flex flex-col items-center py-16">
                 <EmptyState
@@ -466,11 +523,24 @@ function GroupsIndex() {
               </div>
             ) : (
               <Table tableClassName="table-fixed w-full">
-                <TableHeader className="border-b bg-white">
+                <TableHeader className="border-b bg-background">
                   <TableRow className="border-0 hover:bg-transparent">
-                    <TableHead className="pl-6">Name</TableHead>
-                    <TableHead className="w-24">Members</TableHead>
-                    <TableHead className="w-[160px]">Classes</TableHead>
+                    <TableHead className="pl-5 w-[44px]">
+                      <Checkbox
+                        checked={
+                          allSelectedInView
+                            ? true
+                            : someSelectedInView
+                              ? 'indeterminate'
+                              : false
+                        }
+                        onCheckedChange={toggleSelectAll}
+                        aria-label="Select all"
+                      />
+                    </TableHead>
+                    <TableHead className="pl-2">Name</TableHead>
+                    <TableHead className="w-24">Students</TableHead>
+                    <TableHead className="w-24">Type</TableHead>
                     <TableHead className="w-32">Last updated</TableHead>
                     <TableHead className="w-36">Created by</TableHead>
                     <TableHead className="w-[48px] pr-2" />
@@ -484,10 +554,15 @@ function GroupsIndex() {
                           (s) => s.email === CURRENT_USER_EMAIL,
                         )?.role
                       : undefined
+                    const isSelected = selectedIds.has(group.id)
                     return (
                       <TableRow
                         key={group.id}
-                        className="cursor-pointer"
+                        className={cn(
+                          'cursor-pointer',
+                          isSelected &&
+                            'bg-primary/[0.04] hover:bg-primary/[0.06]',
+                        )}
                         onClick={() =>
                           navigate({
                             to: '/groups/$groupId',
@@ -495,7 +570,17 @@ function GroupsIndex() {
                           })
                         }
                       >
-                        <TableCell className="overflow-hidden whitespace-normal pl-6">
+                        <TableCell
+                          className="pl-5 w-[44px]"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => toggleSelect(group.id)}
+                            aria-label={`Select ${group.name}`}
+                          />
+                        </TableCell>
+                        <TableCell className="overflow-hidden whitespace-normal pl-2">
                           <div className="min-w-0">
                             <div className="flex items-center gap-1.5">
                               <span className="truncate font-medium">
@@ -520,6 +605,11 @@ function GroupsIndex() {
                                 </Badge>
                               )}
                             </div>
+                            {group.listType === 'live' && group.criteria && (
+                              <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
+                                {group.criteria}
+                              </p>
+                            )}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -529,13 +619,19 @@ function GroupsIndex() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <ClassPills members={group.members} />
+                          <Badge variant="outline" className="py-0 text-xs">
+                            {group.listType === 'live' ? 'Criteria' : 'Custom'}
+                          </Badge>
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
-                          {formatRelativeDate(group.updatedAt)}
+                          {group.listType === 'live'
+                            ? 'Auto'
+                            : formatRelativeDate(group.updatedAt)}
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
-                          {group.createdBy.name}
+                          {group.createdBy.email === CURRENT_USER_EMAIL
+                            ? 'Me'
+                            : stripSalutation(group.createdBy.name)}
                         </TableCell>
                         <TableCell
                           className="w-[48px] pr-2 text-right"
@@ -603,7 +699,7 @@ function GroupsIndex() {
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
                                   className="text-destructive focus:text-destructive"
-                                  onClick={() => setDeleteId(group.id)}
+                                  onClick={() => openDeleteDialog(group.id)}
                                 >
                                   <Trash2 className="mr-2 h-4 w-4" />
                                   Delete group
@@ -669,6 +765,37 @@ function GroupsIndex() {
                 </TableBody>
               </Table>
             )}
+
+            {/* Selection action bar */}
+            {selectedIds.size > 0 && (
+              <div className="flex items-center gap-3 border-t bg-background px-6 py-3">
+                <span className="text-sm font-medium text-foreground">
+                  {selectedIds.size} selected
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedIds(new Set())}
+                  className="text-xs text-muted-foreground hover:text-foreground"
+                >
+                  Clear
+                </button>
+                <div className="flex-1" />
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => {
+                    setDeleteMode('delete-for-self')
+                    setShowDeleteDialog(true)
+                  }}
+                >
+                  <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                  Delete{' '}
+                  {selectedIds.size > 1
+                    ? `${selectedIds.size} groups`
+                    : 'group'}
+                </Button>
+              </div>
+            )}
           </div>
         )}
 
@@ -679,33 +806,34 @@ function GroupsIndex() {
               <Alert className="border-blue-200 bg-blue-50/60 text-blue-900">
                 <Info className="h-4 w-4 text-blue-500" />
                 <AlertDescription className="text-blue-800">
-                  These groups are managed in School Cockpit. Changes to
-                  membership must be made by your school administrator.
+                  Membership updates automatically based on selected criteria.
+                  Contact your school administrator to make changes.
                 </AlertDescription>
               </Alert>
             </div>
 
-            <div className="max-w-full overflow-x-auto bg-white">
+            <div className="max-w-full overflow-x-auto bg-background">
               {filteredAssignedGroups.length === 0 ? (
-                <EmptyState
-                  title={
-                    assignedSearch || typeFilter.size > 0
-                      ? 'No groups found'
-                      : 'No groups assigned'
-                  }
-                  description={
-                    assignedSearch || typeFilter.size > 0
-                      ? 'Try adjusting your search or filters.'
-                      : 'Your school administrator assigns groups in School Cockpit.'
-                  }
-                />
+                <div className="flex flex-col items-center py-16">
+                  <EmptyState
+                    title={
+                      assignedSearch || typeFilter.size > 0
+                        ? 'No groups found'
+                        : 'No groups assigned'
+                    }
+                    description={
+                      assignedSearch || typeFilter.size > 0
+                        ? 'Try adjusting your search or filters.'
+                        : 'Your school administrator assigns groups in School Cockpit.'
+                    }
+                  />
+                </div>
               ) : (
                 <Table tableClassName="table-fixed w-full">
-                  <TableHeader className="border-b bg-white">
+                  <TableHeader className="border-b bg-background">
                     <TableRow className="border-0 hover:bg-transparent">
                       <TableHead className="pl-6">Name</TableHead>
-                      <TableHead className="w-24">Members</TableHead>
-                      <TableHead className="w-[160px]">Classes</TableHead>
+                      <TableHead className="w-24">Students</TableHead>
                       <TableHead className="w-28">Type</TableHead>
                       <TableHead className="w-[48px] pr-2" />
                     </TableRow>
@@ -734,9 +862,6 @@ function GroupsIndex() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <ClassPills members={group.members} />
-                        </TableCell>
-                        <TableCell>
                           <Badge variant="outline" className="py-0 text-xs">
                             {getStructuredTypeLabel(group.structuredType)}
                           </Badge>
@@ -756,30 +881,120 @@ function GroupsIndex() {
       </div>
 
       {/* ── Delete confirmation ──────────────────────────────────────────────── */}
-      <AlertDialog
-        open={!!deleteId}
-        onOpenChange={(open) => !open && setDeleteId(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete group?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete{' '}
-              <strong>{deleteGroup?.name}</strong>? This action cannot be
-              undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              Delete{' '}
+              {selectedIds.size > 1 ? `${selectedIds.size} groups` : 'group'}?
+            </DialogTitle>
+            {!hasElevatedAccess ? (
+              <DialogDescription>
+                This action cannot be undone.
+              </DialogDescription>
+            ) : (
+              <DialogDescription>
+                Choose what to do with{' '}
+                {selectedIds.size > 1 ? 'these groups' : 'this group'}:
+              </DialogDescription>
+            )}
+          </DialogHeader>
+
+          {hasElevatedAccess && (
+            <div className="space-y-2 py-1">
+              {/* Option: Delete for myself */}
+              <button
+                type="button"
+                onClick={() => setDeleteMode('delete-for-self')}
+                className={cn(
+                  'w-full rounded-md border p-3.5 text-left transition-colors',
+                  deleteMode === 'delete-for-self'
+                    ? 'border-primary bg-primary/[0.04]'
+                    : 'border-border hover:bg-muted',
+                )}
+              >
+                <div className="flex items-start gap-3">
+                  <span
+                    className={cn(
+                      'mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border',
+                      deleteMode === 'delete-for-self'
+                        ? 'border-primary bg-primary'
+                        : 'border-slate-300',
+                    )}
+                  >
+                    {deleteMode === 'delete-for-self' && (
+                      <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                    )}
+                  </span>
+                  <div>
+                    <p className="text-sm font-medium">Delete for myself</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      Remove from your list. Others you've shared it with can
+                      still access the group.
+                    </p>
+                  </div>
+                </div>
+              </button>
+
+              {/* Option: Delete for everyone */}
+              <button
+                type="button"
+                onClick={() => setDeleteMode('delete-for-everyone')}
+                className={cn(
+                  'w-full rounded-md border p-3.5 text-left transition-colors',
+                  deleteMode === 'delete-for-everyone'
+                    ? 'border-destructive bg-destructive/[0.04]'
+                    : 'border-border hover:bg-muted',
+                )}
+              >
+                <div className="flex items-start gap-3">
+                  <span
+                    className={cn(
+                      'mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border',
+                      deleteMode === 'delete-for-everyone'
+                        ? 'border-destructive bg-destructive'
+                        : 'border-slate-300',
+                    )}
+                  >
+                    {deleteMode === 'delete-for-everyone' && (
+                      <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                    )}
+                  </span>
+                  <div>
+                    <p className="text-sm font-medium text-destructive">
+                      Delete for everyone
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      Permanently deletes the group for all users it has been
+                      shared with. This cannot be undone.
+                    </p>
+                  </div>
+                </div>
+              </button>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setShowDeleteDialog(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant={
+                !hasElevatedAccess || deleteMode === 'delete-for-everyone'
+                  ? 'destructive'
+                  : 'default'
+              }
+              onClick={handleDeleteGroups}
             >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+              {!hasElevatedAccess
+                ? `Delete ${selectedIds.size > 1 ? `${selectedIds.size} groups` : 'group'}`
+                : deleteMode === 'delete-for-self'
+                  ? 'Delete for myself'
+                  : 'Delete for everyone'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

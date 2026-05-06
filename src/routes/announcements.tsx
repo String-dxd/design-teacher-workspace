@@ -34,8 +34,8 @@ function AnnouncementsLayout() {
           </Button>
         </div>
         <p className="mt-1 hidden text-sm text-muted-foreground md:block">
-          Send posts to parents via parents gateway, send a view-only post or
-          collect responses.
+          Send a view-only post or collect responses from parents via Parents
+          Gateway.
         </p>
       </div>
       <Outlet />

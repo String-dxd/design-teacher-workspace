@@ -3,6 +3,12 @@ export type ReadStatus = 'read' | 'unread'
 export type PGOwnership = 'mine' | 'shared'
 export type PGRole = 'editor' | 'viewer'
 
+export interface StaffInChargeMember {
+  id: string // matches MOCK_STAFF id
+  name: string // display name without salutation
+  role: PGRole
+}
+
 export interface PGQuestion {
   id: string
   text: string
@@ -52,7 +58,7 @@ export interface PGAnnouncement {
   attachments?: Array<PGAttachment>
   status: PGStatus
   recipients: Array<PGRecipient> // empty [] for drafts/scheduled
-  staffInCharge: string
+  staffInCharge: Array<StaffInChargeMember>
   enquiryEmail: string
   ownership: PGOwnership
   role: PGRole

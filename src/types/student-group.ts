@@ -5,6 +5,8 @@ export interface GroupMember {
   nric?: string
   indexNumber?: number
   cca?: string
+  /** True if this member was recently added by a criteria update (live groups only) */
+  isNew?: boolean
 }
 
 export interface GroupSharedWith {
@@ -33,6 +35,12 @@ export interface StudentGroup {
   name: string
   description?: string
   kind: 'regular'
+  /** static = manually curated; live = auto-updates in real-time based on criteria */
+  listType?: 'static' | 'live'
+  /** Human-readable criteria label shown on live groups (e.g. "Attendance below 80%") */
+  criteria?: string
+  /** Where to redirect the user to edit the criteria or fix errors (for live groups) */
+  criteriaSourceHref?: string
   source?: 'created' | 'saved-from-sdt'
   members: Array<GroupMember>
   staffInCharge: Array<StaffInCharge>

@@ -12,6 +12,14 @@ const iconHoverColorVariants: Record<AppColor, string> = {
   purple: 'group-hover:text-purple-500',
 }
 
+function AppBadge({ label }: { label: string }) {
+  return (
+    <span className="rounded-full bg-twblue-3 px-2 py-0.5 text-xs font-medium text-twblue-9">
+      {label}
+    </span>
+  )
+}
+
 interface AppIconProps {
   icon: LucideIcon | string
   color: AppColor
@@ -23,7 +31,7 @@ export function AppIcon({ icon, color, className }: AppIconProps) {
     return (
       <div
         className={cn(
-          'relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-[14px] border bg-white',
+          'relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-[14px] border bg-white p-2',
           className,
         )}
       >
@@ -57,6 +65,7 @@ interface AppCardProps {
   icon: LucideIcon | string
   color: AppColor
   href: string
+  badge?: string
   onClick?: () => void
   className?: string
 }
@@ -67,6 +76,7 @@ export function AppCard({
   icon,
   color,
   href,
+  badge,
   onClick,
   className,
 }: AppCardProps) {
@@ -79,7 +89,10 @@ export function AppCard({
     <>
       <AppIcon icon={icon} color={color} />
       <div className="flex flex-col gap-2">
-        <h3 className="font-semibold text-foreground">{name}</h3>
+        <div className="flex items-center gap-2">
+          <h3 className="font-semibold text-foreground">{name}</h3>
+          {badge && <AppBadge label={badge} />}
+        </div>
         <p className="line-clamp-3 text-sm text-muted-foreground">
           {description}
         </p>
@@ -145,11 +158,7 @@ export function FeaturedAppCard({
       <div className="flex flex-1 flex-col gap-2">
         <div className="flex items-center gap-2">
           <h3 className="font-semibold text-foreground">{name}</h3>
-          {badge && (
-            <span className="rounded-full border-0 bg-twblue-3 px-2 py-0.5 text-xs font-medium text-twblue-9">
-              {badge}
-            </span>
-          )}
+          {badge && <AppBadge label={badge} />}
         </div>
         <p className="text-sm text-muted-foreground">{description}</p>
       </div>

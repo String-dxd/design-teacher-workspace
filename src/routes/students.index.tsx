@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 
 import type {
@@ -17,9 +17,13 @@ import { StudentFilters } from '@/components/students/student-filters'
 import { StudentTable } from '@/components/students/student-table'
 import { ClassSelector } from '@/components/students/class-selector'
 import { defaultColumns } from '@/components/students/column-visibility-popover'
-import { SubjectSelectorDialog } from '@/components/students/subject-selector-dialog'
+import {
+  ALL_SUBJECTS,
+  SubjectSelectorDialog,
+} from '@/components/students/subject-selector-dialog'
 
 import { getMetrics, mockStudents } from '@/data/mock-students'
+import { getImportedColumns, saveImportedColumns } from '@/lib/imported-columns'
 
 const SUBJECT_SELECTION_KEY = 'overall-pct-subjects'
 
@@ -28,7 +32,16 @@ function loadSelectedSubjects(): Array<string> | null {
     const raw = localStorage.getItem(SUBJECT_SELECTION_KEY)
     if (!raw) return null
     const parsed = JSON.parse(raw)
-    return Array.isArray(parsed) ? parsed : null
+    if (!Array.isArray(parsed)) return null
+    // If any current subject is missing from the saved list, the list is stale
+    // (subjects were added after the user last saved) — reset to all selected
+    const hasNewSubjects = ALL_SUBJECTS.some((s) => !parsed.includes(s))
+    if (hasNewSubjects) {
+      localStorage.removeItem(SUBJECT_SELECTION_KEY)
+      return null
+    }
+    const isAll = ALL_SUBJECTS.every((s) => parsed.includes(s))
+    return isAll ? null : parsed
   } catch {
     return null
   }
@@ -68,6 +81,37 @@ function matchesCondition(
   filter: FilterCriterion,
   selectedSubjects?: Array<string> | null,
 ): boolean {
+  // Imported/custom fields have no student data — skip filter (show all)
+  const knownFields = new Set<string>([
+    'class',
+    'cca',
+    'overallPercentage',
+    'conduct',
+    'approvedMtl',
+    'learningSupport',
+    'postSecEligibility',
+    'offences',
+    'absences',
+    'lateComing',
+    'ccaMissed',
+    'riskIndicators',
+    'lowMoodFlagged',
+    'socialLinks',
+    'counsellingSessions',
+    'sen',
+    'fas',
+    'housing',
+    'housingType',
+    'commuterStatus',
+    'afterSchoolArrangement',
+    'siblings',
+    'externalAgencies',
+    'supportedByComLink',
+    'supportedByFsc',
+    'nonIntactFamily',
+  ])
+  if (!knownFields.has(filter.field)) return true
+
   // For overallPercentage, use the computed value based on selected subjects
   const value =
     filter.field === 'overallPercentage'
@@ -123,21 +167,93 @@ function matchesCondition(
 
 function StudentsPage() {
   const studentAnalyticsEnabled = useFeatureFlag('student-analytics')
+  const studentAnalyticsBasicEnabled = useFeatureFlag('student-analytics-basic')
+  const msfUpliftEnabled = useFeatureFlag('msf-uplift-data')
+  const isStudentInsightsView =
+    !studentAnalyticsEnabled && !studentAnalyticsBasicEnabled
   const pageTitle = studentAnalyticsEnabled ? 'Profiles' : 'Student Insights'
   useSetBreadcrumbs([{ label: pageTitle, href: '/students' }])
 
   const [selectedClass, setSelectedClass] = useState('Secondary 3')
   const [searchQuery, setSearchQuery] = useState('')
   const [filters, setFilters] = useState<Array<FilterCriterion>>([])
-  const [columns, setColumns] = useState<Array<ColumnConfig>>(defaultColumns)
+  const [columns, setColumns] = useState<Array<ColumnConfig>>(() => {
+    const insightsFiltered = isStudentInsightsView
+      ? defaultColumns.filter(
+          (c) =>
+            c.id !== 'approvedMtl' &&
+            c.id !== 'postSecEligibility' &&
+            c.id !== 'commuterStatus' &&
+            c.id !== 'afterSchoolArrangement',
+        )
+      : defaultColumns
+    const baseColumns = msfUpliftEnabled
+      ? insightsFiltered
+      : insightsFiltered.filter(
+          (c) =>
+            c.id !== 'supportedByComLink' &&
+            c.id !== 'supportedByFsc' &&
+            c.id !== 'nonIntactFamily',
+        )
+    const saved = getImportedColumns()
+    if (saved.length === 0) return baseColumns
+    const now = new Date()
+    const dateStr = now.toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    })
+    const restoredImported: Array<ColumnConfig> = saved.map((c) => ({
+      id: c.id,
+      label: c.label,
+      visible: true,
+      sortable: true,
+      imported: true,
+      source: 'Imported by user',
+      lastUpdated: `${dateStr} by You`,
+    }))
+    return [
+      ...baseColumns.filter(
+        (c) => !restoredImported.some((ic) => ic.id === c.id),
+      ),
+      ...restoredImported,
+    ]
+  })
+  const importedColumns = columns.filter((c) => c.imported)
+
+  // Sync MSF UPLIFT columns when the feature flag toggles at runtime
+  useEffect(() => {
+    const MSF_IDS = ['supportedByComLink', 'supportedByFsc', 'nonIntactFamily']
+    setColumns((prev) => {
+      const hasMsf = prev.some((c) => MSF_IDS.includes(c.id))
+      if (msfUpliftEnabled && !hasMsf) {
+        const msfColumns = defaultColumns.filter((c) => MSF_IDS.includes(c.id))
+        const fasIndex = prev.findIndex((c) => c.id === 'fas')
+        const insertAt = fasIndex >= 0 ? fasIndex + 1 : prev.length
+        return [
+          ...prev.slice(0, insertAt),
+          ...msfColumns,
+          ...prev.slice(insertAt),
+        ]
+      }
+      if (!msfUpliftEnabled && hasMsf) {
+        return prev.filter((c) => !MSF_IDS.includes(c.id))
+      }
+      return prev
+    })
+  }, [msfUpliftEnabled])
+
   const [sort, setSort] = useState<SortConfig | null>(null)
   const [selectedSubjects, setSelectedSubjects] =
     useState<Array<string> | null>(() => loadSelectedSubjects())
   const [subjectDialogOpen, setSubjectDialogOpen] = useState(false)
+  const [isRecalculating, setIsRecalculating] = useState(false)
 
   const handleSubjectsApply = useCallback((subjects: Array<string> | null) => {
     setSelectedSubjects(subjects)
     saveSelectedSubjects(subjects)
+    setIsRecalculating(true)
+    setTimeout(() => setIsRecalculating(false), 1000)
   }, [])
 
   // Get students for the selected class/level (this determines the base list)
@@ -234,14 +350,17 @@ function StudentsPage() {
     // Apply column sort first
     if (sort) {
       result.sort((a, b) => {
-        const aVal =
-          sort.field === 'overallPercentage'
-            ? computeStudentOverall(a, selectedSubjects)
-            : a[sort.field as keyof Student]
-        const bVal =
-          sort.field === 'overallPercentage'
-            ? computeStudentOverall(b, selectedSubjects)
-            : b[sort.field as keyof Student]
+        const getSortVal = (s: Student) => {
+          if (sort.field === 'overallPercentage')
+            return computeStudentOverall(s, selectedSubjects)
+          if (sort.field === 'attendance')
+            return s.totalSchoolDays > 0
+              ? s.daysPresent / s.totalSchoolDays
+              : null
+          return s[sort.field as keyof Student]
+        }
+        const aVal = getSortVal(a)
+        const bVal = getSortVal(b)
 
         // Handle null/undefined
         if (aVal == null && bVal == null) return 0
@@ -333,6 +452,21 @@ function StudentsPage() {
           onFiltersChange={setFilters}
           columns={columns}
           onColumnsChange={setColumns}
+          importedColumns={importedColumns.map((c) => ({
+            id: c.id,
+            label: c.label,
+          }))}
+          onImportComplete={(importedColumns) => {
+            setColumns((prev) => [
+              ...prev.filter(
+                (c) => !importedColumns.some((ic) => ic.id === c.id),
+              ),
+              ...importedColumns,
+            ])
+            saveImportedColumns(
+              importedColumns.map((c) => ({ id: c.id, label: c.label })),
+            )
+          }}
           matchedCount={hasActiveFilters ? matchedIds.size : undefined}
           totalCount={hasActiveFilters ? classStudents.length : undefined}
           className="px-6 pb-4"
@@ -354,6 +488,10 @@ function StudentsPage() {
         onClearFilter={handleClearFilter}
         selectedSubjects={selectedSubjects}
         onConfigureSubjects={() => setSubjectDialogOpen(true)}
+        isRecalculating={isRecalculating}
+        onDeleteColumn={(columnId) =>
+          setColumns((prev) => prev.filter((c) => c.id !== columnId))
+        }
       />
 
       <SubjectSelectorDialog

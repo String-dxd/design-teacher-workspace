@@ -5,10 +5,26 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { SAVED_ENQUIRY_EMAILS } from '@/data/mock-staff'
+
+const PRESET_DOMAINS = [
+  'moe.edu.sg',
+  'schools.gov.sg',
+  'school.edu.sg',
+  'gmail.com',
+]
+const CUSTOM = '__custom__'
 
 interface EnquiryEmailSelectorProps {
   value: string // selected email or ''
@@ -22,14 +38,25 @@ export function EnquiryEmailSelector({
   const [savedEmails, setSavedEmails] =
     useState<Array<string>>(SAVED_ENQUIRY_EMAILS)
   const [showAddNew, setShowAddNew] = useState(false)
-  const [newEmail, setNewEmail] = useState('')
+  const [localPart, setLocalPart] = useState('')
+  const [selectedDomain, setSelectedDomain] = useState('moe.edu.sg')
+  const [customDomain, setCustomDomain] = useState('')
   const [addError, setAddError] = useState('')
+
+  const isCustom = selectedDomain === CUSTOM
+  const effectiveDomain = isCustom ? customDomain.trim() : selectedDomain
+
+  function resetForm() {
+    setLocalPart('')
+    setSelectedDomain('moe.edu.sg')
+    setCustomDomain('')
+    setAddError('')
+  }
 
   function selectEmail(email: string) {
     onChange(email)
     setShowAddNew(false)
-    setNewEmail('')
-    setAddError('')
+    resetForm()
   }
 
   function clearEmail(e: React.MouseEvent) {
@@ -38,8 +65,16 @@ export function EnquiryEmailSelector({
   }
 
   function handleAddNew() {
-    const email = newEmail.trim()
-    if (!email) return
+    const local = localPart.trim()
+    if (!local) {
+      setAddError('Please enter the username part.')
+      return
+    }
+    if (isCustom && !effectiveDomain) {
+      setAddError('Please enter a domain (e.g. school.edu.sg).')
+      return
+    }
+    const email = `${local}@${effectiveDomain}`
     const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
     if (!isValid) {
       setAddError('Please enter a valid email address.')
@@ -83,7 +118,7 @@ export function EnquiryEmailSelector({
           )}
         </PopoverTrigger>
 
-        <PopoverContent align="start" sideOffset={4} className="w-72 gap-0 p-0">
+        <PopoverContent align="start" sideOffset={4} className="w-96 gap-0 p-0">
           {/* Header */}
           <div className="flex items-center justify-between border-b px-3 py-2.5">
             <p className="text-sm font-medium">Enquiry email</p>
@@ -125,24 +160,74 @@ export function EnquiryEmailSelector({
 
           {/* Add new email */}
           {showAddNew ? (
-            <div className="space-y-2 p-3">
-              <Input
-                type="email"
-                placeholder="you@school.edu.sg"
-                value={newEmail}
-                onChange={(e) => {
-                  setNewEmail(e.target.value)
-                  setAddError('')
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault()
-                    handleAddNew()
-                  }
-                }}
-                autoFocus
-                className="h-8 text-sm"
-              />
+            <div className="space-y-2.5 p-3">
+              {/* Split input: username @ domain-select */}
+              <div className="flex items-center gap-1.5">
+                <Input
+                  placeholder="username"
+                  value={localPart}
+                  onChange={(e) => {
+                    setLocalPart(e.target.value)
+                    setAddError('')
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      handleAddNew()
+                    }
+                  }}
+                  autoFocus
+                  className="h-8 min-w-0 flex-1 text-sm"
+                />
+                <span className="shrink-0 text-sm text-muted-foreground">
+                  @
+                </span>
+                <Select
+                  value={selectedDomain}
+                  onValueChange={(val) => {
+                    setSelectedDomain(val)
+                    setAddError('')
+                  }}
+                >
+                  <SelectTrigger
+                    size="sm"
+                    className="h-8 w-44 shrink-0 text-xs"
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent align="end">
+                    {PRESET_DOMAINS.map((d) => (
+                      <SelectItem key={d} value={d} className="text-xs">
+                        {d}
+                      </SelectItem>
+                    ))}
+                    <SelectSeparator />
+                    <SelectItem value={CUSTOM} className="text-xs">
+                      Other…
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Custom domain text field — only shown when "Other…" selected */}
+              {isCustom && (
+                <Input
+                  placeholder="e.g. school.edu.sg"
+                  value={customDomain}
+                  onChange={(e) => {
+                    setCustomDomain(e.target.value)
+                    setAddError('')
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      handleAddNew()
+                    }
+                  }}
+                  className="h-8 text-sm"
+                />
+              )}
+
               {addError && (
                 <p className="text-xs text-destructive">{addError}</p>
               )}
@@ -161,8 +246,7 @@ export function EnquiryEmailSelector({
                   size="sm"
                   onClick={() => {
                     setShowAddNew(false)
-                    setNewEmail('')
-                    setAddError('')
+                    resetForm()
                   }}
                   className="h-7 text-xs"
                 >

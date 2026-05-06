@@ -3,15 +3,21 @@
   "configurations": [
     {
       "name": "Dev",
-      "runtimeExecutable": "bun",
+      "runtimeExecutable": "/opt/homebrew/bin/bun",
       "runtimeArgs": ["run", "dev"],
       "port": 3000
     },
     {
+      "name": "Dev-3001",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "dev:3001"],
+      "port": 3001
+    },
+    {
       "name": "Preview",
       "runtimeExecutable": "bun",
-      "runtimeArgs": ["run", "preview"],
-      "port": 4173
+      "runtimeArgs": ["run", "dev"],
+      "port": 3000
     }
   ]
 }

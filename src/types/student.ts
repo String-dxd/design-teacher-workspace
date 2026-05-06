@@ -75,6 +75,9 @@ export interface Student {
   siblings: number
   siblingDetails?: Array<{ name: string; class: string; relationship?: string }>
   externalAgencies: string | null
+  supportedByComLink?: 'Yes' | 'No' | '-'
+  supportedByFsc?: 'Yes' | 'No' | '-'
+  nonIntactFamily?: 'Yes' | 'No' | '-'
   // Personal
   birthday?: string
   citizenship?: 'Singapore citizen' | 'Permanent resident' | 'Foreigner'
@@ -104,6 +107,22 @@ export type AttentionTag =
   | 'SwAN'
 
 export type ConductGrade = 'Excellent' | 'Very Good' | 'Good' | 'Fair' | 'Poor'
+
+export type TemporalType =
+  | 'accumulating'
+  | 'event-based'
+  | 'fixed'
+  | 'cross-term'
+
+export interface TermlyAccumulatingData {
+  offences: number
+  counsellingSessions: number
+  daysPresent: number
+  totalSchoolDays: number
+  lateComing: number
+  absences: number
+  ccaMissed: number
+}
 
 export interface ClassOption {
   value: string
@@ -140,6 +159,9 @@ export type FilterField =
   | 'afterSchoolArrangement'
   | 'siblings'
   | 'externalAgencies'
+  | 'supportedByComLink'
+  | 'supportedByFsc'
+  | 'nonIntactFamily'
 
 export type FilterOperator =
   // Numeric operators
@@ -166,7 +188,7 @@ export interface FilterRangeValue {
 
 export interface FilterCriterion {
   id: string
-  field: FilterField
+  field: FilterField | string
   operator: FilterOperator
   value: string | number | FilterRangeValue | Array<string>
 }

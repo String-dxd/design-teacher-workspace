@@ -9,9 +9,11 @@ export const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
   'holistic-reports': false,
   'parents-gateway': true,
   'student-analytics': false,
+  'student-analytics-basic': false,
   'lta-intervention': false,
   'student-groups': false,
   'import-data': false,
   'agency-reports': true,
   'report-generation': true,
+  'msf-uplift-data': false,
 }
