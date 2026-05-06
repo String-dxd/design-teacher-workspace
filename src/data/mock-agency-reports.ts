@@ -30,7 +30,14 @@ export interface ReportField {
   prefillKey?: string
 }
 
-export type StaffRole = 'YH' | 'SC' | 'P' | 'VP' | 'FT' | 'CCA Teacher'
+export type StaffRole =
+  | 'YH'
+  | 'SC'
+  | 'P'
+  | 'VP'
+  | 'FT'
+  | 'CCA Teacher'
+  | 'Subject Teacher'
 
 export interface Staff {
   name: string
@@ -61,6 +68,46 @@ export const MOCK_STAFF: Array<Staff> = [
 ]
 
 export const CURRENT_USER: Staff = MOCK_STAFF[0]
+
+// Collaborators on the active agency report. Hardcoded for the prototype —
+// real wiring would derive from a per-report ACL.
+export interface Collaborator extends Staff {
+  email: string
+  permission: 'edit' | 'comment' | 'view'
+  isOwner?: boolean
+}
+
+export const MOCK_COLLABORATORS: Array<Collaborator> = [
+  {
+    name: 'Mr Daniel Tan',
+    role: 'YH',
+    initials: 'DT',
+    email: 'daniel_tan@schools.gov.sg',
+    permission: 'edit',
+    isOwner: true,
+  },
+  {
+    name: 'Ms Sarah Chen',
+    role: 'SC',
+    initials: 'SC',
+    email: 'sarah_chen@schools.gov.sg',
+    permission: 'edit',
+  },
+  {
+    name: 'Mr Ahmad Rizal',
+    role: 'CCA Teacher',
+    initials: 'AR',
+    email: 'ahmad_rizal@schools.gov.sg',
+    permission: 'comment',
+  },
+  {
+    name: 'Ms Lim Hui Ying',
+    role: 'Subject Teacher',
+    initials: 'LH',
+    email: 'lim_hui_ying@schools.gov.sg',
+    permission: 'comment',
+  },
+]
 
 export type TemplateCategoryLabel =
   | 'Care & Placement'
@@ -1147,6 +1194,7 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             id: 'ch-att-reason-leaving',
             label: 'Reason for leaving school',
             type: 'narrative',
+            aiDraftable: true,
           },
           {
             id: 'ch-att-withdrawn-by',
@@ -1304,8 +1352,6 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             label: 'Comments, if any',
             type: 'narrative',
             aiDraftable: true,
-            value:
-              "Jun Kai's conduct has declined over Secondary 3. He has been involved in two fighting incidents this term and has shown increasing truancy.",
           },
         ],
       },
@@ -1340,8 +1386,7 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             id: 'ch-acad-remarks',
             label: 'Other remarks pertaining to academic performance',
             type: 'narrative',
-            value:
-              'Academic performance has declined alongside behavioural issues. Jun Kai struggles particularly in Mathematics and English.',
+            aiDraftable: true,
           },
           {
             id: 'ch-cca-activities',
@@ -1365,8 +1410,7 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             id: 'ch-cca-behaviour',
             label: 'Behaviour at CCA',
             type: 'narrative',
-            value:
-              'Generally cooperative during CCA. Responds well to the football coach. Attendance dropped in recent months.',
+            aiDraftable: true,
           },
         ],
       },
@@ -1405,6 +1449,7 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             id: 'ch-par-other',
             label: 'Other parental observations (please provide details)',
             type: 'narrative',
+            aiDraftable: true,
           },
           // Other Information — adverse family records
           {
@@ -1435,6 +1480,7 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             id: 'ch-fam-other',
             label: 'Other family observations (please provide details)',
             type: 'narrative',
+            aiDraftable: true,
             helper: 'NA — Information is not available to the school.',
           },
         ],
@@ -1449,8 +1495,7 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             label:
               "The student's care arrangements, if known to the school (e.g. whether the student is staying with someone with whom he shares a strong emotional bond)",
             type: 'narrative',
-            value:
-              'Jun Kai stays with both parents. He shares a close bond with his mother, Mdm Tan Siew Lee.',
+            aiDraftable: true,
           },
         ],
       },
@@ -1463,7 +1508,7 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             id: 'ch-health-medical',
             label: 'Any known medical problems (please provide details)',
             type: 'narrative',
-            value: 'No known medical problems.',
+            aiDraftable: true,
           },
           {
             id: 'ch-health-bizarre',
@@ -1501,6 +1546,7 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             id: 'ch-health-other',
             label: 'Other psychiatric concerns (please provide details)',
             type: 'narrative',
+            aiDraftable: true,
             helper: 'NA — Information is not available to the school.',
           },
         ],
@@ -1536,6 +1582,7 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             id: 'ch-couns-other',
             label: 'Any other details which will be of assistance',
             type: 'narrative',
+            aiDraftable: true,
           },
         ],
       },
@@ -1549,8 +1596,7 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             label:
               'Any other information which may assist the student and the person in charge of the present investigation',
             type: 'narrative',
-            value:
-              'Jun Kai has been known to the Case Management Team since January 2026. The school is supportive of continued intervention and monitoring.',
+            aiDraftable: true,
           },
         ],
       },
@@ -2147,9 +2193,14 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
     category: 'Family & Social Services',
     totalFields: 60,
     autoFilled: 50,
-    pages: 6,
+    pages: 5,
     turnaroundDays: 7,
-    templateFile: '/report-templates/msf.docx',
+    // Points at the report-only PDF (the upstream .docx leads with an
+    // email cover page; we skipped that and re-derived /report-templates/
+    // msf.pdf + /report-previews/msf-thumb.png from pages 2..6 of the
+    // original so every preview surface — Export step, Eye modal, list
+    // thumbnail — opens at the actual School Report's first page.
+    templateFile: '/report-templates/msf.pdf',
     sections: [
       {
         id: 'ms-purpose',
@@ -2283,13 +2334,11 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             label: 'Reason for leaving school',
             type: 'narrative',
             aiDraftable: true,
-            value: 'N/A',
           },
           {
             id: 'ms-att-withdrawn-by',
             label: 'Withdrawn by (if applicable)',
             type: 'text',
-            value: 'N/A',
           },
         ],
       },
@@ -2396,8 +2445,6 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             label: 'Behaviour at CCA',
             type: 'narrative',
             aiDraftable: true,
-            value:
-              'Jun Kai is generally cooperative during football training and responds well to instructions from the coach. He works well in team drills and shows natural leadership when organising warm-ups. However, his attendance has become irregular since March 2026, missing 4 out of the last 8 sessions without explanation. When present, his attitude remains positive, but the inconsistency has affected his place on the starting team.',
           },
         ],
       },
@@ -2485,6 +2532,7 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             id: 'ms-couns-other',
             label: 'Any other details which will be of assistance',
             type: 'narrative',
+            aiDraftable: true,
           },
         ],
       },
@@ -2773,74 +2821,129 @@ export const DATA_SOURCES: Array<DataSource> = [
   },
 ]
 
-export const mockAgencyReports: Array<AgencyReport> = [
+// Mutable: empty by default (clean state for demo). The agency-report wizard
+// pushes a freshly-submitted report into this array so the student profile
+// reflects the new "In Review" card without round-tripping a backend.
+export const mockAgencyReports: Array<AgencyReport> = []
+
+// Path constants for the asset files actually present in
+// /public/ministry-logos/. Add new logos here as they're added to the
+// folder; downstream resolution is keyword-based via getAgencyLogo().
+const LOGO_PATHS = {
+  msf: '/ministry-logos/msf.png',
+  spf: '/ministry-logos/spf.png',
+  sps: '/ministry-logos/sps.png',
+  cnb: '/ministry-logos/cnb.avif',
+  nuh: '/ministry-logos/nuh.jpeg',
+  imh: '/ministry-logos/imh.png',
+  courts: '/ministry-logos/courts.png',
+  fsc: '/ministry-logos/fsc.svg',
+} as const
+
+// Keyword-based agency → logo resolution. The previous exact-match dict
+// missed forms whose `agency` is a sub-service name (e.g. "Children's
+// Home" — an MSF program — would fall through to a generic acronym
+// tile). Now ANY form whose agency rolls up under MSF (CPS, NAVH,
+// Probation, PSV, Children's Home) resolves to the MSF logo automatically.
+export function getAgencyLogo(agency: string): string | undefined {
+  const a = agency.toLowerCase()
+  // MSF + every MSF sub-service / program location
+  if (
+    a.includes('msf') ||
+    a.includes('ministry of social') ||
+    a.includes("children's home") ||
+    a.includes('child protective') ||
+    a.includes('cps') ||
+    a.includes('probation') ||
+    a.includes('navh') ||
+    a.includes('anti-violence') ||
+    a.includes('psv')
+  ) {
+    return LOGO_PATHS.msf
+  }
+  // SPS — check before SPF so "prison service" doesn't match the police
+  // branch via the looser "service" keyword (it doesn't here, but order
+  // matters for future additions).
+  if (a.includes('prison') || a.includes('sps')) {
+    return LOGO_PATHS.sps
+  }
+  // SPF
+  if (a.includes('spf') || a.includes('police')) {
+    return LOGO_PATHS.spf
+  }
+  // CNB
+  if (a.includes('cnb') || a.includes('narcotics')) {
+    return LOGO_PATHS.cnb
+  }
+  // IMH — check before NUH so "Institute of Mental Health" doesn't get
+  // ambiguously matched (NUH is a different hospital system).
+  if (
+    a.includes('imh') ||
+    a.includes('institute of mental health') ||
+    a.includes('child guidance')
+  ) {
+    return LOGO_PATHS.imh
+  }
+  // NUH — covers both the main hospital and the REACH North program that
+  // sits under it.
+  if (
+    a.includes('nuh') ||
+    a.includes('national university hospital') ||
+    a.includes('reach')
+  ) {
+    return LOGO_PATHS.nuh
+  }
+  // SG Courts — Youth Court and any future court-related agencies.
+  if (a.includes('court') || a.includes('judiciary')) {
+    return LOGO_PATHS.courts
+  }
+  // Family Service Centres (incl. FAM@FSC referral programs).
+  if (
+    a.includes('family service centre') ||
+    a.includes('family service center') ||
+    a.includes('fsc') ||
+    a.includes('fam@fsc')
+  ) {
+    return LOGO_PATHS.fsc
+  }
+  // Future: drop new asset files into /public/ministry-logos/ and add a
+  // matching keyword check here. Returning undefined triggers the
+  // deterministic acronym swatch fallback in <AgencyLogo />.
+  return undefined
+}
+
+// Legacy export retained for any direct lookups. Prefer getAgencyLogo().
+export const AGENCY_LOGOS: Record<string, string | undefined> = new Proxy(
+  {},
   {
-    id: 'ar-draft',
-    studentId: '1',
-    templateId: 'msf',
-    templateName: 'MSF School Report',
-    agency: 'Ministry of Social and Family Development',
-    status: 'draft',
-    createdAt: new Date('2026-04-23'),
-    startedAt: new Date('2026-04-23'),
+    get: (_t, prop: string) => getAgencyLogo(prop),
+  },
+) as Record<string, string | undefined>
+
+// Push a freshly-submitted report onto the mock store and return it. Used by
+// the wizard's "Submit for Principal review" flow.
+export function appendSubmittedReport(input: {
+  studentId: string
+  templateId: string
+  templateName: string
+  agency: string
+  totalSections: number
+}): AgencyReport {
+  const now = new Date()
+  const report: AgencyReport = {
+    id: `ar-${now.getTime()}`,
+    studentId: input.studentId,
+    templateId: input.templateId,
+    templateName: input.templateName,
+    agency: input.agency,
+    status: 'pending_review',
+    createdAt: now,
+    startedAt: now,
     passwordSaved: false,
-  },
-  {
-    id: 'ar-edits',
-    studentId: '1',
-    templateId: 'cps',
-    templateName: 'CPS School Report',
-    agency: 'Child Protective Service',
-    status: 'edits_requested',
-    createdAt: new Date('2026-04-20'),
-    startedAt: new Date('2026-04-20'),
-    passwordSaved: false,
-    principalNote:
-      'Please verify the attendance figures for Term 2 and add more detail to the behavioural observations section.',
-  },
-  {
-    id: 'ar-approved',
-    studentId: '1',
-    templateId: 'intake',
-    templateName: 'MSF CPS Intake Assessment (Part 1)',
-    agency: 'Child Protective Service',
-    status: 'approved',
-    createdAt: new Date('2026-04-22'),
-    startedAt: new Date('2026-04-22'),
-    passwordSaved: true,
-    password: 'SCRUBBED',
-    prefillData: {
-      studentName: 'Chen Jun Kai',
-      nric: 'S9101B',
-      class: '3A',
-      school: 'Bandung Secondary School',
-      attendanceRating: 'Regular',
-      overallConduct: 'Fair',
-      academicPerformance: 'Satisfactory',
-    },
-  },
-  {
-    id: 'ar-completed-cps',
-    studentId: '1',
-    templateId: 'cps',
-    templateName: 'CPS School Report',
-    agency: 'Child Protective Service',
-    status: 'approved',
-    createdAt: new Date('2026-02-12'),
-    startedAt: new Date('2026-02-10'),
-    passwordSaved: true,
-    password: 'SCRUBBED',
-    prefillData: {
-      studentName: 'Chen Jun Kai',
-      nric: 'S9101B',
-      class: '3A',
-      school: 'Bandung Secondary School',
-      attendanceRating: 'Regular',
-      overallConduct: 'Fair',
-      academicPerformance: 'Satisfactory',
-    },
-  },
-]
+  }
+  mockAgencyReports.unshift(report)
+  return report
+}
 
 export const MOCK_AI_SOURCES: Array<AiSourceItem> = [
   {
@@ -3138,4 +3241,134 @@ export function getAgencyReportsByStudent(
   studentId: string,
 ): Array<AgencyReport> {
   return mockAgencyReports.filter((r) => r.studentId === studentId)
+}
+
+// ── Source attribution for auto-populated fields ───────────────────────
+// When a field's value comes from an upstream system (EduHub, School
+// Cockpit, TCI, Case Sync, Connectogram), the Fill Report page surfaces a
+// small affordance next to the value that opens a side panel showing the
+// excerpt the value was derived from. The mapping below is keyed by the
+// field-level `source` string already present on `ReportField` plus an
+// optional per-field excerpt override.
+
+export interface SourceExcerpt {
+  system: string
+  excerpt: string
+  lastUpdated: string
+  href: string
+}
+
+const DEFAULT_SOURCE_EXCERPTS: Record<string, SourceExcerpt> = {
+  EduHub: {
+    system: 'EduHub',
+    excerpt:
+      'Student Record · Active · Chen Jun Kai · NRIC S9101B · Class 3A · Bandung Secondary School · Singapore Citizen',
+    lastUpdated: '12 Jan 2026',
+    href: 'https://eduhub.example.gov.sg/students/S9101B',
+  },
+  'School Cockpit': {
+    system: 'School Cockpit',
+    excerpt:
+      'Term 1 attendance · Present 78 / 95 days (82.1%). Late arrivals: 14. Absences with MC: 9. Unexcused absences: 8.',
+    lastUpdated: '18 Apr 2026',
+    href: 'https://schoolcockpit.example.gov.sg/students/3A/S9101B',
+  },
+  TCI: {
+    system: 'TCI',
+    excerpt:
+      'Discipline ledger · 4 incidents this AY. Most recent: 12 Mar 2026 — disrupting class, 3-day suspension. Conduct grade: Fair.',
+    lastUpdated: '14 Mar 2026',
+    href: 'https://tci.example.gov.sg/cases/S9101B',
+  },
+  'Case Sync': {
+    system: 'Case Sync',
+    excerpt:
+      'Open case · Counselling sessions: 6 since Jan 2026 · Lead: Ms Sarah Chen (SC) · Last session note: 8 Apr 2026.',
+    lastUpdated: '8 Apr 2026',
+    href: 'https://casesync.example.gov.sg/cases/CS-2026-0142',
+  },
+  Connectogram: {
+    system: 'Connectogram',
+    excerpt:
+      'Family map · Lives with maternal aunt (Mdm Tan, 47). Biological mother: contact infrequent. No registered father. Housing: 3-room HDB rental.',
+    lastUpdated: '2 Feb 2026',
+    href: 'https://connectogram.example.gov.sg/family/S9101B',
+  },
+}
+
+// Per-field overrides — adjust the excerpt to be field-specific where the
+// generic text isn't quite right. Falls back to DEFAULT_SOURCE_EXCERPTS
+// keyed on `field.source` when there's no entry here.
+const FIELD_SOURCE_OVERRIDES: Record<string, Partial<SourceExcerpt>> = {
+  // MSF Children's Home School Report — student particulars
+  name: {
+    excerpt:
+      'Student Record · Active · Full name: Chen Jun Kai · Preferred: Jun Kai · NRIC S9101B · Class 3A',
+  },
+  nric: {
+    excerpt:
+      'Identity · NRIC S9101B (issued 2010) · Citizenship: Singapore Citizen · DOB 4 Jan 2010',
+  },
+  school: {
+    excerpt:
+      'Enrolment · Bandung Secondary School · 21 Tampines St 33 · S9101B · Class 3A · Form Teacher: Mr Ahmad Rizal',
+  },
+  // Generic student-name pre-fill keys used by other templates
+  'intk-name': {
+    excerpt:
+      'Student Record · Active · Full name: Chen Jun Kai · NRIC S9101B · Class 3A',
+  },
+  'intk-attendance': {
+    excerpt:
+      'Term 2 attendance · Present 41 / 49 days (83.7%). 7 lates, 1 unexcused absence (12 Apr 2026).',
+  },
+  'intk-conduct': {
+    excerpt:
+      'Conduct Grade · Poor · Driven by 4 disciplinary incidents this AY (last: 12 Mar 2026, 3-day suspension).',
+  },
+  // MSF School Report — student particulars + attendance excerpts. The
+  // demo walkthrough surfaces the source side-panel from these fields.
+  'ms-name': {
+    excerpt:
+      'Student Record · Active · Full name: Chen Jun Kai · Preferred: Jun Kai · NRIC T1234567A · Class 3A',
+  },
+  'ms-nric': {
+    excerpt:
+      'Identity · NRIC T1234567A (issued 2010) · Citizenship: Singapore Citizen · DOB 4 Jan 2010',
+  },
+  'ms-class': {
+    excerpt:
+      'Enrolment · Class 3A · Form Teacher: Mr Ahmad Rizal · Year Head: Mr Daniel Tan',
+  },
+  'ms-school': {
+    excerpt:
+      'Enrolment · Temasek Secondary School · Posting since Sec 1 (2024) · Status: Active · Express stream',
+  },
+  'ms-address': {
+    excerpt:
+      'Address on file · 45 Bedok North Avenue 3, #08-123, Singapore 460045 · Verified 12 Jan 2026',
+  },
+  'ms-att-present': {
+    excerpt:
+      'Term 2 attendance · Present 39 / 47 days (83.0%). 12 lates, 3 unexcused absences. Trend: declining since wk 4.',
+  },
+  'ms-att-late': {
+    excerpt:
+      'Late arrivals · 12 instances this term · Most common day: Monday (7) · Avg lateness: 18 minutes',
+  },
+  'ms-att-absent': {
+    excerpt:
+      'Unexcused absences · 3 days this term (12 Apr, 16 Apr, 22 Apr 2026) · No MC submitted · Parents notified',
+  },
+}
+
+export function getSourceExcerpt(
+  fieldId: string,
+  source: string | null | undefined,
+): SourceExcerpt | null {
+  if (!source) return null
+  const base = DEFAULT_SOURCE_EXCERPTS[source]
+  if (!base) return null
+  const override = FIELD_SOURCE_OVERRIDES[fieldId]
+  return override ? { ...base, ...override } : base
 }

@@ -16,12 +16,15 @@ import {
   EyeOff,
   FileText,
   Filter,
+  Info,
   ListChecks,
   Lock,
+  Maximize2,
   PanelRight,
   RefreshCw,
   Search,
   Sparkles,
+  UserPlus,
   X,
 } from 'lucide-react'
 
@@ -47,11 +50,26 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { Switch } from '@/components/ui/switch'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet'
+import { AgencyLogo } from '@/components/agency-logo'
 import { cn } from '@/lib/utils'
 import { getStudentById } from '@/data/mock-students'
 import type {
   AgencyReport,
   AiSourceItem,
+  Collaborator,
   SectionAssignment,
   Staff,
 } from '@/data/mock-agency-reports'
@@ -61,8 +79,11 @@ import {
   AI_DRAFT_CITATIONS,
   CURRENT_USER,
   MOCK_AI_SOURCES,
+  MOCK_COLLABORATORS,
   MOCK_COUNSELLOR,
   MOCK_STAFF,
+  appendSubmittedReport,
+  getSourceExcerpt,
   mockAgencyReports,
 } from '@/data/mock-agency-reports'
 import { toast } from 'sonner'
@@ -102,8 +123,6 @@ const STEP_MAP: Record<WizardStep, number> = {
   export: 2,
   done: 2,
 }
-
-const PREVIEW_SCALES = [0.55, 0.68, 0.82, 1] as const
 
 function StepBar({
   step,
@@ -222,18 +241,251 @@ function StudentBar({
   )
 }
 
-// ── Agency icon badge ─────────────────────────────────────────
+// ── Collaborator avatar stack ─────────────────────────────────
 
-function AgencyIcon({ abbrev, color }: { abbrev: string; color: string }) {
+// Friendly long-form label for the role acronyms used in MOCK_STAFF.
+const ROLE_LABELS: Record<string, string> = {
+  YH: 'Year Head',
+  SC: 'School Counsellor',
+  P: 'Principal',
+  VP: 'Vice Principal',
+  FT: 'Form Teacher',
+  'CCA Teacher': 'CCA Teacher',
+  'Subject Teacher': 'Subject Teacher',
+}
+
+function CollaboratorAvatars({
+  collaborators,
+  max = 4,
+}: {
+  collaborators: Array<Collaborator>
+  max?: number
+}) {
+  if (collaborators.length === 0) return null
+  // Most recently added on the right (closest to the Add button), older on
+  // the left. The state array is append-only, so the order matches.
+  const overflow = Math.max(0, collaborators.length - max)
+  const visible = collaborators.slice(-max)
   return (
-    <div
-      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[8px] text-[10px] font-bold text-white"
-      style={{ backgroundColor: color }}
-    >
-      {abbrev.length > 4 ? abbrev.slice(0, 4) : abbrev}
-    </div>
+    <TooltipProvider delay={200}>
+      <div className="flex items-center -space-x-1.5">
+        {overflow > 0 && (
+          <Tooltip>
+            <TooltipTrigger
+              nativeButton={false}
+              render={
+                <span className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-card bg-muted text-[10px] font-semibold text-muted-foreground" />
+              }
+            >
+              +{overflow}
+            </TooltipTrigger>
+            <TooltipContent>
+              {overflow} more collaborator{overflow !== 1 ? 's' : ''}
+            </TooltipContent>
+          </Tooltip>
+        )}
+        {visible.map((c) => {
+          const roleLabel = ROLE_LABELS[c.role] ?? c.role
+          return (
+            <Tooltip key={c.email}>
+              <TooltipTrigger
+                nativeButton={false}
+                render={
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-card bg-primary/10 text-[10px] font-semibold text-primary" />
+                }
+              >
+                {c.initials}
+              </TooltipTrigger>
+              <TooltipContent>
+                {c.name} · {roleLabel}
+                {c.isOwner ? ' (owner)' : ''}
+              </TooltipContent>
+            </Tooltip>
+          )
+        })}
+      </div>
+    </TooltipProvider>
   )
 }
+
+function AddCollaboratorsModal({
+  open,
+  onOpenChange,
+  alreadyAdded,
+  onAdd,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  alreadyAdded: Array<string>
+  onAdd: (collaborator: Collaborator) => void
+}) {
+  const [email, setEmail] = useState('')
+  const [permission, setPermission] =
+    useState<Collaborator['permission']>('edit')
+  const [message, setMessage] = useState('')
+  // Multi-select state for quick-pick suggestions. The YH ticks the staff
+  // they want, optionally types a comment, then clicks Send to dispatch
+  // them all at once.
+  const [picked, setPicked] = useState<Set<string>>(new Set())
+  // Reset selection whenever the modal opens for a fresh session.
+  useEffect(() => {
+    if (open) setPicked(new Set())
+  }, [open])
+  const suggestions = MOCK_COLLABORATORS.filter(
+    (c) => !c.isOwner && !alreadyAdded.includes(c.email),
+  )
+  const reset = () => {
+    setEmail('')
+    setMessage('')
+    setPermission('edit')
+    setPicked(new Set())
+  }
+  const togglePick = (emailKey: string) => {
+    setPicked((prev) => {
+      const next = new Set(prev)
+      if (next.has(emailKey)) next.delete(emailKey)
+      else next.add(emailKey)
+      return next
+    })
+  }
+  const sendInvites = () => {
+    // Send everyone the YH selected from the quick-pick list…
+    suggestions
+      .filter((s) => picked.has(s.email))
+      .forEach((s) => onAdd({ ...s, permission }))
+    // …plus the manual email entry, if they typed one.
+    const trimmed = email.trim()
+    if (trimmed) {
+      const localPart = trimmed.split('@')[0] ?? trimmed
+      const niceName = localPart
+        .replace(/[._-]+/g, ' ')
+        .replace(/\b\w/g, (c) => c.toUpperCase())
+      const initials = niceName
+        .split(' ')
+        .slice(0, 2)
+        .map((w) => w[0] ?? '')
+        .join('')
+        .toUpperCase()
+      onAdd({
+        name: niceName,
+        role: 'Subject Teacher',
+        initials,
+        email: trimmed,
+        permission,
+      })
+    }
+    reset()
+    onOpenChange(false)
+  }
+  const canSend = picked.size > 0 || email.trim().length > 0
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Add collaborator</DialogTitle>
+          <DialogDescription>
+            Pick teachers below, add a comment, then click Send. They'll get
+            a link in their inbox.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          {suggestions.length > 0 && (
+            <div>
+              <p className="mb-1.5 text-xs font-medium text-muted-foreground">
+                Suggested
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {suggestions.map((s) => {
+                  const on = picked.has(s.email)
+                  return (
+                    <button
+                      key={s.email}
+                      type="button"
+                      onClick={() => togglePick(s.email)}
+                      aria-pressed={on}
+                      className={cn(
+                        'flex items-center gap-1.5 rounded-full border px-2 py-1 text-xs transition-colors',
+                        on
+                          ? 'border-primary bg-primary/10 text-foreground'
+                          : 'border-input bg-card hover:border-primary/40 hover:bg-muted/40',
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          'flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-semibold',
+                          on
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-primary/10 text-primary',
+                        )}
+                      >
+                        {on ? <Check className="h-3 w-3" /> : s.initials}
+                      </span>
+                      <span className="font-medium">{s.name}</span>
+                      <span className="text-muted-foreground">
+                        · {ROLE_LABELS[s.role] ?? s.role}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+          <div className="flex items-stretch gap-2">
+            <Input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Or add by name or email"
+              className="flex-1"
+            />
+            <select
+              value={permission}
+              onChange={(e) =>
+                setPermission(
+                  e.target.value as Collaborator['permission'],
+                )
+              }
+              className="rounded-md border bg-background px-2 text-sm outline-none focus:border-primary"
+              aria-label="Permission"
+            >
+              <option value="edit">Can edit</option>
+              <option value="comment">Can comment</option>
+              <option value="view">Can view</option>
+            </select>
+          </div>
+          <div>
+            <label
+              htmlFor="collab-message"
+              className="mb-1 block text-xs font-medium text-muted-foreground"
+            >
+              Message{' '}
+              <span className="font-normal">(optional)</span>
+            </label>
+            <textarea
+              id="collab-message"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="What do you want them to do?"
+              className="min-h-[90px] w-full resize-none rounded-lg border px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary"
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button disabled={!canSend} onClick={sendInvites}>
+            Send
+            {picked.size + (email.trim() ? 1 : 0) > 1
+              ? ` (${picked.size + (email.trim() ? 1 : 0)})`
+              : ''}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 
 // ── S2 Template Selection ─────────────────────────────────────
 
@@ -252,6 +504,71 @@ function templatePreviewImg(template: AgencyTemplate): string | null {
   const filename = template.templateFile.split('/').pop() ?? ''
   const base = filename.replace(/\.(docx?|pdf)$/i, '')
   return `/report-previews/${base}-thumb.png`
+}
+
+// Single source of truth for "which templates have an embeddable PDF
+// reference?" — only those whose source file is itself a PDF qualify
+// today (assq, children-home). Everything else falls back to the PNG
+// preview rendered by templatePreviewImg, and only templates with
+// neither show the bare "Preview not available" fallback.
+function templateReferencePdf(template: AgencyTemplate): string | null {
+  if (!template.templateFile) return null
+  return /\.pdf$/i.test(template.templateFile) ? template.templateFile : null
+}
+
+function TemplatePreviewModal({
+  template,
+  open,
+  onOpenChange,
+  onUseTemplate,
+}: {
+  template: AgencyTemplate | null
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onUseTemplate: (id: string) => void
+}) {
+  if (!template) return null
+  const pdf = templateReferencePdf(template)
+  const png = templatePreviewImg(template)
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="flex max-h-[88vh] flex-col gap-0 p-0 sm:max-w-[860px]">
+        <DialogHeader className="border-b px-6 py-4">
+          <DialogTitle className="text-base">{template.name}</DialogTitle>
+          <DialogDescription>{template.agency}</DialogDescription>
+        </DialogHeader>
+        <div className="min-h-[480px] flex-1 overflow-auto bg-muted/30 p-4">
+          {pdf ? (
+            <iframe
+              src={pdf}
+              title={`${template.name} preview`}
+              className="h-[68vh] w-full rounded-md border bg-white"
+            />
+          ) : png ? (
+            <div className="flex justify-center">
+              <img
+                src={png}
+                alt={`${template.name} preview`}
+                className="max-w-full rounded-md border bg-white shadow-sm"
+              />
+            </div>
+          ) : (
+            <div className="flex h-[480px] items-center justify-center text-sm text-muted-foreground">
+              Preview not available for this template.
+            </div>
+          )}
+        </div>
+        <DialogFooter className="border-t px-6 py-4">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Close
+          </Button>
+          <Button onClick={() => onUseTemplate(template.id)}>
+            Use this template
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
 }
 
 function TemplateSelection({
@@ -276,6 +593,12 @@ function TemplateSelection({
   const [multiSelect, setMultiSelect] = useState(false)
   const [query, setQuery] = useState('')
   const [agencyFilter, setAgencyFilter] = useState<string>('all')
+  const [previewTemplate, setPreviewTemplate] =
+    useState<AgencyTemplate | null>(null)
+  // Single-select visual selection (independent of immediate-advance click).
+  // Clicking a row in single-select still advances, but this state lets the
+  // circular button briefly show the filled-blue selected state.
+  const [singleSelected, setSingleSelected] = useState<string | null>(null)
 
   const inProgressReports = mockAgencyReports.filter(
     (r) => r.studentId === studentId && r.status === 'draft',
@@ -543,59 +866,96 @@ function TemplateSelection({
                   </p>
                 </div>
                 {catTemplates.map((tpl, i) => {
-                  const on = selected.includes(tpl.id)
+                  const inMultiSelected = selected.includes(tpl.id)
+                  const isSingleSelected =
+                    !multiSelect && singleSelected === tpl.id
+                  const isSelected = multiSelect
+                    ? inMultiSelected
+                    : isSingleSelected
                   const locked = tpl.locked === true
                   const rowClasses = cn(
-                    'flex w-full items-center gap-3 px-4 py-3 text-left transition-colors',
+                    'group/row relative flex w-full items-center gap-3 px-4 py-3 text-left transition-colors cursor-pointer',
                     i > 0 && 'border-t',
                     locked
                       ? 'pointer-events-none opacity-50'
                       : 'hover:bg-muted/40',
-                    on && multiSelect && !locked && 'bg-primary/5',
+                    isSelected && !locked && 'bg-primary/5',
                   )
                   return (
-                    <button
+                    <div
                       key={tpl.id}
-                      disabled={locked}
+                      role="button"
+                      tabIndex={locked ? -1 : 0}
                       aria-disabled={locked}
+                      aria-pressed={isSelected}
                       onClick={() => {
                         if (locked) return
                         if (multiSelect) {
                           onToggle(tpl.id)
                         } else {
+                          setSingleSelected(tpl.id)
                           onSelectAndContinue(tpl.id)
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (locked) return
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          if (multiSelect) {
+                            onToggle(tpl.id)
+                          } else {
+                            setSingleSelected(tpl.id)
+                            onSelectAndContinue(tpl.id)
+                          }
                         }
                       }}
                       className={rowClasses}
                     >
-                      {multiSelect && !locked && (
-                        <div
-                          className={cn(
-                            'flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border',
-                            on
-                              ? 'border-primary bg-primary'
-                              : 'border-muted-foreground/40 bg-background',
-                          )}
-                        >
-                          {on && <Check className="h-3 w-3 text-white" />}
-                        </div>
-                      )}
+                      <AgencyLogo agency={tpl.agency} size="sm" />
                       <div className="min-w-0 flex-1">
-                        <span className="text-sm font-semibold">
+                        <p className="truncate text-sm font-semibold">
                           {tpl.name}
-                        </span>
+                        </p>
+                        <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                          {tpl.agency}
+                        </p>
                       </div>
-                      <span className="hidden text-xs text-muted-foreground sm:block">
-                        {tpl.agency}
-                      </span>
+
+                      {!locked && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setPreviewTemplate(tpl)
+                          }}
+                          aria-label="Preview form"
+                          title="Preview form"
+                          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </button>
+                      )}
+
                       {locked ? (
                         <Lock className="h-4 w-4 shrink-0 text-muted-foreground" />
                       ) : (
-                        !multiSelect && (
-                          <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-                        )
+                        <span
+                          aria-hidden
+                          className={cn(
+                            'flex h-7 w-7 shrink-0 items-center justify-center rounded-full border transition-colors',
+                            isSelected
+                              ? 'border-primary bg-primary text-primary-foreground'
+                              : 'border-muted-foreground/30 bg-background text-muted-foreground group-hover/row:border-primary/40 group-hover/row:text-foreground',
+                          )}
+                        >
+                          {multiSelect && isSelected ? (
+                            <Check className="h-3.5 w-3.5" />
+                          ) : (
+                            <ChevronRight className="h-3.5 w-3.5" />
+                          )}
+                        </span>
                       )}
-                    </button>
+                    </div>
                   )
                 })}
               </section>
@@ -623,6 +983,26 @@ function TemplateSelection({
           </div>
         </aside>
       </div>
+
+      <TemplatePreviewModal
+        template={previewTemplate}
+        open={previewTemplate !== null}
+        onOpenChange={(open) => {
+          if (!open) setPreviewTemplate(null)
+        }}
+        onUseTemplate={(id) => {
+          setPreviewTemplate(null)
+          if (multiSelect) {
+            // In multi-select, "Use this template" toggles it on then
+            // advances — matches the productive-path intent.
+            if (!selected.includes(id)) onToggle(id)
+            onContinue()
+          } else {
+            setSingleSelected(id)
+            onSelectAndContinue(id)
+          }
+        }}
+      />
 
       {/* Footer — only visible in multi-select mode */}
       {multiSelect && (
@@ -726,11 +1106,82 @@ function AiSourcePanel({
           disabled={selectedIds.size === 0}
         >
           <Sparkles className="mr-1.5 h-3.5 w-3.5" />
-          Generate draft from {selectedIds.size} selected source
-          {selectedIds.size !== 1 ? 's' : ''}
+          Generate draft
         </Button>
       </div>
     </div>
+  )
+}
+
+// Source-attribution affordance + side panel. Reuses the same Sheet
+// primitive that the student profile's FieldWithDetails uses (showOverlay
+// false, sm:max-w-xs, X-button + ESC + click-outside dismissal).
+function FieldSourceLink({
+  fieldId,
+  source,
+}: {
+  fieldId: string
+  source: string
+}) {
+  const [open, setOpen] = useState(false)
+  const excerpt = getSourceExcerpt(fieldId, source)
+  if (!excerpt) return null
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        title={`Source: ${source}`}
+        aria-label={`Source: ${source}`}
+        className="ml-1 inline-flex h-3.5 w-3.5 align-text-bottom items-center justify-center rounded-sm text-muted-foreground/60 transition-colors hover:text-foreground"
+      >
+        <Info className="h-3 w-3" />
+      </button>
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetContent
+          showOverlay={false}
+          showCloseButton={false}
+          className="sm:max-w-xs"
+        >
+          <SheetHeader className="border-b pb-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border">
+                <Info className="h-3.5 w-3.5" />
+              </div>
+              <SheetTitle className="flex-1">{excerpt.system}</SheetTitle>
+              <SheetClose
+                render={
+                  <button className="text-muted-foreground transition-colors hover:text-foreground" />
+                }
+              >
+                <X className="h-5 w-5" />
+              </SheetClose>
+            </div>
+          </SheetHeader>
+          <div className="space-y-4 p-6">
+            <div>
+              <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Source excerpt
+              </p>
+              <p className="rounded-lg border bg-muted/30 p-3 text-sm leading-relaxed">
+                {excerpt.excerpt}
+              </p>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Last updated {excerpt.lastUpdated}
+            </p>
+            <a
+              href={excerpt.href}
+              onClick={(e) => e.preventDefault()}
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80"
+            >
+              Open in {excerpt.system}
+              <ChevronRight className="h-3.5 w-3.5" />
+            </a>
+          </div>
+        </SheetContent>
+      </Sheet>
+    </>
   )
 }
 
@@ -759,6 +1210,18 @@ function FieldRow({
     new Set(
       MOCK_AI_SOURCES.filter((s) => s.defaultSelected).map((s) => s.id),
     )
+  // Empty-state highlight for not-yet-filled fields (Change 4). Signature
+  // fields are stamped on export and never need user input — exempt them.
+  const isEmpty = field.type !== 'signature' && value.trim() === ''
+  const emptyInputBorder = isEmpty
+    ? 'border-amber-200 bg-amber-50/60'
+    : 'border-input bg-background'
+  // Source-link visibility: show only when the field has an upstream source
+  // AND the current value still matches the originally pre-filled value
+  // (i.e. the user hasn't edited it). Once edited, the field becomes a
+  // plain user-entered field with no attribution.
+  const showSourceLink =
+    !!field.source && !!field.value && value === field.value
   return (
     <div className="space-y-1.5">
       <div className="flex flex-wrap items-center gap-1.5">
@@ -797,6 +1260,7 @@ function FieldRow({
               'w-full resize-y rounded-lg border px-3.5 py-2.5 text-sm leading-relaxed outline-none transition-colors',
               'focus:border-primary focus:ring-1 focus:ring-primary',
               'min-h-[120px]',
+              emptyInputBorder,
             )}
           />
           {field.aiDraftable && !aiFlag && !aiPanelOpen && (
@@ -890,7 +1354,12 @@ function FieldRow({
             )}
         </div>
       ) : field.type === 'radio' ? (
-        <div className="flex flex-wrap gap-3">
+        <div
+          className={cn(
+            'flex flex-wrap gap-3 rounded-lg px-2 py-1.5 transition-colors',
+            isEmpty && 'bg-amber-50/60',
+          )}
+        >
           {(field.options ?? []).map((opt) => (
             <label
               key={opt}
@@ -914,7 +1383,12 @@ function FieldRow({
           )}
         </div>
       ) : field.type === 'yesnona' ? (
-        <div className="flex flex-wrap gap-3">
+        <div
+          className={cn(
+            'flex flex-wrap gap-3 rounded-lg px-2 py-1.5 transition-colors',
+            isEmpty && 'bg-amber-50/60',
+          )}
+        >
           {['Yes', 'No', 'NA'].map((opt) => (
             <label
               key={opt}
@@ -938,17 +1412,29 @@ function FieldRow({
         </div>
       ) : (
         <>
-          <input
-            type="text"
-            value={value}
-            onChange={(e) => onValueChange(e.target.value)}
-            placeholder="Enter details..."
-            className={cn(
-              'w-full rounded-lg border px-3.5 py-2 text-sm outline-none transition-colors',
-              'focus:border-primary focus:ring-1 focus:ring-primary',
-              field.stale ? 'border-amber-300 bg-amber-50' : '',
+          <div className="relative">
+            <input
+              type="text"
+              value={value}
+              onChange={(e) => onValueChange(e.target.value)}
+              placeholder="Enter details..."
+              className={cn(
+                'w-full rounded-lg border px-3.5 py-2 text-sm outline-none transition-colors',
+                'focus:border-primary focus:ring-1 focus:ring-primary',
+                showSourceLink && 'pr-9',
+                field.stale
+                  ? 'border-amber-300 bg-amber-50'
+                  : isEmpty
+                    ? 'border-amber-200 bg-amber-50/60'
+                    : '',
+              )}
+            />
+            {showSourceLink && field.source && (
+              <span className="absolute right-2 top-1/2 -translate-y-1/2">
+                <FieldSourceLink fieldId={field.id} source={field.source} />
+              </span>
             )}
-          />
+          </div>
           {field.helper && (
             <p className="text-xs text-muted-foreground">{field.helper}</p>
           )}
@@ -960,63 +1446,6 @@ function FieldRow({
         </p>
       )}
     </div>
-  )
-}
-
-function AssignmentChip({
-  assignedTo,
-  onChange,
-}: {
-  assignedTo: SectionAssignment
-  onChange: (s: Staff) => void
-}) {
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          className="flex items-center gap-1.5 rounded-full border bg-card px-2 py-0.5 text-xs hover:bg-muted"
-        >
-          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-semibold text-primary-foreground">
-            {assignedTo.initials}
-          </span>
-          <span className="font-medium">{assignedTo.name}</span>
-          <span className="text-muted-foreground">· {assignedTo.role}</span>
-        </button>
-      </PopoverTrigger>
-      <PopoverContent align="start" className="w-64 p-0">
-        <div className="border-b px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Reassign section
-        </div>
-        <div className="max-h-64 overflow-y-auto py-1">
-          {MOCK_STAFF.map((s) => {
-            const active =
-              s.name === assignedTo.name && s.role === assignedTo.role
-            return (
-              <button
-                key={s.name}
-                onClick={() => onChange(s)}
-                className={cn(
-                  'flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs hover:bg-muted',
-                  active && 'font-semibold',
-                )}
-              >
-                {active ? (
-                  <Check className="h-3 w-3 text-primary" />
-                ) : (
-                  <span className="h-3 w-3" />
-                )}
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[10px] font-semibold">
-                  {s.initials}
-                </span>
-                <span className="min-w-0 flex-1 truncate">{s.name}</span>
-                <span className="text-muted-foreground">{s.role}</span>
-              </button>
-            )
-          })}
-        </div>
-      </PopoverContent>
-    </Popover>
   )
 }
 
@@ -1054,6 +1483,16 @@ function SectionPanel({
   const isMine = isSameStaff(assignedTo, CURRENT_USER)
   const completed = assignedTo.completed === true
   const completedDate = assignedTo.completedDate
+
+  // Live count of unfilled fields for the section header indicator.
+  // Signature fields are stamped on export and not counted as user input.
+  const emptyCount = isMine
+    ? section.fields.filter((f) => {
+        if (f.type === 'signature') return false
+        const v = (fieldValues as Record<string, string | undefined>)[f.id] ?? f.value ?? ''
+        return v.trim() === ''
+      }).length
+    : 0
 
   // For the read-only rendering of a completed counsellor-role section, fall
   // back to the MOCK_COUNSELLOR.fields content so the demo shows real text.
@@ -1098,7 +1537,12 @@ function SectionPanel({
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           {section.title}
         </h2>
-        <AssignmentChip assignedTo={assignedTo} onChange={onAssignedChange} />
+        {emptyCount > 0 && (
+          <span className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-medium text-amber-700">
+            <AlertTriangle className="h-3 w-3" />
+            {emptyCount} empty field{emptyCount !== 1 ? 's' : ''}
+          </span>
+        )}
       </div>
 
       {isRestrictedCounsellor ? (
@@ -1211,86 +1655,817 @@ function templateReferenceAsset(template: AgencyTemplate): {
 }
 
 
-function TemplateReferenceBody({
-  template,
-  scale,
-}: {
-  template: AgencyTemplate
-  scale: number
-}) {
-  const asset = templateReferenceAsset(template)
-  if (!asset) {
-    return (
-      <div className="mx-auto w-[680px] max-w-full rounded-md bg-card px-10 py-20 text-center text-sm text-muted-foreground shadow-lg">
-        No template preview available for {template.name}.
-      </div>
-    )
-  }
+// ── Filled report rendering ───────────────────────────────────────────
+// The preview must look like a faithful reproduction of the agency's
+// actual blank PDF, with the demo data dropped in — same fonts, gray
+// section bars, bordered tick boxes, conduct grid, RESTRICTED-style
+// headers. The Children's Home + MSF School Report templates get a
+// pixel-faithful renderer below; every other template falls back to a
+// simpler list view.
 
-  if (asset.kind === 'pdf') {
-    return (
-      <iframe
-        src={`${asset.src}#toolbar=0&navpanes=0&view=FitH`}
-        title={`${template.name} blank template`}
-        className="mx-auto block h-[1000px] w-[720px] max-w-full rounded-md border-0 bg-card shadow-lg"
-      />
-    )
-  }
+function stripSuperscripts(s: string): string {
+  return s.replace(/[°-¹⁰-₟]+/g, '').trim()
+}
 
+function fieldValue(
+  template: AgencyTemplate,
+  fieldId: string,
+): string | undefined {
+  for (const section of template.sections) {
+    const f = section.fields.find((x) => x.id === fieldId)
+    if (f) {
+      if (f.value && f.value.trim().length > 0) return f.value
+      const ai = AI_DRAFTS[f.id]
+      if (ai) return stripSuperscripts(ai)
+      if (section.role === 'counsellor') {
+        const v = (MOCK_COUNSELLOR.fields as Record<string, string>)[f.id]
+        if (v) return v
+      }
+      return undefined
+    }
+  }
+  return undefined
+}
+
+// ── Building blocks for the faithful PDF replication ──────────────────
+
+function ConfidentialHeader({ pageNum }: { pageNum: number }) {
   return (
-    <img
-      src={asset.src}
-      alt={`${template.name} blank template`}
-      className="mx-auto block w-[720px] max-w-full rounded-md bg-card shadow-lg"
-    />
+    <div className="relative mb-4">
+      <div className="text-center text-[12px] font-bold">CONFIDENTIAL</div>
+      <div className="absolute right-0 top-0 text-[12px]">{pageNum}</div>
+    </div>
   )
 }
 
-function DocumentPreview({
-  template,
-  scale,
-  onScaleChange,
+function SectionBar({
+  numeral,
+  title,
 }: {
-  template: AgencyTemplate
-  scale: number
-  onScaleChange: (s: number) => void
+  numeral: string
+  title: string
 }) {
   return (
-    <div className="w-[37%] min-w-0 shrink-0 overflow-auto bg-slate-2 p-5">
-      <div className="mb-3 flex items-start justify-between gap-3 px-1">
-        <div className="min-w-0">
-          <p className="text-sm font-semibold text-foreground">Preview</p>
-          <p className="text-xs text-muted-foreground">
-            This is the agency's report template for reference.
-          </p>
+    <div className="my-3 flex bg-[#D9D9D9] px-2 py-1 text-[12px] font-bold">
+      <span className="w-12 shrink-0">{numeral}</span>
+      <span>{title}</span>
+    </div>
+  )
+}
+
+function TickBox({ on }: { on?: boolean }) {
+  return (
+    <span className="inline-flex h-[14px] w-[14px] shrink-0 items-center justify-center border border-black align-middle text-[10px] leading-none">
+      {on ? '✓' : ''}
+    </span>
+  )
+}
+
+function FieldBox({ label, value }: { label: string; value?: string }) {
+  return (
+    <div className="mb-3 flex items-start gap-3">
+      <span className="w-[140px] shrink-0 pt-1 text-[12px]">{label}</span>
+      <span className="flex min-h-[24px] flex-1 items-center border border-black px-2 py-1 text-[12px]">
+        {value ?? ''}
+      </span>
+    </div>
+  )
+}
+
+function LabeledTickRow({
+  label,
+  on,
+  align = 'right',
+}: {
+  label: string
+  on?: boolean
+  align?: 'left' | 'right'
+}) {
+  return (
+    <div
+      className={cn(
+        'flex items-center gap-3 text-[12px]',
+        align === 'right' ? 'justify-between' : '',
+      )}
+    >
+      <span>{label}</span>
+      <TickBox on={on} />
+    </div>
+  )
+}
+
+function YesNoNaRow({
+  label,
+  value,
+  showHeader,
+  hasNa = true,
+}: {
+  label: string | React.ReactNode
+  value?: string
+  showHeader?: boolean
+  hasNa?: boolean
+}) {
+  return (
+    <div className="grid grid-cols-[1fr_28px_28px_28px] items-center gap-1 text-[12px]">
+      <div>
+        {showHeader && (
+          <div className="grid grid-cols-[1fr_28px_28px_28px] gap-1 text-[12px] font-bold">
+            <span />
+            <span className="text-center">Yes</span>
+            <span className="text-center">No</span>
+            {hasNa ? <span className="text-center">NA*</span> : <span />}
+          </div>
+        )}
+        <span>{label}</span>
+      </div>
+      <span className="flex justify-center">
+        <TickBox on={value === 'Yes'} />
+      </span>
+      <span className="flex justify-center">
+        <TickBox on={value === 'No'} />
+      </span>
+      {hasNa ? (
+        <span className="flex justify-center">
+          <TickBox on={value === 'NA'} />
+        </span>
+      ) : (
+        <span />
+      )}
+    </div>
+  )
+}
+
+function AttendanceBlock({
+  template,
+  yearLabel,
+  ratingId,
+  presentId,
+  lateId,
+  absentId,
+}: {
+  template: AgencyTemplate
+  yearLabel: string
+  ratingId: string
+  presentId: string
+  lateId: string
+  absentId: string
+}) {
+  const rating = fieldValue(template, ratingId)
+  return (
+    <div className="mb-3 space-y-1.5">
+      <p className="text-[12px] font-bold underline">{yearLabel}</p>
+      <div className="ml-6 grid grid-cols-3 items-center gap-2 text-[12px]">
+        <div className="flex items-center justify-between gap-2">
+          <span>Very Regular</span>
+          <TickBox on={rating === 'Very Regular'} />
         </div>
-        <div className="flex shrink-0 items-center gap-1">
-          {PREVIEW_SCALES.map((s) => (
-            <button
-              key={s}
-              onClick={() => onScaleChange(s)}
-              className={cn(
-                'h-6 w-9 rounded-md font-mono text-[10px] font-semibold transition-colors',
-                scale === s
-                  ? 'bg-foreground text-background'
-                  : 'bg-card text-muted-foreground hover:bg-muted',
-              )}
-            >
-              {Math.round(s * 100)}%
-            </button>
+        <div className="flex items-center justify-between gap-2">
+          <span>Regular</span>
+          <TickBox on={rating === 'Regular'} />
+        </div>
+        <div className="flex items-center justify-between gap-2">
+          <span>Irregular</span>
+          <TickBox on={rating === 'Irregular'} />
+        </div>
+      </div>
+      <div className="ml-6 grid grid-cols-[1fr_auto] gap-x-3 gap-y-0.5 text-[12px]">
+        <span>No. of days present during the year (e.g. 90/100)</span>
+        <span>: {fieldValue(template, presentId) ?? ''}</span>
+        <span>No. of days late for school</span>
+        <span>: {fieldValue(template, lateId) ?? ''}</span>
+        <span>No. of days absent without valid reasons</span>
+        <span>: {fieldValue(template, absentId) ?? ''}</span>
+      </div>
+    </div>
+  )
+}
+
+function ConductTickGrid({
+  rows,
+}: {
+  rows: Array<{ n: number; label: string; value?: string }>
+}) {
+  const left = rows.slice(0, 10)
+  const right = rows.slice(10)
+  return (
+    <div className="mb-4">
+      <div className="ml-6 grid grid-cols-[1fr_1fr] gap-x-8 text-[12px]">
+        <div className="grid grid-cols-[20px_1fr_28px_28px] gap-x-2 gap-y-1">
+          <span />
+          <span />
+          <span className="text-center font-bold">Yes</span>
+          <span className="text-center font-bold">No</span>
+          {left.map((r) => (
+            <ConductRow key={r.n} {...r} />
+          ))}
+        </div>
+        <div className="grid grid-cols-[20px_1fr_28px_28px] gap-x-2 gap-y-1">
+          <span />
+          <span />
+          <span className="text-center font-bold">Yes</span>
+          <span className="text-center font-bold">No</span>
+          {right.map((r) => (
+            <ConductRow key={r.n} {...r} />
           ))}
         </div>
       </div>
-      <div
-        className="origin-top"
-        style={{
-          transform: `scale(${scale})`,
-          width: `${100 / scale}%`,
-        }}
-      >
-        <TemplateReferenceBody template={template} scale={scale} />
+    </div>
+  )
+}
+
+function ConductRow({
+  n,
+  label,
+  value,
+}: {
+  n: number
+  label: string
+  value?: string
+}) {
+  return (
+    <>
+      <span>{n}</span>
+      <span>{label}</span>
+      <span className="flex justify-center">
+        <TickBox on={value === 'Yes'} />
+      </span>
+      <span className="flex justify-center">
+        <TickBox on={value === 'No'} />
+      </span>
+    </>
+  )
+}
+
+function OverallConductRow({
+  template,
+  yearLabel,
+  fieldId,
+}: {
+  template: AgencyTemplate
+  yearLabel: string
+  fieldId: string
+}) {
+  const v = fieldValue(template, fieldId)
+  return (
+    <div className="mb-2">
+      <p className="text-[12px] font-bold underline">{yearLabel}</p>
+      <div className="ml-6 mt-1 grid grid-cols-4 items-center gap-2 text-[12px]">
+        {(['Excellent', 'Good', 'Fair', 'Poor'] as const).map((opt) => (
+          <div key={opt} className="flex items-center justify-between gap-2">
+            <span>{opt}</span>
+            <TickBox on={v === opt} />
+          </div>
+        ))}
       </div>
     </div>
+  )
+}
+
+function AcademicPerfRow({
+  template,
+  yearLabel,
+  fieldId,
+}: {
+  template: AgencyTemplate
+  yearLabel: string
+  fieldId: string
+}) {
+  const v = fieldValue(template, fieldId)
+  return (
+    <div className="mb-2">
+      <p className="text-[12px] font-bold underline">{yearLabel}</p>
+      <div className="ml-6 mt-1 grid grid-cols-3 items-center gap-2 text-[12px]">
+        {(['Good', 'Satisfactory', 'Poor'] as const).map((opt) => (
+          <div key={opt} className="flex items-center justify-between gap-2">
+            <span>{opt}</span>
+            <TickBox on={v === opt} />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// Children's Home School Report — faithful replication of the blank
+// reference PDF (8 pages condensed into one continuous flow for the
+// modal preview). Layout mirrors the source PDF exactly; only the
+// "XXX" placeholders and empty boxes are populated with demo data.
+function ChildrenHomeFilledRendering({
+  template,
+  studentName,
+}: {
+  template: AgencyTemplate
+  studentName: string
+}) {
+  const purpose = fieldValue(template, 'ch-purpose-type')
+  const conductRows: Array<{ n: number; label: string; value?: string }> = [
+    { n: 1, label: 'Responsive', value: fieldValue(template, 'ch-cond-responsive') },
+    { n: 2, label: 'Responsible', value: fieldValue(template, 'ch-cond-responsible') },
+    { n: 3, label: 'Polite', value: fieldValue(template, 'ch-cond-polite') },
+    { n: 4, label: 'Honest', value: fieldValue(template, 'ch-cond-honest') },
+    { n: 5, label: 'Helpful', value: fieldValue(template, 'ch-cond-helpful') },
+    { n: 6, label: 'Attentive', value: fieldValue(template, 'ch-cond-attentive') },
+    { n: 7, label: 'Hardworking', value: fieldValue(template, 'ch-cond-hardworking') },
+    { n: 8, label: 'Respectful', value: fieldValue(template, 'ch-cond-respectful') },
+    { n: 9, label: 'Problems with peers', value: fieldValue(template, 'ch-cond-peers') },
+    { n: 10, label: 'Problems with teachers', value: fieldValue(template, 'ch-cond-teachers') },
+    { n: 11, label: 'Associates with Gangs', value: fieldValue(template, 'ch-cond-gangs') },
+    { n: 12, label: 'Truancy', value: fieldValue(template, 'ch-cond-truancy') },
+    { n: 13, label: 'Engages in Fights', value: fieldValue(template, 'ch-cond-fights') },
+    { n: 14, label: 'Pilfers/Steals', value: fieldValue(template, 'ch-cond-pilfers') },
+    { n: 15, label: 'Smokes', value: fieldValue(template, 'ch-cond-smokes') },
+    { n: 16, label: 'Abuses other Substances', value: fieldValue(template, 'ch-cond-substances') },
+    { n: 17, label: 'Defies Authority', value: fieldValue(template, 'ch-cond-defies') },
+    { n: 18, label: 'Resists School counselling', value: fieldValue(template, 'ch-cond-resists-counselling') },
+    { n: 19, label: 'Bullies', value: fieldValue(template, 'ch-cond-bullies') },
+  ]
+
+  return (
+    <div
+      className="mx-auto bg-white px-12 py-8 text-black shadow-sm"
+      style={{
+        fontFamily:
+          '"Helvetica Neue", Helvetica, Arial, sans-serif',
+        maxWidth: 760,
+      }}
+    >
+      <ConfidentialHeader pageNum={1} />
+
+      {/* TO / TEL / EMAIL block */}
+      <div className="mb-1 grid grid-cols-[64px_16px_1fr] gap-y-0.5 text-[12px] font-bold">
+        <span>TO</span><span>:</span><span />
+        <span>TEL</span><span>:</span><span />
+        <span>EMAIL</span><span>:</span><span />
+      </div>
+      <div className="mb-6 border-b-[1.5px] border-black" />
+
+      {/* Title */}
+      <h1 className="mb-1 text-center text-[22px] font-bold tracking-wide">
+        SCHOOL REPORT
+      </h1>
+      <p className="mb-8 text-center text-[12px] font-bold">
+        (Period <span className="underline">2024</span> to{' '}
+        <span className="underline">2026 Term 2 Week 4</span>)
+      </p>
+
+      {/* I. Purpose */}
+      <SectionBar numeral="I" title="PURPOSE" />
+      <div className="ml-6 mt-2 space-y-2 text-[12px]">
+        <div className="flex items-center gap-3">
+          <span className="w-[260px] font-bold">Pre-FGO Screening</span>
+          <TickBox on={purpose === 'Pre-FGO Screening'} />
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="w-[260px] font-bold">FGO Social Investigation</span>
+          <TickBox on={purpose === 'FGO Social Investigation'} />
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="w-[260px] font-bold">
+            Others:{' '}
+            <span className="font-normal underline">
+              {fieldValue(template, 'ch-purpose-other') ?? '                      '}
+            </span>
+          </span>
+          <TickBox on={purpose === 'Others'} />
+        </div>
+      </div>
+
+      {/* II. Personal Particulars */}
+      <SectionBar
+        numeral="II"
+        title="STUDENT'S PERSONAL PARTICULARS"
+      />
+      <FieldBox label="Name:" value={fieldValue(template, 'ch-name') ?? studentName} />
+      <FieldBox label="NRIC/BC No.:" value={fieldValue(template, 'ch-nric')} />
+      <FieldBox label="Class:" value={fieldValue(template, 'ch-class')} />
+      <FieldBox label="School:" value={fieldValue(template, 'ch-school')} />
+      <FieldBox label="School's Address:" value={fieldValue(template, 'ch-school-address')} />
+
+      {/* III. Academic Performance & Conduct */}
+      <SectionBar
+        numeral="III"
+        title="STUDENT'S ACADEMIC PERFORMANCE & CONDUCT"
+      />
+      <p className="mb-3 text-[12px] font-bold">
+        A&nbsp;&nbsp;&nbsp;&nbsp;Attendance (please attach attendance for all years in school)
+      </p>
+      <AttendanceBlock
+        template={template}
+        yearLabel="Secondary 1"
+        ratingId="ch-att-rating-sec1"
+        presentId="ch-att-present-sec1"
+        lateId="ch-att-late-sec1"
+        absentId="ch-att-absent-sec1"
+      />
+      <AttendanceBlock
+        template={template}
+        yearLabel="Secondary 2"
+        ratingId="ch-att-rating-sec2"
+        presentId="ch-att-present-sec2"
+        lateId="ch-att-late-sec2"
+        absentId="ch-att-absent-sec2"
+      />
+      <AttendanceBlock
+        template={template}
+        yearLabel="Secondary 3"
+        ratingId="ch-att-rating-sec3"
+        presentId="ch-att-present-sec3"
+        lateId="ch-att-late-sec3"
+        absentId="ch-att-absent-sec3"
+      />
+      <div className="ml-6 mt-1 grid grid-cols-[1fr_auto] gap-x-3 gap-y-0.5 text-[12px]">
+        <span>Date left School (for ex-students)</span>
+        <span>: {fieldValue(template, 'ch-att-date-left') ?? ''}</span>
+        <span>Reason for leaving School</span>
+        <span>: {fieldValue(template, 'ch-att-reason-leaving') ?? ''}</span>
+        <span>Withdrawn by (if applicable)</span>
+        <span>: {fieldValue(template, 'ch-att-withdrawn-by') ?? ''}</span>
+      </div>
+
+      <p className="mt-5 text-[12px] font-bold">
+        B&nbsp;&nbsp;&nbsp;&nbsp;Conduct: <span className="font-normal italic">(Please tick where appropriate)*</span>
+      </p>
+      <div className="mt-2">
+        <ConductTickGrid rows={conductRows} />
+      </div>
+      <p className="mb-2 text-[12px]">
+        Overall Conduct (<span className="italic">Please attach copies of student's conduct slips for all years in school</span>)
+      </p>
+      <OverallConductRow
+        template={template}
+        yearLabel="Secondary 1"
+        fieldId="ch-cond-overall-sec1"
+      />
+      <OverallConductRow
+        template={template}
+        yearLabel="Secondary 2"
+        fieldId="ch-cond-overall-sec2"
+      />
+      <OverallConductRow
+        template={template}
+        yearLabel="Secondary 3"
+        fieldId="ch-cond-overall-sec3"
+      />
+      <p className="mt-2 text-[12px]">Comments, if any:</p>
+      <p className="mb-4 mt-1 whitespace-pre-line text-[12px] leading-relaxed">
+        {fieldValue(template, 'ch-cond-comments') ?? ''}
+      </p>
+
+      <p className="mt-4 text-[12px] font-bold">
+        C&nbsp;&nbsp;&nbsp;&nbsp;Academic Performance <span className="font-normal italic">(Please attach copies of academic results for all years in school)</span>
+      </p>
+      <div className="mt-2">
+        <AcademicPerfRow
+          template={template}
+          yearLabel="Secondary 1"
+          fieldId="ch-acad-sec1"
+        />
+        <AcademicPerfRow
+          template={template}
+          yearLabel="Secondary 2"
+          fieldId="ch-acad-sec2"
+        />
+        <AcademicPerfRow
+          template={template}
+          yearLabel="Secondary 3"
+          fieldId="ch-acad-sec3"
+        />
+      </div>
+      <p className="mt-3 text-[12px]">Other Remarks Pertaining to Academic Performance</p>
+      <p className="mb-4 mt-1 whitespace-pre-line text-[12px] leading-relaxed">
+        {fieldValue(template, 'ch-acad-remarks') ?? ''}
+      </p>
+
+      <p className="mt-4 text-[12px] font-bold">
+        D&nbsp;&nbsp;&nbsp;&nbsp;Co-Curricular Activities <span className="font-normal italic">(Please list down activities student participated in)</span>
+      </p>
+      <div className="ml-6 mt-2 grid grid-cols-[140px_1fr] gap-y-1 text-[12px]">
+        <span>CCA/Activities</span>
+        <span>: {fieldValue(template, 'ch-cca-activities') ?? ''}</span>
+        <span>Position/s Held</span>
+        <span>: {fieldValue(template, 'ch-cca-positions') ?? ''}</span>
+        <span>Attendance</span>
+        <span>: {fieldValue(template, 'ch-cca-attendance') ?? ''}</span>
+        <span>Behaviour at CCA</span>
+        <span className="whitespace-pre-line">
+          : {fieldValue(template, 'ch-cca-behaviour') ?? ''}
+        </span>
+      </div>
+
+      <p className="mt-5 text-[12px] font-bold">
+        E&nbsp;&nbsp;&nbsp;&nbsp;Other Comments
+      </p>
+
+      <p className="ml-6 mt-3 text-[12px] font-bold">
+        1&nbsp;&nbsp;&nbsp;&nbsp;Parents'/Guardians' Involvement
+      </p>
+      <p className="ml-6 mt-1 text-[12px]">
+        (Whether the school has the support and co-operation of the
+        student's parents/guardians in matters relating to his education and
+        school conduct)
+      </p>
+      <p className="ml-6 mb-2 text-[12px] italic">(Please tick the appropriate boxes)</p>
+      <div className="ml-12 space-y-1.5">
+        <YesNoNaRow
+          showHeader
+          label="a)  The parents/guardians are co-operative"
+          value={fieldValue(template, 'ch-par-cooperative')}
+        />
+        <YesNoNaRow
+          label="b)  The parents/guardians are able to exert control"
+          value={fieldValue(template, 'ch-par-control')}
+        />
+        <YesNoNaRow
+          label={`c)  The parents/guardians acknowledge the offender's wrongdoing`}
+          value={fieldValue(template, 'ch-par-acknowledge')}
+        />
+        <YesNoNaRow
+          label="d)  The parents/guardians are inconsistent in their approach to discipline"
+          value={fieldValue(template, 'ch-par-inconsistent')}
+        />
+      </div>
+      <p className="ml-12 mt-2 text-[12px]">e)  Others <span className="italic">(Please provide details)</span></p>
+      <p className="ml-12 mt-1 whitespace-pre-line text-[12px] leading-relaxed">
+        {fieldValue(template, 'ch-par-other') ?? ''}
+      </p>
+
+      <p className="ml-6 mt-4 text-[12px] font-bold">
+        2&nbsp;&nbsp;&nbsp;&nbsp;Other Information
+      </p>
+      <p className="ml-6 mt-1 text-[12px]">
+        Whether the student comes from a family background where members are
+        known to have any adverse records as follows (if such information is
+        available to the school)
+      </p>
+      <p className="ml-6 mb-2 text-[12px] italic">(Please tick the appropriate boxes)</p>
+      <div className="ml-12 space-y-1.5">
+        <YesNoNaRow
+          showHeader
+          label="a)  An immediate family member/members has a criminal record"
+          value={fieldValue(template, 'ch-fam-criminal')}
+        />
+        <YesNoNaRow
+          label="b)  There is information of drug abuse in the family"
+          value={fieldValue(template, 'ch-fam-drug')}
+        />
+        <YesNoNaRow
+          label="c)  There is information of sexual abuse in the family"
+          value={fieldValue(template, 'ch-fam-sexual')}
+        />
+        <YesNoNaRow
+          label="d)  There is information of physical abuse in the family"
+          value={fieldValue(template, 'ch-fam-physical')}
+        />
+      </div>
+      <p className="ml-12 mt-2 text-[12px]">e)  Others <span className="italic">(please provide details)</span></p>
+      <p className="ml-12 mt-1 whitespace-pre-line text-[12px] leading-relaxed">
+        {fieldValue(template, 'ch-fam-other') ?? ''}
+      </p>
+      <p className="ml-6 mt-3 text-[11px] italic">
+        NA* — Information is not available to the school.
+      </p>
+
+      {/* IV. Care Arrangements */}
+      <SectionBar numeral="IV" title="CARE ARRANGEMENTS" />
+      <p className="ml-6 mt-1 text-[12px]">
+        The student's care arrangements, if known to the school (eg. whether
+        the student is staying with someone with whom he shares a strong
+        emotional bond)
+      </p>
+      <p className="ml-6 mt-2 whitespace-pre-line text-[12px] leading-relaxed">
+        {fieldValue(template, 'ch-care-arrangements') ?? ''}
+      </p>
+
+      {/* V. Student's Health */}
+      <SectionBar numeral="V" title="STUDENT'S HEALTH" />
+      <p className="ml-6 mt-1 text-[12px]">
+        The student's medical, mental, physical ailments if known to the
+        school
+      </p>
+      <p className="ml-6 mt-2 text-[12px]">a)  Any known medical problems <span className="italic">(please provide details)</span></p>
+      <p className="ml-12 mt-1 whitespace-pre-line text-[12px] leading-relaxed">
+        {fieldValue(template, 'ch-health-medical') ?? ''}
+      </p>
+      <p className="ml-6 mt-3 text-[12px]">
+        b)  Student displays extreme symptoms of psychiatric disorder, (eg. any
+        known changes in behaviour) <span className="italic">(please tick the appropriate boxes)</span>
+      </p>
+      <div className="ml-12 mt-2 space-y-1.5">
+        <YesNoNaRow
+          showHeader
+          label="a)  Extremely bizarre behaviour (hallucinations, delusions, etc)"
+          value={fieldValue(template, 'ch-health-bizarre')}
+        />
+        <YesNoNaRow
+          label="b)  Extremely violent behaviour"
+          value={fieldValue(template, 'ch-health-violent')}
+        />
+        <YesNoNaRow
+          label="c)  Suicidal inclinations/attempt or clear plan to commit suicide"
+          value={fieldValue(template, 'ch-health-suicidal')}
+        />
+        <YesNoNaRow
+          label="d)  Obvious addiction to substances"
+          value={fieldValue(template, 'ch-health-substance')}
+        />
+        <YesNoNaRow
+          label="e)  Depression"
+          value={fieldValue(template, 'ch-health-depression')}
+        />
+      </div>
+      <p className="ml-12 mt-2 text-[12px]">f)  Others <span className="italic">(please provide details)</span></p>
+      <p className="ml-12 mt-1 whitespace-pre-line text-[12px] leading-relaxed">
+        {fieldValue(template, 'ch-health-other') ?? ''}
+      </p>
+
+      {/* VI. Counselling */}
+      <SectionBar numeral="VI" title="COUNSELLING" />
+      <p className="ml-6 mt-1 text-[12px]">
+        If the student has obtained, or is presently undergoing counselling
+        from the school. <span className="italic">Please provide details, including particulars of counsellor, nature of counselling and the offender's attendance at counselling sessions.</span>
+      </p>
+      <div className="ml-6 mt-3 grid grid-cols-[260px_1fr] gap-y-1 text-[12px]">
+        <span>Name/type of programme</span>
+        <span>: {fieldValue(template, 'ch-couns-programme') ?? ''}</span>
+        <span>Duration/frequency (start/end date)</span>
+        <span>: {fieldValue(template, 'ch-couns-duration') ?? ''}</span>
+        <span>Persons involved (e.g. parent, friend, etc.)</span>
+        <span>: {fieldValue(template, 'ch-couns-persons') ?? ''}</span>
+        <span>Name of counsellor</span>
+        <span>: {fieldValue(template, 'ch-couns-name') ?? ''}</span>
+        <span>Qualifications of counsellor</span>
+        <span>: {fieldValue(template, 'ch-couns-quals') ?? ''}</span>
+        <span>Counsellor's contact details</span>
+        <span>: {fieldValue(template, 'ch-couns-contact') ?? ''}</span>
+      </div>
+      <p className="ml-6 mt-3 text-[12px]">Any other details which will be of assistance</p>
+      <p className="ml-6 mt-1 whitespace-pre-line text-[12px] leading-relaxed">
+        {fieldValue(template, 'ch-couns-other') ?? ''}
+      </p>
+
+      {/* VII. Other Information */}
+      <SectionBar numeral="VII" title="OTHER INFORMATION" />
+      <p className="ml-6 mt-1 text-[12px]">
+        Any other information which may assist the student and the person in
+        charge of the present investigation <span className="italic">(Examples include whether there are any history/current police reports, requests that the student be given a second chance, be sent to a Home, be placed on GP, etc).</span>
+      </p>
+      <p className="ml-6 mt-2 whitespace-pre-line text-[12px] leading-relaxed">
+        {fieldValue(template, 'ch-other-info') ?? ''}
+      </p>
+
+      {/* VIII. Teacher / Person Preparing the Report */}
+      <SectionBar numeral="VIII" title="TEACHER / PERSON PREPARING THE REPORT" />
+      <div className="ml-6 mt-2 grid grid-cols-[160px_1fr] gap-y-2 text-[12px]">
+        <span>Name:</span>
+        <span>{fieldValue(template, 'ch-teacher-name') ?? ''}</span>
+        <span>Appointment:</span>
+        <span>
+          {fieldValue(template, 'ch-teacher-appointment') ?? ''}
+          {'    '}
+          <span className="ml-6">
+            No. of Years student known: {fieldValue(template, 'ch-teacher-years') ?? ''}
+          </span>
+        </span>
+      </div>
+      <div className="ml-6 mt-6 flex items-end justify-between text-[12px]">
+        <div>
+          <p className="border-t border-black pt-1">Signature of Teacher / Person</p>
+        </div>
+        <div className="text-right">
+          <p>
+            Date: {fieldValue(template, 'ch-teacher-date') ?? ''}
+          </p>
+        </div>
+      </div>
+
+      {/* IX. Principal / Head of Institution */}
+      <SectionBar numeral="IX" title="PRINCIPAL / HEAD OF INSTITUTION" />
+      <div className="ml-6 mt-2 grid grid-cols-[80px_1fr_120px_1fr] gap-x-2 gap-y-2 text-[12px]">
+        <span>Name:</span>
+        <span className="border-b border-black" />
+        <span>Tel/Fax Numbers:</span>
+        <span className="border-b border-black" />
+      </div>
+      <p className="ml-6 mt-3 text-[12px]">Comments on Report, if any:</p>
+      <div className="ml-6 mt-1 space-y-3 text-[12px]">
+        <div className="border-b border-black pb-3">&nbsp;</div>
+        <div className="border-b border-black pb-3">&nbsp;</div>
+        <div className="border-b border-black pb-3">&nbsp;</div>
+      </div>
+    </div>
+  )
+}
+
+// Generic fallback for templates without a faithful renderer. Lists the
+// fields with values; not pixel-faithful but still demo-usable.
+function GenericFilledRendering({
+  template,
+  studentName,
+}: {
+  template: AgencyTemplate
+  studentName: string
+}) {
+  return (
+    <div
+      className="mx-auto bg-white px-12 py-8 text-black shadow-sm"
+      style={{
+        fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+        maxWidth: 760,
+      }}
+    >
+      <ConfidentialHeader pageNum={1} />
+      <h1 className="mb-1 text-center text-[22px] font-bold tracking-wide">
+        {template.name.toUpperCase()}
+      </h1>
+      <p className="mb-6 text-center text-[12px]">
+        {template.agency} — {studentName}
+      </p>
+      {template.sections.map((section, idx) => {
+        const numeral = ['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII']
+        return (
+          <div key={section.id}>
+            <SectionBar
+              numeral={numeral[idx] ?? `${idx + 1}`}
+              title={section.title.toUpperCase()}
+            />
+            <div className="ml-6 mt-2 space-y-2 text-[12px]">
+              {section.fields.map((f) => {
+                const v = fieldValue(template, f.id)
+                if (f.type === 'narrative') {
+                  return (
+                    <div key={f.id}>
+                      <p className="font-semibold">{f.label}</p>
+                      <p className="mt-1 whitespace-pre-line leading-relaxed">
+                        {v ?? ''}
+                      </p>
+                    </div>
+                  )
+                }
+                return (
+                  <div key={f.id}>
+                    <span className="font-semibold">{f.label}:</span>{' '}
+                    <span>{v ?? ''}</span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+function FilledReportRendering({
+  template,
+  studentName,
+}: {
+  template: AgencyTemplate
+  studentName: string
+}) {
+  if (template.id === 'children-home') {
+    return (
+      <ChildrenHomeFilledRendering template={template} studentName={studentName} />
+    )
+  }
+  return <GenericFilledRendering template={template} studentName={studentName} />
+}
+
+// Full-screen preview modal showing the filled-in version of the active
+// report. Centred overlay + dimmed backdrop; ESC, X-button, and backdrop
+// click all dismiss. The body renders <FilledReportRendering /> so the
+// preview reflects the demo data the YH would send (auto-populated
+// values + AI-drafted narratives + restricted counsellor content).
+function DocumentPreviewModal({
+  template,
+  studentName,
+  open,
+  onOpenChange,
+}: {
+  template: AgencyTemplate
+  studentName: string
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="flex max-h-[90vh] flex-col gap-0 p-0 sm:max-w-[900px]">
+        <DialogHeader className="border-b px-6 py-4">
+          <DialogTitle className="text-base">
+            {template.name} — {studentName}
+          </DialogTitle>
+          <DialogDescription>
+            Preview of your filled-in report
+          </DialogDescription>
+        </DialogHeader>
+        <div className="min-h-[480px] flex-1 overflow-auto bg-muted/30 p-6">
+          <FilledReportRendering
+            template={template}
+            studentName={studentName}
+          />
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -1320,9 +2495,20 @@ function ReportForm({
     new Set(),
   )
   const [previewOpen, setPreviewOpen] = useState(false)
-  const [previewScale, setPreviewScale] = useState<number>(0.68)
   const [savedStatus, setSavedStatus] = useState<'saved' | 'saving'>('saved')
   const [submitOpen, setSubmitOpen] = useState(false)
+  const [sentOpen, setSentOpen] = useState(false)
+  // Once submitted, the form locks into a read-only / pending state. The
+  // YH can either return to the profile or stay on this page to view what
+  // they sent. Cleared if the YH starts a new report (component unmounts).
+  const [submitted, setSubmitted] = useState(false)
+  const [addCollaboratorsOpen, setAddCollaboratorsOpen] = useState(false)
+  // Start empty — the YH invites collaborators after creating the report.
+  // MOCK_COLLABORATORS is exposed in the modal as quick-pick suggestions.
+  const [collaborators, setCollaborators] = useState<Array<Collaborator>>([])
+  // Hardcoded for the demo — the principal's name is not pulled from a
+  // real source on this prototype branch.
+  const PRINCIPAL_NAME = 'Mrs Tan'
   const [noteToPrincipal, setNoteToPrincipal] = useState('')
   const [prefillBannerDismissed, setPrefillBannerDismissed] = useState(false)
   const [aiSourceSelections, setAiSourceSelections] = useState<
@@ -1471,12 +2657,12 @@ function ReportForm({
     <div
       className={cn(
         'mx-auto flex h-[calc(100vh-120px)] flex-col overflow-hidden rounded-xl border bg-white transition-[max-width]',
-        previewOpen ? 'max-w-none' : 'max-w-5xl',
+        'max-w-5xl',
       )}
     >
       {/* Form header — mirrors Posts new-post top bar */}
       <div className="flex shrink-0 items-center gap-3 border-b bg-card px-4 py-3">
-        <AgencyIcon abbrev={template.abbrev} color={template.color} />
+        <AgencyLogo agency={template.agency} size="md" />
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <span className="truncate text-sm font-semibold">
@@ -1566,15 +2752,55 @@ function ReportForm({
       <div className="flex min-h-0 flex-1 bg-muted/10">
         {/* Form cards — scrollable column */}
         <div className="min-w-0 flex-1 overflow-y-auto px-6 py-5">
-          {/* Progress chip */}
-          <div className="mb-4 flex items-center gap-2 text-xs text-muted-foreground">
-            <ListChecks className="h-3.5 w-3.5" />
-            <span className="font-medium text-foreground">
-              {reviewedCount} of {reviewableSections.length} sections verified
+          {/* Progress chip + collaborators */}
+          <div className="mb-4 flex items-center gap-3 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <ListChecks className="h-3.5 w-3.5" />
+              <span className="font-medium text-foreground">
+                {reviewedCount} of {reviewableSections.length} sections verified
+              </span>
             </span>
+            <span className="h-3 w-px bg-border" />
+            <CollaboratorAvatars collaborators={collaborators} />
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 gap-1.5 px-2 text-xs"
+              onClick={() => setAddCollaboratorsOpen(true)}
+            >
+              <UserPlus className="h-3.5 w-3.5" />
+              Add collaborator
+            </Button>
           </div>
 
-          {principalNote && (
+          <AddCollaboratorsModal
+            open={addCollaboratorsOpen}
+            onOpenChange={setAddCollaboratorsOpen}
+            alreadyAdded={collaborators.map((c) => c.email)}
+            onAdd={(c) => {
+              setCollaborators((prev) => [...prev, c])
+              toast.success(`Invite sent to ${c.name}`)
+            }}
+          />
+
+          {submitted && (
+            <div className="mb-4 flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+              <Clock className="h-4 w-4 shrink-0 text-amber-700" />
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-amber-900">
+                  Report submitted · Awaiting principal review
+                </p>
+                <p className="text-xs text-amber-800/80">
+                  This report is locked while {PRINCIPAL_NAME} reviews it.
+                </p>
+              </div>
+              <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100">
+                In Review
+              </Badge>
+            </div>
+          )}
+
+          {principalNote && !submitted && (
             <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
               <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-amber-700">
                 Principal has requested edits
@@ -1642,34 +2868,49 @@ function ReportForm({
           )}
 
           <div className="space-y-4 pb-16">
-            {template.sections.map((s) => (
-              <SectionPanel
-                key={s.id}
-                section={s}
-                fieldValues={fieldValues}
-                aiFlags={aiFlags}
-                prefilledFrom={prefilledFrom}
-                aiSourceSelections={aiSourceSelections}
-                onAiSourceChange={(fieldId, next) =>
-                  setAiSourceSelections((prev) => ({
-                    ...prev,
-                    [fieldId]: next,
-                  }))
-                }
-                assignedTo={assignments[s.id]}
-                onAssignedChange={(staff) => reassignSection(s.id, staff)}
-                onValueChange={updateField}
-                onAiDraft={aiDraft}
-                onToggleReviewed={toggleReviewed}
-                isReviewed={completedSections.has(s.id)}
-              />
-            ))}
+            <div
+              className={cn(
+                'space-y-4',
+                submitted && 'pointer-events-none select-none opacity-70',
+              )}
+              aria-disabled={submitted}
+            >
+              {template.sections.map((s) => (
+                <SectionPanel
+                  key={s.id}
+                  section={s}
+                  fieldValues={fieldValues}
+                  aiFlags={aiFlags}
+                  prefilledFrom={prefilledFrom}
+                  aiSourceSelections={aiSourceSelections}
+                  onAiSourceChange={(fieldId, next) =>
+                    setAiSourceSelections((prev) => ({
+                      ...prev,
+                      [fieldId]: next,
+                    }))
+                  }
+                  assignedTo={assignments[s.id]}
+                  onAssignedChange={(staff) => reassignSection(s.id, staff)}
+                  onValueChange={updateField}
+                  onAiDraft={aiDraft}
+                  onToggleReviewed={toggleReviewed}
+                  isReviewed={completedSections.has(s.id)}
+                />
+              ))}
+            </div>
 
-            <div className="flex justify-end pt-2">
-              <Button onClick={() => setSubmitOpen(true)}>
-                Submit for P Review
-                <ChevronRight className="ml-1 h-4 w-4" />
-              </Button>
+            <div className="flex items-center justify-end gap-2 pt-2">
+              {submitted ? (
+                <Badge className="bg-amber-100 px-3 py-1 text-amber-700 hover:bg-amber-100">
+                  <Clock className="mr-1.5 h-3 w-3" />
+                  In Review · Awaiting {PRINCIPAL_NAME}
+                </Badge>
+              ) : (
+                <Button onClick={() => setSubmitOpen(true)}>
+                  Submit for P Review
+                  <ChevronRight className="ml-1 h-4 w-4" />
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -1710,11 +2951,49 @@ function ReportForm({
               </Button>
               <Button
                 onClick={() => {
+                  // Persist the submission into the mock store so the
+                  // student profile picks up a fresh "In Review" card.
+                  appendSubmittedReport({
+                    studentId,
+                    templateId: template.id,
+                    templateName: template.name,
+                    agency: template.agency,
+                    totalSections: template.sections.length,
+                  })
                   setSubmitOpen(false)
-                  onSubmittedForReview()
+                  setSubmitted(true)
+                  setSentOpen(true)
                 }}
               >
                 Submit
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={sentOpen} onOpenChange={setSentOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Check className="h-5 w-5 text-green-600" />
+                Sent to {PRINCIPAL_NAME} for review
+              </DialogTitle>
+              <DialogDescription>
+                {PRINCIPAL_NAME} has been notified. You'll see this report on{' '}
+                {studentName}'s profile while it's awaiting review.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setSentOpen(false)}>
+                Done
+              </Button>
+              <Button
+                onClick={() => {
+                  setSentOpen(false)
+                  onSubmittedForReview()
+                }}
+              >
+                Return to profile
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -1764,15 +3043,15 @@ function ReportForm({
           </div>
         </aside>
 
-        {/* Right: static template reference */}
-        {previewOpen && (
-          <DocumentPreview
-            template={template}
-            scale={previewScale}
-            onScaleChange={setPreviewScale}
-          />
-        )}
       </div>
+
+      {/* Full-screen template preview modal */}
+      <DocumentPreviewModal
+        template={template}
+        studentName={studentName}
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+      />
     </div>
   )
 }
@@ -1794,7 +3073,30 @@ function ExportPassword({
   const [showPw, setShowPw] = useState(false)
   const [pw, setPw] = useState('')
   const [encrypt, setEncrypt] = useState(false)
+  const [previewOpen, setPreviewOpen] = useState(false)
   const asset = templateReferenceAsset(template)
+
+  // Suggest a memorable but high-entropy password: agency abbrev + month-
+  // year + 4 random alphanumerics. Matches the format the existing demo
+  // mock data uses (e.g. "SCRUBBED").
+  const generatePassword = () => {
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    ]
+    const now = new Date()
+    const slug = template.abbrev
+      .replace(/[^A-Za-z0-9]/g, '')
+      .toUpperCase()
+      .slice(0, 4)
+    const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
+    const tail = Array.from(
+      { length: 4 },
+      () => chars[Math.floor(Math.random() * chars.length)],
+    ).join('')
+    setPw(`${slug}${months[now.getMonth()]}${now.getFullYear()}${tail}`)
+    setShowPw(true)
+  }
 
   return (
     <div className="space-y-5">
@@ -1818,7 +3120,28 @@ function ExportPassword({
             {template.name} for {studentName}
           </p>
         </div>
-        <div className="max-h-[640px] overflow-auto p-6">
+        <div className="relative max-h-[640px] overflow-auto p-6">
+          {/* Floating expand-to-fullscreen affordance — opens the same
+              DocumentPreviewModal the report-filling page uses. */}
+          {asset && (
+            <TooltipProvider delay={200}>
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <button
+                      type="button"
+                      onClick={() => setPreviewOpen(true)}
+                      aria-label="Expand preview"
+                      className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-md border bg-card/90 text-muted-foreground shadow-sm backdrop-blur transition-colors hover:bg-card hover:text-foreground"
+                    />
+                  }
+                >
+                  <Maximize2 className="h-4 w-4" />
+                </TooltipTrigger>
+                <TooltipContent>Expand preview</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
           {asset?.kind === 'pdf' ? (
             <iframe
               src={`${asset.src}#toolbar=0&navpanes=0&view=FitH`}
@@ -1839,22 +3162,17 @@ function ExportPassword({
         </div>
       </div>
 
+      <DocumentPreviewModal
+        template={template}
+        studentName={studentName}
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+      />
+
       {/* Encryption toggle + (conditional) password */}
       <div className="space-y-4 rounded-xl border bg-white p-5">
-        <div className="flex items-start justify-between gap-3">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <Lock className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-semibold">Encrypt this file?</span>
-              <Badge className="gap-1 bg-purple-50 text-purple-700 hover:bg-purple-50 text-[11px]">
-                <Lock className="h-2.5 w-2.5" />
-                YH, DM &amp; SLs only
-              </Badge>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Add a password so only authorised recipients can open the PDF.
-            </p>
-          </div>
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-sm font-semibold">Encrypt with password</span>
           <Switch
             checked={encrypt}
             onCheckedChange={(v) => {
@@ -1870,32 +3188,64 @@ function ExportPassword({
               htmlFor="report-password"
               className="block text-sm font-medium"
             >
-              Set a password for this PDF.
+              Set a password for this PDF
             </label>
-            <div className="flex items-center gap-2">
+            <div className="relative">
               <input
                 id="report-password"
                 type={showPw ? 'text' : 'password'}
                 value={pw}
                 onChange={(e) => setPw(e.target.value)}
                 placeholder="Enter password"
-                className="flex-1 rounded-lg border px-3 py-2 font-mono text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                className="w-full rounded-lg border px-3 py-2 pr-20 font-mono text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
               />
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowPw((p) => !p)}
-              >
-                {showPw ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-                {showPw ? 'Hide' : 'Show'}
-              </Button>
+              <div className="absolute inset-y-0 right-2 flex items-center gap-0.5">
+                <TooltipProvider delay={200}>
+                  <Tooltip>
+                    <TooltipTrigger
+                      render={
+                        <button
+                          type="button"
+                          onClick={generatePassword}
+                          aria-label="Generate password"
+                          className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-primary"
+                        />
+                      }
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                    </TooltipTrigger>
+                    <TooltipContent>Generate password</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <TooltipProvider delay={200}>
+                  <Tooltip>
+                    <TooltipTrigger
+                      render={
+                        <button
+                          type="button"
+                          onClick={() => setShowPw((p) => !p)}
+                          aria-label={
+                            showPw ? 'Hide password' : 'Show password'
+                          }
+                          className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-primary"
+                        />
+                      }
+                    >
+                      {showPw ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {showPw ? 'Hide password' : 'Show password'}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
             </div>
             <p className="text-xs text-muted-foreground">
-              TW will save this password for future reference.
+              TW will save this password for future reference
             </p>
           </div>
         )}
@@ -2110,22 +3460,13 @@ function AgencyReportWizardPage() {
             currentReportId={resumedReport?.id}
             onBack={() => setStep('templates')}
             onSubmittedForReview={() => {
+              // The wizard already showed a "Sent to Mrs Tan for review"
+              // confirmation modal before calling this — just navigate back
+              // to the student profile, where the new In-Review card now
+              // appears.
               navigate({
                 to: '/students/$id',
                 params: { id: student.id },
-              })
-              toast.success('Report submitted for Principal review.', {
-                action: {
-                  label: 'Start another report',
-                  onClick: () => {
-                    setSelectedTemplates([])
-                    setStep('templates')
-                    navigate({
-                      to: '/students/$id/agency-report/new',
-                      params: { id: student.id },
-                    })
-                  },
-                },
               })
             }}
           />

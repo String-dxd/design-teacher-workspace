@@ -132,7 +132,6 @@ const parentsCommItems: Array<MenuItem> = [
     url: '/reports',
     icon: FileText,
     stage: 'Experiment',
-    featureFlag: 'holistic-reports',
   },
 ]
 
