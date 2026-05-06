@@ -27,6 +27,8 @@ export interface ColumnConfig {
   filterField?: FilterField
   source?: string
   lastUpdated?: string
+  /** Optional override for the "Last synced:" / "Last uploaded:" label */
+  dateLabel?: string
   temporalType?: TemporalType
   /** True for columns added via the Import Data wizard */
   imported?: boolean
@@ -169,19 +171,8 @@ export const defaultColumns: Array<ColumnConfig> = [
     temporalType: 'event-based',
   },
   {
-    id: 'socialLinks',
-    label: 'Social links',
-    visible: true,
-    sortable: true,
-    filterable: true,
-    filterField: 'socialLinks',
-    source: 'School Cockpit, RE_SDT_041, Latest available (Term 4, 2025)',
-    lastUpdated: '16 Sep 2025',
-    temporalType: 'event-based',
-  },
-  {
     id: 'riskIndicators',
-    label: 'Risk indicators',
+    label: 'TCI risk indicators',
     visible: true,
     sortable: true,
     filterable: true,
@@ -200,6 +191,17 @@ export const defaultColumns: Array<ColumnConfig> = [
     source: 'School Cockpit, RE_WB_004',
     lastUpdated: '16 Sep 2025',
     temporalType: 'cross-term',
+  },
+  {
+    id: 'socialLinks',
+    label: 'Social links',
+    visible: true,
+    sortable: true,
+    filterable: true,
+    filterField: 'socialLinks',
+    source: 'School Cockpit, RE_SDT_041, Latest available (Term 4, 2025)',
+    lastUpdated: '16 Sep 2025',
+    temporalType: 'event-based',
   },
   {
     id: 'overallPercentage',
@@ -242,6 +244,17 @@ export const defaultColumns: Array<ColumnConfig> = [
     lastUpdated: '16 Sep 2025',
   },
   {
+    id: 'siblings',
+    label: 'Siblings',
+    visible: true,
+    sortable: true,
+    filterable: true,
+    filterField: 'siblings',
+    source: 'School Cockpit, RE_FA_006',
+    lastUpdated: '16 Sep 2025',
+    temporalType: 'fixed',
+  },
+  {
     id: 'fas',
     label: 'FAS',
     visible: true,
@@ -275,14 +288,39 @@ export const defaultColumns: Array<ColumnConfig> = [
     temporalType: 'fixed',
   },
   {
-    id: 'custody',
-    label: 'Custody',
+    id: 'supportedByComLink',
+    label: 'Supported by ComLink+',
     visible: true,
     sortable: true,
     filterable: true,
-    filterField: 'custody',
-    source: 'School Cockpit, RE_FA_006',
-    lastUpdated: '16 Sep 2025',
+    filterField: 'supportedByComLink',
+    source: 'MSF UPLIFT',
+    lastUpdated: 'As of 19 Sep 2025',
+    dateLabel: 'Date:',
+    temporalType: 'fixed',
+  },
+  {
+    id: 'supportedByFsc',
+    label: 'Supported by FSC in the past 2 years',
+    visible: true,
+    sortable: true,
+    filterable: true,
+    filterField: 'supportedByFsc',
+    source: 'MSF UPLIFT',
+    lastUpdated: 'As of 19 Sep 2025',
+    dateLabel: 'Date:',
+    temporalType: 'fixed',
+  },
+  {
+    id: 'nonIntactFamily',
+    label: 'From Non-Intact Family',
+    visible: true,
+    sortable: true,
+    filterable: true,
+    filterField: 'nonIntactFamily',
+    source: 'School Cockpit, MSF UPLIFT',
+    lastUpdated: 'As of 1 May 2026',
+    dateLabel: 'Date:',
     temporalType: 'fixed',
   },
   {
@@ -305,17 +343,6 @@ export const defaultColumns: Array<ColumnConfig> = [
     lastUpdated: '16 Sep 2025',
     temporalType: 'fixed',
   },
-  {
-    id: 'siblings',
-    label: 'Siblings',
-    visible: true,
-    sortable: true,
-    filterable: true,
-    filterField: 'siblings',
-    source: 'School Cockpit, RE_FA_006',
-    lastUpdated: '16 Sep 2025',
-    temporalType: 'fixed',
-  },
 ]
 
 interface ColumnVisibilityPopoverProps {
@@ -332,6 +359,7 @@ export function ColumnVisibilityPopover({
   const { isEnabled } = useFeatureFlags()
   const isStudentInsightsView =
     !isEnabled('student-analytics') && !isEnabled('student-analytics-basic')
+  const msfUpliftEnabled = isEnabled('msf-uplift-data')
   const [open, setOpen] = useState(false)
 
   const visibleCount = columns.filter((c) => c.visible).length
@@ -345,11 +373,19 @@ export function ColumnVisibilityPopover({
   }
 
   const handleReset = () => {
-    const resetColumns = isStudentInsightsView
+    const baseReset = isStudentInsightsView
       ? defaultColumns.filter(
           (c) => c.id !== 'approvedMtl' && c.id !== 'postSecEligibility',
         )
       : defaultColumns
+    const resetColumns = msfUpliftEnabled
+      ? baseReset
+      : baseReset.filter(
+          (c) =>
+            c.id !== 'supportedByComLink' &&
+            c.id !== 'supportedByFsc' &&
+            c.id !== 'nonIntactFamily',
+        )
     onColumnsChange(resetColumns)
   }
 

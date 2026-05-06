@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 
 import type {
@@ -102,11 +102,13 @@ function matchesCondition(
     'fas',
     'housing',
     'housingType',
-    'custody',
     'commuterStatus',
     'afterSchoolArrangement',
     'siblings',
     'externalAgencies',
+    'supportedByComLink',
+    'supportedByFsc',
+    'nonIntactFamily',
   ])
   if (!knownFields.has(filter.field)) return true
 
@@ -166,6 +168,7 @@ function matchesCondition(
 function StudentsPage() {
   const studentAnalyticsEnabled = useFeatureFlag('student-analytics')
   const studentAnalyticsBasicEnabled = useFeatureFlag('student-analytics-basic')
+  const msfUpliftEnabled = useFeatureFlag('msf-uplift-data')
   const isStudentInsightsView =
     !studentAnalyticsEnabled && !studentAnalyticsBasicEnabled
   const pageTitle = studentAnalyticsEnabled ? 'Profiles' : 'Student Insights'
@@ -175,7 +178,7 @@ function StudentsPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [filters, setFilters] = useState<Array<FilterCriterion>>([])
   const [columns, setColumns] = useState<Array<ColumnConfig>>(() => {
-    const baseColumns = isStudentInsightsView
+    const insightsFiltered = isStudentInsightsView
       ? defaultColumns.filter(
           (c) =>
             c.id !== 'approvedMtl' &&
@@ -184,6 +187,14 @@ function StudentsPage() {
             c.id !== 'afterSchoolArrangement',
         )
       : defaultColumns
+    const baseColumns = msfUpliftEnabled
+      ? insightsFiltered
+      : insightsFiltered.filter(
+          (c) =>
+            c.id !== 'supportedByComLink' &&
+            c.id !== 'supportedByFsc' &&
+            c.id !== 'nonIntactFamily',
+        )
     const saved = getImportedColumns()
     if (saved.length === 0) return baseColumns
     const now = new Date()
@@ -209,6 +220,29 @@ function StudentsPage() {
     ]
   })
   const importedColumns = columns.filter((c) => c.imported)
+
+  // Sync MSF UPLIFT columns when the feature flag toggles at runtime
+  useEffect(() => {
+    const MSF_IDS = ['supportedByComLink', 'supportedByFsc', 'nonIntactFamily']
+    setColumns((prev) => {
+      const hasMsf = prev.some((c) => MSF_IDS.includes(c.id))
+      if (msfUpliftEnabled && !hasMsf) {
+        const msfColumns = defaultColumns.filter((c) => MSF_IDS.includes(c.id))
+        const fasIndex = prev.findIndex((c) => c.id === 'fas')
+        const insertAt = fasIndex >= 0 ? fasIndex + 1 : prev.length
+        return [
+          ...prev.slice(0, insertAt),
+          ...msfColumns,
+          ...prev.slice(insertAt),
+        ]
+      }
+      if (!msfUpliftEnabled && hasMsf) {
+        return prev.filter((c) => !MSF_IDS.includes(c.id))
+      }
+      return prev
+    })
+  }, [msfUpliftEnabled])
+
   const [sort, setSort] = useState<SortConfig | null>(null)
   const [selectedSubjects, setSelectedSubjects] =
     useState<Array<string> | null>(() => loadSelectedSubjects())

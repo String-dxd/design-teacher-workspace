@@ -85,6 +85,13 @@ const featureFlagConfigs: Array<FeatureFlagConfig> = [
       'Show the Import Data option in the student list to upload custom fields via a guided wizard',
     stage: 'Experiment',
   },
+  {
+    key: 'msf-uplift-data',
+    label: 'Student data from MSF UPLIFT',
+    description:
+      'Show student data sourced from MSF UPLIFT when this flag is enabled',
+    stage: 'Experiment',
+  },
 ]
 
 function FeatureFlagsPage() {

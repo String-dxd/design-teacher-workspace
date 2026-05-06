@@ -17,7 +17,12 @@ import type {
   FilterRangeValue,
 } from '@/types/student'
 import type { FilterFieldOption } from '@/data/filter-config'
-import { filterFieldConfigs, isFilterComplete } from '@/data/filter-config'
+import {
+  filterFieldConfigs,
+  groupLabels,
+  groupOrder,
+  isFilterComplete,
+} from '@/data/filter-config'
 import { useFeatureFlags } from '@/lib/feature-flags'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -107,6 +112,7 @@ export function MultiFilterPopover({
   const { isEnabled } = useFeatureFlags()
   const isStudentInsightsView =
     !isEnabled('student-analytics') && !isEnabled('student-analytics-basic')
+  const msfUpliftEnabled = isEnabled('msf-uplift-data')
   const [open, setOpen] = useState(false)
   const [selectorOpen, setSelectorOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -178,19 +184,27 @@ export function MultiFilterPopover({
     [importedFields],
   )
 
-  const visibleFilterFieldOptions = useMemo(
-    () =>
-      isStudentInsightsView
-        ? filterFieldOptions.filter(
-            (opt) =>
-              opt.field !== 'approvedMtl' &&
-              opt.field !== 'postSecEligibility' &&
-              opt.field !== 'commuterStatus' &&
-              opt.field !== 'afterSchoolArrangement',
-          )
-        : filterFieldOptions,
-    [isStudentInsightsView],
-  )
+  const visibleFilterFieldOptions = useMemo(() => {
+    let opts = filterFieldOptions
+    if (isStudentInsightsView) {
+      opts = opts.filter(
+        (opt) =>
+          opt.field !== 'approvedMtl' &&
+          opt.field !== 'postSecEligibility' &&
+          opt.field !== 'commuterStatus' &&
+          opt.field !== 'afterSchoolArrangement',
+      )
+    }
+    if (!msfUpliftEnabled) {
+      opts = opts.filter(
+        (opt) =>
+          opt.field !== 'supportedByComLink' &&
+          opt.field !== 'supportedByFsc' &&
+          opt.field !== 'nonIntactFamily',
+      )
+    }
+    return opts
+  }, [isStudentInsightsView, msfUpliftEnabled])
 
   const allFieldOptions = useMemo(
     () => [...visibleFilterFieldOptions, ...importedFieldOptions],
@@ -225,18 +239,19 @@ export function MultiFilterPopover({
   }, [availableImported, searchQuery])
 
   const groupedFields = useMemo(() => {
-    const groups = [
-      {
-        group: '_all',
-        label: '',
-        fields: filteredFields.filter(
-          (f) => !importedFields.some((i) => i.id === f.field),
-        ),
-      },
-    ]
+    const standardFields = filteredFields.filter(
+      (f) => !importedFields.some((i) => i.id === f.field),
+    )
+    const groups = groupOrder
+      .map((group) => ({
+        group,
+        label: groupLabels[group],
+        fields: standardFields.filter((f) => f.group === group),
+      }))
+      .filter((g) => g.fields.length > 0)
     if (filteredImported.length > 0) {
       groups.push({
-        group: '_imported',
+        group: 'imported' as never,
         label: 'Imported data',
         fields: filteredImported,
       })
@@ -399,6 +414,29 @@ export function MultiFilterPopover({
                           opt.label.toLowerCase().includes(q),
                         )
                       : rowFields
+                    const rowGroupedFields = (() => {
+                      const standard = visibleFields.filter(
+                        (f) => !importedFields.some((i) => i.id === f.field),
+                      )
+                      const groups = groupOrder
+                        .map((g) => ({
+                          group: g,
+                          label: groupLabels[g],
+                          fields: standard.filter((f) => f.group === g),
+                        }))
+                        .filter((g) => g.fields.length > 0)
+                      const importedVisible = visibleFields.filter((f) =>
+                        importedFields.some((i) => i.id === f.field),
+                      )
+                      if (importedVisible.length > 0) {
+                        groups.push({
+                          group: 'imported' as never,
+                          label: 'Imported data',
+                          fields: importedVisible,
+                        })
+                      }
+                      return groups
+                    })()
                     return (
                       <Popover
                         open={isOpen}
@@ -438,23 +476,38 @@ export function MultiFilterPopover({
                           </div>
                           <ScrollArea className="h-[220px]">
                             <div className="py-1">
-                              {visibleFields.map((opt) => (
-                                <button
-                                  key={opt.field}
-                                  type="button"
-                                  onClick={() => {
-                                    handleFieldChange(index, opt.field)
-                                    setOpenFieldSelectorIndex(null)
-                                    setFieldSelectorQuery('')
-                                  }}
-                                  className={cn(
-                                    'w-full rounded-md px-3 py-2 text-left text-sm hover:bg-accent',
-                                    opt.field === filter.field && 'font-medium',
-                                  )}
-                                >
-                                  {opt.label}
-                                </button>
-                              ))}
+                              {rowGroupedFields.map(
+                                ({ group, label, fields }, gi) => (
+                                  <div key={group}>
+                                    {gi > 0 && (
+                                      <div className="my-1 border-t border-[var(--slate-6)]" />
+                                    )}
+                                    {label && (
+                                      <div className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                        {label}
+                                      </div>
+                                    )}
+                                    {fields.map((opt) => (
+                                      <button
+                                        key={opt.field}
+                                        type="button"
+                                        onClick={() => {
+                                          handleFieldChange(index, opt.field)
+                                          setOpenFieldSelectorIndex(null)
+                                          setFieldSelectorQuery('')
+                                        }}
+                                        className={cn(
+                                          'w-full rounded-md px-3 py-2 text-left text-sm hover:bg-accent',
+                                          opt.field === filter.field &&
+                                            'font-medium',
+                                        )}
+                                      >
+                                        {opt.label}
+                                      </button>
+                                    ))}
+                                  </div>
+                                ),
+                              )}
                               {visibleFields.length === 0 && (
                                 <div className="px-3 py-6 text-center text-sm text-muted-foreground">
                                   No filters found
@@ -580,51 +633,49 @@ export function MultiFilterPopover({
                                   <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
                                 </PopoverTrigger>
                                 <PopoverContent
-                                  className="w-[260px] gap-0 p-0"
+                                  className="w-[260px] gap-0 p-3"
                                   align="start"
                                 >
-                                  {/* Header */}
-                                  <div className="flex items-center justify-between border-b px-3 py-2.5">
-                                    <span className="text-sm font-semibold">
-                                      {fieldOption.label}
-                                    </span>
-                                    {visibleOptions.length > 0 && (
-                                      <button
-                                        type="button"
-                                        onClick={toggleAll}
-                                        className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
-                                      >
-                                        <div
-                                          className={cn(
-                                            'flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded border',
-                                            allSelected
-                                              ? 'border-primary bg-primary text-primary-foreground'
-                                              : 'border-input',
-                                          )}
-                                        >
-                                          {allSelected && (
-                                            <Check className="h-2.5 w-2.5" />
-                                          )}
-                                        </div>
-                                        Select all
-                                      </button>
-                                    )}
-                                  </div>
                                   {/* Search */}
-                                  <div className="flex items-center gap-2 border-b px-3 py-2">
+                                  <div className="mb-1 flex items-center gap-2 rounded-lg border border-blue-400 px-3 py-2 focus-within:border-blue-500">
                                     <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
                                     <input
                                       ref={multiselectSearchRef}
                                       className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-                                      placeholder="Search options"
+                                      placeholder="Search filters"
                                       value={multiselectQuery}
                                       onChange={(e) =>
                                         setMultiselectQuery(e.target.value)
                                       }
                                     />
                                   </div>
+                                  {/* Field label */}
+                                  <div className="px-3 pt-2 pb-1 text-sm font-medium">
+                                    {fieldOption.label}
+                                  </div>
                                   <ScrollArea className="max-h-[220px]">
                                     <div className="py-1">
+                                      {visibleOptions.length > 0 && (
+                                        <button
+                                          type="button"
+                                          onClick={toggleAll}
+                                          className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm hover:bg-accent"
+                                        >
+                                          <div
+                                            className={cn(
+                                              'flex h-4 w-4 shrink-0 items-center justify-center rounded border',
+                                              allSelected
+                                                ? 'border-primary bg-primary text-primary-foreground'
+                                                : 'border-input',
+                                            )}
+                                          >
+                                            {allSelected && (
+                                              <Check className="h-3 w-3" />
+                                            )}
+                                          </div>
+                                          Select all
+                                        </button>
+                                      )}
                                       {visibleOptions.map((v) => {
                                         const checked =
                                           selectedValues.includes(v)
@@ -712,6 +763,33 @@ export function MultiFilterPopover({
                                 placeholder="Enter number"
                                 className="w-full rounded-[14px]"
                               />
+                            </div>
+                          ) : filter.field === 'riskIndicators' ? (
+                            // Numerical - TCI indicators (with " / 5 indicators" suffix)
+                            <div className="flex items-center gap-1.5">
+                              <Input
+                                type="number"
+                                min={0}
+                                max={5}
+                                value={
+                                  typeof filter.value === 'number'
+                                    ? filter.value
+                                    : ''
+                                }
+                                onChange={(e) =>
+                                  handleValueChange(
+                                    index,
+                                    e.target.value === ''
+                                      ? ''
+                                      : Number(e.target.value),
+                                  )
+                                }
+                                placeholder="Enter number"
+                                className="w-full rounded-[14px]"
+                              />
+                              <span className="shrink-0 text-sm text-muted-foreground">
+                                / 5 indicators
+                              </span>
                             </div>
                           ) : (
                             // Numerical - not range
@@ -830,10 +908,13 @@ export function MultiFilterPopover({
                     {/* List */}
                     <ScrollArea className="h-[220px]">
                       <div className="py-1">
-                        {groupedFields.map(({ group, label, fields }) => (
+                        {groupedFields.map(({ group, label, fields }, gi) => (
                           <div key={group}>
+                            {gi > 0 && (
+                              <div className="my-1 border-t border-[var(--slate-6)]" />
+                            )}
                             {label && (
-                              <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground">
+                              <div className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                                 {label}
                               </div>
                             )}
