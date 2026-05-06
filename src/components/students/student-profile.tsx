@@ -957,7 +957,21 @@ export function StudentProfile({
               }
             />
             <Field label="SEN" value={student.sen || '-'} />
-            <Field label="Conduct grade" value={student.conduct} />
+            <Field
+              label="Conduct grade"
+              value={
+                student.conduct ? (
+                  <>
+                    {student.conduct}{' '}
+                    <span className="font-normal text-muted-foreground">
+                      (2025, Overall)
+                    </span>
+                  </>
+                ) : (
+                  '-'
+                )
+              }
+            />
           </dl>
 
           {!isStudentInsightsView && (
