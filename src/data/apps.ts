@@ -42,7 +42,7 @@ export const appCategories: Array<AppCategory> = [
           'Your central hub for school management and daily operations',
         icon: '/logos/schoolcockpit-logo.svg',
         color: 'blue',
-        href: '/school-cockpit',
+        href: 'https://schoolcockpit.moe.gov.sg',
       },
       {
         id: 'sc-mobile',
@@ -89,7 +89,7 @@ export const appCategories: Array<AppCategory> = [
         description: 'Simplify your Full SBB class allocation',
         icon: '/logos/allocate-logo.svg',
         color: 'blue',
-        href: '/allocate',
+        href: 'https://allocate.digital.moe.gov.sg/',
       },
       {
         id: 'sdis',
@@ -156,7 +156,7 @@ export const appCategories: Array<AppCategory> = [
         description: 'AI-generated draft student testimonials in seconds',
         icon: '/logos/appraiser-logo.svg',
         color: 'blue',
-        href: 'https://compose.gov.sg',
+        href: 'https://smartcompose.gov.sg',
       },
     ],
   },
