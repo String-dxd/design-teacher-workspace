@@ -520,6 +520,7 @@ export function StudentProfile({
 
   const holisticReportsEnabled = useFeatureFlag('holistic-reports')
   const agencyReportsEnabled = useFeatureFlag('agency-reports')
+  const reportGenerationEnabled = useFeatureFlag('report-generation')
 
   const gradeCounts = getStudentGradeCounts(student)
   const studentReports = filterReports({ studentId: student.id })
@@ -1382,19 +1383,21 @@ export function StudentProfile({
                     ))}
                   </div>
                 )}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  render={
-                    <Link
-                      to="/students/$id/agency-report/new"
-                      params={{ id: student.id }}
-                    />
-                  }
-                >
-                  <Plus className="mr-1 h-4 w-4" />
-                  New Agency Report
-                </Button>
+                {reportGenerationEnabled && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    render={
+                      <Link
+                        to="/students/$id/agency-report/new"
+                        params={{ id: student.id }}
+                      />
+                    }
+                  >
+                    <Plus className="mr-1 h-4 w-4" />
+                    New Agency Report
+                  </Button>
+                )}
               </div>
             )}
           </Section>

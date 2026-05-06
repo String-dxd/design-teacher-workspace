@@ -3313,6 +3313,7 @@ function AgencyReportWizardPage() {
   const search = Route.useSearch()
   const navigate = useNavigate()
   const agencyReportsEnabled = useFeatureFlag('agency-reports')
+  const reportGenerationEnabled = useFeatureFlag('report-generation')
 
   // Reset scroll on mount — TanStack Router can land mid-page when
   // the previous route was scrolled. The app's main scroll container
@@ -3360,13 +3361,18 @@ function AgencyReportWizardPage() {
     },
   ])
 
-  if (!agencyReportsEnabled) {
+  if (!agencyReportsEnabled || !reportGenerationEnabled) {
+    const featureLabel = !agencyReportsEnabled
+      ? 'Agency Reports'
+      : 'Report Generation'
     return (
       <div className="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center gap-3 px-6 text-center">
         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
           <Lock className="h-5 w-5 text-muted-foreground" />
         </div>
-        <h1 className="text-lg font-semibold">Agency Reports is disabled</h1>
+        <h1 className="text-lg font-semibold">
+          {featureLabel} is disabled
+        </h1>
         <p className="text-sm text-muted-foreground">
           This feature is behind a flag. Enable it in Settings → Manage Flags to
           generate agency reports for this student.

@@ -13,4 +13,5 @@ export const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
   'student-groups': false,
   'import-data': false,
   'agency-reports': true,
+  'report-generation': true,
 }
