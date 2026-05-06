@@ -94,7 +94,7 @@ export function CharacterSection({ data }: CharacterSectionProps) {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className="flex flex-col gap-1">
               <span className="text-muted-foreground text-sm">
-                Risk Indicators
+                TCI Risk Indicators
               </span>
               <span
                 className={cn(

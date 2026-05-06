@@ -436,18 +436,6 @@ export function StudentTable({
           className="min-w-[115px]"
         />
       )}
-      {isVisible('socialLinks') && (
-        <ColumnHeaderMenu
-          column={columns.find((c) => c.id === 'socialLinks')!}
-          currentSort={sort}
-          activeFilterFields={activeFilterFields}
-          onSort={onSort}
-          onClearSort={onClearSort}
-          onAddQuickFilter={onAddQuickFilter}
-          onClearFilter={onClearFilter}
-          className="min-w-[140px]"
-        />
-      )}
       {isVisible('riskIndicators') && (
         <ColumnHeaderMenu
           column={columns.find((c) => c.id === 'riskIndicators')!}
@@ -470,6 +458,18 @@ export function StudentTable({
           onAddQuickFilter={onAddQuickFilter}
           onClearFilter={onClearFilter}
           className="min-w-[120px]"
+        />
+      )}
+      {isVisible('socialLinks') && (
+        <ColumnHeaderMenu
+          column={columns.find((c) => c.id === 'socialLinks')!}
+          currentSort={sort}
+          activeFilterFields={activeFilterFields}
+          onSort={onSort}
+          onClearSort={onClearSort}
+          onAddQuickFilter={onAddQuickFilter}
+          onClearFilter={onClearFilter}
+          className="min-w-[140px]"
         />
       )}
       {isVisible('overallPercentage') && (
@@ -522,6 +522,18 @@ export function StudentTable({
           className="min-w-[200px]"
         />
       )}
+      {isVisible('siblings') && (
+        <ColumnHeaderMenu
+          column={columns.find((c) => c.id === 'siblings')!}
+          currentSort={sort}
+          activeFilterFields={activeFilterFields}
+          onSort={onSort}
+          onClearSort={onClearSort}
+          onAddQuickFilter={onAddQuickFilter}
+          onClearFilter={onClearFilter}
+          className="min-w-[110px]"
+        />
+      )}
       {isVisible('fas') && (
         <ColumnHeaderMenu
           column={columns.find((c) => c.id === 'fas')!}
@@ -558,16 +570,40 @@ export function StudentTable({
           className="min-w-[125px]"
         />
       )}
-      {isVisible('custody') && (
+      {isVisible('supportedByComLink') && (
         <ColumnHeaderMenu
-          column={columns.find((c) => c.id === 'custody')!}
+          column={columns.find((c) => c.id === 'supportedByComLink')!}
           currentSort={sort}
           activeFilterFields={activeFilterFields}
           onSort={onSort}
           onClearSort={onClearSort}
           onAddQuickFilter={onAddQuickFilter}
           onClearFilter={onClearFilter}
-          className="min-w-[110px]"
+          className="min-w-[180px]"
+        />
+      )}
+      {isVisible('supportedByFsc') && (
+        <ColumnHeaderMenu
+          column={columns.find((c) => c.id === 'supportedByFsc')!}
+          currentSort={sort}
+          activeFilterFields={activeFilterFields}
+          onSort={onSort}
+          onClearSort={onClearSort}
+          onAddQuickFilter={onAddQuickFilter}
+          onClearFilter={onClearFilter}
+          className="min-w-[240px]"
+        />
+      )}
+      {isVisible('nonIntactFamily') && (
+        <ColumnHeaderMenu
+          column={columns.find((c) => c.id === 'nonIntactFamily')!}
+          currentSort={sort}
+          activeFilterFields={activeFilterFields}
+          onSort={onSort}
+          onClearSort={onClearSort}
+          onAddQuickFilter={onAddQuickFilter}
+          onClearFilter={onClearFilter}
+          className="min-w-[180px]"
         />
       )}
       {isVisible('commuterStatus') && (
@@ -592,18 +628,6 @@ export function StudentTable({
           onAddQuickFilter={onAddQuickFilter}
           onClearFilter={onClearFilter}
           className="min-w-[180px]"
-        />
-      )}
-      {isVisible('siblings') && (
-        <ColumnHeaderMenu
-          column={columns.find((c) => c.id === 'siblings')!}
-          currentSort={sort}
-          activeFilterFields={activeFilterFields}
-          onSort={onSort}
-          onClearSort={onClearSort}
-          onAddQuickFilter={onAddQuickFilter}
-          onClearFilter={onClearFilter}
-          className="min-w-[110px]"
         />
       )}
       {columns
@@ -670,14 +694,14 @@ export function StudentTable({
                     }
                   >
                     {isVisible('index') && (
-                      <TableCell className="sticky left-0 z-10 bg-white pl-6 text-muted-foreground transition-colors group-hover:bg-muted/50">
+                      <TableCell className="sticky left-0 z-10 bg-white pl-6 text-muted-foreground transition-colors group-hover:bg-[color-mix(in_oklab,var(--muted)_50%,white)]">
                         {displayStartIndex + index}
                       </TableCell>
                     )}
                     {isVisible('name') && (
                       <TableCell
                         className={cn(
-                          'sticky z-10 bg-white font-medium shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] transition-colors group-hover:bg-muted/50',
+                          'sticky z-10 bg-white font-medium shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] transition-colors group-hover:bg-[color-mix(in_oklab,var(--muted)_50%,white)]',
                           isVisible('index') ? 'left-12' : 'left-0',
                         )}
                       >
@@ -796,9 +820,6 @@ export function StudentTable({
                     {isVisible('conduct') && (
                       <TableCell>{student.conduct}</TableCell>
                     )}
-                    {isVisible('socialLinks') && (
-                      <TableCell>{student.socialLinks}</TableCell>
-                    )}
                     {isVisible('riskIndicators') && (
                       <TableCell>{student.riskIndicators}</TableCell>
                     )}
@@ -808,6 +829,9 @@ export function StudentTable({
                           <span className="text-muted-foreground">No</span>
                         )}
                       </TableCell>
+                    )}
+                    {isVisible('socialLinks') && (
+                      <TableCell>{student.socialLinks}</TableCell>
                     )}
                     {isVisible('overallPercentage') && (
                       <TableCell>
@@ -837,6 +861,9 @@ export function StudentTable({
                         {student.postSecEligibility}
                       </TableCell>
                     )}
+                    {isVisible('siblings') && (
+                      <TableCell>{student.siblings}</TableCell>
+                    )}
                     {isVisible('fas') && (
                       <TableCell>
                         {student.fas || (
@@ -862,10 +889,33 @@ export function StudentTable({
                         )}
                       </TableCell>
                     )}
-                    {isVisible('custody') && (
+                    {isVisible('supportedByComLink') && (
                       <TableCell>
-                        {student.custody || (
+                        {student.supportedByComLink === '-' ||
+                        !student.supportedByComLink ? (
                           <span className="text-muted-foreground">-</span>
+                        ) : (
+                          student.supportedByComLink
+                        )}
+                      </TableCell>
+                    )}
+                    {isVisible('supportedByFsc') && (
+                      <TableCell>
+                        {student.supportedByFsc === '-' ||
+                        !student.supportedByFsc ? (
+                          <span className="text-muted-foreground">-</span>
+                        ) : (
+                          student.supportedByFsc
+                        )}
+                      </TableCell>
+                    )}
+                    {isVisible('nonIntactFamily') && (
+                      <TableCell>
+                        {student.nonIntactFamily === '-' ||
+                        !student.nonIntactFamily ? (
+                          <span className="text-muted-foreground">-</span>
+                        ) : (
+                          student.nonIntactFamily
                         )}
                       </TableCell>
                     )}
@@ -887,9 +937,6 @@ export function StudentTable({
                         )}
                       </TableCell>
                     )}
-                    {isVisible('siblings') && (
-                      <TableCell>{student.siblings}</TableCell>
-                    )}
                     {columns
                       .filter((c) => c.imported && c.visible)
                       .map((col) => (
@@ -906,62 +953,62 @@ export function StudentTable({
             })}
           </TableBody>
         </Table>
+      </div>
 
-        {/* Record count and Pagination */}
-        <div className="flex shrink-0 items-center justify-between px-6 py-4">
-          <div className="text-sm text-muted-foreground">
-            {displayStartIndex}–
-            {Math.min(startIndex + pageSize, students.length)} of{' '}
-            {students.length} records
-          </div>
-          {totalPages > 1 && (
-            <div className="flex items-center gap-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={goToPreviousPage}
-                disabled={!canGoPrevious}
-              >
-                <ChevronLeft className="h-4 w-4" />
-                Previous
-              </Button>
-
-              {pageNumbers.map((page, index) =>
-                page === 'ellipsis' ? (
-                  <span
-                    key={`ellipsis-${index}`}
-                    className="px-2 text-muted-foreground"
-                    aria-hidden="true"
-                  >
-                    ...
-                  </span>
-                ) : (
-                  <Button
-                    key={page}
-                    variant={currentPage === page ? 'outline' : 'ghost'}
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => goToPage(page)}
-                    aria-label={`Page ${page}`}
-                    aria-current={currentPage === page ? 'page' : undefined}
-                  >
-                    {page}
-                  </Button>
-                ),
-              )}
-
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={goToNextPage}
-                disabled={!canGoNext}
-              >
-                Next
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
+      {/* Record count and Pagination - outside scroll container so it stays horizontally sticky */}
+      <div className="flex shrink-0 items-center justify-between bg-white px-6 py-4">
+        <div className="text-sm text-muted-foreground">
+          {displayStartIndex}–
+          {Math.min(startIndex + pageSize, students.length)} of{' '}
+          {students.length} records
         </div>
+        {totalPages > 1 && (
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={goToPreviousPage}
+              disabled={!canGoPrevious}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Previous
+            </Button>
+
+            {pageNumbers.map((page, index) =>
+              page === 'ellipsis' ? (
+                <span
+                  key={`ellipsis-${index}`}
+                  className="px-2 text-muted-foreground"
+                  aria-hidden="true"
+                >
+                  ...
+                </span>
+              ) : (
+                <Button
+                  key={page}
+                  variant={currentPage === page ? 'outline' : 'ghost'}
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => goToPage(page)}
+                  aria-label={`Page ${page}`}
+                  aria-current={currentPage === page ? 'page' : undefined}
+                >
+                  {page}
+                </Button>
+              ),
+            )}
+
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={goToNextPage}
+              disabled={!canGoNext}
+            >
+              Next
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
       </div>
     </>
   )

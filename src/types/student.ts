@@ -75,6 +75,9 @@ export interface Student {
   siblings: number
   siblingDetails?: Array<{ name: string; class: string; relationship?: string }>
   externalAgencies: string | null
+  supportedByComLink?: 'Yes' | 'No' | '-'
+  supportedByFsc?: 'Yes' | 'No' | '-'
+  nonIntactFamily?: 'Yes' | 'No' | '-'
   // Personal
   birthday?: string
   citizenship?: 'Singapore citizen' | 'Permanent resident' | 'Foreigner'
@@ -156,6 +159,9 @@ export type FilterField =
   | 'afterSchoolArrangement'
   | 'siblings'
   | 'externalAgencies'
+  | 'supportedByComLink'
+  | 'supportedByFsc'
+  | 'nonIntactFamily'
 
 export type FilterOperator =
   // Numeric operators

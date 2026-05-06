@@ -382,7 +382,8 @@ export function ColumnHeaderMenu({
                   {column.lastUpdated && (
                     <div>
                       <p className="text-xs font-medium text-foreground">
-                        {column.imported ? 'Last uploaded:' : 'Last synced:'}
+                        {column.dateLabel ??
+                          (column.imported ? 'Last uploaded:' : 'Last synced:')}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {column.lastUpdated}

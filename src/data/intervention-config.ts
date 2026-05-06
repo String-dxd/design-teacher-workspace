@@ -219,7 +219,7 @@ export const interventionRules: Array<InterventionRule> = [
     buildPackage: (s) => ({
       id: 'high-risk',
       color: 'rose',
-      badge: `${s.riskIndicators} Risk Indicators`,
+      badge: `${s.riskIndicators} TCI Risk Indicators`,
       title: 'Multiple Risk Factors — Early Support Recommended',
       why: `This student has ${s.riskIndicators} risk indicators flagged. No single factor is alarming on its own, but the combination suggests this student may be carrying more than they let on. Proactive support now can prevent escalation.`,
       actions: [

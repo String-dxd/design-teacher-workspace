@@ -5248,6 +5248,19 @@ export const mockStudents: Array<Student> = [
   },
 ]
 
+const MSF_VALUES: Array<'Yes' | 'No' | '-'> = ['Yes', 'No', '-']
+mockStudents.forEach((s, i) => {
+  if (s.name === 'Chen Jun Kai') {
+    s.supportedByComLink = 'Yes'
+    s.supportedByFsc = 'Yes'
+    s.nonIntactFamily = 'Yes'
+    return
+  }
+  s.supportedByComLink = MSF_VALUES[i % 3]
+  s.supportedByFsc = MSF_VALUES[(i + 1) % 3]
+  s.nonIntactFamily = MSF_VALUES[(i + 2) % 3]
+})
+
 export const classOptions: Array<ClassOption> = [
   { value: 'all', label: 'All Classes' },
   { value: '3A', label: 'Secondary 3A' },
