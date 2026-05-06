@@ -32,7 +32,7 @@ export const featuredApp: App = {
 export const appCategories: Array<AppCategory> = [
   {
     id: 'daily-recommended',
-    title: 'Frequently used',
+    title: 'Frequently Used',
     description: 'Your most frequently used daily tools',
     apps: [
       {
