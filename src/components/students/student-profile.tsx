@@ -22,6 +22,7 @@ import {
 import { StudentOverviewCards } from './student-overview-cards'
 import { AcademicAnalytics } from './academic-analytics'
 import { AttendanceAnalytics } from './attendance-analytics'
+import { ProfileCriteriaDetailsCard } from './profile-criteria-details-card'
 import type { Student } from '@/types/student'
 import type { HolisticReport, ReviewStatus, Term } from '@/types/report'
 import { useFeatureFlag } from '@/hooks/use-feature-flag'
@@ -558,7 +559,7 @@ export function StudentProfile({
         student.housingType === 'Rented'
           ? 'Rented'
           : student.housingType === 'Owned'
-            ? 'Owned'
+            ? 'Owner-occupied'
             : '-'
       }
     />
@@ -815,6 +816,9 @@ export function StudentProfile({
         {/* Overview Cards */}
         <StudentOverviewCards student={student} />
 
+        {/* Criteria details (only when an applied profile group matches) */}
+        <ProfileCriteriaDetailsCard student={student} />
+
         {/* Attendance Section */}
         <Section
           id="attendance"
@@ -824,7 +828,7 @@ export function StudentProfile({
         >
           <dl className="grid grid-cols-3 gap-x-8 gap-y-4">
             <Field
-              label="Attendance(%)"
+              label="Attendance (%)"
               value={
                 student.totalSchoolDays > 0
                   ? Math.round(
@@ -833,8 +837,11 @@ export function StudentProfile({
                   : 0
               }
             />
-            <Field label="Late-coming(%)" value={student.lateComing} />
-            <Field label="Non-VR absences(%)" value={student.absences} />
+            <Field label="Late-coming (days)" value={student.lateComing} />
+            <Field
+              label="Non-VR absences (days)"
+              value={student.absences}
+            />
             <Field
               label="CCA attendance(%)"
               value={`${100 - student.ccaMissed * 5}`}
@@ -1396,45 +1403,48 @@ export function StudentProfile({
 
         {/* Personal Section */}
         {!isStudentInsightsView && (
-        <Section
-          id="personal"
-          title="Personal"
-          icon={<Languages className="h-5 w-5" />}
-          iconClassName="bg-purple-100 text-purple-600"
-        >
-          <dl className="grid grid-cols-3 gap-x-8 gap-y-4">
-            {!isStudentInsightsView && (
-              <Field label="Health alerts" value="1 from Parent, 1 from SHS" />
-            )}
-            <Field label="Citizenship" value={student.citizenship ?? '-'} />
-            <Field
-              label="Language spoken"
-              value={student.languagesSpoken ?? '-'}
-            />
-            <Field
-              label="Age"
-              value={
-                student.birthday
-                  ? (() => {
-                      const [day, month, year] = student.birthday.split(' ')
-                      const birthYear = parseInt(year)
-                      const birthMonth = new Date(`${month} 1`).getMonth()
-                      const today = new Date(2026, 2, 4) // 2026-03-04
-                      let age = today.getFullYear() - birthYear
-                      if (
-                        today.getMonth() < birthMonth ||
-                        (today.getMonth() === birthMonth &&
-                          today.getDate() < parseInt(day))
-                      ) {
-                        age--
-                      }
-                      return `${age} years old (${student.birthday})`
-                    })()
-                  : '-'
-              }
-            />
-          </dl>
-        </Section>
+          <Section
+            id="personal"
+            title="Personal"
+            icon={<Languages className="h-5 w-5" />}
+            iconClassName="bg-purple-100 text-purple-600"
+          >
+            <dl className="grid grid-cols-3 gap-x-8 gap-y-4">
+              {!isStudentInsightsView && (
+                <Field
+                  label="Health alerts"
+                  value="1 from Parent, 1 from SHS"
+                />
+              )}
+              <Field label="Citizenship" value={student.citizenship ?? '-'} />
+              <Field
+                label="Language spoken"
+                value={student.languagesSpoken ?? '-'}
+              />
+              <Field
+                label="Age"
+                value={
+                  student.birthday
+                    ? (() => {
+                        const [day, month, year] = student.birthday.split(' ')
+                        const birthYear = parseInt(year)
+                        const birthMonth = new Date(`${month} 1`).getMonth()
+                        const today = new Date(2026, 2, 4) // 2026-03-04
+                        let age = today.getFullYear() - birthYear
+                        if (
+                          today.getMonth() < birthMonth ||
+                          (today.getMonth() === birthMonth &&
+                            today.getDate() < parseInt(day))
+                        ) {
+                          age--
+                        }
+                        return `${age} years old (${student.birthday})`
+                      })()
+                    : '-'
+                }
+              />
+            </dl>
+          </Section>
         )}
 
         {/* Reports Section */}

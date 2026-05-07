@@ -5,6 +5,7 @@ import { MultiFilterPopover } from './multi-filter-popover'
 import { ColumnVisibilityPopover } from './column-visibility-popover'
 import { ExportCsvModal } from './export-csv-modal'
 import { ImportWizard } from './import-wizard'
+import type { ReactNode } from 'react'
 import type { ColumnConfig } from './column-visibility-popover'
 import type { FilterCriterion } from '@/types/student'
 import { useFeatureFlags } from '@/lib/feature-flags'
@@ -30,6 +31,8 @@ interface StudentFiltersProps {
   matchedCount?: number
   totalCount?: number
   className?: string
+  /** Optional slot rendered on the right side, before column visibility */
+  rightSlot?: ReactNode
 }
 
 export function StudentFilters({
@@ -44,6 +47,7 @@ export function StudentFilters({
   matchedCount,
   totalCount,
   className,
+  rightSlot,
 }: StudentFiltersProps) {
   const { flags } = useFeatureFlags()
   const [exportModalOpen, setExportModalOpen] = useState(false)
@@ -79,6 +83,7 @@ export function StudentFilters({
         </div>
 
         <div className="flex items-center gap-2">
+          {rightSlot}
           <ColumnVisibilityPopover
             columns={columns}
             onColumnsChange={onColumnsChange}

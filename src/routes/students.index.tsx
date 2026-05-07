@@ -15,8 +15,10 @@ import { filterFieldConfigs, isFilterComplete } from '@/data/filter-config'
 import { DataCard } from '@/components/data-card'
 import { StudentFilters } from '@/components/students/student-filters'
 import { StudentTable } from '@/components/students/student-table'
+import { StudentGroupedTable } from '@/components/students/student-grouped-table'
 import { ClassSelector } from '@/components/students/class-selector'
 import { defaultColumns } from '@/components/students/column-visibility-popover'
+import { ProfileGroupControl } from '@/components/students/profile-group-control'
 import {
   ALL_SUBJECTS,
   SubjectSelectorDialog,
@@ -24,6 +26,7 @@ import {
 
 import { getMetrics, mockStudents } from '@/data/mock-students'
 import { getImportedColumns, saveImportedColumns } from '@/lib/imported-columns'
+import { useProfileGroups } from '@/lib/profile-group-storage'
 
 const SUBJECT_SELECTION_KEY = 'overall-pct-subjects'
 
@@ -85,6 +88,7 @@ function matchesCondition(
   const knownFields = new Set<string>([
     'class',
     'cca',
+    'attendance',
     'overallPercentage',
     'conduct',
     'approvedMtl',
@@ -113,10 +117,22 @@ function matchesCondition(
   if (!knownFields.has(filter.field)) return true
 
   // For overallPercentage, use the computed value based on selected subjects
+  // For attendance, compute % from daysPresent / totalSchoolDays
+  // For housingType, map raw 'Owned'/'Rented'/null to the canonical filter values
   const value =
     filter.field === 'overallPercentage'
       ? computeStudentOverall(student, selectedSubjects ?? null)
-      : student[filter.field as keyof Student]
+      : filter.field === 'attendance'
+        ? student.totalSchoolDays > 0
+          ? Math.round((student.daysPresent / student.totalSchoolDays) * 100)
+          : 0
+        : filter.field === 'housingType'
+          ? student.housingType === 'Owned'
+            ? 'Owner-occupied'
+            : student.housingType === 'Rented'
+              ? 'Rented'
+              : '-'
+          : student[filter.field as keyof Student]
 
   switch (filter.operator) {
     // Numeric operators
@@ -177,6 +193,7 @@ function StudentsPage() {
   const [selectedClass, setSelectedClass] = useState('Secondary 3')
   const [searchQuery, setSearchQuery] = useState('')
   const [filters, setFilters] = useState<Array<FilterCriterion>>([])
+  const { appliedGroup } = useProfileGroups()
   const [columns, setColumns] = useState<Array<ColumnConfig>>(() => {
     const insightsFiltered = isStudentInsightsView
       ? defaultColumns.filter(
@@ -470,29 +487,38 @@ function StudentsPage() {
           matchedCount={hasActiveFilters ? matchedIds.size : undefined}
           totalCount={hasActiveFilters ? classStudents.length : undefined}
           className="px-6 pb-4"
+          rightSlot={<ProfileGroupControl />}
         />
       </div>
 
-      {/* Student Table */}
-      <StudentTable
-        students={sortedStudents}
-        columns={columns}
-        pageSize={20}
-        matchedIds={hasActiveFilters ? matchedIds : undefined}
-        matchedCount={hasActiveFilters ? matchedIds.size : 0}
-        sort={sort}
-        activeFilterFields={activeFilterFields}
-        onSort={handleSort}
-        onClearSort={handleClearSort}
-        onAddQuickFilter={handleAddQuickFilter}
-        onClearFilter={handleClearFilter}
-        selectedSubjects={selectedSubjects}
-        onConfigureSubjects={() => setSubjectDialogOpen(true)}
-        isRecalculating={isRecalculating}
-        onDeleteColumn={(columnId) =>
-          setColumns((prev) => prev.filter((c) => c.id !== columnId))
-        }
-      />
+      {appliedGroup ? (
+        <StudentGroupedTable
+          students={classStudents}
+          group={appliedGroup}
+          className="px-6"
+        />
+      ) : (
+        /* Student Table */
+        <StudentTable
+          students={sortedStudents}
+          columns={columns}
+          pageSize={20}
+          matchedIds={hasActiveFilters ? matchedIds : undefined}
+          matchedCount={hasActiveFilters ? matchedIds.size : 0}
+          sort={sort}
+          activeFilterFields={activeFilterFields}
+          onSort={handleSort}
+          onClearSort={handleClearSort}
+          onAddQuickFilter={handleAddQuickFilter}
+          onClearFilter={handleClearFilter}
+          selectedSubjects={selectedSubjects}
+          onConfigureSubjects={() => setSubjectDialogOpen(true)}
+          isRecalculating={isRecalculating}
+          onDeleteColumn={(columnId) =>
+            setColumns((prev) => prev.filter((c) => c.id !== columnId))
+          }
+        />
+      )}
 
       <SubjectSelectorDialog
         open={subjectDialogOpen}

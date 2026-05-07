@@ -236,7 +236,11 @@ const EXISTING_FIELDS_MAP: Record<string, Array<string>> = {
     'No. of subjects',
     'Learning support',
   ],
-  Attendance: ['Attendance(%)', 'Late-coming(%)', 'Non-VR absences(%)'],
+  Attendance: [
+    'Attendance (%)',
+    'Late-coming (days)',
+    'Non-VR absences (days)',
+  ],
   Behaviour: ['Offences', 'Counselling cases', 'Conduct grade'],
   Wellbeing: ['Social links', 'Risk indicators', 'Low mood flagged 2+ terms'],
   Family: ['FAS', 'Housing', 'Custody'],
