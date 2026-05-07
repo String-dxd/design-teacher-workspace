@@ -1,0 +1,32 @@
+[
+  {
+    "file": "voiceover/segment-1.wav",
+    "duration": 5.85,
+    "text": "Welcome to Teacher Workspace. Start once, and get straight to the tools teachers need for the day."
+  },
+  {
+    "file": "voiceover/segment-2.wav",
+    "duration": 9.575,
+    "text": "On the home page, every school app sits in one clean shelf. Teachers can open the right tool quickly, without remembering different links or signing in again and again."
+  },
+  {
+    "file": "voiceover/segment-3.wav",
+    "duration": 8.525,
+    "text": "From the same sidebar, open Student Insights. This is where teachers can spot students who may need attention, without leaving the workspace."
+  },
+  {
+    "file": "voiceover/segment-4.wav",
+    "duration": 8.45,
+    "text": "Scroll through the class list and choose Tan Wei Jie. The row highlights naturally, just like a teacher selecting one student during follow-up."
+  },
+  {
+    "file": "voiceover/segment-5.wav",
+    "duration": 9.775,
+    "text": "Now the student profile opens. As we scroll, the full picture is visible in one place: attendance, behaviour, wellbeing, academics, family context, and reports."
+  },
+  {
+    "file": "voiceover/segment-6.wav",
+    "duration": 8.375,
+    "text": "Instead of jumping between many systems, teachers can review what matters, understand the student faster, and decide the next step with confidence."
+  }
+]
