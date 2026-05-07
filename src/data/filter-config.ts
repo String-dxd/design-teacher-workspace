@@ -126,8 +126,16 @@ export const filterFieldConfigs: Array<FilterFieldConfig> = [
   },
   // Attendance
   {
+    field: 'attendance',
+    label: 'Attendance (%)',
+    type: 'numeric',
+    group: 'attendance',
+    defaultOperator: 'lte',
+    defaultValue: 90,
+  },
+  {
     field: 'lateComing',
-    label: 'Late-coming(%)',
+    label: 'Late-coming (days)',
     type: 'numeric',
     group: 'attendance',
     defaultOperator: 'gte',
@@ -135,7 +143,7 @@ export const filterFieldConfigs: Array<FilterFieldConfig> = [
   },
   {
     field: 'absences',
-    label: 'Non-VR absences(%)',
+    label: 'Non-VR absences (days)',
     type: 'numeric',
     group: 'attendance',
     defaultOperator: 'gte',
@@ -298,7 +306,7 @@ export const filterFieldConfigs: Array<FilterFieldConfig> = [
     group: 'family',
     defaultOperator: 'is',
     defaultValue: '',
-    enumValues: ['Owner occupied', 'Rented'],
+    enumValues: ['-', 'Not applicable', 'Rented', 'Owner-occupied', 'Others'],
   },
   {
     field: 'supportedByComLink',

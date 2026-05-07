@@ -43,12 +43,12 @@ import {
 
 // Plain-text operator labels matching the screenshot
 const numericOperatorOptions = [
+  { value: 'gt' as FilterOperator, label: 'greater than' },
+  { value: 'gte' as FilterOperator, label: 'greater than or equal to' },
+  { value: 'lt' as FilterOperator, label: 'less than' },
+  { value: 'lte' as FilterOperator, label: 'less than or equal to' },
   { value: 'eq' as FilterOperator, label: 'equals' },
   { value: 'neq' as FilterOperator, label: 'not equal to' },
-  { value: 'gt' as FilterOperator, label: 'greater than' },
-  { value: 'lt' as FilterOperator, label: 'less than' },
-  { value: 'gte' as FilterOperator, label: 'greater than or equal to' },
-  { value: 'lte' as FilterOperator, label: 'less than or equal to' },
   { value: 'between' as FilterOperator, label: 'between' },
   { value: 'not_between' as FilterOperator, label: 'not between' },
 ]

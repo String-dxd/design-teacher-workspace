@@ -85,7 +85,7 @@ export const defaultColumns: Array<ColumnConfig> = [
   },
   {
     id: 'attendance',
-    label: 'Attendance(%)',
+    label: 'Attendance (%)',
     visible: true,
     sortable: true,
     filterable: false,
@@ -95,7 +95,7 @@ export const defaultColumns: Array<ColumnConfig> = [
   },
   {
     id: 'lateComing',
-    label: 'Late-coming(%)',
+    label: 'Late-coming (days)',
     visible: true,
     sortable: true,
     filterable: true,
@@ -106,7 +106,7 @@ export const defaultColumns: Array<ColumnConfig> = [
   },
   {
     id: 'absences',
-    label: 'Non-VR absences(%)',
+    label: 'Non-VR absences (days)',
     visible: true,
     sortable: true,
     filterable: true,
