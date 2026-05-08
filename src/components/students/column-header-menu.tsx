@@ -9,7 +9,6 @@ import {
   Filter,
   Settings2,
   Trash2,
-  X,
 } from 'lucide-react'
 
 import {
@@ -220,50 +219,43 @@ export function ColumnHeaderMenu({
                 <button
                   type="button"
                   onClick={() => {
-                    onSort(column.id, 'asc')
+                    if (isSortedBy && sortDirection === 'asc') onClearSort()
+                    else onSort(column.id, 'asc')
                     setOpen(false)
                   }}
                   className={cn(
                     'flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-[var(--slate-5)]',
-                    sortDirection === 'asc' && 'bg-[var(--slate-5)]',
+                    isSortedBy &&
+                      sortDirection === 'asc' &&
+                      'bg-[var(--slate-5)]',
                   )}
                 >
                   <ArrowUp className="h-4 w-4 text-[var(--slate-11)]" />
                   Sort ascending
-                  {sortDirection === 'asc' && (
+                  {isSortedBy && sortDirection === 'asc' && (
                     <Check className="ml-auto h-4 w-4 text-[var(--slate-11)]" />
                   )}
                 </button>
                 <button
                   type="button"
                   onClick={() => {
-                    onSort(column.id, 'desc')
+                    if (isSortedBy && sortDirection === 'desc') onClearSort()
+                    else onSort(column.id, 'desc')
                     setOpen(false)
                   }}
                   className={cn(
                     'flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-[var(--slate-5)]',
-                    sortDirection === 'desc' && 'bg-[var(--slate-5)]',
+                    isSortedBy &&
+                      sortDirection === 'desc' &&
+                      'bg-[var(--slate-5)]',
                   )}
                 >
                   <ArrowDown className="h-4 w-4 text-[var(--slate-11)]" />
                   Sort descending
-                  {sortDirection === 'desc' && (
+                  {isSortedBy && sortDirection === 'desc' && (
                     <Check className="ml-auto h-4 w-4 text-[var(--slate-11)]" />
                   )}
                 </button>
-                {isSortedBy && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onClearSort()
-                      setOpen(false)
-                    }}
-                    className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-[var(--slate-5)]"
-                  >
-                    <X className="h-4 w-4 text-[var(--slate-11)]" />
-                    Clear sort
-                  </button>
-                )}
               </>
             )}
 

@@ -162,9 +162,7 @@ export function ProfileGroupModal({
     if (!canApply) return
     // Preserve saved status if editing a saved group; otherwise mark as unsaved
     const wasSaved = initialGroup && !initialGroup.isUnsaved
-    onApply(
-      buildGroup(initialGroup?.name ?? 'Unsaved group', !wasSaved),
-    )
+    onApply(buildGroup(initialGroup?.name ?? 'Unsaved group', !wasSaved))
     onOpenChange(false)
   }
 

@@ -100,10 +100,7 @@ export function ProfileGroupControl({
           <Button
             variant="outline"
             size="sm"
-            className={cn(
-              'gap-2 rounded-full',
-              appliedId && 'border-blue-500',
-            )}
+            className={cn('gap-2 rounded-full', appliedId && 'border-blue-500')}
             onClick={() => {
               if (appliedIsUnsaved && appliedGroup) {
                 openEdit(appliedGroup)
@@ -121,94 +118,94 @@ export function ProfileGroupControl({
             )}
           </Button>
         ) : (
-        <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
-          <DropdownMenuTrigger
-            render={
-              <Button
-                variant="outline"
-                size="sm"
-                className={cn(
-                  'gap-2 rounded-full',
-                  appliedId && 'border-blue-500',
-                )}
-                aria-expanded={menuOpen}
-              />
-            }
-          >
-            <LayoutGrid className="h-4 w-4" />
-            Group
-            {appliedId && (
-              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
-                1
-              </span>
-            )}
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-64 p-1">
-            <div className="px-3 pt-2 pb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Saved groups
-            </div>
-            {savedGroups.length === 0 && (
-              <p className="px-3 py-2 text-sm text-muted-foreground">
-                No saved groups yet
-              </p>
-            )}
-            {savedGroups.map((g) => {
-              const isApplied = appliedId === g.id
-              return (
-                <div
-                  key={g.id}
+          <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  variant="outline"
+                  size="sm"
                   className={cn(
-                    'group/row flex items-center gap-1 rounded-xl px-2 py-1.5 text-sm hover:bg-accent',
-                    isApplied && 'bg-accent/60',
+                    'gap-2 rounded-full',
+                    appliedId && 'border-blue-500',
                   )}
-                >
-                  <button
-                    type="button"
-                    onClick={() => handleSelectGroup(g.id)}
-                    className="flex-1 truncate text-left"
-                  >
-                    {g.name}
-                  </button>
-                  <button
-                    type="button"
-                    aria-label={`Edit ${g.name}`}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      openEdit(g)
-                    }}
-                    className="rounded p-1 text-muted-foreground opacity-0 hover:text-foreground group-hover/row:opacity-100"
-                  >
-                    <Pencil className="h-3.5 w-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    aria-label={`Delete ${g.name}`}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setDeleteCandidate(g)
-                      setMenuOpen(false)
-                    }}
-                    className="rounded p-1 text-muted-foreground opacity-0 hover:text-destructive group-hover/row:opacity-100"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
-                  {isApplied && (
-                    <span className="ml-1 text-xs text-blue-600">✓</span>
-                  )}
-                </div>
-              )
-            })}
-            <div className="my-1 border-t border-border/60" />
-            <button
-              type="button"
-              onClick={openCreate}
-              className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm hover:bg-accent"
+                  aria-expanded={menuOpen}
+                />
+              }
             >
-              <Plus className="h-4 w-4" />
-              Create new group
-            </button>
-          </DropdownMenuContent>
-        </DropdownMenu>
+              <LayoutGrid className="h-4 w-4" />
+              Group
+              {appliedId && (
+                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
+                  1
+                </span>
+              )}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-64 p-1">
+              <div className="px-3 pt-2 pb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Saved groups
+              </div>
+              {savedGroups.length === 0 && (
+                <p className="px-3 py-2 text-sm text-muted-foreground">
+                  No saved groups yet
+                </p>
+              )}
+              {savedGroups.map((g) => {
+                const isApplied = appliedId === g.id
+                return (
+                  <div
+                    key={g.id}
+                    className={cn(
+                      'group/row flex items-center gap-1 rounded-xl px-2 py-1.5 text-sm hover:bg-accent',
+                      isApplied && 'bg-accent/60',
+                    )}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => handleSelectGroup(g.id)}
+                      className="flex-1 truncate text-left"
+                    >
+                      {g.name}
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={`Edit ${g.name}`}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        openEdit(g)
+                      }}
+                      className="rounded p-1 text-muted-foreground opacity-0 hover:text-foreground group-hover/row:opacity-100"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={`Delete ${g.name}`}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setDeleteCandidate(g)
+                        setMenuOpen(false)
+                      }}
+                      className="rounded p-1 text-muted-foreground opacity-0 hover:text-destructive group-hover/row:opacity-100"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                    {isApplied && (
+                      <span className="ml-1 text-xs text-blue-600">✓</span>
+                    )}
+                  </div>
+                )
+              })}
+              <div className="my-1 border-t border-border/60" />
+              <button
+                type="button"
+                onClick={openCreate}
+                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm hover:bg-accent"
+              >
+                <Plus className="h-4 w-4" />
+                Create new group
+              </button>
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
       </div>
 

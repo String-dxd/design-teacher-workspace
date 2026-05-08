@@ -536,7 +536,7 @@ function InsightBuddyPage() {
         resultType === 'performance-per-subject'
           ? "Here's a comparison of weighted assessment scores per subject for this term versus last term."
           : resultType === 'lta'
-            ? `I found ${LTA_STUDENTS.length} students with Latecoming/Truancy/Absenteeism (LTA) this term. The results are shown on the right.`
+            ? `I found ${LTA_STUDENTS.length} students with Long-Term Absenteeism (LTA) this term. The results are shown on the right.`
             : `I'm analysing your query: "${query}". Results will appear on the right.`
 
       const assistantMsg: Message = {

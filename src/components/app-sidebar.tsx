@@ -222,6 +222,13 @@ export function AppSidebar() {
   const studentAnalyticsEnabled = useFeatureFlag('student-analytics')
   const studentAnalyticsBasicEnabled = useFeatureFlag('student-analytics-basic')
   const studentGroupsEnabled = useFeatureFlag('student-groups')
+  const agencyReportsEnabled = useFeatureFlag('agency-reports')
+  const msfUpliftEnabled = useFeatureFlag('msf-uplift-data')
+
+  const hideAttendanceAndReports =
+    msfUpliftEnabled ||
+    ((studentAnalyticsEnabled || studentAnalyticsBasicEnabled) &&
+      !agencyReportsEnabled)
 
   React.useEffect(() => {
     if (localStorage.getItem(COACHMARK_KEY)) return
@@ -262,8 +269,12 @@ export function AppSidebar() {
       return true
     })
 
-  const filteredMainItems = filterItems(mainNavItems)
-  const filteredParentsItems = filterItems(parentsCommItems)
+  const filteredMainItems = filterItems(mainNavItems).filter(
+    (item) => !(hideAttendanceAndReports && item.title === 'Attendance'),
+  )
+  const filteredParentsItems = filterItems(parentsCommItems).filter(
+    (item) => !(hideAttendanceAndReports && item.title === 'Reports'),
+  )
   const filteredManageItems = filterItems(manageItems)
   const filteredStudentItems = studentAnalyticsEnabled
     ? studentInsightItemsWithAnalytics.filter((item) =>
