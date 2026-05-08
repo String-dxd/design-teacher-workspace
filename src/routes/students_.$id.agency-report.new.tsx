@@ -28,10 +28,16 @@ import {
   X,
 } from 'lucide-react'
 
+import { toast } from 'sonner'
 import type {
+  AgencyReport,
   AgencyTemplate,
+  AiSourceItem,
+  Collaborator,
   ReportField,
   ReportSection,
+  SectionAssignment,
+  Staff,
 } from '@/data/mock-agency-reports'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -66,13 +72,6 @@ import {
 import { AgencyLogo } from '@/components/agency-logo'
 import { cn } from '@/lib/utils'
 import { getStudentById } from '@/data/mock-students'
-import type {
-  AgencyReport,
-  AiSourceItem,
-  Collaborator,
-  SectionAssignment,
-  Staff,
-} from '@/data/mock-agency-reports'
 import {
   AGENCY_TEMPLATES,
   AI_DRAFTS,
@@ -86,22 +85,19 @@ import {
   getSourceExcerpt,
   mockAgencyReports,
 } from '@/data/mock-agency-reports'
-import { toast } from 'sonner'
 import { useFeatureFlag } from '@/hooks/use-feature-flag'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
 
 export const Route = createFileRoute('/students_/$id/agency-report/new')({
   component: AgencyReportWizardPage,
-  validateSearch: (search): {
+  validateSearch: (
+    search,
+  ): {
     resume?: string
     reportId?: string
   } => ({
-    resume:
-      typeof search.resume === 'string' ? (search.resume as string) : undefined,
-    reportId:
-      typeof search.reportId === 'string'
-        ? (search.reportId as string)
-        : undefined,
+    resume: typeof search.resume === 'string' ? search.resume : undefined,
+    reportId: typeof search.reportId === 'string' ? search.reportId : undefined,
   }),
   loader: ({ params }) => {
     const student = getStudentById(params.id)
@@ -160,7 +156,7 @@ function StepBar({
             <div key={i} className="flex items-center">
               <button
                 type="button"
-                onClick={clickable ? () => onStepClick!(i) : undefined}
+                onClick={clickable ? () => onStepClick(i) : undefined}
                 disabled={!clickable}
                 aria-current={isCurrent ? 'step' : undefined}
                 className={cn(
@@ -384,8 +380,8 @@ function AddCollaboratorsModal({
         <DialogHeader>
           <DialogTitle>Add collaborator</DialogTitle>
           <DialogDescription>
-            Pick teachers below, add a comment, then click Send. They'll get
-            a link in their inbox.
+            Pick teachers below, add a comment, then click Send. They'll get a
+            link in their inbox.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
@@ -441,9 +437,7 @@ function AddCollaboratorsModal({
             <select
               value={permission}
               onChange={(e) =>
-                setPermission(
-                  e.target.value as Collaborator['permission'],
-                )
+                setPermission(e.target.value as Collaborator['permission'])
               }
               className="rounded-md border bg-background px-2 text-sm outline-none focus:border-primary"
               aria-label="Permission"
@@ -458,8 +452,7 @@ function AddCollaboratorsModal({
               htmlFor="collab-message"
               className="mb-1 block text-xs font-medium text-muted-foreground"
             >
-              Message{' '}
-              <span className="font-normal">(optional)</span>
+              Message <span className="font-normal">(optional)</span>
             </label>
             <textarea
               id="collab-message"
@@ -485,7 +478,6 @@ function AddCollaboratorsModal({
     </Dialog>
   )
 }
-
 
 // ── S2 Template Selection ─────────────────────────────────────
 
@@ -593,8 +585,9 @@ function TemplateSelection({
   const [multiSelect, setMultiSelect] = useState(false)
   const [query, setQuery] = useState('')
   const [agencyFilter, setAgencyFilter] = useState<string>('all')
-  const [previewTemplate, setPreviewTemplate] =
-    useState<AgencyTemplate | null>(null)
+  const [previewTemplate, setPreviewTemplate] = useState<AgencyTemplate | null>(
+    null,
+  )
   // Single-select visual selection (independent of immediate-advance click).
   // Clicking a row in single-select still advances, but this state lets the
   // circular button briefly show the filled-blue selected state.
@@ -629,8 +622,7 @@ function TemplateSelection({
     if (!query.trim()) return true
     const q = query.trim().toLowerCase()
     return (
-      tpl.name.toLowerCase().includes(q) ||
-      tpl.agency.toLowerCase().includes(q)
+      tpl.name.toLowerCase().includes(q) || tpl.agency.toLowerCase().includes(q)
     )
   }
 
@@ -675,11 +667,12 @@ function TemplateSelection({
                     (t) => t.id === r.templateId,
                   )
                   if (!tpl) return null
-                  const lastEdited = (r.startedAt ?? r.createdAt)
-                    .toLocaleDateString('en-SG', {
-                      day: 'numeric',
-                      month: 'short',
-                    })
+                  const lastEdited = (
+                    r.startedAt ?? r.createdAt
+                  ).toLocaleDateString('en-SG', {
+                    day: 'numeric',
+                    month: 'short',
+                  })
                   const statusLabel =
                     r.status === 'draft'
                       ? 'DRAFT'
@@ -691,9 +684,7 @@ function TemplateSelection({
                   const allFields = tpl.sections
                     .filter((s) => s.role !== 'principal')
                     .flatMap((s) => s.fields)
-                  const filledCount = allFields.filter(
-                    (f) => !!f.value,
-                  ).length
+                  const filledCount = allFields.filter((f) => !!f.value).length
                   const pct = allFields.length
                     ? Math.round((filledCount / allFields.length) * 100)
                     : 0
@@ -1207,9 +1198,7 @@ function FieldRow({
   const [aiPanelOpen, setAiPanelOpen] = useState(false)
   const selectedIds =
     selectedAiSourceIds ??
-    new Set(
-      MOCK_AI_SOURCES.filter((s) => s.defaultSelected).map((s) => s.id),
-    )
+    new Set(MOCK_AI_SOURCES.filter((s) => s.defaultSelected).map((s) => s.id))
   // Empty-state highlight for not-yet-filled fields (Change 4). Signature
   // fields are stamped on export and never need user input — exempt them.
   const isEmpty = field.type !== 'signature' && value.trim() === ''
@@ -1305,8 +1294,8 @@ function FieldRow({
                       | Array<{ num: number; source: string; detail: string }>
                       | undefined
                     >
-                  )[field.id]!
-                    .filter((c) => {
+                  )
+                    [field.id]!.filter((c) => {
                       // Filter to only show selected canonical sources.
                       const matched = MOCK_AI_SOURCES.find(
                         (s) => s.citationNum === c.num,
@@ -1489,7 +1478,10 @@ function SectionPanel({
   const emptyCount = isMine
     ? section.fields.filter((f) => {
         if (f.type === 'signature') return false
-        const v = (fieldValues as Record<string, string | undefined>)[f.id] ?? f.value ?? ''
+        const v =
+          (fieldValues as Record<string, string | undefined>)[f.id] ??
+          f.value ??
+          ''
         return v.trim() === ''
       }).length
     : 0
@@ -1654,7 +1646,6 @@ function templateReferenceAsset(template: AgencyTemplate): {
   return img ? { kind: 'image', src: img } : null
 }
 
-
 // ── Filled report rendering ───────────────────────────────────────────
 // The preview must look like a faithful reproduction of the agency's
 // actual blank PDF, with the demo data dropped in — same fonts, gray
@@ -1698,13 +1689,7 @@ function ConfidentialHeader({ pageNum }: { pageNum: number }) {
   )
 }
 
-function SectionBar({
-  numeral,
-  title,
-}: {
-  numeral: string
-  title: string
-}) {
+function SectionBar({ numeral, title }: { numeral: string; title: string }) {
   return (
     <div className="my-3 flex bg-[#D9D9D9] px-2 py-1 text-[12px] font-bold">
       <span className="w-12 shrink-0">{numeral}</span>
@@ -1959,24 +1944,76 @@ function ChildrenHomeFilledRendering({
 }) {
   const purpose = fieldValue(template, 'ch-purpose-type')
   const conductRows: Array<{ n: number; label: string; value?: string }> = [
-    { n: 1, label: 'Responsive', value: fieldValue(template, 'ch-cond-responsive') },
-    { n: 2, label: 'Responsible', value: fieldValue(template, 'ch-cond-responsible') },
+    {
+      n: 1,
+      label: 'Responsive',
+      value: fieldValue(template, 'ch-cond-responsive'),
+    },
+    {
+      n: 2,
+      label: 'Responsible',
+      value: fieldValue(template, 'ch-cond-responsible'),
+    },
     { n: 3, label: 'Polite', value: fieldValue(template, 'ch-cond-polite') },
     { n: 4, label: 'Honest', value: fieldValue(template, 'ch-cond-honest') },
     { n: 5, label: 'Helpful', value: fieldValue(template, 'ch-cond-helpful') },
-    { n: 6, label: 'Attentive', value: fieldValue(template, 'ch-cond-attentive') },
-    { n: 7, label: 'Hardworking', value: fieldValue(template, 'ch-cond-hardworking') },
-    { n: 8, label: 'Respectful', value: fieldValue(template, 'ch-cond-respectful') },
-    { n: 9, label: 'Problems with peers', value: fieldValue(template, 'ch-cond-peers') },
-    { n: 10, label: 'Problems with teachers', value: fieldValue(template, 'ch-cond-teachers') },
-    { n: 11, label: 'Associates with Gangs', value: fieldValue(template, 'ch-cond-gangs') },
+    {
+      n: 6,
+      label: 'Attentive',
+      value: fieldValue(template, 'ch-cond-attentive'),
+    },
+    {
+      n: 7,
+      label: 'Hardworking',
+      value: fieldValue(template, 'ch-cond-hardworking'),
+    },
+    {
+      n: 8,
+      label: 'Respectful',
+      value: fieldValue(template, 'ch-cond-respectful'),
+    },
+    {
+      n: 9,
+      label: 'Problems with peers',
+      value: fieldValue(template, 'ch-cond-peers'),
+    },
+    {
+      n: 10,
+      label: 'Problems with teachers',
+      value: fieldValue(template, 'ch-cond-teachers'),
+    },
+    {
+      n: 11,
+      label: 'Associates with Gangs',
+      value: fieldValue(template, 'ch-cond-gangs'),
+    },
     { n: 12, label: 'Truancy', value: fieldValue(template, 'ch-cond-truancy') },
-    { n: 13, label: 'Engages in Fights', value: fieldValue(template, 'ch-cond-fights') },
-    { n: 14, label: 'Pilfers/Steals', value: fieldValue(template, 'ch-cond-pilfers') },
+    {
+      n: 13,
+      label: 'Engages in Fights',
+      value: fieldValue(template, 'ch-cond-fights'),
+    },
+    {
+      n: 14,
+      label: 'Pilfers/Steals',
+      value: fieldValue(template, 'ch-cond-pilfers'),
+    },
     { n: 15, label: 'Smokes', value: fieldValue(template, 'ch-cond-smokes') },
-    { n: 16, label: 'Abuses other Substances', value: fieldValue(template, 'ch-cond-substances') },
-    { n: 17, label: 'Defies Authority', value: fieldValue(template, 'ch-cond-defies') },
-    { n: 18, label: 'Resists School counselling', value: fieldValue(template, 'ch-cond-resists-counselling') },
+    {
+      n: 16,
+      label: 'Abuses other Substances',
+      value: fieldValue(template, 'ch-cond-substances'),
+    },
+    {
+      n: 17,
+      label: 'Defies Authority',
+      value: fieldValue(template, 'ch-cond-defies'),
+    },
+    {
+      n: 18,
+      label: 'Resists School counselling',
+      value: fieldValue(template, 'ch-cond-resists-counselling'),
+    },
     { n: 19, label: 'Bullies', value: fieldValue(template, 'ch-cond-bullies') },
   ]
 
@@ -1984,8 +2021,7 @@ function ChildrenHomeFilledRendering({
     <div
       className="mx-auto bg-white px-12 py-8 text-black shadow-sm"
       style={{
-        fontFamily:
-          '"Helvetica Neue", Helvetica, Arial, sans-serif',
+        fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
         maxWidth: 760,
       }}
     >
@@ -1993,9 +2029,15 @@ function ChildrenHomeFilledRendering({
 
       {/* TO / TEL / EMAIL block */}
       <div className="mb-1 grid grid-cols-[64px_16px_1fr] gap-y-0.5 text-[12px] font-bold">
-        <span>TO</span><span>:</span><span />
-        <span>TEL</span><span>:</span><span />
-        <span>EMAIL</span><span>:</span><span />
+        <span>TO</span>
+        <span>:</span>
+        <span />
+        <span>TEL</span>
+        <span>:</span>
+        <span />
+        <span>EMAIL</span>
+        <span>:</span>
+        <span />
       </div>
       <div className="mb-6 border-b-[1.5px] border-black" />
 
@@ -2023,7 +2065,8 @@ function ChildrenHomeFilledRendering({
           <span className="w-[260px] font-bold">
             Others:{' '}
             <span className="font-normal underline">
-              {fieldValue(template, 'ch-purpose-other') ?? '                      '}
+              {fieldValue(template, 'ch-purpose-other') ??
+                '                      '}
             </span>
           </span>
           <TickBox on={purpose === 'Others'} />
@@ -2031,15 +2074,18 @@ function ChildrenHomeFilledRendering({
       </div>
 
       {/* II. Personal Particulars */}
-      <SectionBar
-        numeral="II"
-        title="STUDENT'S PERSONAL PARTICULARS"
+      <SectionBar numeral="II" title="STUDENT'S PERSONAL PARTICULARS" />
+      <FieldBox
+        label="Name:"
+        value={fieldValue(template, 'ch-name') ?? studentName}
       />
-      <FieldBox label="Name:" value={fieldValue(template, 'ch-name') ?? studentName} />
       <FieldBox label="NRIC/BC No.:" value={fieldValue(template, 'ch-nric')} />
       <FieldBox label="Class:" value={fieldValue(template, 'ch-class')} />
       <FieldBox label="School:" value={fieldValue(template, 'ch-school')} />
-      <FieldBox label="School's Address:" value={fieldValue(template, 'ch-school-address')} />
+      <FieldBox
+        label="School's Address:"
+        value={fieldValue(template, 'ch-school-address')}
+      />
 
       {/* III. Academic Performance & Conduct */}
       <SectionBar
@@ -2047,7 +2093,8 @@ function ChildrenHomeFilledRendering({
         title="STUDENT'S ACADEMIC PERFORMANCE & CONDUCT"
       />
       <p className="mb-3 text-[12px] font-bold">
-        A&nbsp;&nbsp;&nbsp;&nbsp;Attendance (please attach attendance for all years in school)
+        A&nbsp;&nbsp;&nbsp;&nbsp;Attendance (please attach attendance for all
+        years in school)
       </p>
       <AttendanceBlock
         template={template}
@@ -2083,13 +2130,21 @@ function ChildrenHomeFilledRendering({
       </div>
 
       <p className="mt-5 text-[12px] font-bold">
-        B&nbsp;&nbsp;&nbsp;&nbsp;Conduct: <span className="font-normal italic">(Please tick where appropriate)*</span>
+        B&nbsp;&nbsp;&nbsp;&nbsp;Conduct:{' '}
+        <span className="font-normal italic">
+          (Please tick where appropriate)*
+        </span>
       </p>
       <div className="mt-2">
         <ConductTickGrid rows={conductRows} />
       </div>
       <p className="mb-2 text-[12px]">
-        Overall Conduct (<span className="italic">Please attach copies of student's conduct slips for all years in school</span>)
+        Overall Conduct (
+        <span className="italic">
+          Please attach copies of student's conduct slips for all years in
+          school
+        </span>
+        )
       </p>
       <OverallConductRow
         template={template}
@@ -2112,7 +2167,10 @@ function ChildrenHomeFilledRendering({
       </p>
 
       <p className="mt-4 text-[12px] font-bold">
-        C&nbsp;&nbsp;&nbsp;&nbsp;Academic Performance <span className="font-normal italic">(Please attach copies of academic results for all years in school)</span>
+        C&nbsp;&nbsp;&nbsp;&nbsp;Academic Performance{' '}
+        <span className="font-normal italic">
+          (Please attach copies of academic results for all years in school)
+        </span>
       </p>
       <div className="mt-2">
         <AcademicPerfRow
@@ -2131,13 +2189,18 @@ function ChildrenHomeFilledRendering({
           fieldId="ch-acad-sec3"
         />
       </div>
-      <p className="mt-3 text-[12px]">Other Remarks Pertaining to Academic Performance</p>
+      <p className="mt-3 text-[12px]">
+        Other Remarks Pertaining to Academic Performance
+      </p>
       <p className="mb-4 mt-1 whitespace-pre-line text-[12px] leading-relaxed">
         {fieldValue(template, 'ch-acad-remarks') ?? ''}
       </p>
 
       <p className="mt-4 text-[12px] font-bold">
-        D&nbsp;&nbsp;&nbsp;&nbsp;Co-Curricular Activities <span className="font-normal italic">(Please list down activities student participated in)</span>
+        D&nbsp;&nbsp;&nbsp;&nbsp;Co-Curricular Activities{' '}
+        <span className="font-normal italic">
+          (Please list down activities student participated in)
+        </span>
       </p>
       <div className="ml-6 mt-2 grid grid-cols-[140px_1fr] gap-y-1 text-[12px]">
         <span>CCA/Activities</span>
@@ -2160,11 +2223,13 @@ function ChildrenHomeFilledRendering({
         1&nbsp;&nbsp;&nbsp;&nbsp;Parents'/Guardians' Involvement
       </p>
       <p className="ml-6 mt-1 text-[12px]">
-        (Whether the school has the support and co-operation of the
-        student's parents/guardians in matters relating to his education and
-        school conduct)
+        (Whether the school has the support and co-operation of the student's
+        parents/guardians in matters relating to his education and school
+        conduct)
       </p>
-      <p className="ml-6 mb-2 text-[12px] italic">(Please tick the appropriate boxes)</p>
+      <p className="ml-6 mb-2 text-[12px] italic">
+        (Please tick the appropriate boxes)
+      </p>
       <div className="ml-12 space-y-1.5">
         <YesNoNaRow
           showHeader
@@ -2184,7 +2249,9 @@ function ChildrenHomeFilledRendering({
           value={fieldValue(template, 'ch-par-inconsistent')}
         />
       </div>
-      <p className="ml-12 mt-2 text-[12px]">e)  Others <span className="italic">(Please provide details)</span></p>
+      <p className="ml-12 mt-2 text-[12px]">
+        e) Others <span className="italic">(Please provide details)</span>
+      </p>
       <p className="ml-12 mt-1 whitespace-pre-line text-[12px] leading-relaxed">
         {fieldValue(template, 'ch-par-other') ?? ''}
       </p>
@@ -2197,7 +2264,9 @@ function ChildrenHomeFilledRendering({
         known to have any adverse records as follows (if such information is
         available to the school)
       </p>
-      <p className="ml-6 mb-2 text-[12px] italic">(Please tick the appropriate boxes)</p>
+      <p className="ml-6 mb-2 text-[12px] italic">
+        (Please tick the appropriate boxes)
+      </p>
       <div className="ml-12 space-y-1.5">
         <YesNoNaRow
           showHeader
@@ -2217,7 +2286,9 @@ function ChildrenHomeFilledRendering({
           value={fieldValue(template, 'ch-fam-physical')}
         />
       </div>
-      <p className="ml-12 mt-2 text-[12px]">e)  Others <span className="italic">(please provide details)</span></p>
+      <p className="ml-12 mt-2 text-[12px]">
+        e) Others <span className="italic">(please provide details)</span>
+      </p>
       <p className="ml-12 mt-1 whitespace-pre-line text-[12px] leading-relaxed">
         {fieldValue(template, 'ch-fam-other') ?? ''}
       </p>
@@ -2228,9 +2299,9 @@ function ChildrenHomeFilledRendering({
       {/* IV. Care Arrangements */}
       <SectionBar numeral="IV" title="CARE ARRANGEMENTS" />
       <p className="ml-6 mt-1 text-[12px]">
-        The student's care arrangements, if known to the school (eg. whether
-        the student is staying with someone with whom he shares a strong
-        emotional bond)
+        The student's care arrangements, if known to the school (eg. whether the
+        student is staying with someone with whom he shares a strong emotional
+        bond)
       </p>
       <p className="ml-6 mt-2 whitespace-pre-line text-[12px] leading-relaxed">
         {fieldValue(template, 'ch-care-arrangements') ?? ''}
@@ -2239,16 +2310,19 @@ function ChildrenHomeFilledRendering({
       {/* V. Student's Health */}
       <SectionBar numeral="V" title="STUDENT'S HEALTH" />
       <p className="ml-6 mt-1 text-[12px]">
-        The student's medical, mental, physical ailments if known to the
-        school
+        The student's medical, mental, physical ailments if known to the school
       </p>
-      <p className="ml-6 mt-2 text-[12px]">a)  Any known medical problems <span className="italic">(please provide details)</span></p>
+      <p className="ml-6 mt-2 text-[12px]">
+        a) Any known medical problems{' '}
+        <span className="italic">(please provide details)</span>
+      </p>
       <p className="ml-12 mt-1 whitespace-pre-line text-[12px] leading-relaxed">
         {fieldValue(template, 'ch-health-medical') ?? ''}
       </p>
       <p className="ml-6 mt-3 text-[12px]">
-        b)  Student displays extreme symptoms of psychiatric disorder, (eg. any
-        known changes in behaviour) <span className="italic">(please tick the appropriate boxes)</span>
+        b) Student displays extreme symptoms of psychiatric disorder, (eg. any
+        known changes in behaviour){' '}
+        <span className="italic">(please tick the appropriate boxes)</span>
       </p>
       <div className="ml-12 mt-2 space-y-1.5">
         <YesNoNaRow
@@ -2273,7 +2347,9 @@ function ChildrenHomeFilledRendering({
           value={fieldValue(template, 'ch-health-depression')}
         />
       </div>
-      <p className="ml-12 mt-2 text-[12px]">f)  Others <span className="italic">(please provide details)</span></p>
+      <p className="ml-12 mt-2 text-[12px]">
+        f) Others <span className="italic">(please provide details)</span>
+      </p>
       <p className="ml-12 mt-1 whitespace-pre-line text-[12px] leading-relaxed">
         {fieldValue(template, 'ch-health-other') ?? ''}
       </p>
@@ -2281,8 +2357,12 @@ function ChildrenHomeFilledRendering({
       {/* VI. Counselling */}
       <SectionBar numeral="VI" title="COUNSELLING" />
       <p className="ml-6 mt-1 text-[12px]">
-        If the student has obtained, or is presently undergoing counselling
-        from the school. <span className="italic">Please provide details, including particulars of counsellor, nature of counselling and the offender's attendance at counselling sessions.</span>
+        If the student has obtained, or is presently undergoing counselling from
+        the school.{' '}
+        <span className="italic">
+          Please provide details, including particulars of counsellor, nature of
+          counselling and the offender's attendance at counselling sessions.
+        </span>
       </p>
       <div className="ml-6 mt-3 grid grid-cols-[260px_1fr] gap-y-1 text-[12px]">
         <span>Name/type of programme</span>
@@ -2298,7 +2378,9 @@ function ChildrenHomeFilledRendering({
         <span>Counsellor's contact details</span>
         <span>: {fieldValue(template, 'ch-couns-contact') ?? ''}</span>
       </div>
-      <p className="ml-6 mt-3 text-[12px]">Any other details which will be of assistance</p>
+      <p className="ml-6 mt-3 text-[12px]">
+        Any other details which will be of assistance
+      </p>
       <p className="ml-6 mt-1 whitespace-pre-line text-[12px] leading-relaxed">
         {fieldValue(template, 'ch-couns-other') ?? ''}
       </p>
@@ -2307,14 +2389,22 @@ function ChildrenHomeFilledRendering({
       <SectionBar numeral="VII" title="OTHER INFORMATION" />
       <p className="ml-6 mt-1 text-[12px]">
         Any other information which may assist the student and the person in
-        charge of the present investigation <span className="italic">(Examples include whether there are any history/current police reports, requests that the student be given a second chance, be sent to a Home, be placed on GP, etc).</span>
+        charge of the present investigation{' '}
+        <span className="italic">
+          (Examples include whether there are any history/current police
+          reports, requests that the student be given a second chance, be sent
+          to a Home, be placed on GP, etc).
+        </span>
       </p>
       <p className="ml-6 mt-2 whitespace-pre-line text-[12px] leading-relaxed">
         {fieldValue(template, 'ch-other-info') ?? ''}
       </p>
 
       {/* VIII. Teacher / Person Preparing the Report */}
-      <SectionBar numeral="VIII" title="TEACHER / PERSON PREPARING THE REPORT" />
+      <SectionBar
+        numeral="VIII"
+        title="TEACHER / PERSON PREPARING THE REPORT"
+      />
       <div className="ml-6 mt-2 grid grid-cols-[160px_1fr] gap-y-2 text-[12px]">
         <span>Name:</span>
         <span>{fieldValue(template, 'ch-teacher-name') ?? ''}</span>
@@ -2323,18 +2413,19 @@ function ChildrenHomeFilledRendering({
           {fieldValue(template, 'ch-teacher-appointment') ?? ''}
           {'    '}
           <span className="ml-6">
-            No. of Years student known: {fieldValue(template, 'ch-teacher-years') ?? ''}
+            No. of Years student known:{' '}
+            {fieldValue(template, 'ch-teacher-years') ?? ''}
           </span>
         </span>
       </div>
       <div className="ml-6 mt-6 flex items-end justify-between text-[12px]">
         <div>
-          <p className="border-t border-black pt-1">Signature of Teacher / Person</p>
+          <p className="border-t border-black pt-1">
+            Signature of Teacher / Person
+          </p>
         </div>
         <div className="text-right">
-          <p>
-            Date: {fieldValue(template, 'ch-teacher-date') ?? ''}
-          </p>
+          <p>Date: {fieldValue(template, 'ch-teacher-date') ?? ''}</p>
         </div>
       </div>
 
@@ -2381,7 +2472,20 @@ function GenericFilledRendering({
         {template.agency} — {studentName}
       </p>
       {template.sections.map((section, idx) => {
-        const numeral = ['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII']
+        const numeral = [
+          'I',
+          'II',
+          'III',
+          'IV',
+          'V',
+          'VI',
+          'VII',
+          'VIII',
+          'IX',
+          'X',
+          'XI',
+          'XII',
+        ]
         return (
           <div key={section.id}>
             <SectionBar
@@ -2425,10 +2529,15 @@ function FilledReportRendering({
 }) {
   if (template.id === 'children-home') {
     return (
-      <ChildrenHomeFilledRendering template={template} studentName={studentName} />
+      <ChildrenHomeFilledRendering
+        template={template}
+        studentName={studentName}
+      />
     )
   }
-  return <GenericFilledRendering template={template} studentName={studentName} />
+  return (
+    <GenericFilledRendering template={template} studentName={studentName} />
+  )
 }
 
 // Full-screen preview modal showing the filled-in version of the active
@@ -2943,10 +3052,7 @@ function ReportForm({
               />
             </div>
             <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setSubmitOpen(false)}
-              >
+              <Button variant="outline" onClick={() => setSubmitOpen(false)}>
                 Cancel
               </Button>
               <Button
@@ -3010,10 +3116,7 @@ function ReportForm({
                 const done = completedSections.has(s.id)
                 const restricted =
                   s.role === 'counsellor' &&
-                  !isSameStaff(
-                    assignments[s.id] ?? CURRENT_USER,
-                    CURRENT_USER,
-                  )
+                  !isSameStaff(assignments[s.id] ?? CURRENT_USER, CURRENT_USER)
                 if (restricted) {
                   return (
                     <span
@@ -3042,7 +3145,6 @@ function ReportForm({
             </nav>
           </div>
         </aside>
-
       </div>
 
       {/* Full-screen template preview modal */}
@@ -3055,7 +3157,6 @@ function ReportForm({
     </div>
   )
 }
-
 
 // ── S10 Export & Password ─────────────────────────────────────
 
@@ -3081,8 +3182,18 @@ function ExportPassword({
   // mock data uses (e.g. "SCRUBBED").
   const generatePassword = () => {
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ]
     const now = new Date()
     const slug = template.abbrev
@@ -3370,9 +3481,7 @@ function AgencyReportWizardPage() {
         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
           <Lock className="h-5 w-5 text-muted-foreground" />
         </div>
-        <h1 className="text-lg font-semibold">
-          {featureLabel} is disabled
-        </h1>
+        <h1 className="text-lg font-semibold">{featureLabel} is disabled</h1>
         <p className="text-sm text-muted-foreground">
           This feature is behind a flag. Enable it in Settings → Manage Flags to
           generate agency reports for this student.

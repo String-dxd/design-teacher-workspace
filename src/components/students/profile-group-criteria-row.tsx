@@ -160,8 +160,7 @@ export function ProfileGroupCriteriaRow({
       group: g,
       label: groupLabels[g],
       fields: visibleFields.filter(
-        (f) =>
-          f.group === g && (q ? f.label.toLowerCase().includes(q) : true),
+        (f) => f.group === g && (q ? f.label.toLowerCase().includes(q) : true),
       ),
     }))
     .filter((g) => g.fields.length > 0)
@@ -221,9 +220,7 @@ export function ProfileGroupCriteriaRow({
                         key={opt.field}
                         type="button"
                         disabled={isTaken}
-                        onClick={() =>
-                          handleFieldChange(opt.field as FilterField)
-                        }
+                        onClick={() => handleFieldChange(opt.field)}
                         className={cn(
                           'w-full rounded-md px-3 py-2 text-left text-sm hover:bg-accent',
                           isCurrent && 'font-medium',
@@ -330,18 +327,24 @@ export function ProfileGroupCriteriaRow({
             </Select>
           ) : fieldConfig?.type === 'numeric' ? (
             <Input
-              type="number"
+              type="text"
+              inputMode="numeric"
               value={
                 typeof criterion.value === 'number' ||
                 typeof criterion.value === 'string'
                   ? criterion.value
                   : ''
               }
-              onChange={(e) =>
-                handleValueChange(
-                  e.target.value === '' ? '' : Number(e.target.value),
-                )
-              }
+              onChange={(e) => {
+                const raw = e.target.value
+                if (raw === '') {
+                  handleValueChange('')
+                  return
+                }
+                if (!/^-?\d*\.?\d*$/.test(raw)) return
+                const num = Number(raw)
+                handleValueChange(Number.isNaN(num) ? raw : num)
+              }}
               placeholder="Enter number"
               className="h-9 rounded-[14px] bg-white"
             />

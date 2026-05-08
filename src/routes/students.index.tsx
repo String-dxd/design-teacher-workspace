@@ -15,7 +15,6 @@ import { filterFieldConfigs, isFilterComplete } from '@/data/filter-config'
 import { DataCard } from '@/components/data-card'
 import { StudentFilters } from '@/components/students/student-filters'
 import { StudentTable } from '@/components/students/student-table'
-import { StudentGroupedTable } from '@/components/students/student-grouped-table'
 import { ClassSelector } from '@/components/students/class-selector'
 import { defaultColumns } from '@/components/students/column-visibility-popover'
 import { ProfileGroupControl } from '@/components/students/profile-group-control'
@@ -491,34 +490,27 @@ function StudentsPage() {
         />
       </div>
 
-      {appliedGroup ? (
-        <StudentGroupedTable
-          students={classStudents}
-          group={appliedGroup}
-          className="px-6"
-        />
-      ) : (
-        /* Student Table */
-        <StudentTable
-          students={sortedStudents}
-          columns={columns}
-          pageSize={20}
-          matchedIds={hasActiveFilters ? matchedIds : undefined}
-          matchedCount={hasActiveFilters ? matchedIds.size : 0}
-          sort={sort}
-          activeFilterFields={activeFilterFields}
-          onSort={handleSort}
-          onClearSort={handleClearSort}
-          onAddQuickFilter={handleAddQuickFilter}
-          onClearFilter={handleClearFilter}
-          selectedSubjects={selectedSubjects}
-          onConfigureSubjects={() => setSubjectDialogOpen(true)}
-          isRecalculating={isRecalculating}
-          onDeleteColumn={(columnId) =>
-            setColumns((prev) => prev.filter((c) => c.id !== columnId))
-          }
-        />
-      )}
+      {/* Student Table — rendered with optional grouping */}
+      <StudentTable
+        students={sortedStudents}
+        columns={columns}
+        pageSize={20}
+        matchedIds={hasActiveFilters ? matchedIds : undefined}
+        matchedCount={hasActiveFilters ? matchedIds.size : 0}
+        sort={sort}
+        activeFilterFields={activeFilterFields}
+        onSort={handleSort}
+        onClearSort={handleClearSort}
+        onAddQuickFilter={handleAddQuickFilter}
+        onClearFilter={handleClearFilter}
+        selectedSubjects={selectedSubjects}
+        onConfigureSubjects={() => setSubjectDialogOpen(true)}
+        isRecalculating={isRecalculating}
+        onDeleteColumn={(columnId) =>
+          setColumns((prev) => prev.filter((c) => c.id !== columnId))
+        }
+        group={appliedGroup}
+      />
 
       <SubjectSelectorDialog
         open={subjectDialogOpen}

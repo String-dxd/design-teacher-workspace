@@ -541,9 +541,7 @@ function AgencyReportRow({ report }: { report: AgencyReport }) {
       //   submission regardless of the calendar date.
       const PRINCIPAL_REVIEW_DAYS = 2
       const windowDays =
-        status === 'pending_review'
-          ? PRINCIPAL_REVIEW_DAYS
-          : tpl.turnaroundDays
+        status === 'pending_review' ? PRINCIPAL_REVIEW_DAYS : tpl.turnaroundDays
       const due = addBusinessDaysSimple(report.startedAt, windowDays)
       const today = new Date()
       const diffMs = due.getTime() - today.getTime()
@@ -563,9 +561,7 @@ function AgencyReportRow({ report }: { report: AgencyReport }) {
   // pending_review rows are not click-through — but the badge itself is a
   // demo button that flips them to Approved.
   const isClickable =
-    status === 'draft' ||
-    status === 'edits_requested' ||
-    status === 'approved'
+    status === 'draft' || status === 'edits_requested' || status === 'approved'
 
   // Mock per-section completion summary for in-progress reports
   // (Counsellor's Input + Principal's Remarks are typical "awaiting" sections.)
@@ -660,9 +656,7 @@ function AgencyReportRow({ report }: { report: AgencyReport }) {
             title="Click to mark as approved (demo)"
             className="rounded-full transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1"
           >
-            <Badge className={cn(className, 'cursor-pointer')}>
-              {label}
-            </Badge>
+            <Badge className={cn(className, 'cursor-pointer')}>{label}</Badge>
           </button>
         ) : (
           <Badge className={className}>{label}</Badge>
@@ -932,13 +926,13 @@ export function StudentProfile({
     )
 
   const sections = [
-    { id: 'attendance', label: 'Attendance' },
+    ...(msfUpliftEnabled ? [] : [{ id: 'attendance', label: 'Attendance' }]),
     { id: 'behaviour', label: 'Behaviour' },
     { id: 'wellbeing', label: 'Wellbeing' },
     { id: 'academic', label: 'Academic' },
     { id: 'family', label: 'Family' },
     ...(isStudentInsightsView ? [] : [{ id: 'personal', label: 'Personal' }]),
-    ...(holisticReportsEnabled || agencyReportsEnabled
+    ...(!msfUpliftEnabled && (holisticReportsEnabled || agencyReportsEnabled)
       ? [{ id: 'reports', label: 'Reports' }]
       : []),
     ...(importedColumns.length > 0 ? [{ id: 'others', label: 'Others' }] : []),
@@ -1062,49 +1056,48 @@ export function StudentProfile({
         <ProfileCriteriaDetailsCard student={student} />
 
         {/* Attendance Section */}
-        <Section
-          id="attendance"
-          title="Attendance"
-          icon={<Calendar className="h-5 w-5" />}
-          iconClassName="bg-yellow-100 text-yellow-600"
-        >
-          <dl className="grid grid-cols-3 gap-x-8 gap-y-4">
-            <Field
-              label="Attendance (%)"
-              value={
-                student.totalSchoolDays > 0
-                  ? Math.round(
-                      (student.daysPresent / student.totalSchoolDays) * 100,
-                    )
-                  : 0
-              }
-            />
-            <Field label="Late-coming (days)" value={student.lateComing} />
-            <Field
-              label="Non-VR absences (days)"
-              value={student.absences}
-            />
-            <Field
-              label="CCA attendance(%)"
-              value={`${100 - student.ccaMissed * 5}`}
-            />
-          </dl>
+        {!msfUpliftEnabled && (
+          <Section
+            id="attendance"
+            title="Attendance"
+            icon={<Calendar className="h-5 w-5" />}
+            iconClassName="bg-yellow-100 text-yellow-600"
+          >
+            <dl className="grid grid-cols-3 gap-x-8 gap-y-4">
+              <Field
+                label="Attendance (%)"
+                value={
+                  student.totalSchoolDays > 0
+                    ? Math.round(
+                        (student.daysPresent / student.totalSchoolDays) * 100,
+                      )
+                    : 0
+                }
+              />
+              <Field label="Late-coming (days)" value={student.lateComing} />
+              <Field label="Non-VR absences (days)" value={student.absences} />
+              <Field
+                label="CCA attendance(%)"
+                value={`${100 - student.ccaMissed * 5}`}
+              />
+            </dl>
 
-          {analyticsOpen && <AttendanceAnalytics />}
+            {analyticsOpen && <AttendanceAnalytics />}
 
-          {!isStudentInsightsView && (
-            <div className="mt-4">
-              <Button
-                variant="link"
-                size="sm"
-                className="h-auto p-0 text-blue-600"
-                onClick={() => setAnalyticsOpen((prev) => !prev)}
-              >
-                {analyticsOpen ? 'Show less ∧' : 'View analytics ∨'}
-              </Button>
-            </div>
-          )}
-        </Section>
+            {!isStudentInsightsView && (
+              <div className="mt-4">
+                <Button
+                  variant="link"
+                  size="sm"
+                  className="h-auto p-0 text-blue-600"
+                  onClick={() => setAnalyticsOpen((prev) => !prev)}
+                >
+                  {analyticsOpen ? 'Show less ∧' : 'View analytics ∨'}
+                </Button>
+              </div>
+            )}
+          </Section>
+        )}
 
         {/* Behaviour Section */}
         <Section
@@ -1693,115 +1686,118 @@ export function StudentProfile({
             the agency-reports flag is on. The Holistic part is gated on
             `holisticReportsEnabled`; the Agency Reports subsection on
             `agencyReportsEnabled`. */}
-        {(holisticReportsEnabled || agencyReportsEnabled) && (
-          <Section
-            id="reports"
-            title="Reports"
-            icon={<FileText className="h-5 w-5" />}
-            iconClassName="bg-red-100 text-red-600"
-            headerRight={
-              holisticReportsEnabled && studentReports.length > 0 ? (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-muted-foreground"
-                  render={
-                    <Link
-                      to="/reports"
-                      search={{ studentId: student.id, groupBy: 'student' }}
-                    />
-                  }
-                >
-                  <Eye className="mr-1 h-4 w-4" />
-                  View all in Reports
-                </Button>
-              ) : undefined
-            }
-          >
-            {/* Holistic Development Reports — gated on holistic flag. */}
-            {holisticReportsEnabled && (
-              <>
-                {studentReports.length > 0 ? (
-                  <div className="space-y-2">
-                    {studentReports
-                      .sort(
-                        (a, b) => TERMS.indexOf(a.term) - TERMS.indexOf(b.term),
-                      )
-                      .map((report) => (
-                        <ReportRow key={report.id} report={report} />
-                      ))}
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center gap-3 py-8 text-center">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-                      <FileText className="h-6 w-6 text-muted-foreground" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">No reports generated</p>
-                      <p className="text-xs text-muted-foreground">
-                        Generate a Holistic Development Report for this student
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {missingTerms.length > 0 && (
-                  <div className="mt-4 flex items-center gap-2 border-t pt-4">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setWizardOpen(true)}
-                    >
-                      <Plus className="mr-1 h-4 w-4" />
-                      Generate HDP
-                    </Button>
-                    <span className="text-xs text-muted-foreground">
-                      {missingTerms.length === TERMS.length
-                        ? 'All terms'
-                        : missingTerms.join(', ')}{' '}
-                      not yet generated
-                    </span>
-                  </div>
-                )}
-              </>
-            )}
-
-            {/* Agency Reports subsection. */}
-            {agencyReportsEnabled && (
-              <div
-                className={cn(
-                  holisticReportsEnabled && 'mt-6 border-t pt-5',
-                )}
-              >
-                <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Agency Reports
-                </p>
-                {agencyReports.length > 0 && (
-                  <div className="mb-3 space-y-2">
-                    {agencyReports.map((report) => (
-                      <AgencyReportRow key={report.id} report={report} />
-                    ))}
-                  </div>
-                )}
-                {reportGenerationEnabled && (
+        {!msfUpliftEnabled &&
+          (holisticReportsEnabled || agencyReportsEnabled) && (
+            <Section
+              id="reports"
+              title="Reports"
+              icon={<FileText className="h-5 w-5" />}
+              iconClassName="bg-red-100 text-red-600"
+              headerRight={
+                holisticReportsEnabled && studentReports.length > 0 ? (
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
+                    className="text-muted-foreground"
                     render={
                       <Link
-                        to="/students/$id/agency-report/new"
-                        params={{ id: student.id }}
+                        to="/reports"
+                        search={{ studentId: student.id, groupBy: 'student' }}
                       />
                     }
                   >
-                    <Plus className="mr-1 h-4 w-4" />
-                    New Agency Report
+                    <Eye className="mr-1 h-4 w-4" />
+                    View all in Reports
                   </Button>
-                )}
-              </div>
-            )}
-          </Section>
-        )}
+                ) : undefined
+              }
+            >
+              {/* Holistic Development Reports — gated on holistic flag. */}
+              {holisticReportsEnabled && (
+                <>
+                  {studentReports.length > 0 ? (
+                    <div className="space-y-2">
+                      {studentReports
+                        .sort(
+                          (a, b) =>
+                            TERMS.indexOf(a.term) - TERMS.indexOf(b.term),
+                        )
+                        .map((report) => (
+                          <ReportRow key={report.id} report={report} />
+                        ))}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-3 py-8 text-center">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                        <FileText className="h-6 w-6 text-muted-foreground" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">
+                          No reports generated
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Generate a Holistic Development Report for this
+                          student
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {missingTerms.length > 0 && (
+                    <div className="mt-4 flex items-center gap-2 border-t pt-4">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setWizardOpen(true)}
+                      >
+                        <Plus className="mr-1 h-4 w-4" />
+                        Generate HDP
+                      </Button>
+                      <span className="text-xs text-muted-foreground">
+                        {missingTerms.length === TERMS.length
+                          ? 'All terms'
+                          : missingTerms.join(', ')}{' '}
+                        not yet generated
+                      </span>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Agency Reports subsection. */}
+              {agencyReportsEnabled && (
+                <div
+                  className={cn(holisticReportsEnabled && 'mt-6 border-t pt-5')}
+                >
+                  <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Agency Reports
+                  </p>
+                  {agencyReports.length > 0 && (
+                    <div className="mb-3 space-y-2">
+                      {agencyReports.map((report) => (
+                        <AgencyReportRow key={report.id} report={report} />
+                      ))}
+                    </div>
+                  )}
+                  {reportGenerationEnabled && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      render={
+                        <Link
+                          to="/students/$id/agency-report/new"
+                          params={{ id: student.id }}
+                        />
+                      }
+                    >
+                      <Plus className="mr-1 h-4 w-4" />
+                      New Agency Report
+                    </Button>
+                  )}
+                </div>
+              )}
+            </Section>
+          )}
         {/* Others Section — imported fields */}
         {importedColumns.length > 0 && (
           <Section

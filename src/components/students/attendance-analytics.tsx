@@ -1049,12 +1049,13 @@ function AttSortableHeader({
         )}
         <PopoverContent
           align={align === 'right' ? 'end' : 'start'}
-          className="w-48 gap-1 p-3"
+          className="w-52 gap-1 p-3"
         >
           <button
             type="button"
             onClick={() => {
-              onSort(field, 'asc')
+              if (dir === 'asc') onClearSort()
+              else onSort(field, 'asc')
               setOpen(false)
             }}
             className={cn(
@@ -1071,7 +1072,8 @@ function AttSortableHeader({
           <button
             type="button"
             onClick={() => {
-              onSort(field, 'desc')
+              if (dir === 'desc') onClearSort()
+              else onSort(field, 'desc')
               setOpen(false)
             }}
             className={cn(
@@ -1085,19 +1087,6 @@ function AttSortableHeader({
               <Check className="ml-auto h-4 w-4 text-[var(--slate-11)]" />
             )}
           </button>
-          {active && (
-            <button
-              type="button"
-              onClick={() => {
-                onClearSort()
-                setOpen(false)
-              }}
-              className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-[var(--slate-5)]"
-            >
-              <X className="h-4 w-4 text-[var(--slate-11)]" />
-              Clear sort
-            </button>
-          )}
         </PopoverContent>
       </Popover>
     </th>
@@ -1197,6 +1186,8 @@ function AttendanceStudentsTable({
     else if (categoryKey === 'absentValidPrivate') setFilterValidPrivate(active)
     else if (categoryKey === 'absentValidOfficial')
       setFilterValidOfficial(active)
+    // LTA uses an explicit student-ID filter (top N by total absences),
+    // so no numeric filter is applied here.
     setPage(1)
     // Scroll table into view
     setTimeout(() => {
@@ -1245,9 +1236,24 @@ function AttendanceStudentsTable({
     setPage(1)
   }
 
+  const ltaStudentIds = useMemo(() => {
+    if (segment?.categoryKey !== 'lta') return null
+    const totalOf = (s: AttendanceStudent) =>
+      s.nonVRAbsences +
+      s.absentPendingReason +
+      s.mc +
+      s.absentValidPrivate +
+      s.absentValidOfficial
+    const ranked = [...ATTENDANCE_STUDENTS].sort(
+      (a, b) => totalOf(b) - totalOf(a),
+    )
+    return new Set(ranked.slice(0, segment.count).map((s) => s.id))
+  }, [segment])
+
   const filtered = useMemo(() => {
     const q = search.toLowerCase()
     return ATTENDANCE_STUDENTS.filter((s, i) => {
+      if (ltaStudentIds && !ltaStudentIds.has(s.id)) return false
       if (q && !s.name.toLowerCase().includes(q)) return false
       if (filterClass !== 'all' && s.class !== filterClass) return false
       if (filterMonth !== 'all' && !STUDENT_MONTHS[i]?.includes(filterMonth))
@@ -1263,6 +1269,7 @@ function AttendanceStudentsTable({
       return true
     })
   }, [
+    ltaStudentIds,
     search,
     filterClass,
     filterMonth,
@@ -1282,14 +1289,12 @@ function AttendanceStudentsTable({
       else if (sortField === 'class') cmp = a.class.localeCompare(b.class)
       else if (sortField === 'total')
         cmp =
-          a.late +
           a.nonVRAbsences +
           a.absentPendingReason +
           a.mc +
           a.absentValidPrivate +
           a.absentValidOfficial -
-          (b.late +
-            b.nonVRAbsences +
+          (b.nonVRAbsences +
             b.absentPendingReason +
             b.mc +
             b.absentValidPrivate +
@@ -1303,7 +1308,9 @@ function AttendanceStudentsTable({
   const paged = sorted.slice((page - 1) * ATT_PAGE_SIZE, page * ATT_PAGE_SIZE)
 
   const segmentCat = segment
-    ? BAR_CATEGORIES.find((c) => c.key === segment.categoryKey)
+    ? segment.categoryKey === 'lta'
+      ? { key: 'lta', label: 'LTA', color: '#fd7e14' }
+      : BAR_CATEGORIES.find((c) => c.key === segment.categoryKey)
     : null
 
   return (
@@ -1318,7 +1325,8 @@ function AttendanceStudentsTable({
               className="inline-block h-2 w-2 shrink-0 rounded-sm"
               style={{ backgroundColor: segmentCat.color }}
             />
-            {segment.month} · {segmentCat.label}
+            {segment.month !== 'all' && `${segment.month} · `}
+            {segmentCat.label}
             <button
               type="button"
               onClick={onClearSegment}
@@ -1522,13 +1530,13 @@ function AttendanceStudentsTable({
                 className="w-[140px]"
               />
               <AttSortableHeader
-                label="Total"
+                label="Total absences (days)"
                 field="total"
                 sortField={sortField}
                 sortDir={sortDir}
                 onSort={handleSort}
                 onClearSort={clearSort}
-                className="w-[140px]"
+                className="w-[200px]"
               />
               <AttSortableHeader
                 label="Late"
@@ -1626,9 +1634,8 @@ function AttendanceStudentsTable({
                   {s.name}
                 </td>
                 <td className="min-w-[140px] p-4 align-middle">{s.class}</td>
-                <td className="min-w-[140px] p-4 align-middle tabular-nums">
-                  {s.late +
-                    s.nonVRAbsences +
+                <td className="min-w-[200px] p-4 align-middle tabular-nums">
+                  {s.nonVRAbsences +
                     s.absentPendingReason +
                     s.mc +
                     s.absentValidPrivate +
@@ -1808,14 +1815,32 @@ export function AttendanceLevelAnalytics() {
                       Present ({presentPct}%)
                     </span>
                   </p>
-                  <p className="flex items-baseline gap-2">
-                    <span className="w-8 text-right font-semibold tabular-nums text-foreground">
-                      {attendance.lta}
-                    </span>
-                    <span className="text-muted-foreground">
-                      LTA ({ltaPct}%)
-                    </span>
-                  </p>
+                  <TooltipUI>
+                    <TooltipTrigger
+                      render={
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setSelectedSegment({
+                              month: 'all',
+                              categoryKey: 'lta',
+                              count: attendance.lta,
+                            })
+                          }
+                          className="-mx-2 flex items-center gap-2 rounded-md px-2 py-1 transition-colors hover:bg-accent cursor-pointer"
+                        />
+                      }
+                    >
+                      <span className="w-8 text-right font-semibold tabular-nums text-foreground">
+                        {attendance.lta}
+                      </span>
+                      <span className="text-muted-foreground">
+                        LTA ({ltaPct}%)
+                      </span>
+                      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent side="top">View students</TooltipContent>
+                  </TooltipUI>
                 </div>
               </div>
             </div>

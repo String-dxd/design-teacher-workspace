@@ -13,10 +13,10 @@
 version: 2
 
 paths-ignore:
-  - "src/data/mock-*.ts"
-  - "src/data/**/mock-*.ts"
+  - 'src/data/mock-*.ts'
+  - 'src/data/**/mock-*.ts'
 
 secret:
   ignored-paths:
-    - "src/data/mock-*.ts"
-    - "src/data/**/mock-*.ts"
+    - 'src/data/mock-*.ts'
+    - 'src/data/**/mock-*.ts'

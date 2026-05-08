@@ -5,12 +5,7 @@ export type AgencyReportStatus =
   | 'approved'
 
 export type FieldRole = 'yh' | 'principal' | 'counsellor'
-export type FieldType =
-  | 'text'
-  | 'narrative'
-  | 'radio'
-  | 'yesnona'
-  | 'signature'
+export type FieldType = 'text' | 'narrative' | 'radio' | 'yesnona' | 'signature'
 
 export interface ReportField {
   id: string
@@ -1106,7 +1101,8 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
           },
           {
             id: 'ch-att-present-sec1',
-            label: 'Secondary 1 — No. of days present during the year (e.g. 90/100)',
+            label:
+              'Secondary 1 — No. of days present during the year (e.g. 90/100)',
             type: 'text',
             source: 'School Cockpit',
             value: '186 / 190',
@@ -1135,7 +1131,8 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
           },
           {
             id: 'ch-att-present-sec2',
-            label: 'Secondary 2 — No. of days present during the year (e.g. 90/100)',
+            label:
+              'Secondary 2 — No. of days present during the year (e.g. 90/100)',
             type: 'text',
             source: 'School Cockpit',
             value: '178 / 190',
@@ -1165,7 +1162,8 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
           },
           {
             id: 'ch-att-present-sec3',
-            label: 'Secondary 3 — No. of days present during the year (e.g. 90/100)',
+            label:
+              'Secondary 3 — No. of days present during the year (e.g. 90/100)',
             type: 'text',
             source: 'School Cockpit',
             value: '39 / 47',
@@ -1556,7 +1554,11 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
         title: 'Counselling',
         role: 'counsellor',
         fields: [
-          { id: 'ch-couns-programme', label: 'Name / type of programme', type: 'text' },
+          {
+            id: 'ch-couns-programme',
+            label: 'Name / type of programme',
+            type: 'text',
+          },
           {
             id: 'ch-couns-duration',
             label: 'Duration / frequency (start–end date)',
@@ -2222,7 +2224,8 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
               'Others',
             ],
             value: 'PRGS Pre-Sentence Report',
-            helper: 'Select one. Police / VWOs categories are listed first; MSF categories follow.',
+            helper:
+              'Select one. Police / VWOs categories are listed first; MSF categories follow.',
           },
           {
             id: 'ms-purpose-other',
@@ -2348,29 +2351,109 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
         role: 'yh',
         fields: [
           // Positive
-          { id: 'ms-cond-responsive', label: 'Responsive', type: 'yesnona', value: 'Yes' },
-          { id: 'ms-cond-responsible', label: 'Responsible', type: 'yesnona', value: 'No' },
-          { id: 'ms-cond-polite', label: 'Polite', type: 'yesnona', value: 'Yes' },
-          { id: 'ms-cond-honest', label: 'Honest', type: 'yesnona', value: 'Yes' },
-          { id: 'ms-cond-helpful', label: 'Helpful', type: 'yesnona', value: 'Yes' },
-          { id: 'ms-cond-attentive', label: 'Attentive', type: 'yesnona', value: 'No' },
-          { id: 'ms-cond-hardworking', label: 'Hardworking', type: 'yesnona', value: 'No' },
-          { id: 'ms-cond-respectful', label: 'Respectful', type: 'yesnona', value: 'Yes' },
+          {
+            id: 'ms-cond-responsive',
+            label: 'Responsive',
+            type: 'yesnona',
+            value: 'Yes',
+          },
+          {
+            id: 'ms-cond-responsible',
+            label: 'Responsible',
+            type: 'yesnona',
+            value: 'No',
+          },
+          {
+            id: 'ms-cond-polite',
+            label: 'Polite',
+            type: 'yesnona',
+            value: 'Yes',
+          },
+          {
+            id: 'ms-cond-honest',
+            label: 'Honest',
+            type: 'yesnona',
+            value: 'Yes',
+          },
+          {
+            id: 'ms-cond-helpful',
+            label: 'Helpful',
+            type: 'yesnona',
+            value: 'Yes',
+          },
+          {
+            id: 'ms-cond-attentive',
+            label: 'Attentive',
+            type: 'yesnona',
+            value: 'No',
+          },
+          {
+            id: 'ms-cond-hardworking',
+            label: 'Hardworking',
+            type: 'yesnona',
+            value: 'No',
+          },
+          {
+            id: 'ms-cond-respectful',
+            label: 'Respectful',
+            type: 'yesnona',
+            value: 'Yes',
+          },
           // Negative
-          { id: 'ms-cond-gangs', label: 'Associates with Gangs', type: 'yesnona', value: 'No' },
-          { id: 'ms-cond-truant', label: 'Plays Truant', type: 'yesnona', value: 'Yes' },
-          { id: 'ms-cond-fights', label: 'Engages in Fights', type: 'yesnona', value: 'Yes' },
-          { id: 'ms-cond-pilfers', label: 'Pilfers/Steals', type: 'yesnona', value: 'No' },
-          { id: 'ms-cond-smokes', label: 'Smokes', type: 'yesnona', value: 'No' },
-          { id: 'ms-cond-substances', label: 'Abuses other Substances', type: 'yesnona', value: 'No' },
-          { id: 'ms-cond-defies', label: 'Defies Authority', type: 'yesnona', value: 'Yes' },
+          {
+            id: 'ms-cond-gangs',
+            label: 'Associates with Gangs',
+            type: 'yesnona',
+            value: 'No',
+          },
+          {
+            id: 'ms-cond-truant',
+            label: 'Plays Truant',
+            type: 'yesnona',
+            value: 'Yes',
+          },
+          {
+            id: 'ms-cond-fights',
+            label: 'Engages in Fights',
+            type: 'yesnona',
+            value: 'Yes',
+          },
+          {
+            id: 'ms-cond-pilfers',
+            label: 'Pilfers/Steals',
+            type: 'yesnona',
+            value: 'No',
+          },
+          {
+            id: 'ms-cond-smokes',
+            label: 'Smokes',
+            type: 'yesnona',
+            value: 'No',
+          },
+          {
+            id: 'ms-cond-substances',
+            label: 'Abuses other Substances',
+            type: 'yesnona',
+            value: 'No',
+          },
+          {
+            id: 'ms-cond-defies',
+            label: 'Defies Authority',
+            type: 'yesnona',
+            value: 'Yes',
+          },
           {
             id: 'ms-cond-resists',
             label: 'Resists School counselling and other forms of help',
             type: 'yesnona',
             value: 'No',
           },
-          { id: 'ms-cond-bullies', label: 'Bullies', type: 'yesnona', value: 'No' },
+          {
+            id: 'ms-cond-bullies',
+            label: 'Bullies',
+            type: 'yesnona',
+            value: 'No',
+          },
           // Overall conduct
           {
             id: 'ms-cond-overall',
@@ -2454,10 +2537,28 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
         role: 'yh',
         fields: [
           // Parents/Guardians — left unchecked for the YH to fill
-          { id: 'ms-par-cooperative', label: 'The parents/guardians are co-operative', type: 'yesnona' },
-          { id: 'ms-par-control', label: 'The parents/guardians are able to exert control', type: 'yesnona' },
-          { id: 'ms-par-acknowledge', label: "The parents/guardians acknowledge the offender's wrongdoing", type: 'yesnona' },
-          { id: 'ms-par-inconsistent', label: 'The parents/guardians are inconsistent in their approach to discipline', type: 'yesnona' },
+          {
+            id: 'ms-par-cooperative',
+            label: 'The parents/guardians are co-operative',
+            type: 'yesnona',
+          },
+          {
+            id: 'ms-par-control',
+            label: 'The parents/guardians are able to exert control',
+            type: 'yesnona',
+          },
+          {
+            id: 'ms-par-acknowledge',
+            label:
+              "The parents/guardians acknowledge the offender's wrongdoing",
+            type: 'yesnona',
+          },
+          {
+            id: 'ms-par-inconsistent',
+            label:
+              'The parents/guardians are inconsistent in their approach to discipline',
+            type: 'yesnona',
+          },
           {
             id: 'ms-par-other',
             label: 'Others (please provide details)',
@@ -2465,10 +2566,26 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             aiDraftable: true,
           },
           // Adverse family records — left unchecked for the YH to fill
-          { id: 'ms-fam-criminal', label: 'An immediate family member/members has a criminal record', type: 'yesnona' },
-          { id: 'ms-fam-drug', label: 'There is information of drug abuse in the family', type: 'yesnona' },
-          { id: 'ms-fam-sexual', label: 'There is information of sexual abuse in the family', type: 'yesnona' },
-          { id: 'ms-fam-physical', label: 'There is information of physical abuse in the family', type: 'yesnona' },
+          {
+            id: 'ms-fam-criminal',
+            label: 'An immediate family member/members has a criminal record',
+            type: 'yesnona',
+          },
+          {
+            id: 'ms-fam-drug',
+            label: 'There is information of drug abuse in the family',
+            type: 'yesnona',
+          },
+          {
+            id: 'ms-fam-sexual',
+            label: 'There is information of sexual abuse in the family',
+            type: 'yesnona',
+          },
+          {
+            id: 'ms-fam-physical',
+            label: 'There is information of physical abuse in the family',
+            type: 'yesnona',
+          },
           {
             id: 'ms-fam-other',
             label: 'Others (please provide details)',
@@ -2503,11 +2620,38 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             type: 'narrative',
             aiDraftable: true,
           },
-          { id: 'ms-health-bizarre', label: 'Extremely bizarre behaviour (hallucinations, delusions, etc.)', type: 'yesnona', value: 'No' },
-          { id: 'ms-health-violent', label: 'Extremely violent behaviour', type: 'yesnona', value: 'No' },
-          { id: 'ms-health-suicidal', label: 'Suicidal inclinations / attempt or clear plan to commit suicide', type: 'yesnona', value: 'No' },
-          { id: 'ms-health-substance', label: 'Obvious addiction to substances', type: 'yesnona', value: 'No' },
-          { id: 'ms-health-depression', label: 'Depression', type: 'yesnona', value: 'NA' },
+          {
+            id: 'ms-health-bizarre',
+            label:
+              'Extremely bizarre behaviour (hallucinations, delusions, etc.)',
+            type: 'yesnona',
+            value: 'No',
+          },
+          {
+            id: 'ms-health-violent',
+            label: 'Extremely violent behaviour',
+            type: 'yesnona',
+            value: 'No',
+          },
+          {
+            id: 'ms-health-suicidal',
+            label:
+              'Suicidal inclinations / attempt or clear plan to commit suicide',
+            type: 'yesnona',
+            value: 'No',
+          },
+          {
+            id: 'ms-health-substance',
+            label: 'Obvious addiction to substances',
+            type: 'yesnona',
+            value: 'No',
+          },
+          {
+            id: 'ms-health-depression',
+            label: 'Depression',
+            type: 'yesnona',
+            value: 'NA',
+          },
           {
             id: 'ms-health-other',
             label: 'Others (please provide details)',
@@ -2522,12 +2666,33 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
         title: 'Counselling',
         role: 'counsellor',
         fields: [
-          { id: 'ms-couns-programme', label: 'Name / type of programme', type: 'text' },
-          { id: 'ms-couns-duration', label: 'Duration / frequency', type: 'text' },
-          { id: 'ms-couns-persons', label: 'Persons involved (e.g. parents, fellow students (buddy system) etc)', type: 'text' },
+          {
+            id: 'ms-couns-programme',
+            label: 'Name / type of programme',
+            type: 'text',
+          },
+          {
+            id: 'ms-couns-duration',
+            label: 'Duration / frequency',
+            type: 'text',
+          },
+          {
+            id: 'ms-couns-persons',
+            label:
+              'Persons involved (e.g. parents, fellow students (buddy system) etc)',
+            type: 'text',
+          },
           { id: 'ms-couns-name', label: 'Name of counsellor', type: 'text' },
-          { id: 'ms-couns-quals', label: 'Qualifications of counsellor', type: 'text' },
-          { id: 'ms-couns-contact', label: "Counsellor's contact details", type: 'text' },
+          {
+            id: 'ms-couns-quals',
+            label: 'Qualifications of counsellor',
+            type: 'text',
+          },
+          {
+            id: 'ms-couns-contact',
+            label: "Counsellor's contact details",
+            type: 'text',
+          },
           {
             id: 'ms-couns-other',
             label: 'Any other details which will be of assistance',
@@ -2555,11 +2720,35 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
         title: 'Teacher / Person Preparing the Report',
         role: 'yh',
         fields: [
-          { id: 'ms-teacher-name', label: 'Name', type: 'text', value: 'Mr Daniel Tan' },
-          { id: 'ms-teacher-appointment', label: 'Appointment', type: 'text', value: 'Year Head' },
-          { id: 'ms-teacher-years', label: 'No. of years student known', type: 'text', value: '3' },
-          { id: 'ms-teacher-signature', label: 'Signature of Teacher / Person', type: 'signature' },
-          { id: 'ms-teacher-date', label: 'Date', type: 'text', value: '29 Apr 2026' },
+          {
+            id: 'ms-teacher-name',
+            label: 'Name',
+            type: 'text',
+            value: 'Mr Daniel Tan',
+          },
+          {
+            id: 'ms-teacher-appointment',
+            label: 'Appointment',
+            type: 'text',
+            value: 'Year Head',
+          },
+          {
+            id: 'ms-teacher-years',
+            label: 'No. of years student known',
+            type: 'text',
+            value: '3',
+          },
+          {
+            id: 'ms-teacher-signature',
+            label: 'Signature of Teacher / Person',
+            type: 'signature',
+          },
+          {
+            id: 'ms-teacher-date',
+            label: 'Date',
+            type: 'text',
+            value: '29 Apr 2026',
+          },
         ],
       },
       {
