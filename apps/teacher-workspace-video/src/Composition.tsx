@@ -66,7 +66,7 @@ const RealScreens = ({ frame }: { frame: number }) => {
   const homeIn = fade(frame, 160, 176);
   const studentsIn = frame >= 455 ? 1 : 0;
   const tanIn = frame >= 700 ? 1 : 0;
-  const profileIn = frame >= 940 ? 1 : 0;
+  const profileIn = frame >= 730 ? 1 : 0;
   const profileTopOut = fade(frame, 1050, 1140);
   const profileMidIn = fade(frame, 1050, 1140);
   const profileMidOut = fade(frame, 1230, 1320);
@@ -141,7 +141,7 @@ const SplashVideo = ({ frame }: { frame: number }) => {
 
 const ClickHighlight = ({ frame }: { frame: number }) => {
   const nav = between(frame, 440, 466);
-  const row = between(frame, 700, 730);
+  const row = between(frame, 696, 726);
 
   return (
     <>
@@ -162,7 +162,7 @@ const ClickHighlight = ({ frame }: { frame: number }) => {
           position: "absolute",
           left: 254,
           right: 0,
-          top: 879,
+          top: 381,
           height: 54,
           background: `rgba(50,109,245,${0.12 * row})`,
           borderTop: `2px solid rgba(50,109,245,${0.5 * row})`,
@@ -181,14 +181,14 @@ const Cursor = ({ frame }: { frame: number }) => {
     interpolate(
       frame,
       [0, 110, 150, 290, 440, 460, 640, 710, 735, 1040, 1420],
-      [960, 1135, 1114, 1000, 92, 92, 520, 390, 390, 1190, 1190],
+      [960, 1135, 1114, 1000, 92, 92, 520, 370, 370, 1190, 1190],
       clamp,
     ) + driftX;
   const y =
     interpolate(
       frame,
       [0, 110, 150, 290, 440, 460, 640, 710, 735, 1040, 1420],
-      [1034, 1038, 748, 745, 119, 119, 830, 905, 905, 930, 930],
+      [1034, 1038, 748, 745, 119, 119, 520, 407, 407, 930, 930],
       clamp,
     ) + driftY;
   const clickScale = Math.min(
