@@ -62,7 +62,7 @@ function StudentProfilePage() {
         render={<Link to="/students" />}
       >
         <ArrowLeft className="mr-1 size-4" />
-        Dashboard
+        {studentAnalyticsEnabled ? 'Profiles' : 'Student Insights'}
       </Button>
 
       <div className="flex items-center gap-2">

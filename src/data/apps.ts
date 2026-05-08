@@ -55,7 +55,8 @@ export const appCategories: Array<AppCategory> = [
       {
         id: 'sls',
         name: 'SLS',
-        description: 'Teaching and learning platform for curriculum aligned resources',
+        description:
+          'Teaching and learning platform for curriculum aligned resources',
         icon: '/logos/sls-logo.svg',
         color: 'green',
         href: 'https://vle.learning.moe.edu.sg/login',

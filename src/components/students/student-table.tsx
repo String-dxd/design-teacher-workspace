@@ -881,9 +881,9 @@ export function StudentTable({
                     {isVisible('housingType') && (
                       <TableCell>
                         {student.housingType === 'Rented' ? (
-                          'Rental'
+                          'Rented'
                         ) : student.housingType === 'Owned' ? (
-                          'Owner occupied'
+                          'Owner-occupied'
                         ) : (
                           <span className="text-muted-foreground">-</span>
                         )}
@@ -958,9 +958,8 @@ export function StudentTable({
       {/* Record count and Pagination - outside scroll container so it stays horizontally sticky */}
       <div className="flex shrink-0 items-center justify-between bg-white px-6 py-4">
         <div className="text-sm text-muted-foreground">
-          {displayStartIndex}–
-          {Math.min(startIndex + pageSize, students.length)} of{' '}
-          {students.length} records
+          {displayStartIndex}–{Math.min(startIndex + pageSize, students.length)}{' '}
+          of {students.length} records
         </div>
         {totalPages > 1 && (
           <div className="flex items-center gap-1">

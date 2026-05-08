@@ -26,6 +26,7 @@ import {
 import { StudentOverviewCards } from './student-overview-cards'
 import { AcademicAnalytics } from './academic-analytics'
 import { AttendanceAnalytics } from './attendance-analytics'
+import { ProfileCriteriaDetailsCard } from './profile-criteria-details-card'
 import type { Student } from '@/types/student'
 import type { HolisticReport, ReviewStatus, Term } from '@/types/report'
 import type { AgencyReport } from '@/data/mock-agency-reports'
@@ -262,7 +263,7 @@ function MsfUpliftSheetContent({
           )}
         </div>
         <p className="mb-2 text-xs text-muted-foreground">
-          MSF UPLIFT • As of 19 May 2025
+          MSF via UPLIFT • As of 19 May 2025
         </p>
         <div className="rounded-lg bg-muted px-4 py-3">
           <ul className="space-y-1 text-sm">
@@ -288,7 +289,7 @@ function MsfUpliftSheetContent({
                   <Info className="h-3.5 w-3.5 text-muted-foreground" />
                 </TooltipTrigger>
                 <TooltipContent side="top">
-                  MSF UPLIFT • As of 19 May 2025
+                  MSF via UPLIFT • As of 19 May 2025
                 </TooltipContent>
               </Tooltip>
             </div>
@@ -340,7 +341,7 @@ function NonIntactFamilySheetContent({
           )}
         </div>
         <p className="mb-2 text-xs text-muted-foreground">
-          School Cockpit, MSF UPLIFT • As of 1 May 2026
+          School Cockpit, MSF via UPLIFT • As of 1 May 2026
         </p>
         <div className="rounded-lg bg-muted px-4 py-3">
           <ul className="space-y-1 text-sm">
@@ -369,7 +370,7 @@ function NonIntactFamilySheetContent({
           <div>
             <p className="font-medium">Parents&apos; marital status</p>
             <p className="mb-1.5 text-xs text-muted-foreground">
-              MSF UPLIFT • As of 19 May 2025
+              MSF via UPLIFT • As of 19 May 2025
             </p>
             <ul className="space-y-1">
               <li className="flex items-center gap-2">
@@ -394,7 +395,7 @@ function NonIntactFamilySheetContent({
                   <Info className="h-3.5 w-3.5 text-muted-foreground" />
                 </TooltipTrigger>
                 <TooltipContent side="top">
-                  MSF UPLIFT • As of 19 May 2025
+                  MSF via UPLIFT • As of 19 May 2025
                 </TooltipContent>
               </Tooltip>
             </div>
@@ -695,12 +696,20 @@ function AgencyReportRow({ report }: { report: AgencyReport }) {
   )
 }
 
-function formatTermList(terms: Array<string>): string {
-  if (terms.length === 0) return 'None'
-  const numbers = terms
-    .map((t) => parseInt(t.replace('Term ', '')))
-    .sort((a, b) => a - b)
-  return `Term ${numbers.join(', ')}`
+function formatTermList(
+  records: Array<{ year: number; terms: Array<string> }>,
+): string {
+  if (records.length === 0) return 'None'
+  return records
+    .slice()
+    .sort((a, b) => b.year - a.year)
+    .map(({ year, terms }) => {
+      const numbers = terms
+        .map((t) => parseInt(t.replace('Term ', '')))
+        .sort((a, b) => a - b)
+      return `${year} (Term ${numbers.join(', ')})`
+    })
+    .join(', ')
 }
 
 export function StudentProfile({
@@ -790,7 +799,7 @@ export function StudentProfile({
         student.housingType === 'Rented'
           ? 'Rented'
           : student.housingType === 'Owned'
-            ? 'Owned'
+            ? 'Owner-occupied'
             : '-'
       }
     />
@@ -1049,6 +1058,9 @@ export function StudentProfile({
         {/* Overview Cards */}
         <StudentOverviewCards student={student} />
 
+        {/* Criteria details (only when an applied profile group matches) */}
+        <ProfileCriteriaDetailsCard student={student} />
+
         {/* Attendance Section */}
         <Section
           id="attendance"
@@ -1058,7 +1070,7 @@ export function StudentProfile({
         >
           <dl className="grid grid-cols-3 gap-x-8 gap-y-4">
             <Field
-              label="Attendance(%)"
+              label="Attendance (%)"
               value={
                 student.totalSchoolDays > 0
                   ? Math.round(
@@ -1067,8 +1079,11 @@ export function StudentProfile({
                   : 0
               }
             />
-            <Field label="Late-coming(%)" value={student.lateComing} />
-            <Field label="Non-VR absences(%)" value={student.absences} />
+            <Field label="Late-coming (days)" value={student.lateComing} />
+            <Field
+              label="Non-VR absences (days)"
+              value={student.absences}
+            />
             <Field
               label="CCA attendance(%)"
               value={`${100 - student.ccaMissed * 5}`}
@@ -1191,7 +1206,21 @@ export function StudentProfile({
               }
             />
             <Field label="SEN" value={student.sen || '-'} />
-            <Field label="Conduct grade" value={student.conduct} />
+            <Field
+              label="Conduct grade"
+              value={
+                student.conduct ? (
+                  <>
+                    {student.conduct}{' '}
+                    <span className="font-normal text-muted-foreground">
+                      (2025, Overall)
+                    </span>
+                  </>
+                ) : (
+                  '-'
+                )
+              }
+            />
           </dl>
 
           {!isStudentInsightsView && (
@@ -1292,9 +1321,7 @@ export function StudentProfile({
                 sideSheetContent={
                   <div className="space-y-5">
                     <div>
-                      <p className="mb-1 text-sm font-medium">
-                        TCI risk indicators
-                      </p>
+                      <p className="mb-1 text-sm font-medium">Latest term</p>
                       <p className="mb-2 text-xs text-muted-foreground">
                         No. of risk indicators flagged in latest Termly Check-In
                         Survey
@@ -1311,7 +1338,9 @@ export function StudentProfile({
                     {student.riskIndicatorHistory &&
                       student.riskIndicatorHistory.length > 0 && (
                         <div>
-                          <p className="mb-2 text-sm font-medium">Remarks</p>
+                          <p className="mb-2 text-sm font-medium">
+                            Past 4 terms (if any)
+                          </p>
                           <div className="rounded-lg bg-muted px-4 py-3 space-y-4 text-sm">
                             {student.riskIndicatorHistory.map((record, i) => (
                               <div key={i}>
@@ -1352,18 +1381,39 @@ export function StudentProfile({
                   <div className="space-y-5">
                     <div>
                       <p className="mb-1 text-sm font-medium">
-                        TCI risk indicators
+                        Past 4 terms (if any)
                       </p>
                       <p className="mb-2 text-xs text-muted-foreground">
-                        Flagged in at least 2 terms in the past year, based on
-                        Termly Check-In Survey (All Ears).
+                        Flagged in at least 2 terms in the past 4 terms, based
+                        on Termly Check-In Survey (All Ears).
                       </p>
                       <div className="rounded-lg bg-muted px-4 py-3">
                         <ul className="space-y-1 text-sm">
-                          <li className="flex items-center gap-2">
-                            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-foreground" />
-                            {lowMoodValue}
-                          </li>
+                          {student.lowMoodTerms &&
+                          student.lowMoodTerms.length > 0 ? (
+                            student.lowMoodTerms
+                              .slice()
+                              .sort((a, b) => b.year - a.year)
+                              .map(({ year, terms }) => {
+                                const numbers = terms
+                                  .map((t) => parseInt(t.replace('Term ', '')))
+                                  .sort((a, b) => a - b)
+                                return (
+                                  <li
+                                    key={year}
+                                    className="flex items-center gap-2"
+                                  >
+                                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-foreground" />
+                                    {year} (Term {numbers.join(', ')})
+                                  </li>
+                                )
+                              })
+                          ) : (
+                            <li className="flex items-center gap-2">
+                              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-foreground" />
+                              {lowMoodValue}
+                            </li>
+                          )}
                         </ul>
                       </div>
                     </div>
@@ -1511,7 +1561,7 @@ export function StudentProfile({
                     <FieldWithDetails
                       label="Supported by ComLink+"
                       tooltip="Supported by ComLink+"
-                      description="MSF UPLIFT • 19 May 2025"
+                      description="MSF via UPLIFT • 19 May 2025"
                       value={comLinkDisplay}
                       sideSheetTitle="Supported by ComLink+"
                       sideSheetContent={
@@ -1531,7 +1581,7 @@ export function StudentProfile({
                     <FieldWithDetails
                       label="Supported by FSC in the past 2 years"
                       tooltip="Supported by FSC in the past 2 years"
-                      description="MSF UPLIFT • 19 May 2025"
+                      description="MSF via UPLIFT • 19 May 2025"
                       value={fscDisplay}
                       sideSheetTitle="Supported by FSC in the past 2 years"
                       sideSheetContent={
@@ -1545,12 +1595,12 @@ export function StudentProfile({
                 })()}
                 {(() => {
                   const nonIntact = student.nonIntactFamily ?? '-'
-                  const nonIntactTooltip = `"Yes" if any of the following is provided:\n• Custody information\n• Parents' divorced status\n• Parents' considering divorce status based on enrolment the Mandatory Co-Parenting Programme (CCP)\n\nBased on School Cockpit and MSF UPLIFT`
+                  const nonIntactTooltip = `"Yes" if any of the following is provided:\n• Custody information\n• Parents' divorced status\n• Parents' considering divorce status based on enrolment the Mandatory Co-Parenting Programme (CCP)\n\nBased on School Cockpit and MSF via UPLIFT`
                   return (
                     <FieldWithDetails
                       label="From Non-Intact Family"
                       tooltip="From Non-Intact Family"
-                      description="School Cockpit, MSF UPLIFT • 1 May 2026"
+                      description="School Cockpit, MSF via UPLIFT • 1 May 2026"
                       value={nonIntact}
                       sideSheetTitle="From Non-Intact Family"
                       sideSheetContent={
@@ -1595,45 +1645,48 @@ export function StudentProfile({
 
         {/* Personal Section */}
         {!isStudentInsightsView && (
-        <Section
-          id="personal"
-          title="Personal"
-          icon={<Languages className="h-5 w-5" />}
-          iconClassName="bg-purple-100 text-purple-600"
-        >
-          <dl className="grid grid-cols-3 gap-x-8 gap-y-4">
-            {!isStudentInsightsView && (
-              <Field label="Health alerts" value="1 from Parent, 1 from SHS" />
-            )}
-            <Field label="Citizenship" value={student.citizenship ?? '-'} />
-            <Field
-              label="Language spoken"
-              value={student.languagesSpoken ?? '-'}
-            />
-            <Field
-              label="Age"
-              value={
-                student.birthday
-                  ? (() => {
-                      const [day, month, year] = student.birthday.split(' ')
-                      const birthYear = parseInt(year)
-                      const birthMonth = new Date(`${month} 1`).getMonth()
-                      const today = new Date(2026, 2, 4) // 2026-03-04
-                      let age = today.getFullYear() - birthYear
-                      if (
-                        today.getMonth() < birthMonth ||
-                        (today.getMonth() === birthMonth &&
-                          today.getDate() < parseInt(day))
-                      ) {
-                        age--
-                      }
-                      return `${age} years old (${student.birthday})`
-                    })()
-                  : '-'
-              }
-            />
-          </dl>
-        </Section>
+          <Section
+            id="personal"
+            title="Personal"
+            icon={<Languages className="h-5 w-5" />}
+            iconClassName="bg-purple-100 text-purple-600"
+          >
+            <dl className="grid grid-cols-3 gap-x-8 gap-y-4">
+              {!isStudentInsightsView && (
+                <Field
+                  label="Health alerts"
+                  value="1 from Parent, 1 from SHS"
+                />
+              )}
+              <Field label="Citizenship" value={student.citizenship ?? '-'} />
+              <Field
+                label="Language spoken"
+                value={student.languagesSpoken ?? '-'}
+              />
+              <Field
+                label="Age"
+                value={
+                  student.birthday
+                    ? (() => {
+                        const [day, month, year] = student.birthday.split(' ')
+                        const birthYear = parseInt(year)
+                        const birthMonth = new Date(`${month} 1`).getMonth()
+                        const today = new Date(2026, 2, 4) // 2026-03-04
+                        let age = today.getFullYear() - birthYear
+                        if (
+                          today.getMonth() < birthMonth ||
+                          (today.getMonth() === birthMonth &&
+                            today.getDate() < parseInt(day))
+                        ) {
+                          age--
+                        }
+                        return `${age} years old (${student.birthday})`
+                      })()
+                    : '-'
+                }
+              />
+            </dl>
+          </Section>
         )}
 
         {/* Reports Section — shown whenever EITHER the holistic flag or
