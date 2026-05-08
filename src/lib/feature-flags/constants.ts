@@ -3,10 +3,11 @@ import type { FeatureFlags } from './types'
 export const FEATURE_FLAGS_STORAGE_KEY = 'feature_flags'
 
 export const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
-  posts: true,
+  posts: false,
   forms: true,
+  'release-2-communications': false,
   notifications: true,
-  'holistic-reports': true,
+  'holistic-reports': false,
   'parents-gateway': true,
   'student-analytics': false,
   'student-analytics-basic': false,
@@ -14,4 +15,5 @@ export const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
   'student-groups': false,
   'import-data': false,
   'msf-uplift-data': false,
+  'developer-interfaces': false,
 }

@@ -2,12 +2,27 @@ import {
   Link,
   Outlet,
   createFileRoute,
+  redirect,
   useLocation,
 } from '@tanstack/react-router'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+  DEFAULT_FEATURE_FLAGS,
+  FEATURE_FLAGS_STORAGE_KEY,
+} from '@/lib/feature-flags'
 
 export const Route = createFileRoute('/announcements')({
+  beforeLoad: () => {
+    if (typeof window === 'undefined') return
+    const stored = localStorage.getItem(FEATURE_FLAGS_STORAGE_KEY)
+    const flags = stored
+      ? { ...DEFAULT_FEATURE_FLAGS, ...JSON.parse(stored) }
+      : DEFAULT_FEATURE_FLAGS
+
+    if (!flags['release-2-communications'] || !flags.posts)
+      throw redirect({ to: '/' })
+  },
   component: AnnouncementsLayout,
 })
 

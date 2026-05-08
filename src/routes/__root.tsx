@@ -22,6 +22,7 @@ import { AuthProvider } from '@/lib/auth'
 import { BreadcrumbProvider } from '@/hooks/use-breadcrumbs'
 import { HeyTaliaPanel } from '@/components/heytalia/heytalia-panel'
 import { HeyTaliaProvider } from '@/components/heytalia/heytalia-context'
+import { useFeatureFlag } from '@/hooks/use-feature-flag'
 
 export const Route = createRootRoute({
   head: () => ({
@@ -96,13 +97,27 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         {children}
-        {process.env.NODE_ENV === 'development' && (
-          <DraggableTanStackDevtools />
-        )}
-        {process.env.NODE_ENV === 'development' && <DirectEdit />}
         <Scripts />
       </body>
     </html>
+  )
+}
+
+function DeveloperInterfaces() {
+  const developerInterfacesEnabled = useFeatureFlag('developer-interfaces')
+
+  if (
+    process.env.NODE_ENV !== 'development' ||
+    !developerInterfacesEnabled
+  ) {
+    return null
+  }
+
+  return (
+    <>
+      <DraggableTanStackDevtools />
+      <DirectEdit />
+    </>
   )
 }
 
@@ -123,6 +138,7 @@ function RootComponent() {
               <ErrorBoundary>
                 <Outlet />
               </ErrorBoundary>
+              <DeveloperInterfaces />
             </FeatureFlagProvider>
           </AuthProvider>
         </QueryClientProvider>
@@ -153,6 +169,7 @@ function RootComponent() {
                   <HeyTaliaPanel />
                   <Toaster position="bottom-center" />
                   <WelcomeModal />
+                  <DeveloperInterfaces />
                 </SidebarProvider>
               </HeyTaliaProvider>
             </BreadcrumbProvider>
