@@ -222,6 +222,10 @@ async function main() {
     await setupStorage(page, { welcomeSeen: true });
     await navigate(page, `${appBase}/students/9`);
     await screenshot(page, "profile-top.png");
+    await setViewport(page, 1920, 3000);
+    await navigate(page, `${appBase}/students/9`);
+    await screenshotViewport(page, "profile-full.png");
+    await setViewport(page, 1920, 1080);
     await scrollPage(page, 520);
     await screenshot(page, "profile-mid.png");
     await scrollPage(page, 980);

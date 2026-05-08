@@ -95,29 +95,56 @@ const HomeScrollLayer = ({
   </AbsoluteFill>
 );
 
+const ProfileScrollLayer = ({
+  opacity,
+  scrollY,
+}: {
+  opacity: number;
+  scrollY: number;
+}) => (
+  <AbsoluteFill style={{ opacity, background: "#f7f8fb" }}>
+    <ImageLayer name="profile-top" />
+    <div
+      style={{
+        position: "absolute",
+        left: 254,
+        top: 56,
+        width: 1666,
+        height: 1024,
+        overflow: "hidden",
+      }}
+    >
+      <Img
+        src={screen("profile-full")}
+        style={{
+          position: "absolute",
+          left: -254,
+          top: -56 - scrollY,
+          width: 1920,
+          height: "auto",
+        }}
+      />
+    </div>
+  </AbsoluteFill>
+);
+
 const RealScreens = ({ frame }: { frame: number }) => {
   const homeIn = fade(frame, 160, 176);
   const studentsIn = frame >= 500 ? 1 : 0;
-  const tanIn = frame >= 700 ? 1 : 0;
-  const profileIn = frame >= 730 ? 1 : 0;
+  const tanIn = frame >= 625 ? 1 : 0;
+  const profileIn = frame >= 790 ? 1 : 0;
   const homeScrollY = interpolate(
     frame,
     [190, 310, 350, 455],
     [0, 650, 650, 0],
     clamp,
   );
-  const profileTopOut = fade(frame, 1050, 1140);
-  const profileMidIn = fade(frame, 1050, 1140);
-  const profileMidOut = fade(frame, 1230, 1320);
-  const profileLowIn = fade(frame, 1230, 1320);
-  const profileTopY = interpolate(frame, [972, 1140], [0, -130], clamp);
-  const profileMidY = interpolate(
+  const profileScrollY = interpolate(
     frame,
-    [1050, 1140, 1230, 1320],
-    [110, 0, 0, -120],
+    [972, 1265, 1517],
+    [0, 720, 0],
     clamp,
   );
-  const profileLowY = interpolate(frame, [1230, 1320], [120, 0], clamp);
 
   return (
     <AbsoluteFill style={{ background: "#f7f8fb" }}>
@@ -128,23 +155,7 @@ const RealScreens = ({ frame }: { frame: number }) => {
       />
       <ImageLayer name="students-top" opacity={studentsIn * (1 - tanIn)} />
       <ImageLayer name="students-tan-row" opacity={tanIn * (1 - profileIn)} />
-      <AbsoluteFill
-        style={{
-          background: "#f7f8fb",
-          opacity: profileIn,
-        }}
-      />
-      <ImageLayer
-        name="profile-top"
-        opacity={profileIn * (1 - profileTopOut)}
-        y={profileTopY}
-      />
-      <ImageLayer
-        name="profile-mid"
-        opacity={profileMidIn * (1 - profileMidOut)}
-        y={profileMidY}
-      />
-      <ImageLayer name="profile-low" opacity={profileLowIn} y={profileLowY} />
+      <ProfileScrollLayer opacity={profileIn} scrollY={profileScrollY} />
       <SplashVideo frame={frame} />
       <ClickHighlight frame={frame} />
     </AbsoluteFill>
@@ -184,7 +195,7 @@ const SplashVideo = ({ frame }: { frame: number }) => {
 const ClickHighlight = ({ frame }: { frame: number }) => {
   const navHover = between(frame, 438, 488);
   const nav = between(frame, 482, 512);
-  const row = between(frame, 696, 726);
+  const row = between(frame, 730, 780);
 
   return (
     <>
@@ -224,26 +235,26 @@ const Cursor = ({ frame }: { frame: number }) => {
   const x =
     interpolate(
       frame,
-      [0, 110, 150, 220, 300, 380, 445, 492, 640, 710, 735, 1040, 1420],
-      [960, 1135, 1114, 1010, 1020, 1010, 92, 92, 520, 370, 370, 1190, 1190],
+      [0, 110, 150, 220, 300, 380, 445, 492, 620, 720, 760, 790, 1040, 1420],
+      [960, 1135, 1114, 1010, 1020, 1010, 92, 92, 520, 410, 370, 370, 1190, 1190],
       clamp,
     ) + driftX;
   const y =
     interpolate(
       frame,
-      [0, 110, 150, 220, 300, 380, 445, 492, 640, 710, 735, 1040, 1420],
-      [1034, 1038, 748, 705, 705, 705, 119, 119, 520, 407, 407, 930, 930],
+      [0, 110, 150, 220, 300, 380, 445, 492, 620, 720, 760, 790, 1040, 1420],
+      [1034, 1038, 748, 705, 705, 705, 119, 119, 520, 407, 407, 930, 930, 930],
       clamp,
     ) + driftY;
   const clickScale = Math.min(
     interpolate(frame, [140, 150, 160], [1, 0.82, 1], clamp),
     interpolate(frame, [482, 492, 502], [1, 0.82, 1], clamp),
-    interpolate(frame, [700, 710, 720], [1, 0.82, 1], clamp),
+    interpolate(frame, [750, 760, 770], [1, 0.82, 1], clamp),
   );
   const clickRing = Math.max(
     between(frame, 140, 166),
     between(frame, 482, 512),
-    between(frame, 700, 728),
+    between(frame, 750, 780),
   );
 
   return (
