@@ -189,6 +189,8 @@ async function main() {
     await setupStorage(page, { welcomeSeen: true });
     await navigate(page, appBase);
     await screenshot(page, "home.png");
+    await scrollPage(page, 520);
+    await screenshot(page, "home-lower.png");
 
     await setupStorage(page, { welcomeSeen: true });
     await navigate(page, `${appBase}/students`);

@@ -64,9 +64,12 @@ const ImageLayer = ({
 
 const RealScreens = ({ frame }: { frame: number }) => {
   const homeIn = fade(frame, 160, 176);
-  const studentsIn = frame >= 455 ? 1 : 0;
+  const studentsIn = frame >= 466 ? 1 : 0;
   const tanIn = frame >= 700 ? 1 : 0;
   const profileIn = frame >= 730 ? 1 : 0;
+  const homeLowerIn = fade(frame, 225, 285);
+  const homeLowerOut = fade(frame, 345, 405);
+  const homeLowerOpacity = Math.min(homeLowerIn, 1 - homeLowerOut);
   const profileTopOut = fade(frame, 1050, 1140);
   const profileMidIn = fade(frame, 1050, 1140);
   const profileMidOut = fade(frame, 1230, 1320);
@@ -83,7 +86,14 @@ const RealScreens = ({ frame }: { frame: number }) => {
   return (
     <AbsoluteFill style={{ background: "#f7f8fb" }}>
       <ImageLayer name="welcome" opacity={1 - homeIn} />
-      <ImageLayer name="home" opacity={homeIn * (1 - studentsIn)} />
+      <ImageLayer
+        name="home"
+        opacity={homeIn * (1 - homeLowerOpacity) * (1 - studentsIn)}
+      />
+      <ImageLayer
+        name="home-lower"
+        opacity={homeIn * homeLowerOpacity * (1 - studentsIn)}
+      />
       <ImageLayer name="students-top" opacity={studentsIn * (1 - tanIn)} />
       <ImageLayer name="students-tan-row" opacity={tanIn * (1 - profileIn)} />
       <AbsoluteFill
@@ -140,7 +150,8 @@ const SplashVideo = ({ frame }: { frame: number }) => {
 };
 
 const ClickHighlight = ({ frame }: { frame: number }) => {
-  const nav = between(frame, 440, 466);
+  const navHover = between(frame, 405, 452);
+  const nav = between(frame, 452, 480);
   const row = between(frame, 696, 726);
 
   return (
@@ -153,8 +164,9 @@ const ClickHighlight = ({ frame }: { frame: number }) => {
           width: 240,
           height: 36,
           borderRadius: 10,
+          background: `rgba(50,109,245,${0.1 * navHover})`,
           border: `3px solid rgba(50,109,245,${0.75 * nav})`,
-          opacity: nav,
+          opacity: Math.max(navHover, nav),
         }}
       />
       <div
@@ -180,25 +192,25 @@ const Cursor = ({ frame }: { frame: number }) => {
   const x =
     interpolate(
       frame,
-      [0, 110, 150, 290, 440, 460, 640, 710, 735, 1040, 1420],
-      [960, 1135, 1114, 1000, 92, 92, 520, 370, 370, 1190, 1190],
+      [0, 110, 150, 220, 285, 360, 420, 462, 640, 710, 735, 1040, 1420],
+      [960, 1135, 1114, 1010, 1020, 1010, 92, 92, 520, 370, 370, 1190, 1190],
       clamp,
     ) + driftX;
   const y =
     interpolate(
       frame,
-      [0, 110, 150, 290, 440, 460, 640, 710, 735, 1040, 1420],
-      [1034, 1038, 748, 745, 119, 119, 520, 407, 407, 930, 930],
+      [0, 110, 150, 220, 285, 360, 420, 462, 640, 710, 735, 1040, 1420],
+      [1034, 1038, 748, 705, 705, 705, 119, 119, 520, 407, 407, 930, 930],
       clamp,
     ) + driftY;
   const clickScale = Math.min(
     interpolate(frame, [140, 150, 160], [1, 0.82, 1], clamp),
-    interpolate(frame, [440, 450, 460], [1, 0.82, 1], clamp),
+    interpolate(frame, [452, 462, 472], [1, 0.82, 1], clamp),
     interpolate(frame, [700, 710, 720], [1, 0.82, 1], clamp),
   );
   const clickRing = Math.max(
     between(frame, 140, 166),
-    between(frame, 440, 466),
+    between(frame, 452, 480),
     between(frame, 700, 728),
   );
 
