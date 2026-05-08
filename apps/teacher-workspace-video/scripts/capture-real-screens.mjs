@@ -13,10 +13,11 @@ const appBase = process.env.TW_APP_URL ?? "http://127.0.0.1:3001";
 const port = Number(process.env.TW_CHROME_PORT ?? 9224);
 
 const flags = {
-  posts: true,
+  posts: false,
   forms: true,
+  "release-2-communications": false,
   notifications: true,
-  "holistic-reports": true,
+  "holistic-reports": false,
   "parents-gateway": true,
   "student-analytics": false,
   "student-analytics-basic": false,
@@ -24,6 +25,7 @@ const flags = {
   "student-groups": false,
   "import-data": false,
   "msf-uplift-data": false,
+  "developer-interfaces": false,
 };
 
 class Cdp {

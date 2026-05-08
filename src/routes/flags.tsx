@@ -32,6 +32,13 @@ const featureFlagConfigs: Array<FeatureFlagConfig> = [
     stage: 'Release 2',
   },
   {
+    key: 'release-2-communications',
+    label: 'Release 2 communications',
+    description:
+      'Show the Communications section for Posts and Reports after the May launch',
+    stage: 'Release 2',
+  },
+  {
     key: 'posts',
     label: 'Posts',
     description: 'Show or hide the Posts page in the sidebar navigation',
@@ -91,6 +98,13 @@ const featureFlagConfigs: Array<FeatureFlagConfig> = [
     description:
       'Show student data sourced from MSF UPLIFT when this flag is enabled',
     stage: 'Experiment',
+  },
+  {
+    key: 'developer-interfaces',
+    label: 'Developer interfaces',
+    description:
+      'Show internal TanStack and Handmade editing interfaces during development',
+    stage: 'Internal',
   },
 ]
 

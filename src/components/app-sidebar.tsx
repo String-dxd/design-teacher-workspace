@@ -212,6 +212,9 @@ export function AppSidebar() {
   const [feedbackOpen, setFeedbackOpen] = React.useState(false)
   const [showCoachMark, setShowCoachMark] = React.useState(false)
   const postsEnabled = useFeatureFlag('posts')
+  const release2CommunicationsEnabled = useFeatureFlag(
+    'release-2-communications',
+  )
   const holisticReportsEnabled = useFeatureFlag('holistic-reports')
   const parentsGatewayEnabled = useFeatureFlag('parents-gateway')
   const studentAnalyticsEnabled = useFeatureFlag('student-analytics')
@@ -258,7 +261,9 @@ export function AppSidebar() {
     })
 
   const filteredMainItems = filterItems(mainNavItems)
-  const filteredParentsItems = filterItems(parentsCommItems)
+  const filteredParentsItems = release2CommunicationsEnabled
+    ? filterItems(parentsCommItems)
+    : []
   const filteredManageItems = filterItems(manageItems)
   const filteredStudentItems = studentAnalyticsEnabled
     ? studentInsightItemsWithAnalytics.filter((item) =>

@@ -1,6 +1,7 @@
 export type FeatureFlagKey =
   | 'posts'
   | 'forms'
+  | 'release-2-communications'
   | 'notifications'
   | 'holistic-reports'
   | 'parents-gateway'
@@ -10,6 +11,7 @@ export type FeatureFlagKey =
   | 'student-groups'
   | 'import-data'
   | 'msf-uplift-data'
+  | 'developer-interfaces'
 
 export type FeatureFlags = {
   [K in FeatureFlagKey]: boolean
