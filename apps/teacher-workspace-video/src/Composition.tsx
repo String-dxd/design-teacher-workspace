@@ -64,9 +64,9 @@ const ImageLayer = ({
 
 const RealScreens = ({ frame }: { frame: number }) => {
   const homeIn = fade(frame, 160, 176);
-  const studentsIn = fade(frame, 455, 478);
-  const tanIn = fade(frame, 700, 719);
-  const profileIn = fade(frame, 940, 972);
+  const studentsIn = frame >= 455 ? 1 : 0;
+  const tanIn = frame >= 700 ? 1 : 0;
+  const profileIn = frame >= 940 ? 1 : 0;
   const profileTopOut = fade(frame, 1050, 1140);
   const profileMidIn = fade(frame, 1050, 1140);
   const profileMidOut = fade(frame, 1230, 1320);
@@ -82,7 +82,7 @@ const RealScreens = ({ frame }: { frame: number }) => {
 
   return (
     <AbsoluteFill style={{ background: "#f7f8fb" }}>
-      <ImageLayer name="welcome" />
+      <ImageLayer name="welcome" opacity={1 - homeIn} />
       <ImageLayer name="home" opacity={homeIn * (1 - studentsIn)} />
       <ImageLayer name="students-top" opacity={studentsIn * (1 - tanIn)} />
       <ImageLayer name="students-tan-row" opacity={tanIn * (1 - profileIn)} />
