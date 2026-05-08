@@ -9,6 +9,8 @@ export type FeatureFlagKey =
   | 'lta-intervention'
   | 'student-groups'
   | 'import-data'
+  | 'agency-reports'
+  | 'report-generation'
   | 'msf-uplift-data'
 
 export type FeatureFlags = {

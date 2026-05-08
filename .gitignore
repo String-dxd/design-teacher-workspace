@@ -14,3 +14,9 @@ todos.json
 .vercel
 .env*.local
 .gstack/
+
+# Worktree metadata — do not commit
+.claude/worktrees/
+
+# Local design references — do not commit
+reference/

@@ -3,8 +3,11 @@ import { Link } from '@tanstack/react-router'
 import {
   BookOpen,
   Calendar,
+  Check,
   ChevronRight,
+  Clock,
   Eye,
+  EyeOff,
   FileText,
   GraduationCap,
   Heart,
@@ -12,6 +15,7 @@ import {
   Info,
   Languages,
   LayoutGrid,
+  Lock,
   PanelRight,
   Phone,
   Plus,
@@ -25,6 +29,7 @@ import { AttendanceAnalytics } from './attendance-analytics'
 import { ProfileCriteriaDetailsCard } from './profile-criteria-details-card'
 import type { Student } from '@/types/student'
 import type { HolisticReport, ReviewStatus, Term } from '@/types/report'
+import type { AgencyReport } from '@/data/mock-agency-reports'
 import { useFeatureFlag } from '@/hooks/use-feature-flag'
 import { getImportedColumns } from '@/lib/imported-columns'
 import {
@@ -32,6 +37,11 @@ import {
   filterReports,
   getStudentGradeCounts,
 } from '@/data/mock-reports'
+import {
+  AGENCY_TEMPLATES,
+  getAgencyReportsByStudent,
+} from '@/data/mock-agency-reports'
+import { AgencyLogo } from '@/components/agency-logo'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -61,10 +71,18 @@ interface SectionProps {
   title: string
   icon: React.ReactNode
   iconClassName?: string
+  headerRight?: React.ReactNode
   children: React.ReactNode
 }
 
-function Section({ id, title, icon, iconClassName, children }: SectionProps) {
+function Section({
+  id,
+  title,
+  icon,
+  iconClassName,
+  headerRight,
+  children,
+}: SectionProps) {
   return (
     <section id={id} className="scroll-mt-24 rounded-lg border bg-white p-6">
       <div className="mb-4 flex items-center gap-3">
@@ -76,7 +94,8 @@ function Section({ id, title, icon, iconClassName, children }: SectionProps) {
         >
           {icon}
         </span>
-        <h2 className="text-lg font-semibold">{title}</h2>
+        <h2 className="text-lg font-semibold flex-1">{title}</h2>
+        {headerRight}
       </div>
       {children}
     </section>
@@ -459,6 +478,224 @@ function ReportRow({ report }: { report: HolisticReport }) {
   )
 }
 
+const AGENCY_STATUS_CONFIG: Record<
+  AgencyReport['status'],
+  { label: string; className: string }
+> = {
+  draft: {
+    label: 'Draft',
+    className: 'bg-slate-100 text-slate-700 hover:bg-slate-100',
+  },
+  pending_review: {
+    label: 'In Review',
+    className: 'bg-amber-100 text-amber-700 hover:bg-amber-100',
+  },
+  edits_requested: {
+    label: 'Edits Requested',
+    className: 'bg-orange-100 text-orange-700 hover:bg-orange-100',
+  },
+  approved: {
+    label: 'Approved',
+    className: 'bg-green-100 text-green-700 hover:bg-green-100',
+  },
+}
+
+function addBusinessDaysSimple(from: Date, days: number): Date {
+  const d = new Date(from)
+  let added = 0
+  while (added < days) {
+    d.setDate(d.getDate() + 1)
+    const dow = d.getDay()
+    if (dow !== 0 && dow !== 6) added++
+  }
+  return d
+}
+
+function AgencyReportRow({ report }: { report: AgencyReport }) {
+  const [showPw, setShowPw] = useState(false)
+  // The mock store is mutable — we toggle the status here for the demo and
+  // bump a local tick so the row re-renders. No upstream re-fetch needed.
+  const [, setTick] = useState(0)
+  const status = report.status
+  const { label, className } = AGENCY_STATUS_CONFIG[status]
+  const approve = () => {
+    report.status = 'approved'
+    setTick((t) => t + 1)
+  }
+  const createdDate = report.createdAt.toLocaleDateString('en-SG', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  })
+
+  // Due date: clock icon + bare "N days" (no "Due in" prefix)
+  let dueLabel: string | null = null
+  let dueClass = ''
+  if (report.startedAt && (status === 'draft' || status === 'pending_review')) {
+    const tpl = AGENCY_TEMPLATES.find((t) => t.id === report.templateId)
+    if (tpl) {
+      // Two windows here:
+      // - Drafts: count down to the agency's turnaround (e.g. 7 days for MSF).
+      // - Pending review: the principal has a fixed 2-business-day review
+      //   window. Hardcoded so demos always show "2 days" right after
+      //   submission regardless of the calendar date.
+      const PRINCIPAL_REVIEW_DAYS = 2
+      const windowDays =
+        status === 'pending_review'
+          ? PRINCIPAL_REVIEW_DAYS
+          : tpl.turnaroundDays
+      const due = addBusinessDaysSimple(report.startedAt, windowDays)
+      const today = new Date()
+      const diffMs = due.getTime() - today.getTime()
+      const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24))
+      if (diffDays < 0) {
+        const abs = Math.abs(diffDays)
+        dueLabel = `${abs} day${abs !== 1 ? 's' : ''} overdue`
+        dueClass = 'text-red-600'
+      } else {
+        dueLabel = `${diffDays} day${diffDays !== 1 ? 's' : ''}`
+        dueClass = diffDays <= 2 ? 'text-amber-600' : 'text-muted-foreground'
+      }
+    }
+  }
+
+  // Click target: drafts/edits resume the form; approved jumps to Export.
+  // pending_review rows are not click-through — but the badge itself is a
+  // demo button that flips them to Approved.
+  const isClickable =
+    status === 'draft' ||
+    status === 'edits_requested' ||
+    status === 'approved'
+
+  // Mock per-section completion summary for in-progress reports
+  // (Counsellor's Input + Principal's Remarks are typical "awaiting" sections.)
+  let completionSummary: {
+    completed: number
+    total: number
+    awaiting: Array<string>
+  } | null = null
+  if (status === 'draft' || status === 'edits_requested') {
+    const tpl = AGENCY_TEMPLATES.find((t) => t.id === report.templateId)
+    if (tpl) {
+      const total = tpl.sections.length
+      const awaiting = tpl.sections
+        .filter((s) => s.role !== 'yh')
+        .map((s) => s.title)
+      completionSummary = {
+        completed: total - awaiting.length - (status === 'draft' ? 0 : 0),
+        total,
+        awaiting,
+      }
+    }
+  } else if (status === 'pending_review') {
+    // Just-submitted card: every section is filled by the YH; only the
+    // Principal's review remains.
+    const tpl = AGENCY_TEMPLATES.find((t) => t.id === report.templateId)
+    if (tpl) {
+      const total = tpl.sections.length
+      completionSummary = {
+        completed: total,
+        total,
+        awaiting: ["Principal's review"],
+      }
+    }
+  }
+
+  const titleContent = (
+    <>
+      <p className="text-sm font-medium truncate">{report.templateName}</p>
+      <p className="text-xs text-muted-foreground truncate">
+        {report.agency} · {createdDate}
+      </p>
+      {completionSummary && completionSummary.awaiting.length > 0 && (
+        <p className="mt-1 text-xs text-muted-foreground truncate">
+          {completionSummary.completed} of {completionSummary.total} sections
+          completed
+          {completionSummary.awaiting.length > 0 && (
+            <>
+              {' · '}
+              <span>Awaiting: {completionSummary.awaiting.join(', ')}</span>
+            </>
+          )}
+        </p>
+      )}
+    </>
+  )
+
+  return (
+    <div className="group flex flex-col gap-1.5 rounded-lg border transition-colors hover:border-primary/40 hover:bg-muted/20">
+      <div className="flex items-center gap-3 px-4 py-3">
+        <AgencyLogo agency={report.agency} size="sm" />
+        {isClickable ? (
+          <Link
+            to="/students/$id/agency-report/new"
+            params={{ id: report.studentId }}
+            search={{ reportId: report.id }}
+            className="flex-1 min-w-0 text-left"
+          >
+            {titleContent}
+          </Link>
+        ) : (
+          <div className="flex-1 min-w-0">{titleContent}</div>
+        )}
+        {dueLabel && (
+          <span
+            className={cn(
+              'flex items-center gap-1 text-xs font-medium',
+              dueClass,
+            )}
+          >
+            <Clock className="h-3 w-3" />
+            {dueLabel}
+          </span>
+        )}
+        {status === 'pending_review' ? (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              e.preventDefault()
+              approve()
+            }}
+            title="Click to mark as approved (demo)"
+            className="rounded-full transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1"
+          >
+            <Badge className={cn(className, 'cursor-pointer')}>
+              {label}
+            </Badge>
+          </button>
+        ) : (
+          <Badge className={className}>{label}</Badge>
+        )}
+        {report.passwordSaved && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              setShowPw((p) => !p)
+            }}
+            className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+            title={showPw ? 'Hide password' : 'View password'}
+          >
+            <Lock className="h-3.5 w-3.5" />
+          </button>
+        )}
+      </div>
+      {showPw && report.password && (
+        <div className="mx-4 mb-3 flex items-center gap-2 rounded-md bg-muted/50 px-3 py-1.5 text-xs">
+          <span className="text-muted-foreground">PDF password:</span>
+          <span className="flex-1 font-mono">{report.password}</span>
+          <button
+            onClick={() => setShowPw(false)}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <EyeOff className="h-3 w-3" />
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function formatTermList(
   records: Array<{ year: number; terms: Array<string> }>,
 ): string {
@@ -486,6 +723,8 @@ export function StudentProfile({
   const { isEnabled } = useFeatureFlags()
 
   const holisticReportsEnabled = useFeatureFlag('holistic-reports')
+  const agencyReportsEnabled = useFeatureFlag('agency-reports')
+  const reportGenerationEnabled = useFeatureFlag('report-generation')
   const studentAnalyticsEnabled = useFeatureFlag('student-analytics')
   const studentAnalyticsBasicEnabled = useFeatureFlag('student-analytics-basic')
   const msfUpliftEnabled = useFeatureFlag('msf-uplift-data')
@@ -498,6 +737,7 @@ export function StudentProfile({
   const studentReports = filterReports({ studentId: student.id })
   const existingTerms = new Set(studentReports.map((r) => r.term))
   const missingTerms = TERMS.filter((t): t is Term => !existingTerms.has(t))
+  const agencyReports = getAgencyReportsByStudent(student.id)
 
   const fasField = <Field label="FAS" value={student.fas || '-'} />
   const housingField = (
@@ -698,7 +938,9 @@ export function StudentProfile({
     { id: 'academic', label: 'Academic' },
     { id: 'family', label: 'Family' },
     ...(isStudentInsightsView ? [] : [{ id: 'personal', label: 'Personal' }]),
-    ...(holisticReportsEnabled ? [{ id: 'reports', label: 'Reports' }] : []),
+    ...(holisticReportsEnabled || agencyReportsEnabled
+      ? [{ id: 'reports', label: 'Reports' }]
+      : []),
     ...(importedColumns.length > 0 ? [{ id: 'others', label: 'Others' }] : []),
   ]
 
@@ -1447,57 +1689,18 @@ export function StudentProfile({
           </Section>
         )}
 
-        {/* Reports Section */}
-        {holisticReportsEnabled && (
+        {/* Reports Section — shown whenever EITHER the holistic flag or
+            the agency-reports flag is on. The Holistic part is gated on
+            `holisticReportsEnabled`; the Agency Reports subsection on
+            `agencyReportsEnabled`. */}
+        {(holisticReportsEnabled || agencyReportsEnabled) && (
           <Section
             id="reports"
             title="Reports"
             icon={<FileText className="h-5 w-5" />}
             iconClassName="bg-red-100 text-red-600"
-          >
-            {studentReports.length > 0 ? (
-              <div className="space-y-2">
-                {studentReports
-                  .sort((a, b) => TERMS.indexOf(a.term) - TERMS.indexOf(b.term))
-                  .map((report) => (
-                    <ReportRow key={report.id} report={report} />
-                  ))}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center gap-3 py-8 text-center">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-                  <FileText className="h-6 w-6 text-muted-foreground" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium">No reports generated</p>
-                  <p className="text-xs text-muted-foreground">
-                    Generate a Holistic Development Report for this student
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {missingTerms.length > 0 && (
-              <div className="mt-4 flex items-center gap-2 border-t pt-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setWizardOpen(true)}
-                >
-                  <Plus className="mr-1 h-4 w-4" />
-                  Generate HDP
-                </Button>
-                <span className="text-xs text-muted-foreground">
-                  {missingTerms.length === TERMS.length
-                    ? 'All terms'
-                    : missingTerms.join(', ')}{' '}
-                  not yet generated
-                </span>
-              </div>
-            )}
-
-            {studentReports.length > 0 && (
-              <div className="mt-4 border-t pt-4">
+            headerRight={
+              holisticReportsEnabled && studentReports.length > 0 ? (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -1512,6 +1715,89 @@ export function StudentProfile({
                   <Eye className="mr-1 h-4 w-4" />
                   View all in Reports
                 </Button>
+              ) : undefined
+            }
+          >
+            {/* Holistic Development Reports — gated on holistic flag. */}
+            {holisticReportsEnabled && (
+              <>
+                {studentReports.length > 0 ? (
+                  <div className="space-y-2">
+                    {studentReports
+                      .sort(
+                        (a, b) => TERMS.indexOf(a.term) - TERMS.indexOf(b.term),
+                      )
+                      .map((report) => (
+                        <ReportRow key={report.id} report={report} />
+                      ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-3 py-8 text-center">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                      <FileText className="h-6 w-6 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">No reports generated</p>
+                      <p className="text-xs text-muted-foreground">
+                        Generate a Holistic Development Report for this student
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {missingTerms.length > 0 && (
+                  <div className="mt-4 flex items-center gap-2 border-t pt-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setWizardOpen(true)}
+                    >
+                      <Plus className="mr-1 h-4 w-4" />
+                      Generate HDP
+                    </Button>
+                    <span className="text-xs text-muted-foreground">
+                      {missingTerms.length === TERMS.length
+                        ? 'All terms'
+                        : missingTerms.join(', ')}{' '}
+                      not yet generated
+                    </span>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Agency Reports subsection. */}
+            {agencyReportsEnabled && (
+              <div
+                className={cn(
+                  holisticReportsEnabled && 'mt-6 border-t pt-5',
+                )}
+              >
+                <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Agency Reports
+                </p>
+                {agencyReports.length > 0 && (
+                  <div className="mb-3 space-y-2">
+                    {agencyReports.map((report) => (
+                      <AgencyReportRow key={report.id} report={report} />
+                    ))}
+                  </div>
+                )}
+                {reportGenerationEnabled && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    render={
+                      <Link
+                        to="/students/$id/agency-report/new"
+                        params={{ id: student.id }}
+                      />
+                    }
+                  >
+                    <Plus className="mr-1 h-4 w-4" />
+                    New Agency Report
+                  </Button>
+                )}
               </div>
             )}
           </Section>

@@ -4,6 +4,7 @@ import {
   ArrowUpRight,
   BarChart3,
   Bot,
+  CalendarCheck2,
   CircleHelp,
   FileText,
   Home,
@@ -70,6 +71,11 @@ const mainNavItems: Array<MenuItem> = [
     title: 'Home',
     url: '/',
     icon: Home,
+  },
+  {
+    title: 'Attendance',
+    url: '/attendance',
+    icon: CalendarCheck2,
   },
 ]
 
@@ -140,7 +146,6 @@ const parentsCommItems: Array<MenuItem> = [
     url: '/reports',
     icon: FileText,
     stage: 'Experiment',
-    featureFlag: 'holistic-reports',
   },
 ]
 

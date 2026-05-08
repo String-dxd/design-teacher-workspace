@@ -86,6 +86,20 @@ const featureFlagConfigs: Array<FeatureFlagConfig> = [
     stage: 'Experiment',
   },
   {
+    key: 'agency-reports',
+    label: 'Agency Reports',
+    description:
+      'Show the Agency Reports subsection on the student profile and enable the Agency Report generation wizard (template picker, Fill Report with split-pane template reference, Review & Submit, Export)',
+    stage: 'Experiment',
+  },
+  {
+    key: 'report-generation',
+    label: 'Report Generation',
+    description:
+      "Allow new agency reports to be generated. When off, existing reports stay visible on the student profile but the '+ New Agency Report' button and the wizard entry point are hidden",
+    stage: 'Experiment',
+  },
+  {
     key: 'msf-uplift-data',
     label: 'Student data from MSF via UPLIFT',
     description:

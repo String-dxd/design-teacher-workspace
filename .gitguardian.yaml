@@ -1,0 +1,22 @@
+# GitGuardian configuration
+# https://docs.gitguardian.com/ggshield-docs/reference/configuration/
+#
+# This is a UI prototype used internally to demo the Teacher Workspace
+# experience. Mock-data files in src/data/ may contain placeholder
+# strings shaped like credentials (e.g. demo PDF passwords for the
+# "Encrypt PDF" affordance). They are never real secrets, never grant
+# access to anything, and exist only as static demo strings shipped to
+# Vercel preview deploys. The current source tree no longer contains
+# any literal password values — passwords for the prototype are
+# synthesised at runtime.
+
+version: 2
+
+paths-ignore:
+  - "src/data/mock-*.ts"
+  - "src/data/**/mock-*.ts"
+
+secret:
+  ignored-paths:
+    - "src/data/mock-*.ts"
+    - "src/data/**/mock-*.ts"
