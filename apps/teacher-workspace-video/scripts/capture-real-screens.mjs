@@ -121,6 +121,15 @@ async function connectPage() {
   return page;
 }
 
+async function setViewport(page, width, height) {
+  await page.send("Emulation.setDeviceMetricsOverride", {
+    width,
+    height,
+    deviceScaleFactor: 1,
+    mobile: false,
+  });
+}
+
 async function navigate(page, url) {
   const loaded = page.once("Page.loadEventFired");
   await page.send("Page.navigate", { url });
@@ -159,6 +168,16 @@ async function screenshot(page, name) {
   await writeFile(file, Buffer.from(result.data, "base64"));
 }
 
+async function screenshotViewport(page, name) {
+  const result = await page.send("Page.captureScreenshot", {
+    format: "png",
+    captureBeyondViewport: true,
+  });
+  const file = resolve(outDir, name);
+  await mkdir(dirname(file), { recursive: true });
+  await writeFile(file, Buffer.from(result.data, "base64"));
+}
+
 async function scrollPage(page, top) {
   await evaluate(
     page,
@@ -189,8 +208,10 @@ async function main() {
     await setupStorage(page, { welcomeSeen: true });
     await navigate(page, appBase);
     await screenshot(page, "home.png");
-    await scrollPage(page, 520);
-    await screenshot(page, "home-lower.png");
+    await setViewport(page, 1920, 2200);
+    await navigate(page, appBase);
+    await screenshotViewport(page, "home-full.png");
+    await setViewport(page, 1920, 1080);
 
     await setupStorage(page, { welcomeSeen: true });
     await navigate(page, `${appBase}/students`);
