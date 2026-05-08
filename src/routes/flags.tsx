@@ -87,9 +87,9 @@ const featureFlagConfigs: Array<FeatureFlagConfig> = [
   },
   {
     key: 'msf-uplift-data',
-    label: 'Student data from MSF UPLIFT',
+    label: 'Student data from MSF via UPLIFT',
     description:
-      'Show student data sourced from MSF UPLIFT when this flag is enabled',
+      'Show student data sourced from MSF via UPLIFT when this flag is enabled',
     stage: 'Experiment',
   },
 ]

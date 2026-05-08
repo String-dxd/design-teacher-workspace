@@ -238,7 +238,7 @@ function StudentsPage() {
   })
   const importedColumns = columns.filter((c) => c.imported)
 
-  // Sync MSF UPLIFT columns when the feature flag toggles at runtime
+  // Sync MSF via UPLIFT columns when the feature flag toggles at runtime
   useEffect(() => {
     const MSF_IDS = ['supportedByComLink', 'supportedByFsc', 'nonIntactFamily']
     setColumns((prev) => {
