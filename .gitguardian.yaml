@@ -1,0 +1,30 @@
+# GitGuardian configuration
+# https://docs.gitguardian.com/ggshield-docs/reference/configuration/
+#
+# This is a UI prototype used internally to demo the Teacher Workspace
+# experience. The mock-data file listed below has, in past commits,
+# contained placeholder strings shaped like PDF-encryption passwords
+# (e.g. demo report passwords used to illustrate the "Encrypt PDF"
+# affordance). They were never real credentials, never granted access
+# to anything, and live only as static demo strings inside a TypeScript
+# data file that ships to a Vercel preview deploy. The current source
+# tree no longer contains any literal password values — passwords for
+# the prototype are synthesised at runtime by a `generatePassword()`
+# helper inside the export step component.
+
+version: 2
+
+paths-ignore:
+  # Mock data file for prototype demo flows. Any string that looks like
+  # a credential here is illustrative only.
+  - "src/data/mock-agency-reports.ts"
+
+secret:
+  # Belt-and-suspenders: also suppress the specific historical strings
+  # by content match, so they're filtered even if a future scan looks
+  # at older commits where the file still contained them.
+  ignored-matches:
+    - name: "Demo PDF password — prototype mock, never a real credential"
+      match: "SCRUBBED"
+    - name: "Demo PDF password — prototype mock, never a real credential"
+      match: "SCRUBBED"
