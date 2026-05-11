@@ -186,10 +186,10 @@ function StudentsPage() {
   const msfUpliftEnabled = useFeatureFlag('msf-uplift-data')
   const isStudentInsightsView =
     !studentAnalyticsEnabled && !studentAnalyticsBasicEnabled
-  const pageTitle = studentAnalyticsEnabled ? 'Profiles' : 'Student Insights'
+  const pageTitle = isStudentInsightsView ? 'Student Insights' : 'Student Profiles'
   useSetBreadcrumbs([{ label: pageTitle, href: '/students' }])
 
-  const [selectedClass, setSelectedClass] = useState('Secondary 3')
+  const [selectedClass, setSelectedClass] = useState('Secondary 4')
   const [searchQuery, setSearchQuery] = useState('')
   const [filters, setFilters] = useState<Array<FilterCriterion>>([])
   const { appliedGroup } = useProfileGroups()

@@ -22,7 +22,7 @@ import {
   SlidersHorizontal,
   X,
 } from 'lucide-react'
-import { Link } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 import { CATEGORICAL_6 } from '@/lib/chart-colors'
 
 import { cn } from '@/lib/utils'
@@ -1305,6 +1305,7 @@ const ALL_CLASSES = ['4A', '4B', '4C', '4D']
 const ALL_GRADES = ['A1', 'A2', 'B3', 'B4', 'C5', 'C6', 'D7', 'VR']
 
 export function MonitoringAcademicAnalytics() {
+  const navigate = useNavigate()
   // Distribution filters
   const [level, setLevel] = useState('Secondary 4')
   const [subject, setSubject] = useState('el-g3')
@@ -1778,39 +1779,43 @@ export function MonitoringAcademicAnalytics() {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {pagedCandidates.map((c) => (
+                {pagedCandidates.map((c) => {
+                  const realId = studentIdByName.get(c.name)
+                  return (
                   <tr
                     key={c.id}
-                    className="transition-colors hover:bg-muted/50"
+                    className={cn(
+                      'transition-colors hover:bg-muted/50',
+                      realId && 'cursor-pointer',
+                    )}
+                    onClick={() => {
+                      if (realId) navigate({ to: '/students/$id', params: { id: realId } })
+                    }}
                   >
                     <td className="w-[96px] p-4 align-middle">
-                      {(() => {
-                        const realId = studentIdByName.get(c.name)
-                        return (
-                          <TooltipUI>
-                            <TooltipTrigger>
-                              {realId ? (
-                                <Link
-                                  to="/students/$id"
-                                  params={{ id: realId }}
-                                  className="flex items-center justify-center rounded p-0.5 text-blue-500 hover:bg-blue-50 hover:text-blue-600"
-                                >
-                                  <FileText className="h-4 w-4" />
-                                </Link>
-                              ) : (
-                                <span className="flex items-center justify-center rounded p-0.5 text-muted-foreground">
-                                  <FileText className="h-4 w-4" />
-                                </span>
-                              )}
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              {realId
-                                ? 'View student profile'
-                                : 'Profile not available'}
-                            </TooltipContent>
-                          </TooltipUI>
-                        )
-                      })()}
+                      <TooltipUI>
+                        <TooltipTrigger>
+                          {realId ? (
+                            <Link
+                              to="/students/$id"
+                              params={{ id: realId }}
+                              onClick={(e) => e.stopPropagation()}
+                              className="flex items-center justify-center rounded p-0.5 text-blue-500 hover:bg-blue-50 hover:text-blue-600"
+                            >
+                              <FileText className="h-4 w-4" />
+                            </Link>
+                          ) : (
+                            <span className="flex items-center justify-center rounded p-0.5 text-muted-foreground">
+                              <FileText className="h-4 w-4" />
+                            </span>
+                          )}
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {realId
+                            ? 'View student profile'
+                            : 'Profile not available'}
+                        </TooltipContent>
+                      </TooltipUI>
                     </td>
                     <td className="w-[300px] p-4 align-middle font-medium">
                       {c.name}
@@ -1821,7 +1826,8 @@ export function MonitoringAcademicAnalytics() {
                     </td>
                     <td className="w-[140px] p-4 align-middle">{c.grade}</td>
                   </tr>
-                ))}
+                  )
+                })}
                 {pagedCandidates.length === 0 && (
                   <tr>
                     <td
