@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 import {
   Bar,
   BarChart,
@@ -47,48 +47,17 @@ import {
   TooltipTrigger,
   Tooltip as TooltipUI,
 } from '@/components/ui/tooltip'
+import type { Student } from '@/types/student'
 import { mockStudents } from '@/data/mock-students'
 import { LevelDropdown } from '@/components/students/academic-analytics'
 import { AttendanceRing } from '@/components/reports/attendance-ring'
 
 const studentIdByName = new Map(mockStudents.map((s) => [s.name, s.id]))
 
-// Mock data – replace with real data props as needed
-const CURRENT_ATTENDANCE = {
-  present: 10,
-  total: 12,
-}
-
 const RING_SIZE = 140
 const RING_STROKE = 22
 const RING_RADIUS = (RING_SIZE - RING_STROKE) / 2
 const RING_C = 2 * Math.PI * RING_RADIUS
-
-const RING_SEGMENTS = (() => {
-  const total = CURRENT_ATTENDANCE.total
-  let acc = 0
-  return [
-    { name: 'Present', value: 9, color: '#12b886' },
-    { name: 'Late', value: 1, color: '#fd7e14' },
-    { name: 'Absent pending reason', value: 1, color: '#fa5252' },
-    { name: 'Absent (excl pending reason)', value: 1, color: '#ffa94d' },
-  ].map((seg) => {
-    const len = (seg.value / total) * RING_C
-    const dashoffset = acc === 0 ? 0 : RING_C - acc
-    acc += len
-    return { ...seg, len, dashoffset }
-  })
-})()
-
-const RING_LEGEND = RING_SEGMENTS.filter((s) => s.name !== 'Present')
-
-const WEEKLY_RATE = [
-  { week: 'Week 1', rate: 100 },
-  { week: 'Week 2', rate: 50 },
-  { week: 'Week 3', rate: 100 },
-  { week: 'Week 4', rate: 83 },
-  { week: 'Week 5', rate: 93 },
-]
 
 interface MonthlyEntry {
   month: string
@@ -1149,6 +1118,7 @@ function AttendanceStudentsTable({
   segment?: SegmentSelection | null
   onClearSegment?: () => void
 }) {
+  const navigate = useNavigate()
   const tableRef = useRef<HTMLDivElement>(null)
   const [search, setSearch] = useState('')
   const [filterClass, setFilterClass] = useState('all')
@@ -1599,36 +1569,43 @@ function AttendanceStudentsTable({
             </tr>
           </thead>
           <tbody className="divide-y">
-            {paged.map((s) => (
-              <tr key={s.id} className="transition-colors hover:bg-muted/50">
+            {paged.map((s) => {
+              const realId = studentIdByName.get(s.name)
+              return (
+              <tr
+                key={s.id}
+                className={cn(
+                  'transition-colors hover:bg-muted/50',
+                  realId && 'cursor-pointer',
+                )}
+                onClick={() => {
+                  if (realId) navigate({ to: '/students/$id', params: { id: realId } })
+                }}
+              >
                 <td className="w-[96px] p-4 align-middle">
-                  {(() => {
-                    const realId = studentIdByName.get(s.name)
-                    return (
-                      <TooltipUI>
-                        <TooltipTrigger>
-                          {realId ? (
-                            <Link
-                              to="/students/$id"
-                              params={{ id: realId }}
-                              className="flex items-center justify-center rounded p-0.5 text-blue-500 hover:bg-blue-50 hover:text-blue-600"
-                            >
-                              <FileText className="h-4 w-4" />
-                            </Link>
-                          ) : (
-                            <span className="flex items-center justify-center rounded p-0.5 text-muted-foreground">
-                              <FileText className="h-4 w-4" />
-                            </span>
-                          )}
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          {realId
-                            ? 'View student profile'
-                            : 'Profile not available'}
-                        </TooltipContent>
-                      </TooltipUI>
-                    )
-                  })()}
+                  <TooltipUI>
+                    <TooltipTrigger>
+                      {realId ? (
+                        <Link
+                          to="/students/$id"
+                          params={{ id: realId }}
+                          onClick={(e) => e.stopPropagation()}
+                          className="flex items-center justify-center rounded p-0.5 text-blue-500 hover:bg-blue-50 hover:text-blue-600"
+                        >
+                          <FileText className="h-4 w-4" />
+                        </Link>
+                      ) : (
+                        <span className="flex items-center justify-center rounded p-0.5 text-muted-foreground">
+                          <FileText className="h-4 w-4" />
+                        </span>
+                      )}
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {realId
+                        ? 'View student profile'
+                        : 'Profile not available'}
+                    </TooltipContent>
+                  </TooltipUI>
                 </td>
                 <td className="w-[192px] p-4 align-middle font-medium">
                   {s.name}
@@ -1660,7 +1637,8 @@ function AttendanceStudentsTable({
                   {s.absentValidOfficial}
                 </td>
               </tr>
-            ))}
+              )
+            })}
             {paged.length === 0 && (
               <tr>
                 <td
@@ -1935,11 +1913,56 @@ export function AttendanceLevelAnalytics() {
 
 const DETAILS_TYPE_OPTIONS = [...new Set(ABSENCE_DETAILS.map((r) => r.type))]
 
-export function AttendanceAnalytics() {
+interface AttendanceAnalyticsProps {
+  student: Student
+}
+
+export function AttendanceAnalytics({ student }: AttendanceAnalyticsProps) {
   const [chartExpanded, setChartExpanded] = useState(false)
   const [detailsPage, setDetailsPage] = useState(1)
   const [detailsFilterMonth, setDetailsFilterMonth] = useState('all')
   const [detailsFilterType, setDetailsFilterType] = useState('all')
+
+  const attendancePct =
+    student.totalSchoolDays > 0
+      ? Math.round((student.daysPresent / student.totalSchoolDays) * 100)
+      : 0
+
+  const currentAttendance = useMemo(() => {
+    const total = 12
+    const present = Math.max(0, Math.min(total, Math.round((attendancePct * total) / 100)))
+    return { present, total }
+  }, [attendancePct])
+
+  const ringSegments = useMemo(() => {
+    const total = currentAttendance.total
+    const present = currentAttendance.present
+    const remaining = total - present
+    // Distribute remaining days across Late, Absent pending, Absent excl
+    const late = Math.max(0, Math.round(remaining * 0.2))
+    const absentPending = Math.max(0, Math.round(remaining * 0.45))
+    const absentExcl = Math.max(0, remaining - late - absentPending)
+    let acc = 0
+    return [
+      { name: 'Present', value: present, color: '#12b886' },
+      { name: 'Late', value: late, color: '#fd7e14' },
+      { name: 'Absent pending reason', value: absentPending, color: '#fa5252' },
+      { name: 'Absent (excl pending reason)', value: absentExcl, color: '#ffa94d' },
+    ].map((seg) => {
+      const len = total > 0 ? (seg.value / total) * RING_C : 0
+      const dashoffset = acc === 0 ? 0 : RING_C - acc
+      acc += len
+      return { ...seg, len, dashoffset }
+    })
+  }, [currentAttendance])
+
+  const weeklyRate = useMemo(() => {
+    const variations = [1.15, 0.6, 1.1, 0.95, 1.2]
+    return variations.map((v, i) => ({
+      week: `Week ${i + 1}`,
+      rate: Math.max(0, Math.min(100, Math.round(attendancePct * v))),
+    }))
+  }, [attendancePct])
 
   const filteredDetails = ABSENCE_DETAILS.filter((r) => {
     const month = r.date.split(' ')[1]
@@ -1969,7 +1992,7 @@ export function AttendanceAnalytics() {
         <div className="flex items-center gap-6">
           <AttendanceRing
             percentage={
-              (CURRENT_ATTENDANCE.present / CURRENT_ATTENDANCE.total) * 100
+              (currentAttendance.present / currentAttendance.total) * 100
             }
             size={100}
             color="#228be6"
@@ -1978,12 +2001,12 @@ export function AttendanceAnalytics() {
             <div>
               <p className="text-xs text-muted-foreground">Attendance</p>
               <p className="text-2xl font-semibold">
-                {CURRENT_ATTENDANCE.present} / {CURRENT_ATTENDANCE.total}
+                {currentAttendance.present} / {currentAttendance.total}
               </p>
               <p className="text-xs text-muted-foreground">Days present</p>
             </div>
             <div className="space-y-1 border-l pl-5 text-xs text-muted-foreground">
-              {RING_SEGMENTS.filter((s) => s.name !== 'Present').map((s) => (
+              {ringSegments.filter((s) => s.name !== 'Present').map((s) => (
                 <p key={s.name} className="flex items-baseline gap-2">
                   <span className="font-semibold text-foreground">
                     {s.value}
@@ -2003,7 +2026,7 @@ export function AttendanceAnalytics() {
         </h3>
         <ResponsiveContainer width="100%" height={180}>
           <LineChart
-            data={WEEKLY_RATE}
+            data={weeklyRate}
             margin={{ top: 4, right: 8, left: -20, bottom: 0 }}
           >
             <CartesianGrid

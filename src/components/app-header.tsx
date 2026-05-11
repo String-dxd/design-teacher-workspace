@@ -30,6 +30,9 @@ import { useBreadcrumbs } from '@/hooks/use-breadcrumbs'
 export function AppHeader() {
   const breadcrumbs = useBreadcrumbs()
   const showNotifications = useFeatureFlag('notifications')
+  const studentAnalyticsEnabled = useFeatureFlag('student-analytics')
+  const studentAnalyticsBasicEnabled = useFeatureFlag('student-analytics-basic')
+  const showAssistant = !studentAnalyticsBasicEnabled && !studentAnalyticsEnabled
   const { isLoggedIn, logout } = useAuth()
   const navigate = useNavigate()
   const { setView } = useHeyTalia()
@@ -103,16 +106,20 @@ export function AppHeader() {
             Sign in
           </Button>
         )}
-        <div className="h-4 w-px bg-border" />
-        <Button
-          variant="outline"
-          size="sm"
-          className="gap-1.5"
-          onClick={() => setView('chat')}
-        >
-          <MessageCircle className="h-3.5 w-3.5" />
-          Assistant
-        </Button>
+        {showAssistant && (
+          <>
+            <div className="h-4 w-px bg-border" />
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5"
+              onClick={() => setView('chat')}
+            >
+              <MessageCircle className="h-3.5 w-3.5" />
+              Assistant
+            </Button>
+          </>
+        )}
       </div>
     </header>
   )

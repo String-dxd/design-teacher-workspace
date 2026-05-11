@@ -1082,7 +1082,7 @@ export function StudentProfile({
               />
             </dl>
 
-            {analyticsOpen && <AttendanceAnalytics />}
+            {analyticsOpen && <AttendanceAnalytics student={student} />}
 
             {!isStudentInsightsView && (
               <div className="mt-4">

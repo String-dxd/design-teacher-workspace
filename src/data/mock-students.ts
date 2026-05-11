@@ -571,10 +571,10 @@ export const mockStudents: Array<Student> = [
     formTeacher: 'Mrs. Tan Mei Lin',
     coFormTeacher: 'Mr. Wong Kai Ming',
     promotionStatus: 'Retained',
-    daysPresent: 22,
+    daysPresent: 4,
     totalSchoolDays: 47,
     teacherObservations: 'Requires specialized support. Very cooperative.',
-    nextSteps: 'IEP review, transition planning',
+    nextSteps: 'Weekly check-in with the student',
   },
   {
     id: '10',

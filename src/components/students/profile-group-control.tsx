@@ -100,7 +100,7 @@ export function ProfileGroupControl({
           <Button
             variant="outline"
             size="sm"
-            className={cn('gap-2 rounded-full', appliedId && 'border-blue-500')}
+            className="gap-2 rounded-full"
             onClick={() => {
               if (appliedIsUnsaved && appliedGroup) {
                 openEdit(appliedGroup)
@@ -124,10 +124,7 @@ export function ProfileGroupControl({
                 <Button
                   variant="outline"
                   size="sm"
-                  className={cn(
-                    'gap-2 rounded-full',
-                    appliedId && 'border-blue-500',
-                  )}
+                  className="gap-2 rounded-full"
                   aria-expanded={menuOpen}
                 />
               }
