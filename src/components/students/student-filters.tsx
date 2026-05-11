@@ -18,6 +18,17 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import {
+  closeImportWizard,
+  openImportWizard,
+  useImportJob,
+  useImportWizardState,
+} from '@/lib/import-job-store'
 
 interface StudentFiltersProps {
   searchValue: string
@@ -51,7 +62,9 @@ export function StudentFilters({
 }: StudentFiltersProps) {
   const { flags } = useFeatureFlags()
   const [exportModalOpen, setExportModalOpen] = useState(false)
-  const [importDialogOpen, setImportDialogOpen] = useState(false)
+  const importJob = useImportJob()
+  const wizard = useImportWizardState()
+  const importInProgress = importJob.status === 'importing'
 
   return (
     <>
@@ -102,22 +115,44 @@ export function StudentFilters({
                 <Download className="mr-2 size-4" />
                 Export data
               </DropdownMenuItem>
-              {flags['import-data'] && (
-                <DropdownMenuItem onClick={() => setImportDialogOpen(true)}>
-                  <Upload className="mr-2 size-4" />
-                  Import data
-                </DropdownMenuItem>
-              )}
+              {flags['import-data'] &&
+                (importInProgress ? (
+                  <Tooltip>
+                    <TooltipTrigger
+                      render={
+                        <span className="block" tabIndex={0}>
+                          <DropdownMenuItem
+                            disabled
+                            onSelect={(e) => e.preventDefault()}
+                          >
+                            <Upload className="mr-2 size-4" />
+                            Import data
+                          </DropdownMenuItem>
+                        </span>
+                      }
+                    />
+                    <TooltipContent side="left">
+                      Import in progress
+                    </TooltipContent>
+                  </Tooltip>
+                ) : (
+                  <DropdownMenuItem onClick={() => openImportWizard(1)}>
+                    <Upload className="mr-2 size-4" />
+                    Import data
+                  </DropdownMenuItem>
+                ))}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </div>
 
-      {flags['import-data'] && importDialogOpen && (
+      {flags['import-data'] && wizard.open && (
         <div className="fixed inset-0 z-50 flex flex-col bg-background">
           <ImportWizard
-            onClose={() => setImportDialogOpen(false)}
+            onClose={() => closeImportWizard()}
             onImportComplete={onImportComplete}
+            initialStep={wizard.initialStep}
+            seedJobResult={wizard.seedJobResult}
           />
         </div>
       )}
