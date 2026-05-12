@@ -138,9 +138,8 @@ function getFormStatusBadge(status: FormStatus) {
 type PostTab = 'view-only' | 'with-responses' | 'custom-forms'
 
 function ParentsGatewayPage() {
-  const { tab: initialTab } = Route.useSearch()
+  const { tab } = Route.useSearch()
   const [searchQuery, setSearchQuery] = useState('')
-  const [tab, setTab] = useState<PostTab>(initialTab)
   const [filters, setFilters] = useState<AnnouncementFilters>(
     EMPTY_ANNOUNCEMENT_FILTERS,
   )
@@ -345,7 +344,13 @@ function ParentsGatewayPage() {
               <SegmentedTab
                 key={t.value}
                 active={tab === t.value}
-                onClick={() => setTab(t.value)}
+                onClick={() =>
+                  navigate({
+                    to: '/announcements',
+                    search: { tab: t.value },
+                    replace: true,
+                  })
+                }
               >
                 {t.label}
               </SegmentedTab>
