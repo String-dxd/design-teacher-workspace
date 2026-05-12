@@ -739,63 +739,65 @@ function AnnouncementDetailPage() {
                   </div>
                 )}
 
-              {/* Questions — shown for acknowledge / yes-no types */}
-              {announcement.questions && announcement.questions.length > 0 && (
-                <div className="space-y-2 border-t pt-3">
-                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                    Questions asked
-                  </p>
-                  {announcement.questions.map((q, i) => (
-                    <div
-                      key={q.id}
-                      className="rounded-md bg-slate-50 px-3 py-2.5"
-                    >
-                      <div className="flex items-start gap-2">
-                        <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[10px] font-semibold text-slate-600">
-                          {i + 1}
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm leading-snug text-foreground">
-                            {q.text}
-                          </p>
-                          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                            {q.type === 'mcq' && q.options ? (
-                              q.options.map((opt) => (
-                                <span
-                                  key={opt}
-                                  className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[11px] text-muted-foreground"
-                                >
-                                  {opt}
+              {/* Questions — shown for acknowledge / yes-no types only */}
+              {responseType !== 'view-only' &&
+                announcement.questions &&
+                announcement.questions.length > 0 && (
+                  <div className="space-y-2 border-t pt-3">
+                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      Questions asked
+                    </p>
+                    {announcement.questions.map((q, i) => (
+                      <div
+                        key={q.id}
+                        className="rounded-md bg-slate-50 px-3 py-2.5"
+                      >
+                        <div className="flex items-start gap-2">
+                          <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[10px] font-semibold text-slate-600">
+                            {i + 1}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm leading-snug text-foreground">
+                              {q.text}
+                            </p>
+                            <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                              {q.type === 'mcq' && q.options ? (
+                                q.options.map((opt) => (
+                                  <span
+                                    key={opt}
+                                    className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[11px] text-muted-foreground"
+                                  >
+                                    {opt}
+                                  </span>
+                                ))
+                              ) : (
+                                <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                                  <MessageSquare className="h-3 w-3" />
+                                  Open-ended
                                 </span>
-                              ))
-                            ) : (
-                              <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                                <MessageSquare className="h-3 w-3" />
-                                Open-ended
-                              </span>
+                              )}
+                            </div>
+                            {q.showAfter && q.showAfter !== 'both' && (
+                              <p className="mt-1 text-[11px] text-muted-foreground">
+                                Shown after:{' '}
+                                <span
+                                  className={cn(
+                                    'font-medium',
+                                    q.showAfter === 'yes'
+                                      ? 'text-green-700'
+                                      : 'text-rose-600',
+                                  )}
+                                >
+                                  {q.showAfter === 'yes' ? 'Yes' : 'No'}
+                                </span>
+                              </p>
                             )}
                           </div>
-                          {q.showAfter && q.showAfter !== 'both' && (
-                            <p className="mt-1 text-[11px] text-muted-foreground">
-                              Shown after:{' '}
-                              <span
-                                className={cn(
-                                  'font-medium',
-                                  q.showAfter === 'yes'
-                                    ? 'text-green-700'
-                                    : 'text-rose-600',
-                                )}
-                              >
-                                {q.showAfter === 'yes' ? 'Yes' : 'No'}
-                              </span>
-                            </p>
-                          )}
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    ))}
+                  </div>
+                )}
 
               {/* Enquiry email — above staff in charge */}
               {isEditing ? (
