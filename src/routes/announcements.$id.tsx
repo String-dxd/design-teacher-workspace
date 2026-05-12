@@ -750,22 +750,22 @@ function AnnouncementDetailPage() {
                     {announcement.questions.map((q, i) => (
                       <div
                         key={q.id}
-                        className="rounded-md bg-slate-50 px-3 py-3"
+                        className="rounded-lg border border-input bg-background px-3 py-2.5"
                       >
-                        <div className="flex items-start gap-2.5">
-                          <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[11px] font-semibold text-slate-600">
+                        <div className="flex items-start gap-2">
+                          <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-semibold text-muted-foreground">
                             {i + 1}
                           </span>
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium leading-snug text-foreground">
+                            <p className="text-sm font-medium text-foreground">
                               {q.text}
                             </p>
-                            <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                            <div className="mt-1 flex flex-wrap items-center gap-1">
                               {q.type === 'mcq' && q.options ? (
                                 q.options.map((opt) => (
                                   <span
                                     key={opt}
-                                    className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-xs text-muted-foreground"
+                                    className="rounded-full border border-input px-2 py-0.5 text-xs text-muted-foreground"
                                   >
                                     {opt}
                                   </span>
@@ -778,11 +778,11 @@ function AnnouncementDetailPage() {
                               )}
                             </div>
                             {q.showAfter && q.showAfter !== 'both' && (
-                              <p className="mt-1.5 text-xs text-muted-foreground">
+                              <p className="mt-1 text-xs text-muted-foreground">
                                 Shown after:{' '}
                                 <span
                                   className={cn(
-                                    'font-semibold',
+                                    'font-medium',
                                     q.showAfter === 'yes'
                                       ? 'text-green-700'
                                       : 'text-rose-600',
