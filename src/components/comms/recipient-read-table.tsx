@@ -49,7 +49,7 @@ type ColumnKey = 'indexNo' | 'readAt' | 'readBy' | 'pgStatus'
 const COLUMN_LABELS: Record<ColumnKey, string> = {
   indexNo: 'Index No.',
   readAt: 'Read at',
-  readBy: 'Read by',
+  readBy: 'Parent / Guardian',
   pgStatus: 'PG Status',
 }
 
@@ -234,13 +234,6 @@ export function RecipientReadTable({
       : responseType === 'yes-no'
         ? 'Responded At'
         : 'Read At'
-
-  const readByColLabel =
-    responseType === 'view-only'
-      ? 'Read by'
-      : responseType === 'acknowledge'
-        ? 'Acknowledged by'
-        : 'Responded by'
 
   const uniqueClasses = useMemo(
     () => [...new Set(recipients.map((r) => r.classLabel))].sort(),
@@ -503,9 +496,7 @@ export function RecipientReadTable({
                     <span className="text-sm">
                       {col === 'readAt'
                         ? timestampColLabel
-                        : col === 'readBy'
-                          ? readByColLabel
-                          : COLUMN_LABELS[col]}
+                        : COLUMN_LABELS[col]}
                     </span>
                   </label>
                 ))}
@@ -613,7 +604,7 @@ export function RecipientReadTable({
                   </div>
                 </TableHead>
               ))}
-              {show('readBy') && <TableHead>{readByColLabel}</TableHead>}
+              {show('readBy') && <TableHead>Parent / Guardian</TableHead>}
               {show('pgStatus') && <TableHead>PG Status</TableHead>}
             </TableRow>
           </TableHeader>
