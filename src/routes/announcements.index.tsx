@@ -390,7 +390,9 @@ function ParentsGatewayPage() {
                     <TableHead className="w-[100px]">Status</TableHead>
                     <TableHead className="w-[90px]">Created by</TableHead>
                     <TableHead className="w-[150px]">Read / Response</TableHead>
-                    <TableHead className="w-[48px] pr-2" />
+                    <TableHead className="w-[80px] pr-4 text-right">
+                      Actions
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -453,7 +455,7 @@ function ParentsGatewayPage() {
                           )}
                         </TableCell>
                         <TableCell
-                          className="w-[48px] pr-2 text-right"
+                          className="w-[80px] pr-4 text-right"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <DropdownMenu>
@@ -515,7 +517,9 @@ function ParentsGatewayPage() {
                     <TableHead className="w-[150px]">
                       {tab === 'with-responses' ? 'Response' : 'Read'}
                     </TableHead>
-                    <TableHead className="w-[48px] pr-2" />
+                    <TableHead className="w-[80px] pr-4 text-right">
+                      Actions
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -596,7 +600,8 @@ function ParentsGatewayPage() {
                                 <span className="truncate font-medium">
                                   {announcement.title}
                                 </span>
-                                {(announcement.attachments?.length ?? 0) > 0 && (
+                                {(announcement.attachments?.length ?? 0) >
+                                  0 && (
                                   <Paperclip className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                                 )}
                                 {announcement.responseType ===
@@ -672,7 +677,7 @@ function ParentsGatewayPage() {
                           )}
                         </TableCell>
                         <TableCell
-                          className="w-[48px] pr-2 text-right"
+                          className="w-[80px] pr-4 text-right"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <DropdownMenu>
