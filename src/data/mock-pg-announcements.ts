@@ -348,6 +348,95 @@ export const mockPGAnnouncements: Array<PGAnnouncement> = [
     ],
   },
 
+  // 2b. Yes/no with questions that apply to both responses
+  {
+    id: 'pg-13',
+    title: 'Overseas Trip to Japan – RSVP',
+    description:
+      '<p>Dear Parent/Guardian,</p><p>We are organising an <strong>Overseas Learning Trip to Japan</strong> from <strong>1–7 December 2026</strong>. Please indicate whether your child will be participating.</p>',
+    shortcuts: [],
+    websiteLinks: [],
+    status: 'posted',
+    ownership: 'mine',
+    role: 'editor',
+    staffInCharge: [{ id: 'tan-ml', name: 'Tan Mei Lin', role: 'editor' }],
+    enquiryEmail: 'tanml@bandungsec.edu.sg',
+    responseType: 'yes-no',
+    dueDate: daysFromNow(14),
+    questions: [
+      {
+        id: 'q-jp-1',
+        text: "What is your child's passport expiry date?",
+        type: 'free-text',
+        showAfter: 'both',
+      },
+      {
+        id: 'q-jp-2',
+        text: 'Does your child have any medical conditions we should be aware of?',
+        type: 'free-text',
+        showAfter: 'both',
+      },
+      {
+        id: 'q-jp-3',
+        text: 'Preferred room type if attending',
+        type: 'mcq',
+        options: ['Twin sharing', 'Triple sharing'],
+        showAfter: 'yes',
+      },
+    ],
+    createdAt: daysAgo(3),
+    postedAt: daysAgo(2),
+    recipients: [
+      {
+        studentId: '1',
+        studentName: 'Chen Teo Jun Kai',
+        indexNo: classIndexMap['1'],
+        classLabel: '3A',
+        parentName: 'Chen Wei Liang',
+        ...parentContactMap['1'],
+        pgStatus: pgStatusMap['1'],
+        readStatus: 'read',
+        readAt: daysAgo(1),
+        formResponse: 'yes',
+        respondedAt: daysAgo(1),
+        questionAnswers: {
+          'q-jp-1': '15 Mar 2028',
+          'q-jp-2': 'None',
+          'q-jp-3': 'Twin sharing',
+        },
+      },
+      {
+        studentId: '2',
+        studentName: 'Vincent Koh Xin Yi',
+        indexNo: classIndexMap['2'],
+        classLabel: '3A',
+        parentName: 'Koh Beng Huat',
+        ...parentContactMap['2'],
+        pgStatus: pgStatusMap['2'],
+        readStatus: 'read',
+        readAt: hoursAgo(10),
+        formResponse: 'no',
+        respondedAt: hoursAgo(10),
+        questionAnswers: {
+          'q-jp-1': '22 Aug 2027',
+          'q-jp-2': 'Mild asthma, has inhaler',
+          // q-jp-3 not applicable (showAfter: 'yes')
+        },
+      },
+      {
+        studentId: '4',
+        studentName: 'Priya Nair',
+        indexNo: classIndexMap['4'],
+        classLabel: '3A',
+        parentName: 'Nair Ramesh',
+        ...parentContactMap['4'],
+        pgStatus: pgStatusMap['4'],
+        readStatus: 'unread',
+        // no response yet
+      },
+    ],
+  },
+
   // 3. Post with acknowledge response
   {
     id: 'pg-10',
