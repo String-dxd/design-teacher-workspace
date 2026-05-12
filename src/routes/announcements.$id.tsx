@@ -750,14 +750,14 @@ function AnnouncementDetailPage() {
                     {announcement.questions.map((q, i) => (
                       <div
                         key={q.id}
-                        className="rounded-md bg-slate-50 px-3 py-2.5"
+                        className="rounded-md bg-slate-50 px-3 py-3"
                       >
-                        <div className="flex items-start gap-2">
-                          <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[10px] font-semibold text-slate-600">
+                        <div className="flex items-start gap-2.5">
+                          <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[11px] font-semibold text-slate-600">
                             {i + 1}
                           </span>
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm leading-snug text-foreground">
+                            <p className="text-sm font-medium leading-snug text-foreground">
                               {q.text}
                             </p>
                             <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
@@ -765,24 +765,24 @@ function AnnouncementDetailPage() {
                                 q.options.map((opt) => (
                                   <span
                                     key={opt}
-                                    className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[11px] text-muted-foreground"
+                                    className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-xs text-muted-foreground"
                                   >
                                     {opt}
                                   </span>
                                 ))
                               ) : (
-                                <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                                <span className="flex items-center gap-1 text-xs text-muted-foreground">
                                   <MessageSquare className="h-3 w-3" />
                                   Open-ended
                                 </span>
                               )}
                             </div>
                             {q.showAfter && q.showAfter !== 'both' && (
-                              <p className="mt-1 text-[11px] text-muted-foreground">
+                              <p className="mt-1.5 text-xs text-muted-foreground">
                                 Shown after:{' '}
                                 <span
                                   className={cn(
-                                    'font-medium',
+                                    'font-semibold',
                                     q.showAfter === 'yes'
                                       ? 'text-green-700'
                                       : 'text-rose-600',

@@ -109,6 +109,21 @@ export const mockPGAnnouncements: Array<PGAnnouncement> = [
     enquiryEmail: 'tanml@bandungsec.edu.sg',
     responseType: 'yes-no',
     dueDate: daysFromNow(20),
+    questions: [
+      {
+        id: 'q-camp-1',
+        text: 'Does your child have any medical conditions we should know about?',
+        type: 'free-text',
+        showAfter: 'yes',
+      },
+      {
+        id: 'q-camp-2',
+        text: 'Dietary requirements',
+        type: 'mcq',
+        options: ['No restriction', 'Vegetarian', 'Halal', 'Other'],
+        showAfter: 'yes',
+      },
+    ],
     createdAt: daysAgo(1),
     recipients: [],
   },
