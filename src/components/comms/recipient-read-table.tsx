@@ -94,45 +94,72 @@ function exportCSV(
   rows: Array<PGRecipient>,
   title: string,
   responseType: ResponseType,
+  questions: Array<PGQuestion> = [],
 ) {
+  const statusHeader =
+    responseType === 'acknowledge'
+      ? 'Acknowledged'
+      : responseType === 'yes-no'
+        ? 'Response'
+        : 'Read Status'
+
+  const timestampHeader =
+    responseType === 'acknowledge'
+      ? 'Acknowledged At'
+      : responseType === 'yes-no'
+        ? 'Responded At'
+        : 'Read At'
+
   const headers = [
     'Student',
     'Index No.',
     'Class',
     'PG Status',
-    responseType === 'acknowledge'
-      ? 'Acknowledged'
-      : responseType === 'yes-no'
-        ? 'Response'
-        : 'Read Status',
-    'Timestamp',
+    statusHeader,
+    timestampHeader,
+    // one column per question
+    ...questions.map((q) => q.text),
     'Parent / Guardian',
     'Relationship',
     'Contact',
   ]
-  const data = rows.map((r) => [
-    r.studentName,
-    r.indexNo ?? '',
-    r.classLabel,
-    r.pgStatus === 'onboarded' ? 'Onboarded' : 'Not Onboarded',
-    responseType === 'acknowledge'
-      ? r.respondedAt
-        ? 'Acknowledged'
-        : 'Pending'
-      : responseType === 'yes-no'
-        ? r.formResponse
-          ? r.formResponse.charAt(0).toUpperCase() + r.formResponse.slice(1)
-          : 'No Response'
-        : r.readStatus === 'read'
-          ? 'Read'
-          : 'Unread',
-    getTimestamp(r, responseType)
-      ? formatTimestamp(getTimestamp(r, responseType)!)
-      : '',
-    r.parentName,
-    r.parentRelationship ?? '',
-    r.parentContact ?? '',
-  ])
+
+  const data = rows.map((r) => {
+    const statusCell =
+      responseType === 'acknowledge'
+        ? r.respondedAt
+          ? 'Acknowledged'
+          : 'Pending'
+        : responseType === 'yes-no'
+          ? r.formResponse
+            ? r.formResponse.charAt(0).toUpperCase() + r.formResponse.slice(1)
+            : 'No Response'
+          : r.readStatus === 'read'
+            ? 'Read'
+            : 'Unread'
+
+    const ts = getTimestamp(r, responseType)
+
+    const questionCells = questions.map((q) => {
+      const applies =
+        !q.showAfter || q.showAfter === 'both' || q.showAfter === r.formResponse
+      return applies ? (r.questionAnswers?.[q.id] ?? '') : ''
+    })
+
+    return [
+      r.studentName,
+      r.indexNo ?? '',
+      r.classLabel,
+      r.pgStatus === 'onboarded' ? 'Onboarded' : 'Not Onboarded',
+      statusCell,
+      ts ? formatTimestamp(ts) : '',
+      ...questionCells,
+      r.parentName,
+      r.parentRelationship ?? '',
+      r.parentContact ?? '',
+    ]
+  })
+
   const csv = [headers, ...data]
     .map((row) =>
       row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(','),
@@ -159,8 +186,8 @@ export function RecipientReadTable({
   responseType = 'view-only',
   questions = [],
 }: RecipientReadTableProps) {
-  // Only show questions that are relevant to yes-no type
-  const visibleQuestions = responseType === 'yes-no' ? questions : []
+  // Show questions for any post type that has them
+  const visibleQuestions = questions ?? []
   const [search, setSearch] = useState('')
   const [classFilter, setClassFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
@@ -207,6 +234,13 @@ export function RecipientReadTable({
       : responseType === 'yes-no'
         ? 'Responded At'
         : 'Read At'
+
+  const readByColLabel =
+    responseType === 'view-only'
+      ? 'Read by'
+      : responseType === 'acknowledge'
+        ? 'Acknowledged by'
+        : 'Responded by'
 
   const uniqueClasses = useMemo(
     () => [...new Set(recipients.map((r) => r.classLabel))].sort(),
@@ -469,7 +503,9 @@ export function RecipientReadTable({
                     <span className="text-sm">
                       {col === 'readAt'
                         ? timestampColLabel
-                        : COLUMN_LABELS[col]}
+                        : col === 'readBy'
+                          ? readByColLabel
+                          : COLUMN_LABELS[col]}
                     </span>
                   </label>
                 ))}
@@ -498,7 +534,14 @@ export function RecipientReadTable({
           variant="outline"
           size="sm"
           className="gap-1.5"
-          onClick={() => exportCSV(filtered, announcementTitle, responseType)}
+          onClick={() =>
+            exportCSV(
+              filtered,
+              announcementTitle,
+              responseType,
+              visibleQuestions,
+            )
+          }
         >
           <Download className="h-3.5 w-3.5" />
           Export
@@ -570,7 +613,7 @@ export function RecipientReadTable({
                   </div>
                 </TableHead>
               ))}
-              {show('readBy') && <TableHead>Parent / Guardian</TableHead>}
+              {show('readBy') && <TableHead>{readByColLabel}</TableHead>}
               {show('pgStatus') && <TableHead>PG Status</TableHead>}
             </TableRow>
           </TableHeader>
@@ -679,24 +722,39 @@ export function RecipientReadTable({
                     })}
                     {show('readBy') && (
                       <TableCell className="text-sm">
-                        <div className="flex flex-col gap-0.5">
-                          <span
-                            className={
-                              status !== 'pending' && status !== 'unread'
-                                ? 'font-medium text-foreground'
-                                : 'text-muted-foreground'
-                            }
-                          >
-                            {r.parentRelationship
-                              ? `${r.parentRelationship} · ${r.parentName}`
-                              : r.parentName}
-                          </span>
-                          {r.parentContact && (
-                            <span className="text-xs text-muted-foreground">
-                              {r.parentContact}
-                            </span>
-                          )}
-                        </div>
+                        {(() => {
+                          const hasActed =
+                            status !== 'pending' && status !== 'unread'
+                          return (
+                            <div className="flex flex-col gap-0.5">
+                              <span
+                                className={cn(
+                                  'flex items-center gap-1',
+                                  hasActed
+                                    ? 'font-medium text-foreground'
+                                    : 'text-muted-foreground',
+                                )}
+                              >
+                                {hasActed && (
+                                  <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-green-600" />
+                                )}
+                                {r.parentRelationship
+                                  ? `${r.parentRelationship} · ${r.parentName}`
+                                  : r.parentName}
+                              </span>
+                              {r.parentContact && (
+                                <span
+                                  className={cn(
+                                    'text-xs text-muted-foreground',
+                                    hasActed && 'pl-5',
+                                  )}
+                                >
+                                  {r.parentContact}
+                                </span>
+                              )}
+                            </div>
+                          )
+                        })()}
                       </TableCell>
                     )}
                     {show('pgStatus') && (
