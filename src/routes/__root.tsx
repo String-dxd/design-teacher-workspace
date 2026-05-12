@@ -22,6 +22,8 @@ import { AuthProvider } from '@/lib/auth'
 import { BreadcrumbProvider } from '@/hooks/use-breadcrumbs'
 import { HeyTaliaPanel } from '@/components/heytalia/heytalia-panel'
 import { HeyTaliaProvider } from '@/components/heytalia/heytalia-context'
+import { ImportJobToastBridge } from '@/components/students/import-job-toast-bridge'
+import { ImportDesignToolsFab } from '@/components/students/import-design-tools-fab'
 
 export const Route = createRootRoute({
   head: () => ({
@@ -151,7 +153,11 @@ function RootComponent() {
                     </div>
                   </SidebarInset>
                   <HeyTaliaPanel />
-                  <Toaster position="bottom-center" />
+                  <Toaster position="bottom-right" />
+                  <ImportJobToastBridge />
+                  {process.env.NODE_ENV === 'development' && (
+                    <ImportDesignToolsFab />
+                  )}
                   <WelcomeModal />
                 </SidebarProvider>
               </HeyTaliaProvider>

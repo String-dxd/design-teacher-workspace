@@ -10,7 +10,6 @@ import {
   List,
   MessageSquareText,
   Plus,
-  Settings2,
   ShieldCheck,
   Upload,
   X,
@@ -19,14 +18,18 @@ import {
 import { toast } from 'sonner'
 
 import type { ColumnConfig } from './column-visibility-popover'
+import {
+  clearImportJob,
+  setDesignTools,
+  startImportJob,
+  useDesignToolsState,
+} from '@/lib/import-job-store'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Popover,
   PopoverContent,
-  PopoverHeader,
-  PopoverTitle,
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { Separator } from '@/components/ui/separator'
@@ -35,14 +38,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-
 import {
   Table,
   TableBody,
@@ -1162,29 +1157,58 @@ function ConfirmationPage({
 
 // ─── Wizard root ─────────────────────────────────────────────────────────────
 
+function buildImportedColumns(): Array<ColumnConfig> {
+  const now = new Date()
+  const dateStr = now.toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  })
+  return INCOMING_FIELDS.map((f) => ({
+    id: f.id,
+    label: f.name,
+    visible: true,
+    sortable: true,
+    imported: true,
+    source: 'Imported by user',
+    lastUpdated: `${dateStr} by You`,
+  }))
+}
+
 export function ImportWizard({
   onClose,
   onImportComplete,
+  initialStep,
+  seedJobResult,
 }: {
   onClose: () => void
   onImportComplete?: (columns: Array<ColumnConfig>) => void
+  initialStep?: 1 | 4
+  seedJobResult?: {
+    fieldsByCategory: Record<string, Array<string>>
+    columns: Array<ColumnConfig>
+  }
 }) {
-  const [step, setStep] = useState<WizardStep>(1)
-  const [uploadError, setUploadError] = useState(false)
-  const [hasIssues, setHasIssues] = useState(false)
-  const [confirmationShowAll, setConfirmationShowAll] = useState(false)
-  const [fieldsByCategory, setFieldsByCategory] = useState<
-    Record<string, Array<string>>
-  >({})
+  // Step 4 can only be the initial step when a seed result is supplied (i.e.
+  // when reopening from the success toast). Otherwise fall back to step 1.
+  const resolvedInitialStep: WizardStep =
+    initialStep === 4 && seedJobResult ? 4 : 1
+  const [step, setStep] = useState<WizardStep>(resolvedInitialStep)
+  const designTools = useDesignToolsState()
+  const uploadError = designTools.uploadError
+  const hasIssues = designTools.hasIssues
+  const confirmationShowAll = designTools.confirmationShowAll
+  const [fileName, setFileName] = useState('')
 
   function handleFileAccepted(file: File) {
-    setUploadError(false)
+    setDesignTools({ uploadError: false })
+    setFileName(file.name)
     const toastId = toast.loading('Processing file…')
     setTimeout(() => {
       toast.dismiss(toastId)
       const willError = file.name.includes('bad')
       if (willError) {
-        setUploadError(true)
+        setDesignTools({ uploadError: true })
       } else {
         setStep(2)
       }
@@ -1203,13 +1227,19 @@ export function ImportWizard({
     return result
   }
 
+  function kickOffImport(mappings: Record<string, string>) {
+    const fieldsByCategory = buildFieldsByCategory(mappings)
+    const columns = buildImportedColumns()
+    startImportJob({
+      filename: fileName || 'student-data',
+      fieldsByCategory,
+      columns,
+    })
+    onClose()
+  }
+
   function handleComplete(mappings: Record<string, string>) {
-    const toastId = toast.loading('Merging data…')
-    setTimeout(() => {
-      toast.dismiss(toastId)
-      setFieldsByCategory(buildFieldsByCategory(mappings))
-      setStep(4)
-    }, 2000)
+    kickOffImport(mappings)
   }
 
   function handleSkipAll(mappings: Record<string, string>) {
@@ -1217,15 +1247,13 @@ export function ImportWizard({
     const allOthers = Object.fromEntries(
       INCOMING_FIELDS.map((f) => [f.id, 'Others']),
     )
-    const toastId = toast.loading('Merging data…')
-    setTimeout(() => {
-      toast.dismiss(toastId)
-      setFieldsByCategory(buildFieldsByCategory({ ...mappings, ...allOthers }))
-      setStep(4)
-    }, 2000)
+    kickOffImport({ ...mappings, ...allOthers })
   }
 
   const isConfirmation = step === 4
+  const confirmationFields =
+    seedJobResult?.fieldsByCategory ?? ({} as Record<string, Array<string>>)
+  const confirmationColumns = seedJobResult?.columns ?? buildImportedColumns()
 
   return (
     <>
@@ -1275,104 +1303,16 @@ export function ImportWizard({
           fieldsByCategory={
             confirmationShowAll
               ? MOCK_MANY_FIELDS_BY_CATEGORY
-              : fieldsByCategory
+              : confirmationFields
           }
           onExplore={() => {
-            if (onImportComplete) {
-              const now = new Date()
-              const dateStr = now.toLocaleDateString('en-GB', {
-                day: 'numeric',
-                month: 'short',
-                year: 'numeric',
-              })
-              onImportComplete(
-                INCOMING_FIELDS.map((f) => ({
-                  id: f.id,
-                  label: f.name,
-                  visible: true,
-                  sortable: true,
-                  imported: true,
-                  source: 'Imported by user',
-                  lastUpdated: `${dateStr} by You`,
-                })),
-              )
-            }
+            onImportComplete?.(confirmationColumns)
+            clearImportJob()
             onClose()
           }}
         />
       )}
 
-      {/* Floating design tools — dev only */}
-      <Popover>
-        <PopoverTrigger
-          render={
-            <button className="fixed bottom-4 right-4 flex h-10 w-10 items-center justify-center rounded-full border bg-white shadow-lg transition-shadow hover:shadow-xl">
-              <Settings2 className="h-4 w-4 text-slate-500" />
-            </button>
-          }
-        />
-        <PopoverContent side="top" sideOffset={8} align="end" className="w-64">
-          <PopoverHeader>
-            <PopoverTitle>Design Tools</PopoverTitle>
-          </PopoverHeader>
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-2">
-              <label className="text-xs font-medium text-slate-500">
-                Step 1 — Upload state
-              </label>
-              <Select
-                value={uploadError ? 'error' : 'idle'}
-                onValueChange={(val) => setUploadError(val === 'error')}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="idle">Idle</SelectItem>
-                  <SelectItem value="error">Upload error</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex flex-col gap-2">
-              <label className="text-xs font-medium text-slate-500">
-                Step 2 — Review state
-              </label>
-              <Select
-                value={hasIssues ? 'issues' : 'clean'}
-                onValueChange={(val) => setHasIssues(val === 'issues')}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="clean">No issues</SelectItem>
-                  <SelectItem value="issues">Few issues found</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-medium text-slate-500">
-                Step 4 — Overflow state
-              </label>
-              <button
-                type="button"
-                onClick={() => setConfirmationShowAll((v) => !v)}
-                className={cn(
-                  'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline-none',
-                  confirmationShowAll ? 'bg-slate-900' : 'bg-slate-200',
-                )}
-              >
-                <span
-                  className={cn(
-                    'pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform',
-                    confirmationShowAll ? 'translate-x-4' : 'translate-x-0',
-                  )}
-                />
-              </button>
-            </div>
-          </div>
-        </PopoverContent>
-      </Popover>
     </>
   )
 }
