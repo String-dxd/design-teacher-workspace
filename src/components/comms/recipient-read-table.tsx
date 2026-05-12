@@ -186,8 +186,8 @@ export function RecipientReadTable({
   responseType = 'view-only',
   questions = [],
 }: RecipientReadTableProps) {
-  // Show questions for any post type that has them
-  const visibleQuestions = questions ?? []
+  // Questions only apply to response-required posts (not view-only)
+  const visibleQuestions = responseType !== 'view-only' ? (questions ?? []) : []
   const [search, setSearch] = useState('')
   const [classFilter, setClassFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')

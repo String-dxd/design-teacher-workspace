@@ -4,6 +4,7 @@ import {
   createFileRoute,
   notFound,
   useNavigate,
+  useRouter,
 } from '@tanstack/react-router'
 import {
   ArrowLeft,
@@ -178,6 +179,7 @@ function AnnouncementDetailPage() {
   const contentLocked = announcement.status === 'posted'
 
   const navigate = useNavigate()
+  const router = useRouter()
 
   useSetBreadcrumbs([
     { label: 'Posts', href: '/announcements' },
@@ -299,18 +301,7 @@ function AnnouncementDetailPage() {
               variant="ghost"
               size="icon"
               className="mt-0.5 shrink-0"
-              render={
-                <Link
-                  to="/announcements"
-                  search={{
-                    tab:
-                      responseType === 'acknowledge' ||
-                      responseType === 'yes-no'
-                        ? 'with-responses'
-                        : 'view-only',
-                  }}
-                />
-              }
+              onClick={() => router.history.back()}
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
@@ -450,7 +441,8 @@ function AnnouncementDetailPage() {
           <Clock className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
           <p>
             <span className="font-medium">Files expire after 30 days.</span>{' '}
-            Uploaded files and images are automatically removed 30 days after upload. Re-upload before sending if needed.
+            Uploaded files and images are automatically removed 30 days after
+            upload. Re-upload before sending if needed.
           </p>
         </div>
       )}
