@@ -1,15 +1,14 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useRef, useState } from 'react'
 import {
   AlertCircle,
   ArrowLeft,
   ArrowRight,
-  Award,
   Check,
   ChevronDown,
+  ChevronsDown,
   ExternalLink,
-  List,
-  MessageSquareText,
   Plus,
+  Settings2,
   ShieldCheck,
   Upload,
   X,
@@ -18,18 +17,14 @@ import {
 import { toast } from 'sonner'
 
 import type { ColumnConfig } from './column-visibility-popover'
-import {
-  clearImportJob,
-  setDesignTools,
-  startImportJob,
-  useDesignToolsState,
-} from '@/lib/import-job-store'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Popover,
   PopoverContent,
+  PopoverHeader,
+  PopoverTitle,
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { Separator } from '@/components/ui/separator'
@@ -38,6 +33,14 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+
 import {
   Table,
   TableBody,
@@ -55,34 +58,6 @@ const INCOMING_FIELDS = [
   { id: 'next_steps', name: 'Next steps' },
   { id: 'teacher_remarks', name: "Teacher's remarks" },
 ]
-
-const MOCK_MANY_FIELDS_BY_CATEGORY: Record<string, Array<string>> = {
-  Others: [
-    'Math Score',
-    'Science Score',
-    'English Score',
-    'Mother Tongue Score',
-    'Humanities Score',
-    'Overall GPA',
-    'Next steps',
-    'Parent contact notes',
-    'Counsellor notes',
-  ],
-  Attendance: [
-    'VIA missed',
-    'Days absent',
-    'Late arrivals',
-    'Medical leave',
-    'Excused absences',
-  ],
-  Behaviour: [
-    "Teacher's remarks",
-    'Conduct grade',
-    'Detention records',
-    'Commendations',
-  ],
-  CCA: ['CCA name', 'CCA attendance', 'CCA achievement level'],
-}
 
 const MOCK_REVIEW_ROWS = [
   {
@@ -253,7 +228,7 @@ const STEP1_UPLOAD_ERRORS = [
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-type WizardStep = 1 | 2 | 3 | 4
+type WizardStep = 1 | 2 | 3
 
 interface FieldState {
   // 'unset' | 'selected' | 'skipped' | 'creating'
@@ -348,27 +323,20 @@ function DropZone({
       onDrop={handleDrop}
       onClick={() => inputRef.current?.click()}
       className={cn(
-        'flex h-full min-h-[320px] w-full cursor-pointer flex-col items-center justify-center gap-5 rounded-2xl border-2 border-dashed transition-colors',
+        'flex w-full cursor-pointer flex-col items-center justify-center gap-4 rounded-xl border-2 border-dashed p-12 transition-colors',
         className,
         isDragging
-          ? 'border-blue-400 bg-blue-100/60'
-          : 'border-blue-300 bg-blue-50/60 hover:border-blue-400 hover:bg-blue-50',
+          ? 'border-twblue-9 bg-twblue-2'
+          : 'border-twblue-7 bg-twblue-2 hover:border-twblue-9',
       )}
     >
-      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-sm">
-        <Upload className="h-5 w-5 text-primary" />
+      <div className="flex items-center justify-center rounded-full bg-white p-3 shadow-xs">
+        <Upload className="h-6 w-6 text-twblue-9" />
       </div>
-      <div className="text-center">
-        <p className="text-sm font-semibold text-slate-800">
-          Drop your files here or{' '}
-          <span className="text-primary underline underline-offset-2">
-            browse
-          </span>
-        </p>
-        <p className="mt-1 text-xs text-slate-500">
-          Supported file types: .csv, .xls, .xlsx
-        </p>
-      </div>
+      <p className="text-base text-slate-12">
+        Drop your files here or{' '}
+        <span className="font-semibold text-twblue-9">browse</span>
+      </p>
       <input
         ref={inputRef}
         type="file"
@@ -394,147 +362,81 @@ function Step1({
 }) {
   return (
     <div className="flex flex-1 flex-col overflow-y-auto">
-      <div className="px-8 pb-6 pt-8">
-        <h1 className="text-2xl font-semibold text-slate-900">
-          Upload student data
-        </h1>
-        <p className="mt-1 text-sm text-slate-500">
-          Add your own data for a more complete student view
-        </p>
-      </div>
-
-      <div className="flex flex-1 flex-col gap-6 px-8 pb-8 sm:flex-row">
-        {/* Left panel — second on mobile, first on desktop */}
-        <div className="order-2 flex shrink-0 flex-col gap-4 sm:order-1 sm:w-[340px]">
-          {hasError && (
-            <Alert className="rounded-3xl border-[var(--slate-6)] bg-white [&>svg]:text-[var(--crimson-11)]">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle className="font-semibold text-[var(--crimson-11)]">
-                File upload failed
-              </AlertTitle>
-              <AlertDescription className="text-[var(--slate-12)]">
-                <ul className="mt-1 list-disc space-y-0.5 pl-4">
-                  {STEP1_UPLOAD_ERRORS.map((err, i) => (
-                    <li key={i}>{err}</li>
-                  ))}
-                </ul>
-              </AlertDescription>
-            </Alert>
-          )}
-          {/* Prepare your file */}
-          <div className="rounded-3xl border border-slate-200 bg-white px-6 py-4">
-            <p className="mb-3 text-base font-semibold text-slate-600">
-              Prepare your file
+      <div className="mx-auto flex w-full max-w-[632px] flex-col gap-6 px-6 pt-10 pb-16">
+        {/* Prepare your file section */}
+        <section className="flex flex-col gap-6">
+          <h1 className="text-[23px] font-semibold leading-7 text-slate-12">
+            Prepare your file
+          </h1>
+          <ul className="flex list-disc flex-col gap-3 pl-6 text-base leading-6 text-slate-12 marker:text-slate-11">
+            <li>
+              Use the{' '}
+              <a className="cursor-pointer border-b border-twblue-9 text-twblue-9">
+                template
+              </a>
+              , or check the{' '}
+              <a className="cursor-pointer border-b border-twblue-9 text-twblue-9">
+                file guide
+              </a>
+            </li>
+            <li>Name and Class, or NRIC column included</li>
+            <li>Spreadsheet file (.csv, .xls, or .xlsx)</li>
+            <li>Not password-protected</li>
+          </ul>
+          <div className="flex items-center gap-2 pl-1">
+            <ShieldCheck className="h-4 w-4 shrink-0 text-slate-11" />
+            <p className="text-sm leading-5 text-slate-11">
+              We'll check your file before importing
             </p>
-            <ul className="space-y-3">
-              <li className="flex items-center gap-3 text-sm text-slate-600">
-                <Check className="h-4 w-4 shrink-0 text-slate-400" />
-                <span>
-                  Use the{' '}
-                  <a className="cursor-pointer text-twblue-9 underline underline-offset-2">
-                    template
-                  </a>
-                  , or check your{' '}
-                  <a className="cursor-pointer text-twblue-9 underline underline-offset-2">
-                    file is ready
-                  </a>
-                </span>
-              </li>
-              <li className="flex items-center gap-3 text-sm text-slate-600">
-                <Check className="h-4 w-4 shrink-0 text-slate-400" />
-                File is a spreadsheet (.csv, .xls, .xlsx)
-              </li>
-              <li className="flex items-center gap-3 text-sm text-slate-600">
-                <Check className="h-4 w-4 shrink-0 text-slate-400" />
-                File is not password-protected
-              </li>
-            </ul>
-            <div className="mt-4 flex items-center gap-2 border-t border-[var(--color-slate-4)] pt-3">
-              <ShieldCheck className="h-4 w-4 shrink-0 text-slate-400" />
-              <p className="text-sm text-slate-400">
-                We'll check your file before importing
+          </div>
+        </section>
+
+        {/* Divider with chevrons-down */}
+        <div className="flex h-6 items-center gap-3">
+          <div className="h-px flex-1 bg-slate-6" />
+          <ChevronsDown className="h-4 w-4 shrink-0 text-slate-11" />
+          <div className="h-px flex-1 bg-slate-6" />
+        </div>
+
+        {/* Upload your file section */}
+        <section className="flex flex-col gap-6">
+          <h2 className="text-[23px] font-semibold leading-7 text-slate-12">
+            Upload your file
+          </h2>
+
+          <div className="flex flex-col gap-4">
+            {hasError && (
+              <Alert className="rounded-2xl border-slate-6 bg-white [&>svg]:text-[var(--crimson-11)]">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle className="font-semibold text-[var(--crimson-11)]">
+                  File upload failed
+                </AlertTitle>
+                <AlertDescription className="text-slate-12">
+                  <ul className="mt-1 list-disc space-y-0.5 pl-4">
+                    {STEP1_UPLOAD_ERRORS.map((err, i) => (
+                      <li key={i}>{err}</li>
+                    ))}
+                  </ul>
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <DropZone onFileAccepted={onFileAccepted} />
+
+            <div className="flex flex-col gap-1">
+              <p className="text-sm leading-5 text-slate-11">
+                Examples: teacher's remarks, students' achievements, and
+                enrichment activities
               </p>
-            </div>
-          </div>
-
-          {/* Required columns */}
-          <div className="rounded-3xl border border-slate-200 bg-white px-6 py-4">
-            <p className="mb-3 text-base font-semibold text-slate-600">
-              Required columns
-            </p>
-            <div className="space-y-3">
-              <div className="flex items-start gap-3">
-                <Check className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
-                <div>
-                  <p className="text-sm font-semibold text-slate-600">
-                    Name and Class
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    As shown in School Cockpit
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <Check className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
-                <div>
-                  <p className="text-sm font-semibold text-slate-600">
-                    Or NRIC
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    As shown in School Cockpit
-                  </p>
-                </div>
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4 shrink-0 text-slate-11" />
+                <p className="text-sm leading-5 text-slate-11">
+                  Only you can view the data you upload. It will not be shared.
+                </p>
               </div>
             </div>
           </div>
-
-          {/* Frequently uploaded */}
-          <div className="px-2">
-            <p className="mb-3 text-sm text-slate-500">Frequently uploaded</p>
-            <ul className="space-y-2">
-              {[
-                {
-                  icon: MessageSquareText,
-                  label: "Teacher's remarks",
-                  desc: 'Observations and interactions',
-                },
-                {
-                  icon: List,
-                  label: 'Follow-up notes',
-                  desc: 'Next steps and actions',
-                },
-                {
-                  icon: Award,
-                  label: 'Awards and enrichment',
-                  desc: 'Programmes, enrichment activities, awards',
-                },
-              ].map(({ icon: Icon, label, desc }) => (
-                <li
-                  key={label}
-                  className="flex items-center gap-3 rounded-2xl bg-slate-100 p-3"
-                >
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-200">
-                    <Icon className="h-4 w-4 text-slate-500" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-slate-600">
-                      {label}
-                    </p>
-                    <p className="text-xs text-slate-500">{desc}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-
-        {/* Right panel — first on mobile (above left), second on desktop */}
-        <div className="order-1 flex flex-1 flex-col sm:order-2 py-3 sm:py-0">
-          <DropZone
-            onFileAccepted={onFileAccepted}
-            className="min-h-0 h-[132px] sm:h-full sm:min-h-[320px]"
-          />
-        </div>
+        </section>
       </div>
     </div>
   )
@@ -1053,166 +955,57 @@ function Step3({
   )
 }
 
-// ─── Confirmation page ───────────────────────────────────────────────────────
-
-const CONFIRMATION_ILLUSTRATION =
-  'https://www.figma.com/api/mcp/asset/81a60440-2f7c-4dce-ac01-8e5e7e8517ea'
-
-function ConfirmationPage({
-  fieldsByCategory,
-  onExplore,
-}: {
-  fieldsByCategory: Record<string, Array<string>>
-  onExplore: () => void
-}) {
-  const [expanded, setExpanded] = useState(false)
-  const [overflows, setOverflows] = useState(false)
-  const contentRef = useRef<HTMLDivElement>(null)
-  const categories = Object.keys(fieldsByCategory)
-  const totalFields = Object.values(fieldsByCategory).flat().length
-
-  useEffect(() => {
-    setExpanded(false)
-    if (contentRef.current) {
-      setOverflows(contentRef.current.scrollHeight > 238)
-    }
-  }, [fieldsByCategory])
-
-  return (
-    <div className="relative flex flex-1 overflow-hidden bg-[var(--color-slate-1,#fcfcfd)]">
-      {/* Left: content centered vertically */}
-      <div className="flex flex-1 items-start justify-end px-8">
-        <div className="flex w-[412px] flex-col gap-8 pt-[140px]">
-          {/* Heading */}
-          <div className="flex flex-col gap-3">
-            <h1 className="text-[26px] font-semibold leading-8 text-[var(--color-slate-12,#1c2024)]">
-              You're all set, import done!
-            </h1>
-            <p className="text-lg font-semibold leading-7 text-[var(--color-twblue-9,#0064ff)]">
-              1023 records updated, {totalFields} fields added
-            </p>
-          </div>
-
-          {/* Category card */}
-          <div
-            className={cn(
-              'relative overflow-hidden rounded-3xl bg-[var(--color-slate-3,#f0f0f3)] p-6',
-              overflows && !expanded && 'h-[238px]',
-            )}
-          >
-            <div ref={contentRef} className="flex flex-col gap-4">
-              {categories.map((cat) => (
-                <div key={cat} className="flex flex-col gap-1">
-                  <p className="text-sm font-semibold leading-5 text-[var(--color-slate-11,#60646c)]">
-                    {cat}
-                  </p>
-                  <div className="flex flex-col gap-0.5">
-                    {fieldsByCategory[cat].map((field, i) => (
-                      <div key={i} className="flex items-center gap-2 py-1">
-                        <Check className="h-4 w-4 shrink-0 text-[var(--color-slate-11,#60646c)]" />
-                        <p className="text-sm leading-5 text-[var(--color-slate-11,#60646c)]">
-                          {field}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Show all overlay */}
-            {overflows && !expanded && (
-              <div className="absolute bottom-0 left-0 right-0 flex h-[64px] items-center justify-end bg-[rgba(240,240,243,0.85)] px-6">
-                <button
-                  type="button"
-                  onClick={() => setExpanded(true)}
-                  className="flex items-center gap-1 text-sm font-medium text-[var(--color-slate-12,#1c2024)]"
-                >
-                  Show all
-                  <ChevronDown className="h-4 w-4" />
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* CTA */}
-          <Button onClick={onExplore} className="w-fit gap-2 rounded-full px-6">
-            View student data
-            <ArrowRight className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-
-      {/* Right: illustration */}
-      <div className="flex flex-1 items-start justify-start pt-[380px]">
-        <img
-          src={CONFIRMATION_ILLUSTRATION}
-          alt=""
-          className="pointer-events-none h-[360px] w-[360px] object-cover ml-[48px]"
-        />
-      </div>
-    </div>
-  )
-}
-
 // ─── Wizard root ─────────────────────────────────────────────────────────────
 
-function buildImportedColumns(): Array<ColumnConfig> {
-  const now = new Date()
-  const dateStr = now.toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })
-  return INCOMING_FIELDS.map((f) => ({
-    id: f.id,
-    label: f.name,
-    visible: true,
-    sortable: true,
-    imported: true,
-    source: 'Imported by user',
-    lastUpdated: `${dateStr} by You`,
-  }))
+export interface ImportResult {
+  columns: Array<ColumnConfig>
+  fileName: string
+  fieldsByCategory: Record<string, Array<string>>
 }
 
 export function ImportWizard({
   onClose,
   onImportComplete,
-  initialStep,
-  seedJobResult,
 }: {
   onClose: () => void
-  onImportComplete?: (columns: Array<ColumnConfig>) => void
-  initialStep?: 1 | 4
-  seedJobResult?: {
-    fieldsByCategory: Record<string, Array<string>>
-    columns: Array<ColumnConfig>
-  }
+  onImportComplete?: (result: ImportResult) => void
 }) {
-  // Step 4 can only be the initial step when a seed result is supplied (i.e.
-  // when reopening from the success toast). Otherwise fall back to step 1.
-  const resolvedInitialStep: WizardStep =
-    initialStep === 4 && seedJobResult ? 4 : 1
-  const [step, setStep] = useState<WizardStep>(resolvedInitialStep)
-  const designTools = useDesignToolsState()
-  const uploadError = designTools.uploadError
-  const hasIssues = designTools.hasIssues
-  const confirmationShowAll = designTools.confirmationShowAll
-  const [fileName, setFileName] = useState('')
+  const [step, setStep] = useState<WizardStep>(1)
+  const [uploadError, setUploadError] = useState(false)
+  const [hasIssues, setHasIssues] = useState(false)
+  const [fileName, setFileName] = useState<string>('')
 
   function handleFileAccepted(file: File) {
-    setDesignTools({ uploadError: false })
+    setUploadError(false)
     setFileName(file.name)
     const toastId = toast.loading('Processing file…')
     setTimeout(() => {
       toast.dismiss(toastId)
       const willError = file.name.includes('bad')
       if (willError) {
-        setDesignTools({ uploadError: true })
+        setUploadError(true)
       } else {
         setStep(2)
       }
     }, 1800)
+  }
+
+  function buildColumns(): Array<ColumnConfig> {
+    const now = new Date()
+    const dateStr = now.toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    })
+    return INCOMING_FIELDS.map((f) => ({
+      id: f.id,
+      label: f.name,
+      visible: true,
+      sortable: true,
+      imported: true,
+      source: 'Imported by user',
+      lastUpdated: `${dateStr} by You`,
+    }))
   }
 
   function buildFieldsByCategory(
@@ -1221,39 +1014,32 @@ export function ImportWizard({
     const result: Record<string, Array<string>> = {}
     for (const field of INCOMING_FIELDS) {
       const category = mappings[field.id] ?? 'Others'
-      if (!result[category]) result[category] = []
-      result[category].push(field.name)
+      const bucket = result[category] ?? (result[category] = [])
+      bucket.push(field.name)
     }
     return result
   }
 
-  function kickOffImport(mappings: Record<string, string>) {
-    const fieldsByCategory = buildFieldsByCategory(mappings)
-    const columns = buildImportedColumns()
-    startImportJob({
-      filename: fileName || 'student-data',
-      fieldsByCategory,
-      columns,
+  function handleComplete(mappings: Record<string, string>) {
+    onImportComplete?.({
+      columns: buildColumns(),
+      fileName,
+      fieldsByCategory: buildFieldsByCategory(mappings),
     })
     onClose()
   }
 
-  function handleComplete(mappings: Record<string, string>) {
-    kickOffImport(mappings)
-  }
-
   function handleSkipAll(mappings: Record<string, string>) {
-    // All fields go to "Others"
     const allOthers = Object.fromEntries(
       INCOMING_FIELDS.map((f) => [f.id, 'Others']),
     )
-    kickOffImport({ ...mappings, ...allOthers })
+    onImportComplete?.({
+      columns: buildColumns(),
+      fileName,
+      fieldsByCategory: buildFieldsByCategory({ ...mappings, ...allOthers }),
+    })
+    onClose()
   }
-
-  const isConfirmation = step === 4
-  const confirmationFields =
-    seedJobResult?.fieldsByCategory ?? ({} as Record<string, Array<string>>)
-  const confirmationColumns = seedJobResult?.columns ?? buildImportedColumns()
 
   return (
     <>
@@ -1263,12 +1049,8 @@ export function ImportWizard({
           <span className="text-base font-semibold text-slate-900">
             Import data
           </span>
-          {!isConfirmation && (
-            <>
-              <div className="h-4 w-px bg-slate-200" />
-              <WizardStepper current={step} />
-            </>
-          )}
+          <div className="h-4 w-px bg-slate-200" />
+          <WizardStepper current={step} />
         </div>
         <Button
           variant="outline"
@@ -1298,21 +1080,58 @@ export function ImportWizard({
           onSkipAll={handleSkipAll}
         />
       )}
-      {step === 4 && (
-        <ConfirmationPage
-          fieldsByCategory={
-            confirmationShowAll
-              ? MOCK_MANY_FIELDS_BY_CATEGORY
-              : confirmationFields
-          }
-          onExplore={() => {
-            onImportComplete?.(confirmationColumns)
-            clearImportJob()
-            onClose()
-          }}
-        />
-      )}
 
+      {/* Floating design tools — dev only */}
+      <Popover>
+        <PopoverTrigger
+          render={
+            <button className="fixed bottom-4 right-4 flex h-10 w-10 items-center justify-center rounded-full border bg-white shadow-lg transition-shadow hover:shadow-xl">
+              <Settings2 className="h-4 w-4 text-slate-500" />
+            </button>
+          }
+        />
+        <PopoverContent side="top" sideOffset={8} align="end" className="w-64">
+          <PopoverHeader>
+            <PopoverTitle>Design Tools</PopoverTitle>
+          </PopoverHeader>
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-medium text-slate-500">
+                Step 1 — Upload state
+              </label>
+              <Select
+                value={uploadError ? 'error' : 'idle'}
+                onValueChange={(val) => setUploadError(val === 'error')}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="idle">Idle</SelectItem>
+                  <SelectItem value="error">Upload error</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-medium text-slate-500">
+                Step 2 — Review state
+              </label>
+              <Select
+                value={hasIssues ? 'issues' : 'clean'}
+                onValueChange={(val) => setHasIssues(val === 'issues')}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="clean">No issues</SelectItem>
+                  <SelectItem value="issues">Few issues found</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </PopoverContent>
+      </Popover>
     </>
   )
 }

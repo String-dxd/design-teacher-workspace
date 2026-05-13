@@ -186,7 +186,9 @@ function StudentsPage() {
   const msfUpliftEnabled = useFeatureFlag('msf-uplift-data')
   const isStudentInsightsView =
     !studentAnalyticsEnabled && !studentAnalyticsBasicEnabled
-  const pageTitle = isStudentInsightsView ? 'Student Insights' : 'Student Profiles'
+  const pageTitle = isStudentInsightsView
+    ? 'Student Insights'
+    : 'Student Profiles'
   useSetBreadcrumbs([{ label: pageTitle, href: '/students' }])
 
   const [selectedClass, setSelectedClass] = useState('Secondary 4')
