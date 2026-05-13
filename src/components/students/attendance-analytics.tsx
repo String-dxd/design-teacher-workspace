@@ -27,6 +27,7 @@ import {
   X,
 } from 'lucide-react'
 
+import type { Student } from '@/types/student'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -47,7 +48,6 @@ import {
   TooltipTrigger,
   Tooltip as TooltipUI,
 } from '@/components/ui/tooltip'
-import type { Student } from '@/types/student'
 import { mockStudents } from '@/data/mock-students'
 import { LevelDropdown } from '@/components/students/academic-analytics'
 import { AttendanceRing } from '@/components/reports/attendance-ring'
@@ -1572,71 +1572,72 @@ function AttendanceStudentsTable({
             {paged.map((s) => {
               const realId = studentIdByName.get(s.name)
               return (
-              <tr
-                key={s.id}
-                className={cn(
-                  'transition-colors hover:bg-muted/50',
-                  realId && 'cursor-pointer',
-                )}
-                onClick={() => {
-                  if (realId) navigate({ to: '/students/$id', params: { id: realId } })
-                }}
-              >
-                <td className="w-[96px] p-4 align-middle">
-                  <TooltipUI>
-                    <TooltipTrigger>
-                      {realId ? (
-                        <Link
-                          to="/students/$id"
-                          params={{ id: realId }}
-                          onClick={(e) => e.stopPropagation()}
-                          className="flex items-center justify-center rounded p-0.5 text-blue-500 hover:bg-blue-50 hover:text-blue-600"
-                        >
-                          <FileText className="h-4 w-4" />
-                        </Link>
-                      ) : (
-                        <span className="flex items-center justify-center rounded p-0.5 text-muted-foreground">
-                          <FileText className="h-4 w-4" />
-                        </span>
-                      )}
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      {realId
-                        ? 'View student profile'
-                        : 'Profile not available'}
-                    </TooltipContent>
-                  </TooltipUI>
-                </td>
-                <td className="w-[192px] p-4 align-middle font-medium">
-                  {s.name}
-                </td>
-                <td className="min-w-[140px] p-4 align-middle">{s.class}</td>
-                <td className="min-w-[200px] p-4 align-middle tabular-nums">
-                  {s.nonVRAbsences +
-                    s.absentPendingReason +
-                    s.mc +
-                    s.absentValidPrivate +
-                    s.absentValidOfficial}
-                </td>
-                <td className="min-w-[140px] p-4 align-middle tabular-nums">
-                  {s.late}
-                </td>
-                <td className="min-w-[140px] p-4 align-middle tabular-nums">
-                  {s.nonVRAbsences}
-                </td>
-                <td className="min-w-[140px] p-4 align-middle tabular-nums">
-                  {s.absentPendingReason}
-                </td>
-                <td className="min-w-[140px] p-4 align-middle tabular-nums">
-                  {s.mc}
-                </td>
-                <td className="min-w-[140px] p-4 align-middle tabular-nums">
-                  {s.absentValidPrivate}
-                </td>
-                <td className="min-w-[140px] p-4 align-middle tabular-nums">
-                  {s.absentValidOfficial}
-                </td>
-              </tr>
+                <tr
+                  key={s.id}
+                  className={cn(
+                    'transition-colors hover:bg-muted/50',
+                    realId && 'cursor-pointer',
+                  )}
+                  onClick={() => {
+                    if (realId)
+                      navigate({ to: '/students/$id', params: { id: realId } })
+                  }}
+                >
+                  <td className="w-[96px] p-4 align-middle">
+                    <TooltipUI>
+                      <TooltipTrigger>
+                        {realId ? (
+                          <Link
+                            to="/students/$id"
+                            params={{ id: realId }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="flex items-center justify-center rounded p-0.5 text-blue-500 hover:bg-blue-50 hover:text-blue-600"
+                          >
+                            <FileText className="h-4 w-4" />
+                          </Link>
+                        ) : (
+                          <span className="flex items-center justify-center rounded p-0.5 text-muted-foreground">
+                            <FileText className="h-4 w-4" />
+                          </span>
+                        )}
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {realId
+                          ? 'View student profile'
+                          : 'Profile not available'}
+                      </TooltipContent>
+                    </TooltipUI>
+                  </td>
+                  <td className="w-[192px] p-4 align-middle font-medium">
+                    {s.name}
+                  </td>
+                  <td className="min-w-[140px] p-4 align-middle">{s.class}</td>
+                  <td className="min-w-[200px] p-4 align-middle tabular-nums">
+                    {s.nonVRAbsences +
+                      s.absentPendingReason +
+                      s.mc +
+                      s.absentValidPrivate +
+                      s.absentValidOfficial}
+                  </td>
+                  <td className="min-w-[140px] p-4 align-middle tabular-nums">
+                    {s.late}
+                  </td>
+                  <td className="min-w-[140px] p-4 align-middle tabular-nums">
+                    {s.nonVRAbsences}
+                  </td>
+                  <td className="min-w-[140px] p-4 align-middle tabular-nums">
+                    {s.absentPendingReason}
+                  </td>
+                  <td className="min-w-[140px] p-4 align-middle tabular-nums">
+                    {s.mc}
+                  </td>
+                  <td className="min-w-[140px] p-4 align-middle tabular-nums">
+                    {s.absentValidPrivate}
+                  </td>
+                  <td className="min-w-[140px] p-4 align-middle tabular-nums">
+                    {s.absentValidOfficial}
+                  </td>
+                </tr>
               )
             })}
             {paged.length === 0 && (
@@ -1930,7 +1931,10 @@ export function AttendanceAnalytics({ student }: AttendanceAnalyticsProps) {
 
   const currentAttendance = useMemo(() => {
     const total = 12
-    const present = Math.max(0, Math.min(total, Math.round((attendancePct * total) / 100)))
+    const present = Math.max(
+      0,
+      Math.min(total, Math.round((attendancePct * total) / 100)),
+    )
     return { present, total }
   }, [attendancePct])
 
@@ -1947,7 +1951,11 @@ export function AttendanceAnalytics({ student }: AttendanceAnalyticsProps) {
       { name: 'Present', value: present, color: '#12b886' },
       { name: 'Late', value: late, color: '#fd7e14' },
       { name: 'Absent pending reason', value: absentPending, color: '#fa5252' },
-      { name: 'Absent (excl pending reason)', value: absentExcl, color: '#ffa94d' },
+      {
+        name: 'Absent (excl pending reason)',
+        value: absentExcl,
+        color: '#ffa94d',
+      },
     ].map((seg) => {
       const len = total > 0 ? (seg.value / total) * RING_C : 0
       const dashoffset = acc === 0 ? 0 : RING_C - acc
@@ -2006,14 +2014,16 @@ export function AttendanceAnalytics({ student }: AttendanceAnalyticsProps) {
               <p className="text-xs text-muted-foreground">Days present</p>
             </div>
             <div className="space-y-1 border-l pl-5 text-xs text-muted-foreground">
-              {ringSegments.filter((s) => s.name !== 'Present').map((s) => (
-                <p key={s.name} className="flex items-baseline gap-2">
-                  <span className="font-semibold text-foreground">
-                    {s.value}
-                  </span>
-                  {s.name}
-                </p>
-              ))}
+              {ringSegments
+                .filter((s) => s.name !== 'Present')
+                .map((s) => (
+                  <p key={s.name} className="flex items-baseline gap-2">
+                    <span className="font-semibold text-foreground">
+                      {s.value}
+                    </span>
+                    {s.name}
+                  </p>
+                ))}
             </div>
           </div>
         </div>

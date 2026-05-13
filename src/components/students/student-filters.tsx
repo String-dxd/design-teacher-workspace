@@ -1,10 +1,14 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Download, MoreHorizontal, Search, Upload } from 'lucide-react'
+import { toast } from 'sonner'
 
 import { MultiFilterPopover } from './multi-filter-popover'
 import { ColumnVisibilityPopover } from './column-visibility-popover'
 import { ExportCsvModal } from './export-csv-modal'
 import { ImportWizard } from './import-wizard'
+import { ImportProgressToast } from './import-progress-toast'
+import { ImportSuccessPage } from './import-success-page'
+import type { ImportResult } from './import-wizard'
 import type { ReactNode } from 'react'
 import type { ColumnConfig } from './column-visibility-popover'
 import type { FilterCriterion } from '@/types/student'
@@ -52,6 +56,88 @@ export function StudentFilters({
   const { flags } = useFeatureFlags()
   const [exportModalOpen, setExportModalOpen] = useState(false)
   const [importDialogOpen, setImportDialogOpen] = useState(false)
+  const [successPage, setSuccessPage] = useState<{
+    fileName: string
+    fieldsByCategory: Record<string, Array<string>>
+  } | null>(null)
+  const progressIntervalRef = useRef<number | null>(null)
+
+  function startImportProgress(result: ImportResult) {
+    const { columns: columnsToImport, fileName, fieldsByCategory } = result
+
+    if (progressIntervalRef.current) {
+      window.clearInterval(progressIntervalRef.current)
+      progressIntervalRef.current = null
+    }
+
+    const willFail = fileName.toLowerCase().includes('fail')
+    const toastId = `import-progress-${Date.now()}`
+    let percent = 0
+
+    const renderToast = (jsx: ReactNode) =>
+      toast.custom(() => jsx, {
+        id: toastId,
+        duration: Infinity,
+        unstyled: true,
+      })
+
+    renderToast(
+      <ImportProgressToast state="importing" fileName={fileName} percent={0} />,
+    )
+
+    progressIntervalRef.current = window.setInterval(() => {
+      percent = Math.min(100, percent + Math.round(8 + Math.random() * 6))
+
+      if (percent < 100) {
+        renderToast(
+          <ImportProgressToast
+            state="importing"
+            fileName={fileName}
+            percent={percent}
+          />,
+        )
+        return
+      }
+
+      if (progressIntervalRef.current) {
+        window.clearInterval(progressIntervalRef.current)
+        progressIntervalRef.current = null
+      }
+
+      if (willFail) {
+        toast.custom(
+          () => (
+            <ImportProgressToast
+              state="failed"
+              fileName={fileName}
+              onRetry={() => {
+                toast.dismiss(toastId)
+                setImportDialogOpen(true)
+              }}
+              onDismiss={() => toast.dismiss(toastId)}
+            />
+          ),
+          { id: toastId, duration: 10000, unstyled: true },
+        )
+      } else {
+        onImportComplete?.(columnsToImport)
+        toast.custom(
+          () => (
+            <ImportProgressToast
+              state="success"
+              fileName={fileName}
+              onReview={() => {
+                toast.dismiss(toastId)
+                setSuccessPage({ fileName, fieldsByCategory })
+              }}
+              onDismiss={() => toast.dismiss(toastId)}
+            />
+          ),
+          { id: toastId, duration: 10000, unstyled: true },
+        )
+      }
+    }, 350)
+  }
 
   return (
     <>
@@ -117,9 +203,16 @@ export function StudentFilters({
         <div className="fixed inset-0 z-50 flex flex-col bg-background">
           <ImportWizard
             onClose={() => setImportDialogOpen(false)}
-            onImportComplete={onImportComplete}
+            onImportComplete={startImportProgress}
           />
         </div>
+      )}
+
+      {successPage && (
+        <ImportSuccessPage
+          fieldsByCategory={successPage.fieldsByCategory}
+          onClose={() => setSuccessPage(null)}
+        />
       )}
 
       <ExportCsvModal

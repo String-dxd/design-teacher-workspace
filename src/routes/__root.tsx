@@ -151,7 +151,7 @@ function RootComponent() {
                     </div>
                   </SidebarInset>
                   <HeyTaliaPanel />
-                  <Toaster position="bottom-center" />
+                  <Toaster position="bottom-right" />
                   <WelcomeModal />
                 </SidebarProvider>
               </HeyTaliaProvider>

@@ -1782,50 +1782,54 @@ export function MonitoringAcademicAnalytics() {
                 {pagedCandidates.map((c) => {
                   const realId = studentIdByName.get(c.name)
                   return (
-                  <tr
-                    key={c.id}
-                    className={cn(
-                      'transition-colors hover:bg-muted/50',
-                      realId && 'cursor-pointer',
-                    )}
-                    onClick={() => {
-                      if (realId) navigate({ to: '/students/$id', params: { id: realId } })
-                    }}
-                  >
-                    <td className="w-[96px] p-4 align-middle">
-                      <TooltipUI>
-                        <TooltipTrigger>
-                          {realId ? (
-                            <Link
-                              to="/students/$id"
-                              params={{ id: realId }}
-                              onClick={(e) => e.stopPropagation()}
-                              className="flex items-center justify-center rounded p-0.5 text-blue-500 hover:bg-blue-50 hover:text-blue-600"
-                            >
-                              <FileText className="h-4 w-4" />
-                            </Link>
-                          ) : (
-                            <span className="flex items-center justify-center rounded p-0.5 text-muted-foreground">
-                              <FileText className="h-4 w-4" />
-                            </span>
-                          )}
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          {realId
-                            ? 'View student profile'
-                            : 'Profile not available'}
-                        </TooltipContent>
-                      </TooltipUI>
-                    </td>
-                    <td className="w-[300px] p-4 align-middle font-medium">
-                      {c.name}
-                    </td>
-                    <td className="w-[140px] p-4 align-middle">{c.class}</td>
-                    <td className="w-[140px] p-4 align-middle tabular-nums">
-                      {c.score}
-                    </td>
-                    <td className="w-[140px] p-4 align-middle">{c.grade}</td>
-                  </tr>
+                    <tr
+                      key={c.id}
+                      className={cn(
+                        'transition-colors hover:bg-muted/50',
+                        realId && 'cursor-pointer',
+                      )}
+                      onClick={() => {
+                        if (realId)
+                          navigate({
+                            to: '/students/$id',
+                            params: { id: realId },
+                          })
+                      }}
+                    >
+                      <td className="w-[96px] p-4 align-middle">
+                        <TooltipUI>
+                          <TooltipTrigger>
+                            {realId ? (
+                              <Link
+                                to="/students/$id"
+                                params={{ id: realId }}
+                                onClick={(e) => e.stopPropagation()}
+                                className="flex items-center justify-center rounded p-0.5 text-blue-500 hover:bg-blue-50 hover:text-blue-600"
+                              >
+                                <FileText className="h-4 w-4" />
+                              </Link>
+                            ) : (
+                              <span className="flex items-center justify-center rounded p-0.5 text-muted-foreground">
+                                <FileText className="h-4 w-4" />
+                              </span>
+                            )}
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {realId
+                              ? 'View student profile'
+                              : 'Profile not available'}
+                          </TooltipContent>
+                        </TooltipUI>
+                      </td>
+                      <td className="w-[300px] p-4 align-middle font-medium">
+                        {c.name}
+                      </td>
+                      <td className="w-[140px] p-4 align-middle">{c.class}</td>
+                      <td className="w-[140px] p-4 align-middle tabular-nums">
+                        {c.score}
+                      </td>
+                      <td className="w-[140px] p-4 align-middle">{c.grade}</td>
+                    </tr>
                   )
                 })}
                 {pagedCandidates.length === 0 && (

@@ -32,7 +32,8 @@ export function AppHeader() {
   const showNotifications = useFeatureFlag('notifications')
   const studentAnalyticsEnabled = useFeatureFlag('student-analytics')
   const studentAnalyticsBasicEnabled = useFeatureFlag('student-analytics-basic')
-  const showAssistant = !studentAnalyticsBasicEnabled && !studentAnalyticsEnabled
+  const showAssistant =
+    !studentAnalyticsBasicEnabled && !studentAnalyticsEnabled
   const { isLoggedIn, logout } = useAuth()
   const navigate = useNavigate()
   const { setView } = useHeyTalia()
