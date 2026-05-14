@@ -926,7 +926,9 @@ export function StudentProfile({
     )
 
   const sections = [
-    ...(msfUpliftEnabled ? [] : [{ id: 'attendance', label: 'Attendance' }]),
+    ...(msfUpliftEnabled && isStudentInsightsView
+      ? []
+      : [{ id: 'attendance', label: 'Attendance' }]),
     { id: 'behaviour', label: 'Behaviour' },
     { id: 'wellbeing', label: 'Wellbeing' },
     { id: 'academic', label: 'Academic' },
@@ -1056,7 +1058,7 @@ export function StudentProfile({
         <ProfileCriteriaDetailsCard student={student} />
 
         {/* Attendance Section */}
-        {!msfUpliftEnabled && (
+        {(!msfUpliftEnabled || !isStudentInsightsView) && (
           <Section
             id="attendance"
             title="Attendance"
