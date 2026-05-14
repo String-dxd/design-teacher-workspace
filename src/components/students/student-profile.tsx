@@ -263,7 +263,7 @@ function MsfUpliftSheetContent({
           )}
         </div>
         <p className="mb-2 text-xs text-muted-foreground">
-          MSF via UPLIFT • As of 19 May 2025
+          MSF via Uplift Office • As of 19 May 2025
         </p>
         <div className="rounded-lg bg-muted px-4 py-3">
           <ul className="space-y-1 text-sm">
@@ -289,7 +289,7 @@ function MsfUpliftSheetContent({
                   <Info className="h-3.5 w-3.5 text-muted-foreground" />
                 </TooltipTrigger>
                 <TooltipContent side="top">
-                  MSF via UPLIFT • As of 19 May 2025
+                  MSF via Uplift Office • As of 19 May 2025
                 </TooltipContent>
               </Tooltip>
             </div>
@@ -341,7 +341,7 @@ function NonIntactFamilySheetContent({
           )}
         </div>
         <p className="mb-2 text-xs text-muted-foreground">
-          School Cockpit, MSF via UPLIFT • As of 1 May 2026
+          School Cockpit, MSF via Uplift Office • As of 1 May 2026
         </p>
         <div className="rounded-lg bg-muted px-4 py-3">
           <ul className="space-y-1 text-sm">
@@ -370,7 +370,7 @@ function NonIntactFamilySheetContent({
           <div>
             <p className="font-medium">Parents&apos; marital status</p>
             <p className="mb-1.5 text-xs text-muted-foreground">
-              MSF via UPLIFT • As of 19 May 2025
+              MSF via Uplift Office • As of 19 May 2025
             </p>
             <ul className="space-y-1">
               <li className="flex items-center gap-2">
@@ -395,7 +395,7 @@ function NonIntactFamilySheetContent({
                   <Info className="h-3.5 w-3.5 text-muted-foreground" />
                 </TooltipTrigger>
                 <TooltipContent side="top">
-                  MSF via UPLIFT • As of 19 May 2025
+                  MSF via Uplift Office • As of 19 May 2025
                 </TooltipContent>
               </Tooltip>
             </div>
@@ -1556,7 +1556,7 @@ export function StudentProfile({
                     <FieldWithDetails
                       label="Supported by ComLink+"
                       tooltip="Supported by ComLink+"
-                      description="MSF via UPLIFT • 19 May 2025"
+                      description="MSF via Uplift Office • 19 May 2025"
                       value={comLinkDisplay}
                       sideSheetTitle="Supported by ComLink+"
                       sideSheetContent={
@@ -1576,7 +1576,7 @@ export function StudentProfile({
                     <FieldWithDetails
                       label="Supported by FSC in the past 2 years"
                       tooltip="Supported by FSC in the past 2 years"
-                      description="MSF via UPLIFT • 19 May 2025"
+                      description="MSF via Uplift Office • 19 May 2025"
                       value={fscDisplay}
                       sideSheetTitle="Supported by FSC in the past 2 years"
                       sideSheetContent={
@@ -1590,12 +1590,12 @@ export function StudentProfile({
                 })()}
                 {(() => {
                   const nonIntact = student.nonIntactFamily ?? '-'
-                  const nonIntactTooltip = `"Yes" if any of the following is provided:\n• Custody information\n• Parents' divorced status\n• Parents' considering divorce status based on enrolment the Mandatory Co-Parenting Programme (CCP)\n\nBased on School Cockpit and MSF via UPLIFT`
+                  const nonIntactTooltip = `"Yes" if any of the following is provided:\n• Custody information\n• Parents' divorced status\n• Parents' considering divorce status based on enrolment the Mandatory Co-Parenting Programme (CCP)\n\nBased on School Cockpit and MSF via Uplift Office`
                   return (
                     <FieldWithDetails
                       label="From Non-Intact Family"
                       tooltip="From Non-Intact Family"
-                      description="School Cockpit, MSF via UPLIFT • 1 May 2026"
+                      description="School Cockpit, MSF via Uplift Office • 1 May 2026"
                       value={nonIntact}
                       sideSheetTitle="From Non-Intact Family"
                       sideSheetContent={
