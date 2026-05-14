@@ -378,8 +378,12 @@ export function StudentTable({
       )}
       {isGrouped && (
         <>
-          <TableHead className="min-w-[110px]">Criteria met</TableHead>
-          <TableHead className="min-w-[140px]">Criteria tag</TableHead>
+          <TableHead className="min-w-[110px] shadow-[inset_0_1px_0_var(--color-border),inset_0_-1px_0_var(--color-border)]">
+            Criteria met
+          </TableHead>
+          <TableHead className="min-w-[140px] shadow-[inset_0_1px_0_var(--color-border),inset_0_-1px_0_var(--color-border)]">
+            Criteria tag
+          </TableHead>
         </>
       )}
       {isVisible('cca') && (

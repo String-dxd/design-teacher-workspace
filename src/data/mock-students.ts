@@ -625,7 +625,7 @@ export const mockStudents: Array<Student> = [
   },
   {
     id: '11',
-    name: 'Ahmad Bin Hassan',
+    name: 'Lim Jun Hao',
     class: '3B',
     cca: 'Tennis',
     schoolName: 'Bandung Secondary School',
@@ -754,7 +754,7 @@ export const mockStudents: Array<Student> = [
   },
   {
     id: '14',
-    name: 'Priya Sharma',
+    name: 'Tan Shu Min',
     class: '3B',
     cca: 'Badminton',
     schoolName: 'Bandung Secondary School',
@@ -797,7 +797,7 @@ export const mockStudents: Array<Student> = [
   },
   {
     id: '15',
-    name: 'Muhammad Farhan',
+    name: 'Goh Wei Liang',
     class: '3B',
     cca: 'Volleyball',
     schoolName: 'Bandung Secondary School',
@@ -930,7 +930,7 @@ export const mockStudents: Array<Student> = [
   },
   {
     id: '18',
-    name: 'Nurul Izzah Binte Kamal',
+    name: 'Chua Xin Tong',
     class: '3C',
     cca: 'Concert Band',
     schoolName: 'Bandung Secondary School',
@@ -1016,7 +1016,7 @@ export const mockStudents: Array<Student> = [
   },
   {
     id: '20',
-    name: 'Siti Aminah Binte Rahman',
+    name: 'Yap Mei Qi',
     class: '3C',
     cca: 'Scouts',
     schoolName: 'Bandung Secondary School',
@@ -1149,7 +1149,7 @@ export const mockStudents: Array<Student> = [
   },
   {
     id: '23',
-    name: 'Arjun Krishnan',
+    name: 'Ng Jian Hong',
     class: '3D',
     cca: 'Tennis',
     schoolName: 'Bandung Secondary School',
@@ -1407,7 +1407,7 @@ export const mockStudents: Array<Student> = [
   },
   {
     id: '29',
-    name: 'Hafiz Bin Abdullah',
+    name: 'Yeo Wei Hao',
     class: '3D',
     cca: 'Choir',
     schoolName: 'Bandung Secondary School',
@@ -1536,7 +1536,7 @@ export const mockStudents: Array<Student> = [
   },
   {
     id: '32',
-    name: 'Aisha Binte Mohamed',
+    name: 'Tan Hui Min',
     class: '3C',
     cca: 'Scouts',
     schoolName: 'Bandung Secondary School',
@@ -1795,7 +1795,7 @@ export const mockStudents: Array<Student> = [
   },
   {
     id: '38',
-    name: 'Anya Sharma',
+    name: 'Lee Shi Yun',
     class: 'P2-B',
     cca: 'Badminton',
     schoolName: 'River Valley Primary School',
@@ -1838,7 +1838,7 @@ export const mockStudents: Array<Student> = [
   },
   {
     id: '39',
-    name: 'Zain Bin Ismail',
+    name: 'Lim Zhi Yang',
     class: 'P2-B',
     cca: 'Volleyball',
     schoolName: 'River Valley Primary School',
@@ -2100,7 +2100,7 @@ export const mockStudents: Array<Student> = [
   },
   {
     id: '45',
-    name: 'Muhammad Irfan',
+    name: 'Chong Yi Ren',
     class: 'P5-A',
     cca: 'Red Cross',
     schoolName: 'River Valley Primary School',
@@ -2233,7 +2233,7 @@ export const mockStudents: Array<Student> = [
   },
   {
     id: '48',
-    name: 'Nur Aisyah Binte Hassan',
+    name: 'Ho Jia Min',
     class: 'P1-A',
     cca: 'Swimming',
     schoolName: 'River Valley Primary School',
@@ -2708,7 +2708,7 @@ export const mockStudents: Array<Student> = [
   },
   {
     id: '59',
-    name: 'Aisha Binte Yusof',
+    name: 'Sim Xin Yi',
     class: '4B',
     cca: 'Tennis',
     schoolName: 'Bandung Secondary School',
@@ -2837,7 +2837,7 @@ export const mockStudents: Array<Student> = [
   },
   {
     id: '62',
-    name: 'Preet Kaur Sandhu',
+    name: 'Lau Hui Wen',
     class: '4D',
     cca: 'Badminton',
     schoolName: 'Bandung Secondary School',
@@ -3139,7 +3139,7 @@ export const mockStudents: Array<Student> = [
   },
   {
     id: '69',
-    name: 'Muhammad Rizwan',
+    name: 'Pang Wei Sheng',
     class: '4D',
     cca: 'Red Cross',
     schoolName: 'Bandung Secondary School',
@@ -3399,7 +3399,7 @@ export const mockStudents: Array<Student> = [
   },
   {
     id: '75',
-    name: 'Farhan Bin Osman',
+    name: 'Toh Jia Wei',
     class: '4C',
     cca: 'Volleyball',
     schoolName: 'Bandung Secondary School',
@@ -3617,7 +3617,7 @@ export const mockStudents: Array<Student> = [
   },
   {
     id: '80',
-    name: 'Humaira Binte Salleh',
+    name: 'Lim Shu Hui',
     class: '4D',
     cca: 'Scouts',
     schoolName: 'Bandung Secondary School',
@@ -3880,7 +3880,7 @@ export const mockStudents: Array<Student> = [
   },
   {
     id: '86',
-    name: 'Farrukh Bin Rashid',
+    name: 'Ong Kai Wen',
     class: '4A',
     cca: 'Badminton',
     schoolName: 'Bandung Secondary School',
@@ -4101,7 +4101,7 @@ export const mockStudents: Array<Student> = [
   },
   {
     id: '91',
-    name: 'Nur Ain Binte Azhar',
+    name: 'Quek Mei Xuan',
     class: '4C',
     cca: 'Drama',
     schoolName: 'Bandung Secondary School',
@@ -4450,7 +4450,7 @@ export const mockStudents: Array<Student> = [
   },
   {
     id: '99',
-    name: 'Tariq Bin Anwar',
+    name: 'Soh Wei Jun',
     class: '4C',
     cca: 'Volleyball',
     schoolName: 'Bandung Secondary School',
@@ -4631,7 +4631,7 @@ export const mockStudents: Array<Student> = [
   },
   {
     id: '103',
-    name: 'Rizky Bin Ahmad',
+    name: 'Foo Zhi Hong',
     class: '4B',
     cca: 'Drama',
     schoolName: 'Bandung Secondary School',
@@ -4849,7 +4849,7 @@ export const mockStudents: Array<Student> = [
   },
   {
     id: '108',
-    name: 'Nur Syahirah Binte Ramlan',
+    name: 'Wee Jia Yi',
     class: '4C',
     cca: 'Swimming',
     schoolName: 'Bandung Secondary School',
@@ -5032,7 +5032,7 @@ export const mockStudents: Array<Student> = [
   },
   {
     id: '112',
-    name: 'Azlan Bin Mustafa',
+    name: 'Cheng Yong Han',
     class: '4D',
     cca: 'Football',
     schoolName: 'Bandung Secondary School',
@@ -5210,7 +5210,7 @@ export const mockStudents: Array<Student> = [
   },
   {
     id: '116',
-    name: 'Rafi Bin Idris',
+    name: 'Tay Kai Ming',
     class: '4D',
     cca: 'Scouts',
     schoolName: 'Bandung Secondary School',
@@ -5300,7 +5300,7 @@ export const mockStudents: Array<Student> = [
 
 const MSF_VALUES: Array<'Yes' | 'No' | '-'> = ['Yes', 'No', '-']
 mockStudents.forEach((s, i) => {
-  if (s.name === 'Chen Jun Kai') {
+  if (s.name === 'Chen Jun Kai' || s.name === 'Sim Xin Yi') {
     s.supportedByComLink = 'Yes'
     s.supportedByFsc = 'Yes'
     s.nonIntactFamily = 'Yes'

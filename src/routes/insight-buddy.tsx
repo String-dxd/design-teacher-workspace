@@ -76,7 +76,7 @@ interface LtaStudent {
 
 const LTA_STUDENTS: Array<LtaStudent> = [
   {
-    name: 'Ahmad Bin Ismail',
+    name: 'Lim Zhi Yong',
     class: '3A',
     attendedDays: 30,
     latecoming: 5,
@@ -87,7 +87,7 @@ const LTA_STUDENTS: Array<LtaStudent> = [
     absencePendingReason: 1,
   },
   {
-    name: 'Siti Nurhaliza',
+    name: 'Tan Mei Ling',
     class: '3A',
     attendedDays: 32,
     latecoming: 3,
@@ -109,7 +109,7 @@ const LTA_STUDENTS: Array<LtaStudent> = [
     absencePendingReason: 2,
   },
   {
-    name: 'Priya Devi',
+    name: 'Goh Hui Wen',
     class: '3B',
     attendedDays: 31,
     latecoming: 2,
@@ -131,7 +131,7 @@ const LTA_STUDENTS: Array<LtaStudent> = [
     absencePendingReason: 0,
   },
   {
-    name: 'Mohamed Faiz',
+    name: 'Chua Jian Hao',
     class: '4A',
     attendedDays: 27,
     latecoming: 10,
@@ -153,7 +153,7 @@ const LTA_STUDENTS: Array<LtaStudent> = [
     absencePendingReason: 1,
   },
   {
-    name: 'Raj Kumar',
+    name: 'Ng Wei Sheng',
     class: '4B',
     attendedDays: 26,
     latecoming: 7,
@@ -164,7 +164,7 @@ const LTA_STUDENTS: Array<LtaStudent> = [
     absencePendingReason: 1,
   },
   {
-    name: 'Nurul Aisyah',
+    name: 'Foo Jia Min',
     class: '4B',
     attendedDays: 34,
     latecoming: 3,
@@ -186,7 +186,7 @@ const LTA_STUDENTS: Array<LtaStudent> = [
     absencePendingReason: 1,
   },
   {
-    name: 'Aisha Binte Rahman',
+    name: 'Tan Hui Xian',
     class: '3C',
     attendedDays: 25,
     latecoming: 9,

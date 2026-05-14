@@ -353,10 +353,10 @@ const MOCK_CANDIDATES = [
     score: 83,
     grade: 'A1',
   },
-  { id: '11', name: 'Aisha Binte Yusof', class: '4B', score: 82, grade: 'A1' },
+  { id: '11', name: 'Sim Xin Yi', class: '4B', score: 82, grade: 'A1' },
   { id: '12', name: 'Jing Wei Tan', class: '4C', score: 81, grade: 'A1' },
   { id: '13', name: 'Ryan Seah Kok Wee', class: '4A', score: 80, grade: 'A1' },
-  { id: '14', name: 'Preet Kaur Sandhu', class: '4D', score: 79, grade: 'A1' },
+  { id: '14', name: 'Lau Hui Wen', class: '4D', score: 79, grade: 'A1' },
   { id: '15', name: 'Zachary Ng Jun Hao', class: '4B', score: 78, grade: 'A1' },
   { id: '16', name: 'Sarah Chan Jun Kai', class: '4A', score: 77, grade: 'A2' },
   { id: '17', name: 'Lam Wei Jie', class: '4B', score: 76, grade: 'A2' },
@@ -377,7 +377,7 @@ const MOCK_CANDIDATES = [
   { id: '20', name: 'Lena Chua Shu Min', class: '4A', score: 73, grade: 'A2' },
   { id: '21', name: 'Daniel Woo Kai Xin', class: '4B', score: 72, grade: 'A2' },
   { id: '22', name: 'Tricia Ho Yan Ling', class: '4C', score: 71, grade: 'A2' },
-  { id: '23', name: 'Muhammad Rizwan', class: '4D', score: 70, grade: 'A2' },
+  { id: '23', name: 'Pang Wei Sheng', class: '4D', score: 70, grade: 'A2' },
   { id: '24', name: 'Chloe Lim Jia Hui', class: '4A', score: 69, grade: 'A2' },
   { id: '25', name: 'Wei Jie Pang', class: '4B', score: 68, grade: 'A2' },
   {
@@ -411,7 +411,7 @@ const MOCK_CANDIDATES = [
     score: 61,
     grade: 'B3',
   },
-  { id: '33', name: 'Farhan Bin Osman', class: '4C', score: 60, grade: 'B3' },
+  { id: '33', name: 'Toh Jia Wei', class: '4C', score: 60, grade: 'B3' },
   {
     id: '34',
     name: 'Joanne Lau Hui Shan',
@@ -442,14 +442,14 @@ const MOCK_CANDIDATES = [
   },
   {
     id: '38',
-    name: 'Humaira Binte Salleh',
+    name: 'Lim Shu Hui',
     class: '4D',
     score: 55,
     grade: 'B3',
   },
   { id: '39', name: 'Tan Wei Jie', class: '4B', score: 54, grade: 'B4' },
   { id: '40', name: 'Jason Chua Jun Kai', class: '4C', score: 53, grade: 'B4' },
-  { id: '41', name: 'Ahmad Bin Hassan', class: '4A', score: 52, grade: 'B4' },
+  { id: '41', name: 'Lim Jun Hao', class: '4A', score: 52, grade: 'B4' },
   {
     id: '42',
     name: 'Cheryl Wong Xiu Min',
@@ -467,7 +467,7 @@ const MOCK_CANDIDATES = [
     grade: 'B4',
   },
   { id: '46', name: 'Nadia Tan Zhi Ling', class: '4D', score: 47, grade: 'B4' },
-  { id: '47', name: 'Farrukh Bin Rashid', class: '4A', score: 46, grade: 'B4' },
+  { id: '47', name: 'Ong Kai Wen', class: '4A', score: 46, grade: 'B4' },
   { id: '48', name: 'Lim Xin Ying', class: '4B', score: 45, grade: 'B4' },
   {
     id: '49',
@@ -476,7 +476,7 @@ const MOCK_CANDIDATES = [
     score: 44,
     grade: 'B4',
   },
-  { id: '50', name: 'Priya Sharma', class: '4C', score: 43, grade: 'C5' },
+  { id: '50', name: 'Tan Shu Min', class: '4C', score: 43, grade: 'C5' },
   {
     id: '51',
     name: 'Rachel Wong Mei Ling',
@@ -485,7 +485,7 @@ const MOCK_CANDIDATES = [
     grade: 'C5',
   },
   { id: '52', name: 'Kevin Ng Wei Ming', class: '4B', score: 41, grade: 'C5' },
-  { id: '53', name: 'Muhammad Farhan', class: '4D', score: 40, grade: 'C5' },
+  { id: '53', name: 'Goh Wei Liang', class: '4D', score: 40, grade: 'C5' },
   {
     id: '54',
     name: 'Serene Chua Jia Lin',
@@ -496,7 +496,7 @@ const MOCK_CANDIDATES = [
   { id: '55', name: 'Edwin Toh Kah Meng', class: '4B', score: 38, grade: 'C5' },
   {
     id: '56',
-    name: 'Nur Ain Binte Azhar',
+    name: 'Quek Mei Xuan',
     class: '4C',
     score: 37,
     grade: 'C5',
@@ -526,13 +526,13 @@ const MOCK_CANDIDATES = [
     grade: 'C5',
   },
   { id: '63', name: 'Lucas Wee Jun Xian', class: '4B', score: 30, grade: 'C5' },
-  { id: '64', name: 'Tariq Bin Anwar', class: '4C', score: 29, grade: 'C5' },
+  { id: '64', name: 'Soh Wei Jun', class: '4C', score: 29, grade: 'C5' },
   { id: '65', name: 'Hui Ying Chan', class: '4D', score: 28, grade: 'C5' },
   { id: '66', name: 'Emily Tan Shu Wen', class: '4A', score: 27, grade: 'C6' },
   { id: '67', name: 'Ryan Lim Zhi Hao', class: '4B', score: 26, grade: 'C6' },
   {
     id: '68',
-    name: 'Nurul Izzah Binte Kamal',
+    name: 'Chua Xin Tong',
     class: '4C',
     score: 25,
     grade: 'C6',
@@ -545,7 +545,7 @@ const MOCK_CANDIDATES = [
     grade: 'C6',
   },
   { id: '70', name: 'Peiyi Tan Hui Jing', class: '4A', score: 23, grade: 'C6' },
-  { id: '71', name: 'Rizky Bin Ahmad', class: '4B', score: 22, grade: 'C6' },
+  { id: '71', name: 'Foo Zhi Hong', class: '4B', score: 22, grade: 'C6' },
   {
     id: '72',
     name: 'Clarissa Ho Jia Hui',
@@ -564,7 +564,7 @@ const MOCK_CANDIDATES = [
   { id: '75', name: 'Bryan Tan Jia Jun', class: '4B', score: 18, grade: 'C6' },
   {
     id: '76',
-    name: 'Nur Syahirah Binte Ramlan',
+    name: 'Wee Jia Yi',
     class: '4C',
     score: 17,
     grade: 'C6',
@@ -585,7 +585,7 @@ const MOCK_CANDIDATES = [
   },
   {
     id: '79',
-    name: 'Siti Aminah Binte Rahman',
+    name: 'Yap Mei Qi',
     class: '4A',
     score: 14,
     grade: 'D7',
@@ -598,7 +598,7 @@ const MOCK_CANDIDATES = [
     grade: 'D7',
   },
   { id: '81', name: 'Mei Qi Chia', class: '4C', score: 12, grade: 'D7' },
-  { id: '82', name: 'Azlan Bin Mustafa', class: '4D', score: 11, grade: 'D7' },
+  { id: '82', name: 'Cheng Yong Han', class: '4D', score: 11, grade: 'D7' },
   {
     id: '83',
     name: 'Yolanda Sim Jia Hui',
@@ -614,7 +614,7 @@ const MOCK_CANDIDATES = [
     grade: 'D7',
   },
   { id: '85', name: 'Fiona Loh Xiu Ting', class: '4C', score: 8, grade: 'VR' },
-  { id: '86', name: 'Rafi Bin Idris', class: '4D', score: 7, grade: 'VR' },
+  { id: '86', name: 'Tay Kai Ming', class: '4D', score: 7, grade: 'VR' },
   { id: '87', name: 'Cheryl Ang Mei Kuan', class: '4A', score: 6, grade: 'VR' },
 ]
 
