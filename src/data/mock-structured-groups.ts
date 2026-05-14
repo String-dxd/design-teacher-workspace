@@ -42,7 +42,7 @@ const BASKETBALL_NAMES = [
   'Chen Teo Jun Kai',
   'Yusuf Koh Xin Yi',
   'Bryan Tay Zhi Wei',
-  'Ahmad Bin Hassan',
+  'Lim Jun Hao',
   'Kevin Ng Wei Ming',
   'Ryan Lim Zhi Hao',
   'Daniel Ong Jun Wei',
@@ -53,9 +53,9 @@ const CHOIR_NAMES = [
   'Natalie Lim Jia Ying',
   'Sophie Wong Xin Hui',
   'Rachel Wong Mei Ling',
-  'Priya Sharma',
+  'Tan Shu Min',
   'Emily Tan Shu Wen',
-  'Nurul Izzah Binte Kamal',
+  'Chua Xin Tong',
 ]
 
 // Derive a fake class label for CCA members (spread across levels)
@@ -74,13 +74,13 @@ const sec3Students = bandung
 
 // Teaching Group: English Remedial Sec 3 (subset of Sec 3 students)
 const englishRemedialNames = [
-  'Ahmad Bin Hassan',
+  'Lim Jun Hao',
   'Bryan Tay Zhi Wei',
   'Chen Teo Jun Kai',
   'Daniel Ong Jun Wei',
-  'Farah Binte Noor',
+  'Fong Wei Lin',
   'Grace Lim Shu Wen',
-  'Hassan Bin Yusof',
+  'Heng Yong Sheng',
   'Isabel Tan Xin Yi',
 ]
 
