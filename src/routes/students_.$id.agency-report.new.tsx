@@ -2704,11 +2704,16 @@ function ReportForm({
     setTimeout(() => setSavedStatus('saved'), 800)
   }
   const aiDraft = (id: string) => {
-    updateField(
-      id,
-      AI_DRAFTS[id] ??
-        'Based on available case notes and TCI data, the student has shown consistent patterns…',
-    )
+    const draft = AI_DRAFTS[id]
+    if (!draft) {
+      // No bespoke draft for this field — fail loud in dev rather than
+      // pollute the textarea with a generic placeholder. Demo paths
+      // (MSF School Report + MSF Children's Home) have full coverage in
+      // AI_DRAFTS; any miss here is a data-config gap, not a fallback.
+      console.warn(`[agency-report] No AI_DRAFTS entry for field "${id}"`)
+      return
+    }
+    updateField(id, draft)
     setAiFlags((p) => ({ ...p, [id]: true }))
   }
   const toggleReviewed = (sectionId: string) => {
