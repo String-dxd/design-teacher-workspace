@@ -2336,7 +2336,8 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
             id: 'ms-att-reason-leaving',
             label: 'Reason for leaving school',
             type: 'narrative',
-            aiDraftable: true,
+            // No aiDraftable here — the field is for ex-students only,
+            // so an AI Draft button would be misleading on this profile.
           },
           {
             id: 'ms-att-withdrawn-by',
@@ -2956,27 +2957,29 @@ export const AI_DRAFTS: Record<string, string> = {
     'Jun Kai demonstrates periodic withdrawal and mood fluctuations at school. He is generally cooperative with trusted adults but struggles with group interactions. His attendance has declined to 83% this term.',
   'nric-remarks':
     'Jun Kai is a Secondary 3 student with an attendance rate of 83% and a conduct grade of Poor. He is receiving school counselling and is on MOE FAS. He responds positively to pastoral engagement.',
-  // MSF School Report — narrative AI drafts
+  // MSF School Report — narrative AI drafts. Each draft is composed
+  // from concrete data in the student's record (attendance, conduct,
+  // counselling sessions, family composition) so the demo can speak
+  // specifically when DOS clicks "Generate draft". Superscript markers
+  // ¹²³ map to AI_DRAFT_CITATIONS entries rendered in the SOURCES block.
   'ms-cond-comments':
-    "Jun Kai's conduct has deteriorated notably since the start of Secondary 3¹. He has been involved in two physical altercations with peers, both occurring during unstructured break periods². A 2-day suspension was issued in March 2026 following the second incident³. He responds positively to one-on-one conversations with his Year Head but can become disengaged in larger group settings¹.",
+    "Jun Kai's overall conduct has shifted across the Secondary track — Good in Secondary 1, Fair in Secondary 2, and Poor in his current year¹. Three disciplinary incidents have been logged this academic year: a verbal altercation with a classmate in late January, a physical scuffle during recess on 6 March, and a follow-up incident on 12 March that escalated to a two-day suspension². His Year Head reports that one-on-one conversations are productive — Jun Kai can articulate what led to each incident and accepts the consequences without argument. The pattern of escalation clusters around Monday mornings and the first week following each school break, which may point to home-environment stressors rather than classroom triggers¹.",
   'ms-acad-remarks':
-    "Jun Kai's academic performance has trended downward across his Secondary 3 papers, with the weakest results in Mathematics and English¹. His Term 2 attendance pattern correlates with the dip²; teacher feedback in counselling notes describes stronger engagement in practical subjects³.",
+    'Academic performance has dipped sharply through Secondary 3, with Mathematics (38%) and English (44%) producing the weakest results on the Term 2 papers — well below his Secondary 2 averages of 58% and 61% respectively¹. The mid-year drop tracks closely with attendance: 39 of 47 possible school days present, twelve recorded late-comings, and three unexcused absences in Term 2 alone². Subject teachers note that engagement is markedly higher in practical components — he completes hands-on work in Design & Technology and Science labs at a level above his theory marks, suggesting capability rather than ability is the gap. Targeted remedial support in Mathematics and English would likely lift both grades if attendance stabilises through Term 3³.',
   'ms-par-other':
-    'School outreach indicates the parents are responsive to communication but report limited day-to-day capacity to enforce routines¹. Counselling notes suggest the mother is the primary anchor for Jun Kai at home². Termly Check-In responses do not flag escalated conflict at home³.',
+    'Both parents have attended every parent-teacher conference scheduled this academic year and respond to school WhatsApp messages within a day¹. They acknowledge the recent disciplinary incidents, do not minimise them, and have been receptive to the counselling recommendations the school has put forward. The mother, Mdm Tan Siew Lee, is the day-to-day point of contact and supervises homework; the father works long shifts as a taxi driver and engages less frequently with school matters but joins meetings when scheduled in advance². Both parents have asked the school for clearer behavioural expectations they can reinforce at home — the underlying issue appears to be capacity rather than willingness³.',
   'ms-fam-other':
-    'There are no school records indicating adverse family circumstances¹. Termly Check-In responses do not flag family-related risk². Case Sync entries reflect cooperative engagement from the family during prior interventions³.',
+    'School records hold no information indicating criminal activity, drug abuse, sexual abuse, or physical abuse in the immediate family¹. The household consists of both biological parents, Jun Kai, and a younger sister currently in Primary 5 at Bandung Primary School. The family qualifies for the MOE Financial Assistance Scheme; combined household income from the father\'s taxi-driving and the mother\'s part-time cleaning role sits below the FAS threshold². Term 1 Termly Check-In responses note moderate financial stress at home but raise no flags around safety, conflict, or substance use³.',
   'ms-care-arrangements':
-    'Jun Kai resides with both parents in the family home¹. School counselling notes describe a strong emotional bond with his mother, who is the main point of contact for school matters². Father involvement is more limited based on caregiver records on file³.',
+    'Jun Kai lives with both biological parents and his younger sister in a three-room HDB rental flat in Bedok North¹. The strongest emotional bond, consistently described in counselling notes, is with his mother — she is named as his primary emergency contact, attends every school engagement, and is the parent Jun Kai turns to first². His relationship with his father is functional but less close; the father\'s shift-based work limits one-on-one time, and Jun Kai has described feeling closer to his sister than to his father in counselling sessions. He takes an active role caring for his sister after school, walking her home from her after-school programme on most weekdays³.',
   'ms-health-medical':
-    'School records show no chronic medical conditions or known allergies for Jun Kai¹. Attendance data does not show illness-related absence patterns². No medical alerts are currently flagged in his profile³.',
+    'School health records show no chronic medical conditions, no known allergies, and no long-term medication for Jun Kai¹. He has had no health-related absences this academic year — the eight Term 2 absences logged were disciplinary, unexcused, or attributable to family commitments rather than illness². The Secondary 1 medical screening flagged mild myopia, now corrected with prescription glasses, and the most recent annual screening on 18 January 2026 raised no new concerns. Jun Kai self-reports good general health and has not visited the school sickbay this year³.',
   'ms-health-other':
-    'Termly Check-In responses do not flag acute psychiatric concerns¹. School counselling notes mention occasional low-mood episodes but no suicidal ideation or violent behaviour². Behavioural incident records have been disciplinary rather than psychiatric in nature³.',
+    'There are no acute psychiatric concerns on file — no recorded suicidal ideation, no violent or self-injurious behaviour, and no substance-use indicators¹. However, Term 1 and Term 2 Termly Check-In responses both show consistently low mood scores (3 and 4 out of 10 on the wellbeing slider, against a Secondary 3 cohort average of 6.2). The school counsellor has noted occasional flat affect during sessions and reduced spontaneous engagement compared to his Secondary 2 baseline². The disciplinary incidents recorded this year have been impulsive rather than indicative of an underlying psychiatric disorder, but the persistent low-mood signal warrants continued external monitoring and would benefit from a community-based touchpoint³.',
   'ms-other-info':
-    'Jun Kai has been receiving regular school counselling support since January 2026¹. The school is aware of escalating peer-related concerns and has engaged the family proactively². Termly Check-In data suggests ongoing low mood that warrants continued external support³.',
-  'ms-att-reason-leaving':
-    'Not applicable — student is currently enrolled¹. School records confirm continued enrolment². Attendance data is up to date as of the current term³.',
+    'Jun Kai has been receiving fortnightly individual counselling from the School Counsellor, Ms Sarah Chen, since 12 January 2026; eight sessions have been completed to date¹. The school has proactively engaged the family through three structured meetings this academic year — two with both parents present, one with the mother only — and has logged each in Case Sync². Termly Check-In data over the past two cycles suggests an ongoing low-mood pattern that the school cannot address through its own resources alone, and the Year Head has indicated the school would welcome an external referral. Jun Kai has not previously been known to MSF, the Singapore Police Force, or any community agency; this is his first agency-level engagement, and the school is committed to remaining a stable touchpoint throughout³.',
   'ms-cca-behaviour':
-    'Jun Kai is generally cooperative during football training and responds well to instructions from the coach¹. He works well in team drills and shows natural leadership when organising warm-ups². Attendance has become irregular since March 2026, missing a noticeable share of recent sessions³.',
+    'Jun Kai has been a member of the school football team since Secondary 1 and trains twice weekly under Coach Lee Wei Kiat¹. He is generally cooperative during training, follows tactical instructions promptly, and takes a leadership role when warming up younger team-mates — a side of his behaviour rarely visible in the classroom. Attendance was very regular through Secondary 1 and 2 but has become irregular since March 2026; he has missed four of the last eight training sessions without explanation, which cost him his place on the starting eleven for the recent inter-school friendly². When he does attend, the effort and attitude remain high, suggesting that motivation is intact and the consistency issue is external rather than disengagement from the sport itself³.',
 }
 
 export const DATA_SOURCES: Array<DataSource> = [
@@ -3378,23 +3381,6 @@ export const AI_DRAFT_CITATIONS: Record<
       num: 3,
       source: 'TCI',
       detail: 'Term 1 wellbeing check-in',
-    },
-  ],
-  'ms-att-reason-leaving': [
-    {
-      num: 1,
-      source: 'EduHub',
-      detail: 'Enrolment status, 2026',
-    },
-    {
-      num: 2,
-      source: 'School Cockpit',
-      detail: 'Enrolment record',
-    },
-    {
-      num: 3,
-      source: 'School Cockpit',
-      detail: 'Attendance record, Term 2 2026',
     },
   ],
   'ms-cca-behaviour': [
