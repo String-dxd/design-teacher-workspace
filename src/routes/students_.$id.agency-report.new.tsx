@@ -534,14 +534,14 @@ function TemplatePreviewModal({
             <iframe
               src={pdf}
               title={`${template.name} preview`}
-              className="h-[68vh] w-full rounded-md border bg-white"
+              className="h-[68vh] w-full rounded-md bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.08)]"
             />
           ) : png ? (
             <div className="flex justify-center">
               <img
                 src={png}
                 alt={`${template.name} preview`}
-                className="max-w-full rounded-md border bg-white shadow-sm"
+                className="max-w-full rounded-md bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.08)]"
               />
             </div>
           ) : (
@@ -709,7 +709,7 @@ function TemplateSelection({
                         <div className="mt-1.5 flex items-center gap-2">
                           <div className="h-1 max-w-[240px] flex-1 overflow-hidden rounded-full bg-primary/15">
                             <div
-                              className="h-full bg-primary transition-all"
+                              className="h-full bg-primary transition-[width] duration-300"
                               style={{ width: `${pct}%` }}
                             />
                           </div>
@@ -921,7 +921,7 @@ function TemplateSelection({
                           }}
                           aria-label="Preview form"
                           title="Preview form"
-                          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                         >
                           <Eye className="h-4 w-4" />
                         </button>
@@ -1124,7 +1124,7 @@ function FieldSourceLink({
         onClick={() => setOpen(true)}
         title={`Source: ${source}`}
         aria-label={`Source: ${source}`}
-        className="ml-1 inline-flex h-3.5 w-3.5 align-text-bottom items-center justify-center rounded-sm text-muted-foreground/60 transition-colors hover:text-foreground"
+        className="relative ml-1 inline-flex h-3.5 w-3.5 align-text-bottom items-center justify-center rounded-sm text-muted-foreground/60 transition-colors hover:text-foreground before:absolute before:-inset-3 before:content-['']"
       >
         <Info className="h-3 w-3" />
       </button>
@@ -1530,7 +1530,7 @@ function SectionPanel({
           {section.title}
         </h2>
         {emptyCount > 0 && (
-          <span className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-medium text-amber-700">
+          <span className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-medium tabular-nums text-amber-700">
             <AlertTriangle className="h-3 w-3" />
             {emptyCount} empty field{emptyCount !== 1 ? 's' : ''}
           </span>
@@ -2704,11 +2704,16 @@ function ReportForm({
     setTimeout(() => setSavedStatus('saved'), 800)
   }
   const aiDraft = (id: string) => {
-    updateField(
-      id,
-      AI_DRAFTS[id] ??
-        'Based on available case notes and TCI data, the student has shown consistent patterns…',
-    )
+    const draft = AI_DRAFTS[id]
+    if (!draft) {
+      // No bespoke draft for this field — fail loud in dev rather than
+      // pollute the textarea with a generic placeholder. Demo paths
+      // (MSF School Report + MSF Children's Home) have full coverage in
+      // AI_DRAFTS; any miss here is a data-config gap, not a fallback.
+      console.warn(`[agency-report] No AI_DRAFTS entry for field "${id}"`)
+      return
+    }
+    updateField(id, draft)
     setAiFlags((p) => ({ ...p, [id]: true }))
   }
   const toggleReviewed = (sectionId: string) => {
@@ -2818,7 +2823,7 @@ function ReportForm({
           <div className="h-1 w-16 overflow-hidden rounded-full bg-muted">
             <div
               className={cn(
-                'h-full transition-all',
+                'h-full transition-[width] duration-300',
                 completionPct === 100 ? 'bg-green-500' : 'bg-amber-500',
               )}
               style={{ width: `${completionPct}%` }}
@@ -2865,7 +2870,7 @@ function ReportForm({
           <div className="mb-4 flex items-center gap-3 text-xs text-muted-foreground">
             <span className="flex items-center gap-1.5">
               <ListChecks className="h-3.5 w-3.5" />
-              <span className="font-medium text-foreground">
+              <span className="font-medium tabular-nums text-foreground">
                 {reviewedCount} of {reviewableSections.length} sections verified
               </span>
             </span>
@@ -3243,7 +3248,7 @@ function ExportPassword({
                       type="button"
                       onClick={() => setPreviewOpen(true)}
                       aria-label="Expand preview"
-                      className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-md border bg-card/90 text-muted-foreground shadow-sm backdrop-blur transition-colors hover:bg-card hover:text-foreground"
+                      className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-md bg-card/95 text-muted-foreground shadow-[0_2px_8px_rgba(0,0,0,0.12)] backdrop-blur transition-colors hover:bg-card hover:text-foreground"
                     />
                   }
                 >
@@ -3281,7 +3286,7 @@ function ExportPassword({
       />
 
       {/* Encryption toggle + (conditional) password */}
-      <div className="space-y-4 rounded-xl border bg-white p-5">
+      <div className="space-y-4 rounded-xl bg-white p-5 shadow-[0_1px_0_rgba(0,0,0,0.04),0_8px_16px_-12px_rgba(0,0,0,0.12)]">
         <div className="flex items-center justify-between gap-3">
           <span className="text-sm font-semibold">Encrypt with password</span>
           <Switch

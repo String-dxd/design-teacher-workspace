@@ -604,7 +604,7 @@ function AgencyReportRow({ report }: { report: AgencyReport }) {
         {report.agency} · {createdDate}
       </p>
       {completionSummary && completionSummary.awaiting.length > 0 && (
-        <p className="mt-1 text-xs text-muted-foreground truncate">
+        <p className="mt-1 text-xs tabular-nums text-muted-foreground truncate">
           {completionSummary.completed} of {completionSummary.total} sections
           completed
           {completionSummary.awaiting.length > 0 && (
@@ -637,7 +637,7 @@ function AgencyReportRow({ report }: { report: AgencyReport }) {
         {dueLabel && (
           <span
             className={cn(
-              'flex items-center gap-1 text-xs font-medium',
+              'flex items-center gap-1 text-xs font-medium tabular-nums',
               dueClass,
             )}
           >
@@ -654,7 +654,7 @@ function AgencyReportRow({ report }: { report: AgencyReport }) {
               approve()
             }}
             title="Click to mark as approved (demo)"
-            className="rounded-full transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1"
+            className="rounded-full transition-transform active:scale-[0.96] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1"
           >
             <Badge className={cn(className, 'cursor-pointer')}>{label}</Badge>
           </button>
@@ -667,7 +667,7 @@ function AgencyReportRow({ report }: { report: AgencyReport }) {
               e.stopPropagation()
               setShowPw((p) => !p)
             }}
-            className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+            className="flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             title={showPw ? 'Hide password' : 'View password'}
           >
             <Lock className="h-3.5 w-3.5" />
