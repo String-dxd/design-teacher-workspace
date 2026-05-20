@@ -3180,7 +3180,6 @@ function ExportPassword({
   const [pw, setPw] = useState('')
   const [encrypt, setEncrypt] = useState(false)
   const [previewOpen, setPreviewOpen] = useState(false)
-  const asset = templateReferenceAsset(template)
 
   // Suggest a memorable but high-entropy password: agency abbrev + month-
   // year + 4 random alphanumerics. Matches the format the existing demo
@@ -3239,42 +3238,30 @@ function ExportPassword({
         <div className="relative max-h-[640px] overflow-auto p-6">
           {/* Floating expand-to-fullscreen affordance — opens the same
               DocumentPreviewModal the report-filling page uses. */}
-          {asset && (
-            <TooltipProvider delay={200}>
-              <Tooltip>
-                <TooltipTrigger
-                  render={
-                    <button
-                      type="button"
-                      onClick={() => setPreviewOpen(true)}
-                      aria-label="Expand preview"
-                      className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-md bg-card/95 text-muted-foreground shadow-[0_2px_8px_rgba(0,0,0,0.12)] backdrop-blur transition-colors hover:bg-card hover:text-foreground"
-                    />
-                  }
-                >
-                  <Maximize2 className="h-4 w-4" />
-                </TooltipTrigger>
-                <TooltipContent>Expand preview</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
-          {asset?.kind === 'pdf' ? (
-            <iframe
-              src={`${asset.src}#toolbar=0&navpanes=0&view=FitH`}
-              title={`${template.name} preview`}
-              className="mx-auto block h-[900px] w-full max-w-[820px] rounded-md border-0 bg-card shadow-lg"
-            />
-          ) : asset?.kind === 'image' ? (
-            <img
-              src={asset.src}
-              alt={`${template.name} preview`}
-              className="mx-auto block w-full max-w-[820px] rounded-md bg-card shadow-lg"
-            />
-          ) : (
-            <div className="rounded-lg bg-card p-10 text-center text-sm text-muted-foreground">
-              No preview available.
-            </div>
-          )}
+          <TooltipProvider delay={200}>
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <button
+                    type="button"
+                    onClick={() => setPreviewOpen(true)}
+                    aria-label="Expand preview"
+                    className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-md bg-card/95 text-muted-foreground shadow-[0_2px_8px_rgba(0,0,0,0.12)] backdrop-blur transition-colors hover:bg-card hover:text-foreground"
+                  />
+                }
+              >
+                <Maximize2 className="h-4 w-4" />
+              </TooltipTrigger>
+              <TooltipContent>Expand preview</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          {/* Filled-in rendering — same component the Show Preview modal
+              uses on the Fill page, so the export view and the modal
+              show identical content. */}
+          <FilledReportRendering
+            template={template}
+            studentName={studentName}
+          />
         </div>
       </div>
 
