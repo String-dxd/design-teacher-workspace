@@ -140,11 +140,11 @@ function RootComponent() {
                 <SidebarProvider>
                   <AppSidebar />
                   <SidebarInset className="h-screen overflow-hidden">
-                    <AppHeader />
                     <div
                       data-scroll-container
                       className="flex min-h-0 flex-1 flex-col overflow-auto bg-slate-1"
                     >
+                      <AppHeader />
                       <ErrorBoundary>
                         <Outlet />
                       </ErrorBoundary>

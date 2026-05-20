@@ -1,5 +1,6 @@
 import { Link, useNavigate } from '@tanstack/react-router'
 import { MessageCircle } from 'lucide-react'
+import * as React from 'react'
 
 import { NotificationPopover } from '@/components/notifications/notification-popover'
 import { useHeyTalia } from '@/components/heytalia/heytalia-context'
@@ -26,6 +27,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { useBreadcrumbs } from '@/hooks/use-breadcrumbs'
+import { cn } from '@/lib/utils'
 
 export function AppHeader() {
   const breadcrumbs = useBreadcrumbs()
@@ -37,9 +39,29 @@ export function AppHeader() {
   const { isLoggedIn, logout } = useAuth()
   const navigate = useNavigate()
   const { setView } = useHeyTalia()
+  const headerRef = React.useRef<HTMLElement>(null)
+  const [isScrolled, setIsScrolled] = React.useState(false)
+
+  React.useEffect(() => {
+    const container = headerRef.current?.closest<HTMLElement>(
+      '[data-scroll-container]',
+    )
+    if (!container) return
+
+    const update = () => setIsScrolled(container.scrollTop > 0)
+    update()
+    container.addEventListener('scroll', update, { passive: true })
+    return () => container.removeEventListener('scroll', update)
+  }, [])
 
   return (
-    <header className="flex h-14 shrink-0 items-center justify-between gap-2 border-b px-4">
+    <header
+      ref={headerRef}
+      className={cn(
+        'sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between gap-2 border-b px-4 bg-background/70 backdrop-blur-md transition-colors duration-200',
+        isScrolled ? 'border-border' : 'border-transparent',
+      )}
+    >
       <div className="flex items-center gap-2">
         <SidebarTrigger className="md:hidden" />
         <Breadcrumb>
