@@ -921,7 +921,7 @@ function TemplateSelection({
                           }}
                           aria-label="Preview form"
                           title="Preview form"
-                          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                         >
                           <Eye className="h-4 w-4" />
                         </button>
@@ -1124,7 +1124,7 @@ function FieldSourceLink({
         onClick={() => setOpen(true)}
         title={`Source: ${source}`}
         aria-label={`Source: ${source}`}
-        className="ml-1 inline-flex h-3.5 w-3.5 align-text-bottom items-center justify-center rounded-sm text-muted-foreground/60 transition-colors hover:text-foreground"
+        className="relative ml-1 inline-flex h-3.5 w-3.5 align-text-bottom items-center justify-center rounded-sm text-muted-foreground/60 transition-colors hover:text-foreground before:absolute before:-inset-3 before:content-['']"
       >
         <Info className="h-3 w-3" />
       </button>

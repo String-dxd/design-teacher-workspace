@@ -667,7 +667,7 @@ function AgencyReportRow({ report }: { report: AgencyReport }) {
               e.stopPropagation()
               setShowPw((p) => !p)
             }}
-            className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+            className="flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             title={showPw ? 'Hide password' : 'View password'}
           >
             <Lock className="h-3.5 w-3.5" />

@@ -39,17 +39,18 @@ const SIZE_CLASSES: Record<
   AgencyLogoSize,
   { box: string; radius: string; pad: string; text: string }
 > = {
-  // sm: inline-meta on report-card rows in the student profile.
+  // sm: inline-meta on report-card rows in the student profile. Radius
+  // sits concentrically inside the rounded-lg row (outer 8px → inner 6px).
   sm: {
     box: 'size-9',
-    radius: 'rounded-[10px]',
+    radius: 'rounded-md',
     pad: 'p-1',
     text: 'text-[10px]',
   },
   // md: page header on the Fill Report top bar.
   md: {
     box: 'size-11',
-    radius: 'rounded-[12px]',
+    radius: 'rounded-[10px]',
     pad: 'p-1.5',
     text: 'text-xs',
   },
@@ -81,7 +82,10 @@ export function AgencyLogo({
   return (
     <div
       className={cn(
-        'relative flex shrink-0 items-center justify-center overflow-hidden border bg-white',
+        // Per make-interfaces-feel-better #11: pure-black low-opacity
+        // outline reads as clean image-edge depth on coloured rows
+        // (border tokens pick up surface tints and look dirty).
+        'relative flex shrink-0 items-center justify-center overflow-hidden bg-white outline outline-1 -outline-offset-1 outline-black/10 dark:outline-white/10',
         s.box,
         s.radius,
         className,
