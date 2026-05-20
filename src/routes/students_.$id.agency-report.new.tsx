@@ -709,7 +709,7 @@ function TemplateSelection({
                         <div className="mt-1.5 flex items-center gap-2">
                           <div className="h-1 max-w-[240px] flex-1 overflow-hidden rounded-full bg-primary/15">
                             <div
-                              className="h-full bg-primary transition-all"
+                              className="h-full bg-primary transition-[width] duration-300"
                               style={{ width: `${pct}%` }}
                             />
                           </div>
@@ -1530,7 +1530,7 @@ function SectionPanel({
           {section.title}
         </h2>
         {emptyCount > 0 && (
-          <span className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-medium text-amber-700">
+          <span className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-medium tabular-nums text-amber-700">
             <AlertTriangle className="h-3 w-3" />
             {emptyCount} empty field{emptyCount !== 1 ? 's' : ''}
           </span>
@@ -2818,7 +2818,7 @@ function ReportForm({
           <div className="h-1 w-16 overflow-hidden rounded-full bg-muted">
             <div
               className={cn(
-                'h-full transition-all',
+                'h-full transition-[width] duration-300',
                 completionPct === 100 ? 'bg-green-500' : 'bg-amber-500',
               )}
               style={{ width: `${completionPct}%` }}
@@ -2865,7 +2865,7 @@ function ReportForm({
           <div className="mb-4 flex items-center gap-3 text-xs text-muted-foreground">
             <span className="flex items-center gap-1.5">
               <ListChecks className="h-3.5 w-3.5" />
-              <span className="font-medium text-foreground">
+              <span className="font-medium tabular-nums text-foreground">
                 {reviewedCount} of {reviewableSections.length} sections verified
               </span>
             </span>
