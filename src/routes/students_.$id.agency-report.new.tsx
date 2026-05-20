@@ -534,14 +534,14 @@ function TemplatePreviewModal({
             <iframe
               src={pdf}
               title={`${template.name} preview`}
-              className="h-[68vh] w-full rounded-md border bg-white"
+              className="h-[68vh] w-full rounded-md bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.08)]"
             />
           ) : png ? (
             <div className="flex justify-center">
               <img
                 src={png}
                 alt={`${template.name} preview`}
-                className="max-w-full rounded-md border bg-white shadow-sm"
+                className="max-w-full rounded-md bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.08)]"
               />
             </div>
           ) : (
@@ -3243,7 +3243,7 @@ function ExportPassword({
                       type="button"
                       onClick={() => setPreviewOpen(true)}
                       aria-label="Expand preview"
-                      className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-md border bg-card/90 text-muted-foreground shadow-sm backdrop-blur transition-colors hover:bg-card hover:text-foreground"
+                      className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-md bg-card/95 text-muted-foreground shadow-[0_2px_8px_rgba(0,0,0,0.12)] backdrop-blur transition-colors hover:bg-card hover:text-foreground"
                     />
                   }
                 >
@@ -3281,7 +3281,7 @@ function ExportPassword({
       />
 
       {/* Encryption toggle + (conditional) password */}
-      <div className="space-y-4 rounded-xl border bg-white p-5">
+      <div className="space-y-4 rounded-xl bg-white p-5 shadow-[0_1px_0_rgba(0,0,0,0.04),0_8px_16px_-12px_rgba(0,0,0,0.12)]">
         <div className="flex items-center justify-between gap-3">
           <span className="text-sm font-semibold">Encrypt with password</span>
           <Switch
