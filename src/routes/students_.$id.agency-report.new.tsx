@@ -1591,21 +1591,35 @@ function SectionPanel({
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="flex items-center justify-between gap-3 rounded-lg border border-dashed bg-amber-50/40 px-4 py-2.5 text-xs">
-            <span className="flex items-center gap-2 text-amber-700">
-              <Clock className="h-3.5 w-3.5" />
-              Awaiting input from {assignedTo.name}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                toast.success(`Reminder sent to ${assignedTo.name}`)
-              }
-            >
-              Send reminder
-            </Button>
-          </div>
+          {section.role === 'principal' ? (
+            // Fresh-draft principal section: the principal hasn't been
+            // asked yet (the YH hasn't submitted), so "Awaiting input"
+            // + Send reminder reads as if she's overdue. Use a neutral
+            // "will review after submission" note instead.
+            <div className="flex items-center gap-2 rounded-lg border border-dashed bg-muted/30 px-4 py-2.5 text-xs text-muted-foreground">
+              <Lock className="h-3.5 w-3.5" />
+              <span>
+                {assignedTo.name} will review and sign this section after
+                you submit the report.
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between gap-3 rounded-lg border border-dashed bg-amber-50/40 px-4 py-2.5 text-xs">
+              <span className="flex items-center gap-2 text-amber-700">
+                <Clock className="h-3.5 w-3.5" />
+                Awaiting input from {assignedTo.name}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  toast.success(`Reminder sent to ${assignedTo.name}`)
+                }
+              >
+                Send reminder
+              </Button>
+            </div>
+          )}
           <div className="pointer-events-none space-y-5 select-none opacity-70">
             {section.fields.map((f) => (
               <div key={f.id} className="space-y-1.5">
