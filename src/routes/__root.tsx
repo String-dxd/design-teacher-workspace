@@ -115,8 +115,11 @@ function RootComponent() {
   const isGlowRoute = matches.some((m) =>
     (m as { pathname: string }).pathname?.startsWith('/glow/'),
   )
+  const isNotFoundRoute =
+    matches.some((m) => m.routeId === '/$') ||
+    matches.at(-1)?.status === 'notFound'
 
-  if (isGuestRoute || isGlowRoute) {
+  if (isGuestRoute || isGlowRoute || isNotFoundRoute) {
     return (
       <ErrorBoundary>
         <QueryClientProvider client={queryClient}>
