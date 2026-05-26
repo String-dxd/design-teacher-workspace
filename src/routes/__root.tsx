@@ -10,6 +10,7 @@ import * as React from 'react'
 
 import { DirectEdit } from 'made-refine'
 import appCss from '../styles.css?url'
+import { NotFoundPage } from './$'
 import { DraggableTanStackDevtools } from '@/components/draggable-tanstack-devtools'
 import { AppHeader } from '@/components/app-header'
 import { AppSidebar } from '@/components/app-sidebar'
@@ -24,6 +25,7 @@ import { HeyTaliaPanel } from '@/components/heytalia/heytalia-panel'
 import { HeyTaliaProvider } from '@/components/heytalia/heytalia-context'
 
 export const Route = createRootRoute({
+  notFoundComponent: NotFoundPage,
   head: () => ({
     meta: [
       {
@@ -113,8 +115,11 @@ function RootComponent() {
   const isGlowRoute = matches.some((m) =>
     (m as { pathname: string }).pathname?.startsWith('/glow/'),
   )
+  const isNotFoundRoute =
+    matches.some((m) => m.routeId === '/$') ||
+    matches.at(-1)?.status === 'notFound'
 
-  if (isGuestRoute || isGlowRoute) {
+  if (isGuestRoute || isGlowRoute || isNotFoundRoute) {
     return (
       <ErrorBoundary>
         <QueryClientProvider client={queryClient}>
