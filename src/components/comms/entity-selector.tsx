@@ -973,7 +973,9 @@ export function EntitySelector({
             setQuery(e.target.value)
             if (!isOpen) setIsOpen(true)
           }}
-          onFocus={() => { if (openOnFocus) setIsOpen(true) }}
+          onFocus={() => {
+            if (openOnFocus) setIsOpen(true)
+          }}
           onKeyDown={(e) => {
             if (e.key === 'Escape') {
               if (query) setQuery('')

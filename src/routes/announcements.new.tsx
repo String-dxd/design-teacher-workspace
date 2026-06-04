@@ -56,7 +56,11 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Calendar } from '@/components/ui/calendar'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import { cn, stripSalutation } from '@/lib/utils'
 import {
   clearDraft,
@@ -1210,8 +1214,7 @@ function NewAnnouncementPage() {
         existingAnnouncement.attachments.map((att) => {
           // Parse "214 KB" / "1.2 MB" → bytes
           const [num, unit] = att.size.split(' ')
-          const multiplier =
-            unit?.toUpperCase() === 'MB' ? 1024 * 1024 : 1024
+          const multiplier = unit?.toUpperCase() === 'MB' ? 1024 * 1024 : 1024
           return {
             name: att.name,
             size: Math.round(parseFloat(num) * multiplier),
@@ -1750,10 +1753,7 @@ function NewAnnouncementPage() {
                   open={showValidationPopover}
                   onOpenChange={setShowValidationPopover}
                 >
-                  <Button
-                    size="sm"
-                    onClick={handlePostClick}
-                  >
+                  <Button size="sm" onClick={handlePostClick}>
                     <Send className="mr-2 h-3.5 w-3.5" />
                     Post now
                   </Button>
@@ -1832,7 +1832,6 @@ function NewAnnouncementPage() {
             )}
           </div>
         </div>
-
       </div>
 
       {/* Form body */}
@@ -2064,7 +2063,9 @@ function NewAnnouncementPage() {
                     aria-invalid={errTitle}
                   />
                   {errTitle && (
-                    <p className="text-xs text-destructive">Title is required.</p>
+                    <p className="text-xs text-destructive">
+                      Title is required.
+                    </p>
                   )}
                 </div>
 

@@ -255,8 +255,12 @@ function SharingDialog({
                   <Users className="size-5 text-muted-foreground" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-foreground">No one added yet</p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">Search above to add staff</p>
+                  <p className="text-sm font-medium text-foreground">
+                    No one added yet
+                  </p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    Search above to add staff
+                  </p>
                 </div>
               </div>
             ) : (
