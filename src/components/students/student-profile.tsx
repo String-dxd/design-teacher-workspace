@@ -236,10 +236,14 @@ function MsfUpliftSheetContent({
   title,
   value,
   titleTooltip,
+  fscCaseStartDate,
+  fscCaseEndDate,
 }: {
   title: string
   value: string
   titleTooltip?: string
+  fscCaseStartDate?: string
+  fscCaseEndDate?: string
 }) {
   return (
     <div className="space-y-5">
@@ -277,19 +281,42 @@ function MsfUpliftSheetContent({
       <div>
         <p className="mb-2 text-sm font-medium">Remarks</p>
         <div className="rounded-lg bg-muted px-4 py-3 space-y-4 text-sm">
+          {fscCaseStartDate && (
+            <div>
+              <p className="mb-1.5 font-medium">FSC Case start date</p>
+              <ul className="space-y-1">
+                <li className="flex items-center gap-2">
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-foreground" />
+                  {fscCaseStartDate}
+                </li>
+              </ul>
+            </div>
+          )}
+          {fscCaseEndDate && (
+            <div>
+              <p className="mb-1.5 font-medium">FSC Case end date</p>
+              <ul className="space-y-1">
+                <li className="flex items-center gap-2">
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-foreground" />
+                  {fscCaseEndDate}
+                </li>
+              </ul>
+            </div>
+          )}
           <div>
             <div className="mb-1.5 flex items-start gap-1">
-              <p className="flex-1 font-medium">
-                SSO nearest to student&apos;s residential address
-              </p>
+              <p className="font-medium">Nearest SSO</p>
               <Tooltip>
                 <TooltipTrigger
                   render={<span className="mt-0.5 inline-flex shrink-0" />}
                 >
                   <Info className="h-3.5 w-3.5 text-muted-foreground" />
                 </TooltipTrigger>
-                <TooltipContent side="top">
-                  MSF via Uplift Office • As of 19 May 2025
+                <TooltipContent
+                  side="top"
+                  className="max-w-xs whitespace-pre-line"
+                >
+                  {`Social Service Offices (SSOs) nearest to student's residential address. MSF via Uplift Office • As of 19 Sep 2026`}
                 </TooltipContent>
               </Tooltip>
             </div>
@@ -308,22 +335,18 @@ function MsfUpliftSheetContent({
 
 function NonIntactFamilySheetContent({
   value,
-  custody,
-  divorced,
-  consideringDivorce,
+  ccpEnrolled,
   titleTooltip,
 }: {
   value: string
-  custody: string
-  divorced: 'Yes' | 'No'
-  consideringDivorce: 'Yes' | 'No'
+  ccpEnrolled: 'Yes' | 'No'
   titleTooltip?: string
 }) {
   return (
     <div className="space-y-5">
       <div>
         <div className="mb-1 flex items-center gap-1">
-          <p className="text-sm font-medium">From Non-Intact Family</p>
+          <p className="text-sm font-medium">Parents are divorced</p>
           {titleTooltip && (
             <Tooltip>
               <TooltipTrigger
@@ -356,46 +379,43 @@ function NonIntactFamilySheetContent({
         <p className="mb-2 text-sm font-medium">Remarks</p>
         <div className="rounded-lg bg-muted px-4 py-3 space-y-4 text-sm">
           <div>
-            <p className="font-medium">Custody</p>
-            <p className="mb-1.5 text-xs text-muted-foreground">
-              School Cockpit • As of 1 May 2026
-            </p>
-            <ul className="space-y-1">
-              <li className="flex items-start gap-2">
-                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-foreground" />
-                {custody}
-              </li>
-            </ul>
-          </div>
-          <div>
-            <p className="font-medium">Parents&apos; marital status</p>
-            <p className="mb-1.5 text-xs text-muted-foreground">
-              MSF via Uplift Office • As of 19 May 2025
-            </p>
-            <ul className="space-y-1">
-              <li className="flex items-center gap-2">
-                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-foreground" />
-                Divorced: {divorced}
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-foreground" />
-                Considering divorce: {consideringDivorce}
-              </li>
-            </ul>
-          </div>
-          <div>
-            <div className="mb-1.5 flex items-start gap-1">
-              <p className="flex-1 font-medium">
-                SSO nearest to student&apos;s residential address
-              </p>
+            <div className="flex items-start gap-1">
+              <p className="font-medium">Parent enrolled in CCP</p>
               <Tooltip>
                 <TooltipTrigger
                   render={<span className="mt-0.5 inline-flex shrink-0" />}
                 >
                   <Info className="h-3.5 w-3.5 text-muted-foreground" />
                 </TooltipTrigger>
-                <TooltipContent side="top">
-                  MSF via Uplift Office • As of 19 May 2025
+                <TooltipContent side="top" className="max-w-xs">
+                  {`"Yes" indicates that at least one parent is enrolled in the Mandatory Co-Parenting Programme (CCP). All parents with children below 21 years old are required to attend the CCP before filing for divorce. Under the CPP, parents receive support from counsellors to help them make informed decisions that prioritise the well-being of their children, such as working out co-parenting arrangements arising from a divorce.`}
+                </TooltipContent>
+              </Tooltip>
+            </div>
+            <p className="mb-1.5 text-xs text-muted-foreground">
+              MSF via Uplift Office • As of 19 May 2025
+            </p>
+            <ul className="space-y-1">
+              <li className="flex items-center gap-2">
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-foreground" />
+                {ccpEnrolled}
+              </li>
+            </ul>
+          </div>
+          <div>
+            <div className="mb-1.5 flex items-start gap-1">
+              <p className="font-medium">Nearest SSO</p>
+              <Tooltip>
+                <TooltipTrigger
+                  render={<span className="mt-0.5 inline-flex shrink-0" />}
+                >
+                  <Info className="h-3.5 w-3.5 text-muted-foreground" />
+                </TooltipTrigger>
+                <TooltipContent
+                  side="top"
+                  className="max-w-xs whitespace-pre-line"
+                >
+                  {`Social Service Offices (SSOs) nearest to student's residential address. MSF via Uplift Office • As of 19 Sep 2026`}
                 </TooltipContent>
               </Tooltip>
             </div>
@@ -734,6 +754,12 @@ export function StudentProfile({
   const agencyReports = getAgencyReportsByStudent(student.id)
 
   const fasField = <Field label="FAS" value={student.fas || '-'} />
+  const custodyField = (
+    <Field
+      label="Custody"
+      value={student.custody || 'Mother (Sole custody with care and control)'}
+    />
+  )
   const housingField = (
     <FieldWithDetails
       label="Housing"
@@ -1544,14 +1570,33 @@ export function StudentProfile({
             {msfUpliftEnabled ? (
               <>
                 {primaryContactField}
-                {siblingsField}
-                {fasField}
-                {housingField}
-                {housingOwnershipField}
+                {custodyField}
                 {(() => {
-                  const comLink = student.supportedByComLink ?? '-'
+                  const nonIntact = student.nonIntactFamily ?? '-'
+                  const nonIntactTooltip = `"Yes" if any of the following is provided:\n• Parents' divorced status\n• Parents' considering divorce status based on enrolment the Mandatory Co-Parenting Programme (CCP)`
+                  return (
+                    <FieldWithDetails
+                      label="Parents are divorced"
+                      tooltip="Parents are divorced"
+                      description="MSF via Uplift Office • 19 May 2025"
+                      value={nonIntact}
+                      sideSheetTitle="Parents are divorced"
+                      sideSheetContent={
+                        <NonIntactFamilySheetContent
+                          value={nonIntact}
+                          ccpEnrolled="Yes"
+                          titleTooltip={nonIntactTooltip}
+                        />
+                      }
+                    />
+                  )
+                })()}
+                {(() => {
+                  const comLink = student.supportedByComLink ?? 'No'
                   const comLinkDisplay =
-                    comLink === 'Yes' ? 'Yes by SSO Woodlands' : comLink
+                    comLink === 'Yes'
+                      ? `Yes by ${student.supportedByComLinkBy ?? 'SSO Woodlands'}`
+                      : comLink
                   return (
                     <FieldWithDetails
                       label="Supported by ComLink+"
@@ -1569,50 +1614,35 @@ export function StudentProfile({
                   )
                 })()}
                 {(() => {
-                  const fsc = student.supportedByFsc ?? '-'
+                  const fsc = student.supportedByFsc ?? 'No'
                   const fscDisplay =
-                    fsc === 'Yes' ? 'Yes by Fei Yue FSC (Choa Chu Kang)' : fsc
+                    fsc === 'Yes (Current)'
+                      ? 'Currently supported by Fei Yue FSC (Choa Chu Kang)'
+                      : fsc === 'Yes (Past)'
+                        ? 'Previously supported by Fei Yue FSC (Choa Chu Kang)'
+                        : fsc
                   return (
                     <FieldWithDetails
-                      label="Supported by FSC in the past 2 years"
-                      tooltip="Supported by FSC in the past 2 years"
+                      label="Supported by FSC"
+                      tooltip="Supported by FSC"
                       description="MSF via Uplift Office • 19 May 2025"
                       value={fscDisplay}
-                      sideSheetTitle="Supported by FSC in the past 2 years"
+                      sideSheetTitle="Supported by FSC"
                       sideSheetContent={
                         <MsfUpliftSheetContent
-                          title="Supported by FSC in the past 2 years"
+                          title="Supported by FSC"
                           value={fscDisplay}
+                          fscCaseStartDate="11 Jan 2025"
+                          fscCaseEndDate="22 May 2026"
                         />
                       }
                     />
                   )
                 })()}
-                {(() => {
-                  const nonIntact = student.nonIntactFamily ?? '-'
-                  const nonIntactTooltip = `"Yes" if any of the following is provided:\n• Custody information\n• Parents' divorced status\n• Parents' considering divorce status based on enrolment the Mandatory Co-Parenting Programme (CCP)\n\nBased on School Cockpit and MSF via Uplift Office`
-                  return (
-                    <FieldWithDetails
-                      label="From Non-Intact Family"
-                      tooltip="From Non-Intact Family"
-                      description="School Cockpit, MSF via Uplift Office • 1 May 2026"
-                      value={nonIntact}
-                      sideSheetTitle="From Non-Intact Family"
-                      sideSheetContent={
-                        <NonIntactFamilySheetContent
-                          value={nonIntact}
-                          custody={
-                            student.custody ||
-                            'Mother (Sole custody with care and control)'
-                          }
-                          divorced="No"
-                          consideringDivorce="Yes"
-                          titleTooltip={nonIntactTooltip}
-                        />
-                      }
-                    />
-                  )
-                })()}
+                {fasField}
+                {housingField}
+                {housingOwnershipField}
+                {siblingsField}
               </>
             ) : (
               <>

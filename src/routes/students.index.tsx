@@ -247,7 +247,7 @@ function StudentsPage() {
       if (msfUpliftEnabled && !hasMsf) {
         const msfColumns = defaultColumns.filter((c) => MSF_IDS.includes(c.id))
         const fasIndex = prev.findIndex((c) => c.id === 'fas')
-        const insertAt = fasIndex >= 0 ? fasIndex + 1 : prev.length
+        const insertAt = fasIndex >= 0 ? fasIndex : prev.length
         return [
           ...prev.slice(0, insertAt),
           ...msfColumns,
