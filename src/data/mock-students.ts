@@ -5299,15 +5299,35 @@ export const mockStudents: Array<Student> = [
 ]
 
 const MSF_VALUES: Array<'Yes' | 'No' | '-'> = ['Yes', 'No', '-']
+const COMLINK_VALUES: Array<'Yes' | 'No'> = ['Yes', 'No']
+const FSC_VALUES: Array<'Yes (Current)' | 'Yes (Past)' | 'No'> = [
+  'Yes (Current)',
+  'Yes (Past)',
+  'No',
+]
 mockStudents.forEach((s, i) => {
-  if (s.name === 'Chen Jun Kai' || s.name === 'Sim Xin Yi') {
+  if (s.name === 'Chen Jun Kai') {
     s.supportedByComLink = 'Yes'
-    s.supportedByFsc = 'Yes'
+    s.supportedByFsc = 'Yes (Current)'
     s.nonIntactFamily = 'Yes'
     return
   }
-  s.supportedByComLink = MSF_VALUES[i % 3]
-  s.supportedByFsc = MSF_VALUES[(i + 1) % 3]
+  if (s.name === 'Sim Xin Yi') {
+    s.supportedByComLink = 'Yes'
+    s.supportedByComLinkBy = 'Fei Yue FSC (Choa Chu Kang)'
+    s.supportedByFsc = 'Yes (Current)'
+    s.nonIntactFamily = 'Yes'
+    return
+  }
+  if (s.name === 'Jing Wei Tan') {
+    s.supportedByComLink = 'Yes'
+    s.supportedByComLinkBy = 'SSO Woodlands'
+    s.supportedByFsc = FSC_VALUES[i % 3]
+    s.nonIntactFamily = MSF_VALUES[(i + 2) % 3]
+    return
+  }
+  s.supportedByComLink = COMLINK_VALUES[i % 2]
+  s.supportedByFsc = FSC_VALUES[i % 3]
   s.nonIntactFamily = MSF_VALUES[(i + 2) % 3]
 })
 

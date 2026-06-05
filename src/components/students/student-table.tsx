@@ -604,16 +604,40 @@ export function StudentTable({
           className="min-w-[200px]"
         />
       )}
-      {isVisible('siblings') && (
+      {isVisible('nonIntactFamily') && (
         <ColumnHeaderMenu
-          column={columns.find((c) => c.id === 'siblings')!}
+          column={columns.find((c) => c.id === 'nonIntactFamily')!}
           currentSort={sort}
           activeFilterFields={activeFilterFields}
           onSort={onSort}
           onClearSort={onClearSort}
           onAddQuickFilter={onAddQuickFilter}
           onClearFilter={onClearFilter}
-          className="min-w-[110px]"
+          className="min-w-[180px]"
+        />
+      )}
+      {isVisible('supportedByComLink') && (
+        <ColumnHeaderMenu
+          column={columns.find((c) => c.id === 'supportedByComLink')!}
+          currentSort={sort}
+          activeFilterFields={activeFilterFields}
+          onSort={onSort}
+          onClearSort={onClearSort}
+          onAddQuickFilter={onAddQuickFilter}
+          onClearFilter={onClearFilter}
+          className="min-w-[180px]"
+        />
+      )}
+      {isVisible('supportedByFsc') && (
+        <ColumnHeaderMenu
+          column={columns.find((c) => c.id === 'supportedByFsc')!}
+          currentSort={sort}
+          activeFilterFields={activeFilterFields}
+          onSort={onSort}
+          onClearSort={onClearSort}
+          onAddQuickFilter={onAddQuickFilter}
+          onClearFilter={onClearFilter}
+          className="min-w-[240px]"
         />
       )}
       {isVisible('fas') && (
@@ -652,40 +676,16 @@ export function StudentTable({
           className="min-w-[125px]"
         />
       )}
-      {isVisible('supportedByComLink') && (
+      {isVisible('siblings') && (
         <ColumnHeaderMenu
-          column={columns.find((c) => c.id === 'supportedByComLink')!}
+          column={columns.find((c) => c.id === 'siblings')!}
           currentSort={sort}
           activeFilterFields={activeFilterFields}
           onSort={onSort}
           onClearSort={onClearSort}
           onAddQuickFilter={onAddQuickFilter}
           onClearFilter={onClearFilter}
-          className="min-w-[180px]"
-        />
-      )}
-      {isVisible('supportedByFsc') && (
-        <ColumnHeaderMenu
-          column={columns.find((c) => c.id === 'supportedByFsc')!}
-          currentSort={sort}
-          activeFilterFields={activeFilterFields}
-          onSort={onSort}
-          onClearSort={onClearSort}
-          onAddQuickFilter={onAddQuickFilter}
-          onClearFilter={onClearFilter}
-          className="min-w-[240px]"
-        />
-      )}
-      {isVisible('nonIntactFamily') && (
-        <ColumnHeaderMenu
-          column={columns.find((c) => c.id === 'nonIntactFamily')!}
-          currentSort={sort}
-          activeFilterFields={activeFilterFields}
-          onSort={onSort}
-          onClearSort={onClearSort}
-          onAddQuickFilter={onAddQuickFilter}
-          onClearFilter={onClearFilter}
-          className="min-w-[180px]"
+          className="min-w-[110px]"
         />
       )}
       {isVisible('commuterStatus') && (
@@ -900,7 +900,21 @@ export function StudentTable({
           {student.postSecEligibility}
         </TableCell>
       )}
-      {isVisible('siblings') && <TableCell>{student.siblings}</TableCell>}
+      {isVisible('nonIntactFamily') && (
+        <TableCell>
+          {student.nonIntactFamily === '-' || !student.nonIntactFamily ? (
+            <span className="text-muted-foreground">-</span>
+          ) : (
+            student.nonIntactFamily
+          )}
+        </TableCell>
+      )}
+      {isVisible('supportedByComLink') && (
+        <TableCell>{student.supportedByComLink ?? 'No'}</TableCell>
+      )}
+      {isVisible('supportedByFsc') && (
+        <TableCell>{student.supportedByFsc ?? 'No'}</TableCell>
+      )}
       {isVisible('fas') && (
         <TableCell>
           {student.fas || <span className="text-muted-foreground">-</span>}
@@ -922,33 +936,7 @@ export function StudentTable({
           )}
         </TableCell>
       )}
-      {isVisible('supportedByComLink') && (
-        <TableCell>
-          {student.supportedByComLink === '-' || !student.supportedByComLink ? (
-            <span className="text-muted-foreground">-</span>
-          ) : (
-            student.supportedByComLink
-          )}
-        </TableCell>
-      )}
-      {isVisible('supportedByFsc') && (
-        <TableCell>
-          {student.supportedByFsc === '-' || !student.supportedByFsc ? (
-            <span className="text-muted-foreground">-</span>
-          ) : (
-            student.supportedByFsc
-          )}
-        </TableCell>
-      )}
-      {isVisible('nonIntactFamily') && (
-        <TableCell>
-          {student.nonIntactFamily === '-' || !student.nonIntactFamily ? (
-            <span className="text-muted-foreground">-</span>
-          ) : (
-            student.nonIntactFamily
-          )}
-        </TableCell>
-      )}
+      {isVisible('siblings') && <TableCell>{student.siblings}</TableCell>}
       {isVisible('commuterStatus') && (
         <TableCell>
           {student.commuterStatus || (
