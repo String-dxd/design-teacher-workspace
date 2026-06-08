@@ -137,13 +137,7 @@ export function ColumnHeaderMenu({
         )}
         style={stickyLeft ? { left: stickyLeft } : undefined}
       >
-        <Popover
-          open={open}
-          onOpenChange={(next) => {
-            setOpen(next)
-            if (!next) setTermSubOpen(false)
-          }}
-        >
+        <Popover open={open} onOpenChange={setOpen}>
           <Tooltip>
             <TooltipTrigger
               render={

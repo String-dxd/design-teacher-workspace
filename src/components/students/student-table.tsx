@@ -429,8 +429,6 @@ export function StudentTable({
           onAddQuickFilter={onAddQuickFilter}
           onClearFilter={onClearFilter}
           className="min-w-[135px]"
-          selectedTerm={getSelectedTerm('lateComing')}
-          onTermChange={(t) => handleTermChange('lateComing', t)}
         />
       )}
       {isVisible('absences') && (
@@ -443,8 +441,6 @@ export function StudentTable({
           onAddQuickFilter={onAddQuickFilter}
           onClearFilter={onClearFilter}
           className="min-w-[115px]"
-          selectedTerm={getSelectedTerm('absences')}
-          onTermChange={(t) => handleTermChange('absences', t)}
         />
       )}
       {isVisible('ccaMissed') && (
@@ -457,8 +453,6 @@ export function StudentTable({
           onAddQuickFilter={onAddQuickFilter}
           onClearFilter={onClearFilter}
           className="min-w-[130px]"
-          selectedTerm={getSelectedTerm('ccaMissed')}
-          onTermChange={(t) => handleTermChange('ccaMissed', t)}
         />
       )}
       {isVisible('offences') && (
@@ -471,8 +465,6 @@ export function StudentTable({
           onAddQuickFilter={onAddQuickFilter}
           onClearFilter={onClearFilter}
           className="min-w-[115px]"
-          selectedTerm={getSelectedTerm('offences')}
-          onTermChange={(t) => handleTermChange('offences', t)}
         />
       )}
       {isVisible('counsellingSessions') && (
@@ -485,8 +477,6 @@ export function StudentTable({
           onAddQuickFilter={onAddQuickFilter}
           onClearFilter={onClearFilter}
           className="min-w-[135px]"
-          selectedTerm={getSelectedTerm('counsellingSessions')}
-          onTermChange={(t) => handleTermChange('counsellingSessions', t)}
         />
       )}
       {isVisible('sen') && (
@@ -812,7 +802,7 @@ export function StudentTable({
       )}
       {isVisible('attendance') &&
         (() => {
-          const d = getTermlyData(student, getSelectedTerm('attendance'))
+          const d = getTermlyData(student, selectedTermKey)
           return (
             <TableCell>
               {d.totalSchoolDays > 0
@@ -824,30 +814,27 @@ export function StudentTable({
         })()}
       {isVisible('lateComing') && (
         <TableCell>
-          {getTermlyData(student, getSelectedTerm('lateComing')).lateComing}
+          {getTermlyData(student, selectedTermKey).lateComing}
         </TableCell>
       )}
       {isVisible('absences') && (
         <TableCell>
-          {getTermlyData(student, getSelectedTerm('absences')).absences}
+          {getTermlyData(student, selectedTermKey).absences}
         </TableCell>
       )}
       {isVisible('ccaMissed') && (
         <TableCell>
-          {getTermlyData(student, getSelectedTerm('ccaMissed')).ccaMissed}
+          {getTermlyData(student, selectedTermKey).ccaMissed}
         </TableCell>
       )}
       {isVisible('offences') && (
         <TableCell>
-          {getTermlyData(student, getSelectedTerm('offences')).offences}
+          {getTermlyData(student, selectedTermKey).offences}
         </TableCell>
       )}
       {isVisible('counsellingSessions') && (
         <TableCell>
-          {
-            getTermlyData(student, getSelectedTerm('counsellingSessions'))
-              .counsellingSessions
-          }
+          {getTermlyData(student, selectedTermKey).counsellingSessions}
         </TableCell>
       )}
       {isVisible('sen') && (
