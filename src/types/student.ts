@@ -133,6 +133,7 @@ export interface ClassOption {
 
 export type FilterField =
   // General
+  | 'dateRange'
   | 'class'
   | 'cca'
   // Academic Performance

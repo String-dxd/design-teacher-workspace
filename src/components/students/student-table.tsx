@@ -67,6 +67,9 @@ interface StudentTableProps {
   /** When set, table groups students by profile-group buckets. Adds Criteria
    *  met / Criteria tag columns and removes pagination. */
   group?: ProfileGroup | null
+  /** Term key (e.g. "T4 2025") derived from the Date range filter. Drives the
+   *  default term shown for temporal columns so values mimic the chosen period. */
+  periodTermKey?: string
 }
 
 const tagVariantMap: Record<AttentionTag, 'default' | 'secondary' | 'outline'> =
@@ -119,20 +122,14 @@ export function StudentTable({
   isRecalculating,
   onDeleteColumn,
   group,
+  periodTermKey,
 }: StudentTableProps) {
   const navigate = useNavigate()
   const { isEnabled } = useFeatureFlags()
   const isGrouped = !!group
 
-  const [columnTermSelections, setColumnTermSelections] = useState<
-    Record<string, string>
-  >({})
-
-  const getSelectedTerm = (columnId: string) =>
-    columnTermSelections[columnId] ?? CURRENT_TERM_KEY
-
-  const handleTermChange = (columnId: string, term: string) =>
-    setColumnTermSelections((prev) => ({ ...prev, [columnId]: term }))
+  // Temporal columns show data for the term chosen via the Date range filter.
+  const selectedTermKey = periodTermKey ?? CURRENT_TERM_KEY
 
   // Sticky header state
   const tableContainerRef = useRef<HTMLDivElement>(null)
@@ -420,8 +417,6 @@ export function StudentTable({
           onAddQuickFilter={onAddQuickFilter}
           onClearFilter={onClearFilter}
           className="min-w-[120px]"
-          selectedTerm={getSelectedTerm('attendance')}
-          onTermChange={(t) => handleTermChange('attendance', t)}
         />
       )}
       {isVisible('lateComing') && (

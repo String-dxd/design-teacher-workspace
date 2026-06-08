@@ -10,6 +10,7 @@ import {
   X,
 } from 'lucide-react'
 
+import { DateRangePicker } from './date-range-picker'
 import type {
   FilterCriterion,
   FilterField,
@@ -18,7 +19,9 @@ import type {
 } from '@/types/student'
 import type { FilterFieldOption } from '@/data/filter-config'
 import {
+  LATEST_PERIOD,
   filterFieldConfigs,
+  formatPeriodValue,
   groupLabels,
   groupOrder,
   isFilterComplete,
@@ -62,6 +65,8 @@ const multiselectOperatorOptions = [
   { value: 'is' as FilterOperator, label: 'is' },
 ]
 
+const periodOperatorOptions = [{ value: 'is' as FilterOperator, label: 'is' }]
+
 const textOperatorOptions = [
   { value: 'contains' as FilterOperator, label: 'contains' },
   { value: 'not_contains' as FilterOperator, label: 'does not contain' },
@@ -83,9 +88,11 @@ const filterFieldOptions: Array<FilterFieldOption2> = filterFieldConfigs.map(
         ? numericOperatorOptions
         : config.type === 'multiselect'
           ? multiselectOperatorOptions
-          : config.type === 'boolean' || config.type === 'enum'
-            ? booleanOperatorOptions
-            : textOperatorOptions,
+          : config.type === 'period'
+            ? periodOperatorOptions
+            : config.type === 'boolean' || config.type === 'enum'
+              ? booleanOperatorOptions
+              : textOperatorOptions,
   }),
 )
 
@@ -268,7 +275,9 @@ export function MultiFilterPopover({
         ? ''
         : fieldOption.type === 'multiselect'
           ? []
-          : fieldOption.defaultValue
+          : fieldOption.type === 'period'
+            ? []
+            : fieldOption.defaultValue
     onFiltersChange([
       ...filters,
       {
@@ -295,7 +304,9 @@ export function MultiFilterPopover({
         ? ''
         : fieldOption.type === 'multiselect'
           ? []
-          : fieldOption.defaultValue
+          : fieldOption.type === 'period'
+            ? []
+            : fieldOption.defaultValue
     const newFilters = [...filters]
     newFilters[index] = {
       ...newFilters[index],
@@ -327,7 +338,7 @@ export function MultiFilterPopover({
 
   const handleValueChange = (
     index: number,
-    value: string | number | FilterRangeValue,
+    value: string | number | FilterRangeValue | Array<string>,
   ) => {
     const newFilters = [...filters]
     newFilters[index] = { ...newFilters[index], value }
@@ -553,7 +564,44 @@ export function MultiFilterPopover({
                   <div className="w-[240px] shrink-0">
                     {needsValueInput(filter.operator) && (
                       <>
-                        {fieldOption?.type === 'multiselect' ? (
+                        {fieldOption?.type === 'period' ? (
+                          // Date range (period) picker — hierarchical year/term
+                          (() => {
+                            const selected = Array.isArray(filter.value)
+                              ? filter.value
+                              : []
+                            const triggerLabel = selected.includes(
+                              LATEST_PERIOD,
+                            )
+                              ? formatPeriodValue(LATEST_PERIOD)
+                              : selected.length === 0
+                                ? 'Select option'
+                                : selected.length === 1
+                                  ? formatPeriodValue(selected[0])
+                                  : `${selected.length} selected`
+                            return (
+                              <DateRangePicker
+                                value={selected}
+                                onChange={(v) => handleValueChange(index, v)}
+                                trigger={
+                                  <button
+                                    type="button"
+                                    className={cn(
+                                      'border-input flex h-9 w-full items-center justify-between gap-1.5 rounded-[14px] border bg-white px-3 text-sm outline-none',
+                                      selected.length === 0 &&
+                                        'text-muted-foreground',
+                                    )}
+                                  >
+                                    <span className="flex-1 truncate text-left">
+                                      {triggerLabel}
+                                    </span>
+                                    <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+                                  </button>
+                                }
+                              />
+                            )
+                          })()
+                        ) : fieldOption?.type === 'multiselect' ? (
                           // Multi-select dropdown
                           (() => {
                             const isOpen = openMultiselectIndex === index

@@ -4,19 +4,11 @@ import {
   ArrowUp,
   Check,
   ChevronDown,
-  ChevronRight,
-  Clock,
   Filter,
   Settings2,
   Trash2,
 } from 'lucide-react'
 
-import {
-  CURRENT_TERM_KEY,
-  CURRENT_TERM_LABEL,
-  PREV_TERM_KEY,
-  PREV_TERM_LABEL,
-} from './column-visibility-popover'
 import type { FilterField, SortConfig, SortDirection } from '@/types/student'
 import type { ColumnConfig } from './column-visibility-popover'
 import { cn } from '@/lib/utils'
@@ -58,10 +50,6 @@ interface ColumnHeaderMenuProps {
   onConfigureSubjects?: () => void
   /** Whether a custom subject selection is currently active */
   hasCustomSubjects?: boolean
-  /** Selected term key for accumulating columns */
-  selectedTerm?: string
-  /** Called when user picks a different term for this column */
-  onTermChange?: (term: string) => void
   /** Called when user confirms deletion of an imported column */
   onDelete?: () => void
 }
@@ -80,12 +68,9 @@ export function ColumnHeaderMenu({
   showStickyShadow,
   onConfigureSubjects,
   hasCustomSubjects,
-  selectedTerm,
-  onTermChange,
   onDelete,
 }: ColumnHeaderMenuProps) {
   const [open, setOpen] = useState(false)
-  const [termSubOpen, setTermSubOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
   const isSortedBy = currentSort?.field === column.id
@@ -97,26 +82,7 @@ export function ColumnHeaderMenu({
     ? 'shadow-[inset_0_1px_0_var(--color-border),inset_0_-1px_0_var(--color-border),2px_0_5px_-2px_rgba(0,0,0,0.1)]'
     : 'shadow-[inset_0_1px_0_var(--color-border),inset_0_-1px_0_var(--color-border)]'
 
-  const handleTermSelect = (term: string) => {
-    onTermChange?.(term)
-    setTermSubOpen(false)
-    setOpen(false)
-  }
-
-  const activeTermLabel =
-    selectedTerm === CURRENT_TERM_KEY || selectedTerm === undefined
-      ? CURRENT_TERM_LABEL
-      : PREV_TERM_LABEL
-
-  const showTermSelector =
-    column.temporalType === 'accumulating' &&
-    selectedTerm !== undefined &&
-    onTermChange !== undefined
-
-  const displaySource =
-    showTermSelector && column.source
-      ? `${column.source}, ${activeTermLabel}`
-      : column.source
+  const displaySource = column.source
 
   // Non-interactive columns render as plain TableHead
   if (!column.sortable && !column.filterable) {
@@ -256,67 +222,6 @@ export function ColumnHeaderMenu({
                     <Check className="ml-auto h-4 w-4 text-[var(--slate-11)]" />
                   )}
                 </button>
-              </>
-            )}
-
-            {/* Show data from — term selector submenu */}
-            {showTermSelector && (
-              <>
-                <div className="my-1 h-px bg-border" />
-                <Popover open={termSubOpen} onOpenChange={setTermSubOpen}>
-                  <PopoverTrigger asChild>
-                    <button
-                      type="button"
-                      className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-[var(--slate-5)]"
-                    >
-                      <Clock className="h-4 w-4 text-[var(--slate-11)]" />
-                      Show data from
-                      <ChevronRight className="ml-auto h-4 w-4 text-[var(--slate-11)]" />
-                    </button>
-                  </PopoverTrigger>
-                  <PopoverContent
-                    side="right"
-                    align="start"
-                    className="w-56 gap-1 p-3"
-                  >
-                    <button
-                      type="button"
-                      onClick={() => handleTermSelect(CURRENT_TERM_KEY)}
-                      className={cn(
-                        'flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-[var(--slate-5)]',
-                        (selectedTerm === CURRENT_TERM_KEY ||
-                          selectedTerm === undefined) &&
-                          'bg-[var(--slate-5)]',
-                      )}
-                    >
-                      <span className="flex-1 text-left">
-                        {CURRENT_TERM_LABEL}
-                      </span>
-                      {(selectedTerm === CURRENT_TERM_KEY ||
-                        selectedTerm === undefined) && (
-                        <Check className="shrink-0 h-3.5 w-3.5" />
-                      )}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleTermSelect(PREV_TERM_KEY)}
-                      className={cn(
-                        'flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-[var(--slate-5)]',
-                        selectedTerm === PREV_TERM_KEY && 'bg-[var(--slate-5)]',
-                      )}
-                    >
-                      <span className="flex-1 text-left">
-                        Previous term
-                        <span className="block text-xs text-[var(--slate-11)]">
-                          (Term 4, 2025)
-                        </span>
-                      </span>
-                      {selectedTerm === PREV_TERM_KEY && (
-                        <Check className="shrink-0 h-3.5 w-3.5" />
-                      )}
-                    </button>
-                  </PopoverContent>
-                </Popover>
               </>
             )}
 
