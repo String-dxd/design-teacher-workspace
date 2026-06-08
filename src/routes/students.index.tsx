@@ -11,12 +11,20 @@ import type {
 import type { ColumnConfig } from '@/components/students/column-visibility-popover'
 import { useFeatureFlag } from '@/hooks/use-feature-flag'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
-import { filterFieldConfigs, isFilterComplete } from '@/data/filter-config'
+import {
+  LATEST_PERIOD,
+  filterFieldConfigs,
+  isFilterComplete,
+  periodYears,
+} from '@/data/filter-config'
 import { DataCard } from '@/components/data-card'
 import { StudentFilters } from '@/components/students/student-filters'
 import { StudentTable } from '@/components/students/student-table'
 import { ClassSelector } from '@/components/students/class-selector'
-import { defaultColumns } from '@/components/students/column-visibility-popover'
+import {
+  CURRENT_TERM_KEY,
+  defaultColumns,
+} from '@/components/students/column-visibility-popover'
 import { ProfileGroupControl } from '@/components/students/profile-group-control'
 import {
   ALL_SUBJECTS,
@@ -76,6 +84,29 @@ function computeStudentOverall(
 export const Route = createFileRoute('/students/')({
   component: StudentsPage,
 })
+
+// Map a Date-range filter value ('2025-T4') to a termly-data key ('T4 2025')
+function periodValueToTermKey(value: string): string {
+  const [year, term] = value.split('-')
+  return `${term} ${year}`
+}
+
+// Single representative term key for the active Date-range selection, used to
+// drive the temporal columns so displayed values mimic the chosen period.
+// Multiple terms -> most recent selected; "Latest available"/none -> current term.
+function getPeriodTermKey(filters: Array<FilterCriterion>): string {
+  const dateRange = filters.find((f) => f.field === 'dateRange')
+  const values = Array.isArray(dateRange?.value) ? dateRange.value : []
+  const terms = values.filter((v) => v !== LATEST_PERIOD)
+  if (terms.length === 0) return CURRENT_TERM_KEY
+  // periodYears is ordered most-recent-first (by year, then term)
+  for (const year of periodYears) {
+    for (const t of year.terms) {
+      if (terms.includes(t.value)) return periodValueToTermKey(t.value)
+    }
+  }
+  return CURRENT_TERM_KEY
+}
 
 // Check if a student matches a filter condition
 function matchesCondition(
@@ -420,6 +451,10 @@ function StudentsPage() {
 
   const metrics = useMemo(() => getMetrics(matchedStudents), [matchedStudents])
 
+  // Term key driven by the Date range filter — temporal columns use this so the
+  // table's mock values reflect the selected period.
+  const periodTermKey = useMemo(() => getPeriodTermKey(filters), [filters])
+
   return (
     <div className="flex flex-col">
       {/* Fixed content area */}
@@ -512,6 +547,7 @@ function StudentsPage() {
           setColumns((prev) => prev.filter((c) => c.id !== columnId))
         }
         group={appliedGroup}
+        periodTermKey={periodTermKey}
       />
 
       <SubjectSelectorDialog

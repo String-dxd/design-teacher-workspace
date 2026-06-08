@@ -15,7 +15,71 @@ export function isFilterComplete(filter: FilterCriterion): boolean {
   return typeof value === 'string' && value.trim() !== ''
 }
 
-export type FieldType = 'numeric' | 'text' | 'boolean' | 'enum' | 'multiselect'
+export type FieldType =
+  | 'numeric'
+  | 'text'
+  | 'boolean'
+  | 'enum'
+  | 'multiselect'
+  | 'period'
+
+/**
+ * Data period (date range) options for the "Date range" filter.
+ *
+ * "Latest available" is the default view: for each data field it resolves to the
+ * most recent term that actually has a value (e.g. for Conduct grade at the
+ * start of Term 2 2026, the latest available data is still Term 1 2026).
+ * Users can instead pin the view to specific year/term combinations.
+ *
+ * Years are listed most recent first, and terms within a year are also listed
+ * most recent first (T2 above T1) to match the date-range picker design.
+ */
+export const LATEST_PERIOD = 'latest'
+
+/** Display label for the "Latest available" period option */
+export const LATEST_LABEL = 'Latest available (Recommended)'
+
+export interface PeriodTerm {
+  /** Stable value stored in the filter, e.g. "2026-T2" */
+  value: string
+  /** Short label shown in the picker, e.g. "T2" */
+  label: string
+}
+
+export interface PeriodYear {
+  year: number
+  terms: Array<PeriodTerm>
+}
+
+export const periodYears: Array<PeriodYear> = [
+  {
+    year: 2026,
+    // 2026 only has T1 and T2 so far
+    terms: [
+      { value: '2026-T2', label: 'T2' },
+      { value: '2026-T1', label: 'T1' },
+    ],
+  },
+  {
+    year: 2025,
+    terms: [
+      { value: '2025-T4', label: 'T4' },
+      { value: '2025-T3', label: 'T3' },
+      { value: '2025-T2', label: 'T2' },
+      { value: '2025-T1', label: 'T1' },
+    ],
+  },
+]
+
+/** Human-readable label for a stored period value, e.g. "2026-T1" -> "T1, 2026" */
+export function formatPeriodValue(value: string): string {
+  if (value === LATEST_PERIOD) return LATEST_LABEL
+  for (const year of periodYears) {
+    const term = year.terms.find((t) => t.value === value)
+    if (term) return `${term.label}, ${year.year}`
+  }
+  return value
+}
 
 export type FieldGroup =
   | 'general'
@@ -85,6 +149,14 @@ export interface FilterFieldConfig {
 
 export const filterFieldConfigs: Array<FilterFieldConfig> = [
   // General
+  {
+    field: 'dateRange',
+    label: 'Date range',
+    type: 'period',
+    group: 'general',
+    defaultOperator: 'is',
+    defaultValue: LATEST_PERIOD,
+  },
   {
     field: 'class',
     label: 'Class',

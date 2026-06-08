@@ -82,6 +82,8 @@ export function ProfileGroupCriteriaRow({
   const msfUpliftEnabled = isEnabled('msf-uplift-data')
 
   const visibleFields = filterFieldConfigs.filter((f) => {
+    // Date range is a data-view setting, not a student attribute to group by
+    if (f.field === 'dateRange') return false
     if (
       isStudentInsightsView &&
       (f.field === 'approvedMtl' ||
