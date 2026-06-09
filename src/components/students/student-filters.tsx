@@ -211,21 +211,23 @@ export function StudentFilters({
             matchedCount={matchedCount}
             totalCount={totalCount}
           />
-          <DateRangePicker
-            value={quickDateValue}
-            onChange={handleQuickDateChange}
-            trigger={
-              <button
-                type="button"
-                aria-label="Filter by date range"
-                className="border-border flex h-9 items-center gap-1.5 rounded-full border bg-white px-3 text-sm font-medium outline-none transition-colors hover:bg-muted aria-expanded:bg-muted"
-              >
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-                Date
-                <ChevronDown className="h-4 w-4 text-muted-foreground" />
-              </button>
-            }
-          />
+          {flags['date-range-filter'] && (
+            <DateRangePicker
+              value={quickDateValue}
+              onChange={handleQuickDateChange}
+              trigger={
+                <button
+                  type="button"
+                  aria-label="Filter by date range"
+                  className="border-border flex h-9 items-center gap-1.5 rounded-full border bg-white px-3 text-sm font-medium outline-none transition-colors hover:bg-muted aria-expanded:bg-muted"
+                >
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  Date
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                </button>
+              }
+            />
+          )}
         </div>
 
         <div className="flex items-center gap-2">

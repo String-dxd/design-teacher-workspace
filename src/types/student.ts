@@ -78,7 +78,7 @@ export interface Student {
   supportedByComLink?: 'Yes' | 'No'
   /** Name of the FSC or SSO providing ComLink+ support (shown on the profile) */
   supportedByComLinkBy?: string
-  supportedByFsc?: 'Yes (Current)' | 'Yes (Past)' | 'No'
+  supportedByFsc?: 'Yes' | 'No'
   nonIntactFamily?: 'Yes' | 'No' | '-'
   // Personal
   birthday?: string

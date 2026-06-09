@@ -335,7 +335,7 @@ export const filterFieldConfigs: Array<FilterFieldConfig> = [
   // Family, Housing, Finance
   {
     field: 'nonIntactFamily',
-    label: 'From Non-Intact Family',
+    label: 'Parents are divorced',
     type: 'multiselect',
     group: 'family',
     defaultOperator: 'is',
@@ -353,12 +353,12 @@ export const filterFieldConfigs: Array<FilterFieldConfig> = [
   },
   {
     field: 'supportedByFsc',
-    label: 'Supported by FSC in the past 2 years',
+    label: 'Supported by FSC',
     type: 'multiselect',
     group: 'family',
     defaultOperator: 'is',
     defaultValue: '',
-    enumValues: ['Yes (Current)', 'Yes (Past)', 'No'],
+    enumValues: ['Yes', 'No'],
   },
   {
     field: 'fas',
