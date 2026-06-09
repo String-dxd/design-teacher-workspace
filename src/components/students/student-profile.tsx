@@ -1616,11 +1616,9 @@ export function StudentProfile({
                 {(() => {
                   const fsc = student.supportedByFsc ?? 'No'
                   const fscDisplay =
-                    fsc === 'Yes (Current)'
-                      ? 'Currently supported by Fei Yue FSC (Choa Chu Kang)'
-                      : fsc === 'Yes (Past)'
-                        ? 'Previously supported by Fei Yue FSC (Choa Chu Kang)'
-                        : fsc
+                    fsc === 'Yes'
+                      ? 'Yes by Fei Yue FSC (Choa Chu Kang)'
+                      : fsc
                   return (
                     <FieldWithDetails
                       label="Supported by FSC"
@@ -1633,7 +1631,11 @@ export function StudentProfile({
                           title="Supported by FSC"
                           value={fscDisplay}
                           fscCaseStartDate="11 Jan 2025"
-                          fscCaseEndDate="22 May 2026"
+                          fscCaseEndDate={
+                            student.name === 'Sim Xin Yi'
+                              ? 'Ongoing'
+                              : '22 May 2026'
+                          }
                         />
                       }
                     />

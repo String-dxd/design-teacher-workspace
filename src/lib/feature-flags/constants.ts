@@ -16,4 +16,5 @@ export const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
   'agency-reports': true,
   'report-generation': true,
   'msf-uplift-data': false,
+  'date-range-filter': false,
 }

@@ -106,6 +106,13 @@ const featureFlagConfigs: Array<FeatureFlagConfig> = [
       'Show student data sourced from MSF via Uplift Office when this flag is enabled',
     stage: 'Experiment',
   },
+  {
+    key: 'date-range-filter',
+    label: 'Date range filter',
+    description:
+      'Show the Date range selector in the student list filter bar for filtering data by period',
+    stage: 'Experiment',
+  },
 ]
 
 function FeatureFlagsPage() {
