@@ -47,7 +47,7 @@ interface StudentTableProps {
   /** Current sort configuration */
   sort: SortConfig | null
   /** Set of filter fields that have active filters */
-  activeFilterFields: Set<FilterField>
+  activeFilterFields: Set<string>
   /** Handler for sorting by a column */
   onSort: (field: string, direction: SortDirection) => void
   /** Handler for clearing the current sort */

@@ -34,6 +34,10 @@ import {
 import { getMetrics, mockStudents } from '@/data/mock-students'
 import { getImportedColumns, saveImportedColumns } from '@/lib/imported-columns'
 import { useProfileGroups } from '@/lib/profile-group-storage'
+import {
+  computeStudentOverall,
+  evaluateCriterion,
+} from '@/lib/filter-evaluation'
 
 const SUBJECT_SELECTION_KEY = 'overall-pct-subjects'
 
@@ -65,22 +69,6 @@ function saveSelectedSubjects(subjects: Array<string> | null) {
   }
 }
 
-function computeStudentOverall(
-  student: Student,
-  selectedSubjects: Array<string> | null,
-): number {
-  if (!selectedSubjects || !student.subjectScores) {
-    return student.overallPercentage
-  }
-  const relevant = student.subjectScores.filter((s) =>
-    selectedSubjects.includes(s.subject),
-  )
-  if (relevant.length === 0) return student.overallPercentage
-  return Math.round(
-    relevant.reduce((sum, s) => sum + s.percentage, 0) / relevant.length,
-  )
-}
-
 export const Route = createFileRoute('/students/')({
   component: StudentsPage,
 })
@@ -106,109 +94,6 @@ function getPeriodTermKey(filters: Array<FilterCriterion>): string {
     }
   }
   return CURRENT_TERM_KEY
-}
-
-// Check if a student matches a filter condition
-function matchesCondition(
-  student: Student,
-  filter: FilterCriterion,
-  selectedSubjects?: Array<string> | null,
-): boolean {
-  // Imported/custom fields have no student data — skip filter (show all)
-  const knownFields = new Set<string>([
-    'class',
-    'cca',
-    'attendance',
-    'overallPercentage',
-    'conduct',
-    'approvedMtl',
-    'learningSupport',
-    'postSecEligibility',
-    'offences',
-    'absences',
-    'lateComing',
-    'ccaMissed',
-    'riskIndicators',
-    'lowMoodFlagged',
-    'socialLinks',
-    'counsellingSessions',
-    'sen',
-    'fas',
-    'housing',
-    'housingType',
-    'commuterStatus',
-    'afterSchoolArrangement',
-    'siblings',
-    'externalAgencies',
-    'supportedByComLink',
-    'supportedByFsc',
-    'nonIntactFamily',
-  ])
-  if (!knownFields.has(filter.field)) return true
-
-  // For overallPercentage, use the computed value based on selected subjects
-  // For attendance, compute % from daysPresent / totalSchoolDays
-  // For housingType, map raw 'Owned'/'Rented'/null to the canonical filter values
-  const value =
-    filter.field === 'overallPercentage'
-      ? computeStudentOverall(student, selectedSubjects ?? null)
-      : filter.field === 'attendance'
-        ? student.totalSchoolDays > 0
-          ? Math.round((student.daysPresent / student.totalSchoolDays) * 100)
-          : 0
-        : filter.field === 'housingType'
-          ? student.housingType === 'Owned'
-            ? 'Owner-occupied'
-            : student.housingType === 'Rented'
-              ? 'Rented'
-              : '-'
-          : student[filter.field as keyof Student]
-
-  switch (filter.operator) {
-    // Numeric operators
-    case 'gt':
-      return Number(value) > Number(filter.value)
-    case 'gte':
-      return Number(value) >= Number(filter.value)
-    case 'lt':
-      return Number(value) < Number(filter.value)
-    case 'lte':
-      return Number(value) <= Number(filter.value)
-    case 'eq':
-      return Number(value) === Number(filter.value)
-    case 'neq':
-      return Number(value) !== Number(filter.value)
-    case 'between': {
-      const range = filter.value as { min: number; max: number }
-      return Number(value) >= range.min && Number(value) <= range.max
-    }
-    case 'not_between': {
-      const range = filter.value as { min: number; max: number }
-      return Number(value) < range.min || Number(value) > range.max
-    }
-    // Text operators
-    case 'contains':
-      return String(value ?? '')
-        .toLowerCase()
-        .includes(String(filter.value).toLowerCase())
-    case 'not_contains':
-      return !String(value ?? '')
-        .toLowerCase()
-        .includes(String(filter.value).toLowerCase())
-    case 'is':
-      if (Array.isArray(filter.value)) {
-        return filter.value.includes(String(value ?? ''))
-      }
-      return String(value ?? '') === String(filter.value)
-    case 'is_not':
-      return String(value ?? '') !== String(filter.value)
-    case 'is_empty':
-      return !value || value === ''
-    case 'is_not_empty':
-      return !!value && value !== ''
-    default:
-      return false
-  }
 }
 
 function StudentsPage() {
@@ -347,7 +232,7 @@ function StudentsPage() {
       const matchesFilters =
         !hasFilterCriteria ||
         completeFilters.every((filter) =>
-          matchesCondition(student, filter, selectedSubjects),
+          evaluateCriterion(student, filter, { unknownField: 'match', selectedSubjects }),
         )
 
       if (matchesSearch && matchesFilters) {

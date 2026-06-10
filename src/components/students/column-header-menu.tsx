@@ -36,7 +36,7 @@ import {
 interface ColumnHeaderMenuProps {
   column: ColumnConfig
   currentSort: SortConfig | null
-  activeFilterFields: Set<FilterField>
+  activeFilterFields: Set<string>
   onSort: (field: string, direction: SortDirection) => void
   onClearSort: () => void
   onAddQuickFilter: (field: FilterField) => void
