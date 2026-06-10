@@ -929,13 +929,15 @@ function Step3({
         </Button>
         <div className="flex items-center gap-3">
           <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                onClick={() => onSkipAll(buildMappings())}
-              >
-                Skip for now
-              </Button>
+            <TooltipTrigger
+              render={
+                <Button
+                  variant="outline"
+                  onClick={() => onSkipAll(buildMappings())}
+                />
+              }
+            >
+              Skip for now
             </TooltipTrigger>
             <TooltipContent>
               New fields go under "Others" for now
