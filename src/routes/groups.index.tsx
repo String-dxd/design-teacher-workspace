@@ -640,15 +640,17 @@ function GroupsIndex() {
                           {!isShared ? (
                             // Owner: full dropdown
                             <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                                  aria-label="More actions"
-                                >
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
+                              <DropdownMenuTrigger
+                                render={
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                    aria-label="More actions"
+                                  />
+                                }
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
                                 <DropdownMenuItem
@@ -709,15 +711,17 @@ function GroupsIndex() {
                           ) : sharedRole === 'editor' ? (
                             // Shared editor: Edit + Make a copy
                             <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                                  aria-label="More actions"
-                                >
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
+                              <DropdownMenuTrigger
+                                render={
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                    aria-label="More actions"
+                                  />
+                                }
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
                                 <DropdownMenuItem
