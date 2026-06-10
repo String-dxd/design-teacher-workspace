@@ -51,6 +51,8 @@ A design prototype for the **MOE (Ministry of Education) Teacher Workspace** —
 - **[Bun](https://bun.sh/)** (runtime & package manager) — the project uses `bunfig.toml` to run all scripts with Bun's native runtime.
 - **Node.js ≥ 18** (required by some tooling)
 
+> This project uses **Bun exclusively** — run `bun install`, never `npm install` (an `npm` lockfile will drift from `bun.lock`).
+
 ## Getting Started
 
 1. **Clone the repository**
