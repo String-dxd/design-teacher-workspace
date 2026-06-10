@@ -70,6 +70,57 @@ describe('loadDraft with corrupted storage', () => {
   })
 })
 
+describe('loadDraft shape validation', () => {
+  it('patches missing array fields (questions, photosMeta) from an old-version draft', () => {
+    const oldDraft = {
+      savedAt: '2026-01-01T00:00:00Z',
+      title: 'Old draft',
+      description: '',
+      shortcuts: [],
+      websiteLinks: [],
+      recipients: [],
+      staffInCharge: [],
+      enquiryEmail: '',
+      responseType: 'view-only',
+      dueDate: '',
+      reminderType: 'none',
+      reminderDate: '',
+      // questions intentionally missing
+      eventStart: '',
+      eventStartTime: '',
+      eventEnd: '',
+      eventEndTime: '',
+      venue: '',
+      sendOption: 'now',
+      scheduledDate: '',
+      scheduledTime: '',
+      staffRoles: {},
+      filesMeta: [],
+      // photosMeta intentionally missing
+      coverPhotoIndices: [],
+    }
+    localStorage.setItem('pg-new-post-draft', JSON.stringify(oldDraft))
+    const loaded = loadDraft()
+    expect(loaded).not.toBeNull()
+    expect(loaded?.questions).toEqual([])
+    expect(loaded?.photosMeta).toEqual([])
+  })
+
+  it('returns null when the stored value is a JSON primitive (null literal or string)', () => {
+    localStorage.setItem('pg-new-post-draft', 'null')
+    expect(loadDraft()).toBeNull()
+
+    localStorage.setItem('pg-new-post-draft', '"a string"')
+    expect(loadDraft()).toBeNull()
+  })
+
+  it('returns null when the stored object is missing savedAt', () => {
+    const draft = { title: 'No savedAt', questions: [], photosMeta: [] }
+    localStorage.setItem('pg-new-post-draft', JSON.stringify(draft))
+    expect(loadDraft()).toBeNull()
+  })
+})
+
 describe('daysRemaining', () => {
   const NOW = new Date('2026-06-10T00:00:00Z')
 
