@@ -2,9 +2,6 @@
   "name": "moe-teacher-workspace-v0",
   "private": true,
   "type": "module",
-  "workspaces": [
-    "apps/*"
-  ],
   "scripts": {
     "dev": "vite dev --port 3000",
     "dev:3001": "vite dev --port 3001",
@@ -17,8 +14,6 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.0.0",
-    "@flow/core": "^0.1.17",
-    "@flow/design-tokens": "^0.1.7",
     "@fontsource/atkinson-hyperlegible": "^5.2.8",
     "@fontsource/inter": "^5.2.8",
     "@radix-ui/colors": "^3.0.0",
