@@ -1,17 +1,17 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import * as React from 'react'
+
+import { useAuth } from '@/lib/auth'
+import { Button } from '@/components/ui/button'
 import {
-  Button,
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-  Input,
-  Label,
-} from '@flow/core'
-import * as React from 'react'
-
-import { useAuth } from '@/lib/auth'
+} from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 
 export const Route = createFileRoute('/_guest/student-login')({
   component: StudentLoginPage,
@@ -30,20 +30,20 @@ function StudentLoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-page px-md">
+    <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm">
         <Card>
           <CardHeader>
-            <CardTitle className="typography-title-lg text-foreground-default">
+            <CardTitle className="text-base font-medium text-foreground">
               Sign in
             </CardTitle>
-            <CardDescription className="typography-body-md text-foreground-subtle">
+            <CardDescription className="text-sm text-muted-foreground">
               Enter your school email and password to continue.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="flex flex-col gap-md">
-              <div className="flex flex-col gap-xs">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
@@ -57,12 +57,12 @@ function StudentLoginPage() {
                 />
               </div>
 
-              <div className="flex flex-col gap-xs">
+              <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Password</Label>
                   <a
                     href="#"
-                    className="typography-label-sm text-foreground-link hover:text-foreground-link-hover transition-colors"
+                    className="text-xs font-medium text-twblue-11 transition-colors hover:text-twblue-12"
                   >
                     Forgot password?
                   </a>
@@ -79,7 +79,7 @@ function StudentLoginPage() {
                 />
               </div>
 
-              <Button type="submit" className="mt-sm w-full">
+              <Button type="submit" className="mt-3 w-full">
                 Sign in
               </Button>
             </form>

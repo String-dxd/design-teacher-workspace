@@ -268,7 +268,6 @@ function CollaboratorAvatars({
         {overflow > 0 && (
           <Tooltip>
             <TooltipTrigger
-              nativeButton={false}
               render={
                 <span className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-card bg-muted text-[10px] font-semibold text-muted-foreground" />
               }
@@ -285,7 +284,6 @@ function CollaboratorAvatars({
           return (
             <Tooltip key={c.email}>
               <TooltipTrigger
-                nativeButton={false}
                 render={
                   <span className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-card bg-primary/10 text-[10px] font-semibold text-primary" />
                 }
@@ -752,19 +750,21 @@ function TemplateSelection({
               />
             </div>
             <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="gap-2 aria-expanded:bg-white"
-                >
-                  <Filter className="h-4 w-4" />
-                  Filter
-                  {agencyFilter !== 'all' && (
-                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
-                      1
-                    </span>
-                  )}
-                </Button>
+              <PopoverTrigger
+                render={
+                  <Button
+                    variant="outline"
+                    className="gap-2 aria-expanded:bg-white"
+                  />
+                }
+              >
+                <Filter className="h-4 w-4" />
+                Filter
+                {agencyFilter !== 'all' && (
+                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
+                    1
+                  </span>
+                )}
               </PopoverTrigger>
               <PopoverContent align="end" className="w-60 p-0">
                 <div className="border-b p-2">

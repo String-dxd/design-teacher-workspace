@@ -1,23 +1,19 @@
 import { useMemo, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import {
-  Avatar,
-  AvatarFallback,
-  Button,
-  ToggleGroup,
-  ToggleGroupItem,
-} from '@flow/core'
-import {
   CalendarCheck2,
   CircleCheck,
   CircleX,
   Clock,
   Search,
   UserRound,
-} from '@flow/icons'
+} from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Button } from '@/components/ui/button'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { ClassSelector } from '@/components/students/class-selector'
 import { Input } from '@/components/ui/input'
 import { mockStudents } from '@/data/mock-students'
@@ -81,17 +77,17 @@ function AttendancePage() {
   }
 
   return (
-    <div className="flex flex-col gap-lg pt-lg">
+    <div className="flex flex-col gap-6 pt-6">
       {/* Page header */}
-      <div className="flex items-start justify-between px-lg">
-        <div className="flex flex-col gap-xs">
-          <div className="flex items-center gap-sm">
-            <CalendarCheck2 className="size-5 text-subtle" />
-            <h1 className="typography-title-lg text-default">
+      <div className="flex items-start justify-between px-6">
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-3">
+            <CalendarCheck2 className="size-5 text-muted-foreground" />
+            <h1 className="text-base font-medium text-foreground">
               Morning Attendance
             </h1>
           </div>
-          <p className="typography-body-sm text-subtle">
+          <p className="text-sm text-muted-foreground">
             {today.toLocaleDateString('en-SG', {
               weekday: 'long',
               day: 'numeric',
@@ -110,28 +106,28 @@ function AttendancePage() {
       </div>
 
       {/* Summary strip */}
-      <div className="flex flex-wrap items-center gap-sm px-lg">
-        <div className="flex items-center gap-xs rounded-md border border-success-7 bg-success-3 px-sm py-xs">
-          <CircleCheck className="size-4 shrink-0 text-success-11" />
-          <span className="typography-label-sm text-success-11">
+      <div className="flex flex-wrap items-center gap-3 px-6">
+        <div className="flex items-center gap-2 rounded-md border border-lime-7 bg-lime-3 px-3 py-2">
+          <CircleCheck className="size-4 shrink-0 text-lime-11" />
+          <span className="text-xs font-medium text-lime-11">
             {summary.present} Present
           </span>
         </div>
-        <div className="flex items-center gap-xs rounded-md border border-critical-7 bg-critical-3 px-sm py-xs">
-          <CircleX className="size-4 shrink-0 text-critical-11" />
-          <span className="typography-label-sm text-critical-11">
+        <div className="flex items-center gap-2 rounded-md border border-crimson-7 bg-crimson-3 px-3 py-2">
+          <CircleX className="size-4 shrink-0 text-crimson-11" />
+          <span className="text-xs font-medium text-crimson-11">
             {summary.absent} Absent
           </span>
         </div>
-        <div className="flex items-center gap-xs rounded-md border border-amber-7 bg-amber-3 px-sm py-xs">
+        <div className="flex items-center gap-2 rounded-md border border-amber-7 bg-amber-3 px-3 py-2">
           <Clock className="size-4 shrink-0 text-amber-11" />
-          <span className="typography-label-sm text-amber-11">
+          <span className="text-xs font-medium text-amber-11">
             {summary.late} Late
           </span>
         </div>
         {summary.unmarked > 0 && (
-          <div className="flex items-center gap-xs rounded-md border border-default px-sm py-xs">
-            <span className="typography-label-sm text-subtle">
+          <div className="flex items-center gap-2 rounded-md border border-border px-3 py-2">
+            <span className="text-xs font-medium text-muted-foreground">
               {summary.unmarked} Not marked
             </span>
           </div>
@@ -139,10 +135,10 @@ function AttendancePage() {
       </div>
 
       {/* Toolbar: class selector + search */}
-      <div className="flex items-center gap-sm px-lg">
+      <div className="flex items-center gap-3 px-6">
         <ClassSelector value={selectedClass} onValueChange={setSelectedClass} />
         <div className="relative ml-auto w-56">
-          <Search className="pointer-events-none absolute left-sm top-1/2 size-4 -translate-y-1/2 text-subtle" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="search"
             placeholder="Search students…"
@@ -154,11 +150,11 @@ function AttendancePage() {
       </div>
 
       {/* Student list */}
-      <div className="mx-lg mb-lg overflow-hidden rounded-lg border border-default bg-section">
+      <div className="mx-6 mb-6 overflow-hidden rounded-lg border border-border bg-card">
         {filteredStudents.length === 0 ? (
-          <div className="flex flex-col items-center gap-sm py-2xl">
-            <UserRound className="size-8 text-neutral-11" />
-            <p className="typography-body-sm text-subtle">No students found</p>
+          <div className="flex flex-col items-center gap-3 py-10">
+            <UserRound className="size-8 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">No students found</p>
           </div>
         ) : (
           <ul role="list">
@@ -168,41 +164,37 @@ function AttendancePage() {
                 <li
                   key={student.id}
                   className={cn(
-                    'flex items-center gap-md px-md py-sm',
+                    'flex items-center gap-4 px-4 py-3',
                     index < filteredStudents.length - 1 &&
-                      'border-b border-default',
+                      'border-b border-border',
                   )}
                 >
                   <Avatar>
-                    <AvatarFallback className="text-default">
+                    <AvatarFallback className="text-foreground">
                       {getInitials(student.name)}
                     </AvatarFallback>
                   </Avatar>
 
                   <div className="min-w-0 flex-1">
-                    <p className="truncate typography-body-md-strong text-default">
+                    <p className="truncate text-sm font-medium text-foreground">
                       {student.name}
                     </p>
-                    <p className="typography-label-sm text-subtle">
+                    <p className="text-xs font-medium text-muted-foreground">
                       Class {student.class}
                     </p>
                   </div>
 
                   <ToggleGroup
-                    type="single"
-                    value={status ?? ''}
-                    onValueChange={(val) => handleStatusChange(student.id, val)}
+                    value={status ? [status] : []}
+                    onValueChange={(vals) =>
+                      handleStatusChange(student.id, vals[0] ?? '')
+                    }
                     aria-label={`Attendance status for ${student.name}`}
                   >
                     <ToggleGroupItem
                       value="present"
                       aria-label="Present"
-                      className={cn(
-                        'flex items-center gap-xs border px-sm typography-label-sm transition-colors',
-                        status === 'present'
-                          ? 'border-success-7 bg-success-3 text-success-11'
-                          : 'border-transparent text-subtle hover:text-default',
-                      )}
+                      className="flex items-center gap-2 border border-transparent px-3 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground aria-pressed:border-lime-7 aria-pressed:bg-lime-3 aria-pressed:text-lime-11"
                     >
                       <CircleCheck className="size-4 shrink-0" />
                       <span>Present</span>
@@ -210,12 +202,7 @@ function AttendancePage() {
                     <ToggleGroupItem
                       value="late"
                       aria-label="Late"
-                      className={cn(
-                        'flex items-center gap-xs border px-sm typography-label-sm transition-colors',
-                        status === 'late'
-                          ? 'border-amber-7 bg-amber-3 text-amber-11'
-                          : 'border-transparent text-subtle hover:text-default',
-                      )}
+                      className="flex items-center gap-2 border border-transparent px-3 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground aria-pressed:border-amber-7 aria-pressed:bg-amber-3 aria-pressed:text-amber-11"
                     >
                       <Clock className="size-4 shrink-0" />
                       <span>Late</span>
@@ -223,12 +210,7 @@ function AttendancePage() {
                     <ToggleGroupItem
                       value="absent"
                       aria-label="Absent"
-                      className={cn(
-                        'flex items-center gap-xs border px-sm typography-label-sm transition-colors',
-                        status === 'absent'
-                          ? 'border-critical-7 bg-critical-3 text-critical-11'
-                          : 'border-transparent text-subtle hover:text-default',
-                      )}
+                      className="flex items-center gap-2 border border-transparent px-3 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground aria-pressed:border-crimson-7 aria-pressed:bg-crimson-3 aria-pressed:text-crimson-11"
                     >
                       <CircleX className="size-4 shrink-0" />
                       <span>Absent</span>

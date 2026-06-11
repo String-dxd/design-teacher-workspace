@@ -16,7 +16,6 @@ A design prototype for the **MOE (Ministry of Education) Teacher Workspace** —
 | Rich Text       | Tiptap                                                                                                        |
 | Charts          | Recharts                                                                                                      |
 | Icons           | Lucide React                                                                                                  |
-| Design Tokens   | Flow Design System (`@flow/core`, `@flow/design-tokens`)                                                      |
 | Build Tool      | Vite                                                                                                          |
 | Package Manager | Bun                                                                                                           |
 | Testing         | Vitest + Testing Library (React & DOM)                                                                        |
@@ -26,7 +25,6 @@ A design prototype for the **MOE (Ministry of Education) Teacher Workspace** —
 ## Project Structure
 
 ```
-├── apps/                  # Workspace apps (e.g. flow-ds-test)
 ├── packages/              # Shared packages (e.g. ds-tw-skills)
 ├── public/                # Static assets (images, favicon, manifest)
 ├── src/
@@ -51,6 +49,8 @@ A design prototype for the **MOE (Ministry of Education) Teacher Workspace** —
 - **[Bun](https://bun.sh/)** (runtime & package manager) — the project uses `bunfig.toml` to run all scripts with Bun's native runtime.
 - **Node.js ≥ 18** (required by some tooling)
 
+> This project uses **Bun exclusively** — run `bun install`, never `npm install` (an `npm` lockfile will drift from `bun.lock`).
+
 ## Getting Started
 
 1. **Clone the repository**
@@ -65,8 +65,6 @@ A design prototype for the **MOE (Ministry of Education) Teacher Workspace** —
    ```bash
    bun install
    ```
-
-   > The `.npmrc` configures a scoped registry for `@flow/*` packages. No additional auth tokens are needed for public access.
 
 3. **Copy the environment file** (optional — no environment variables are required; feature flags are stored in `localStorage`)
 
@@ -101,7 +99,6 @@ A design prototype for the **MOE (Ministry of Education) Teacher Workspace** —
 - **@tanstack/react-start** — Full-stack React framework with SSR
 - **@tanstack/react-router** — File-based routing
 - **@base-ui/react** — Headless UI primitives from MUI
-- **@flow/core & @flow/design-tokens** — MOE Flow Design System
 - **@tiptap** extensions — Rich text editor suite
 - **recharts** — Charting library
 - **tailwindcss** — Utility-first CSS framework
