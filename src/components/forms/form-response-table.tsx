@@ -221,23 +221,25 @@ export function FormResponseTable({
 
         {/* Filter popover */}
         <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              className={cn(
-                'gap-1.5',
-                activeFilterCount > 0 && 'border-twblue-9 text-twblue-9',
-              )}
-            >
-              <SlidersHorizontal className="h-3.5 w-3.5" />
-              Filter
-              {activeFilterCount > 0 && (
-                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-twblue-9 text-[10px] font-semibold text-white">
-                  {activeFilterCount}
-                </span>
-              )}
-            </Button>
+          <PopoverTrigger
+            render={
+              <Button
+                variant="outline"
+                size="sm"
+                className={cn(
+                  'gap-1.5',
+                  activeFilterCount > 0 && 'border-twblue-9 text-twblue-9',
+                )}
+              />
+            }
+          >
+            <SlidersHorizontal className="h-3.5 w-3.5" />
+            Filter
+            {activeFilterCount > 0 && (
+              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-twblue-9 text-[10px] font-semibold text-white">
+                {activeFilterCount}
+              </span>
+            )}
           </PopoverTrigger>
           <PopoverContent align="end" className="w-52 p-0">
             <div className="px-3 pt-3">
@@ -361,11 +363,11 @@ export function FormResponseTable({
 
         {/* Column visibility */}
         <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-1.5">
-              <Columns2 className="h-3.5 w-3.5" />
-              Columns
-            </Button>
+          <PopoverTrigger
+            render={<Button variant="outline" size="sm" className="gap-1.5" />}
+          >
+            <Columns2 className="h-3.5 w-3.5" />
+            Columns
           </PopoverTrigger>
           <PopoverContent align="end" className="w-56 p-2">
             <p className="mb-1.5 px-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">

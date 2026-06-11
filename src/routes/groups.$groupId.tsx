@@ -506,10 +506,12 @@ function GroupDetailPage() {
               Share
             </Button>
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" className="size-8">
-                  <MoreHorizontal className="size-4" />
-                </Button>
+              <DropdownMenuTrigger
+                render={
+                  <Button variant="outline" size="icon" className="size-8" />
+                }
+              >
+                <MoreHorizontal className="size-4" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem render={<Link to="/groups/new" />}>

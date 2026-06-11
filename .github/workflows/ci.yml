@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - name: Test
+        run: bun run test
+      - name: Build
+        run: bun run build
+      # Non-blocking until the existing 139 tsc / 71 eslint errors are fixed
+      # (plans 002, 003 and follow-ups). Flip continue-on-error to false then.
+      - name: Typecheck (non-blocking)
+        run: npx tsc --noEmit
+        continue-on-error: true
+      - name: Lint (non-blocking)
+        run: bun run lint
+        continue-on-error: true
