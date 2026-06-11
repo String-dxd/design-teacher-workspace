@@ -716,32 +716,36 @@ function ParentsGatewayPage() {
               </Table>
             )}
 
-            {/* Floating selection action bar */}
+            {/* Floating bulk action bar — same pattern as Reports */}
             {selectedIds.size > 0 && tab !== 'custom-forms' && (
-              <div className="flex items-center gap-3 border-t bg-background px-6 py-3">
-                <span className="text-sm font-medium text-foreground">
-                  {selectedIds.size} selected
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setSelectedIds(new Set())}
-                  className="text-xs text-muted-foreground hover:text-foreground"
-                >
-                  Clear
-                </button>
-                <div className="flex-1" />
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => {
-                    setDeleteMode('remove-from-list')
-                    setShowDeleteDialog(true)
-                  }}
-                >
-                  <Trash2 className="mr-1.5 h-3.5 w-3.5" />
-                  Delete{' '}
-                  {selectedIds.size > 1 ? `${selectedIds.size} posts` : 'post'}
-                </Button>
+              <div className="fixed inset-x-0 bottom-6 z-50 flex justify-center">
+                <div className="flex items-center gap-3 rounded-full border bg-white px-5 py-2.5 shadow-lg">
+                  <span className="text-sm font-medium text-muted-foreground">
+                    {selectedIds.size} selected
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedIds(new Set())}
+                    className="text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    Clear
+                  </button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="rounded-full text-destructive hover:text-destructive"
+                    onClick={() => {
+                      setDeleteMode('remove-from-list')
+                      setShowDeleteDialog(true)
+                    }}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete{' '}
+                    {selectedIds.size > 1
+                      ? `${selectedIds.size} posts`
+                      : 'post'}
+                  </Button>
+                </div>
               </div>
             )}
           </div>
