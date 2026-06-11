@@ -194,12 +194,7 @@ function AttendancePage() {
                     <ToggleGroupItem
                       value="present"
                       aria-label="Present"
-                      className={cn(
-                        'flex items-center gap-2 border px-3 text-xs font-medium transition-colors',
-                        status === 'present'
-                          ? 'border-lime-7 bg-lime-3 text-lime-11'
-                          : 'border-transparent text-muted-foreground hover:text-foreground',
-                      )}
+                      className="flex items-center gap-2 border border-transparent px-3 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground aria-pressed:border-lime-7 aria-pressed:bg-lime-3 aria-pressed:text-lime-11"
                     >
                       <CircleCheck className="size-4 shrink-0" />
                       <span>Present</span>
@@ -207,12 +202,7 @@ function AttendancePage() {
                     <ToggleGroupItem
                       value="late"
                       aria-label="Late"
-                      className={cn(
-                        'flex items-center gap-2 border px-3 text-xs font-medium transition-colors',
-                        status === 'late'
-                          ? 'border-amber-7 bg-amber-3 text-amber-11'
-                          : 'border-transparent text-muted-foreground hover:text-foreground',
-                      )}
+                      className="flex items-center gap-2 border border-transparent px-3 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground aria-pressed:border-amber-7 aria-pressed:bg-amber-3 aria-pressed:text-amber-11"
                     >
                       <Clock className="size-4 shrink-0" />
                       <span>Late</span>
@@ -220,12 +210,7 @@ function AttendancePage() {
                     <ToggleGroupItem
                       value="absent"
                       aria-label="Absent"
-                      className={cn(
-                        'flex items-center gap-2 border px-3 text-xs font-medium transition-colors',
-                        status === 'absent'
-                          ? 'border-crimson-7 bg-crimson-3 text-crimson-11'
-                          : 'border-transparent text-muted-foreground hover:text-foreground',
-                      )}
+                      className="flex items-center gap-2 border border-transparent px-3 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground aria-pressed:border-crimson-7 aria-pressed:bg-crimson-3 aria-pressed:text-crimson-11"
                     >
                       <CircleX className="size-4 shrink-0" />
                       <span>Absent</span>
