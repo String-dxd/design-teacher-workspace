@@ -1,12 +1,8 @@
-@import '@flow/design-tokens/css';
-@import '@flow/design-tokens/tailwind/reset';
-@import '@flow/design-tokens/tailwind';
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
 @import '@fontsource/inter';
 @import '@fontsource/atkinson-hyperlegible';
-@import '@flow/core/tailwind.no-reset.css';
 @import '@radix-ui/colors/slate.css';
 @import '@radix-ui/colors/slate-dark.css';
 @import '@radix-ui/colors/crimson.css';
@@ -19,13 +15,11 @@
 @import '@radix-ui/colors/amber-dark.css';
 @import '@radix-ui/colors/violet.css';
 @import '@radix-ui/colors/violet-dark.css';
-@import './flow-ds-theme.css';
 
 @custom-variant dark (&:is(.dark *));
 
 /* ─── App Token Definitions ────────────────────────────────────────────
- * Brand scales, Shadcn tokens, Tier 1 primitives, and app-specific vars.
- * The imported flow-ds-theme.css reads these to map Flow DS tokens.
+ * Brand scales, Shadcn semantic tokens, and app-specific vars.
  * ──────────────────────────────────────────────────────────────────── */
 :root {
   /* Brand scale: twblue (12-step + alpha) */
@@ -94,25 +88,6 @@
   --chart-5: var(--twblue-11);
   --radius-input: 14px;
 
-  /* Tier 1 overridable primitives (--_ prefix).
-     TW theme values by default; .flow-theme reverts to Flow DS defaults. */
-  --_radius-sm: 6px;
-  --_radius-md: 8px;
-  --_radius-lg: 10px;
-  --_radius-xl: 14px;
-  --_radius-2xl: 24px;
-  --_radius-3xl: 24px;
-  --_radius-4xl: 32px;
-  --_spacing-xs: 0.5rem;
-  --_spacing-md: 1rem;
-  --_spacing-2xl: 2.25rem;
-  --_text-body-md: 0.875rem;
-  --_text-body-md-strong: 0.875rem;
-  --_text-label-sm: 0.75rem;
-  --_text-label-sm-strong: 0.75rem;
-  --_weight-body-md-strong: 500;
-  --_weight-label-sm-strong: 500;
-
   /* App-specific tokens */
   --overlay: rgba(0, 0, 0, 0.8);
   --sidebar: var(--slate-2);
@@ -127,8 +102,7 @@
 
 /* ─── Dark Mode ────────────────────────────────────────────────────────
  * Swap Radix primitives + custom brand to dark values.
- * .dark is on <html> (same as :root), so all var() mappings in
- * flow-ds-theme.css auto-resolve. Only formula changes go here.
+ * .dark is on <html> (same as :root); only formula changes go here.
  * ──────────────────────────────────────────────────────────────────── */
 .dark {
   --overlay: rgba(0, 0, 0, 0.8);
