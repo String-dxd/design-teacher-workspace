@@ -1071,9 +1071,10 @@ function NumericFilterRow({
   filter: NumericFilter
   onChange: (f: NumericFilter) => void
 }) {
+  const id = `filter-${label.toLowerCase().replace(/[^a-z0-9]/g, '-')}`
   return (
     <div className="space-y-1.5">
-      <label className="text-xs font-medium text-muted-foreground">
+      <label htmlFor={id} className="text-xs font-medium text-muted-foreground">
         {label}
       </label>
       <div className="flex items-center gap-2">
@@ -1099,6 +1100,7 @@ function NumericFilterRow({
           </SelectContent>
         </Select>
         <Input
+          id={id}
           placeholder="Enter number"
           value={filter.value}
           onChange={(e) => onChange({ ...filter, value: e.target.value })}
@@ -1806,7 +1808,7 @@ export function AttendanceLevelAnalytics() {
                               count: attendance.lta,
                             })
                           }
-                          className="-mx-2 flex items-center gap-2 rounded-md px-2 py-1 transition-colors hover:bg-accent cursor-pointer"
+                          className="-mx-2 flex items-center gap-2 rounded-md px-2 py-1 transition-colors hover:bg-accent cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         />
                       }
                     >
@@ -1833,7 +1835,7 @@ export function AttendanceLevelAnalytics() {
               </p>
               <button
                 onClick={() => setChartExpanded(true)}
-                className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 aria-label="Expand chart"
               >
                 <Maximize2 className="h-4 w-4" />
@@ -1884,7 +1886,7 @@ export function AttendanceLevelAnalytics() {
               </h3>
               <button
                 onClick={() => setChartExpanded(false)}
-                className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 aria-label="Close chart"
               >
                 <X className="h-4 w-4" />
@@ -2090,7 +2092,7 @@ export function AttendanceAnalytics({ student }: AttendanceAnalyticsProps) {
           </h3>
           <button
             onClick={() => setChartExpanded(true)}
-            className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+            className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             aria-label="Expand chart"
           >
             <Maximize2 className="h-4 w-4" />
@@ -2128,7 +2130,7 @@ export function AttendanceAnalytics({ student }: AttendanceAnalyticsProps) {
               </h3>
               <button
                 onClick={() => setChartExpanded(false)}
-                className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 aria-label="Close chart"
               >
                 <X className="h-4 w-4" />
