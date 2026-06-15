@@ -251,15 +251,18 @@ const GRADE_FILL: Record<string, string> = {
   VR: '#adb5bd',
 }
 
-const GRADE_BADGE: Record<string, string> = {
-  A1: 'bg-blue-100 text-blue-800',
-  A2: 'bg-blue-50 text-blue-700',
-  B3: 'bg-teal-100 text-teal-800',
-  B4: 'bg-teal-50 text-teal-700',
-  C5: 'bg-orange-100 text-orange-800',
-  C6: 'bg-orange-50 text-orange-700',
-  D7: 'bg-red-100 text-red-800',
-  VR: 'bg-gray-100 text-gray-600',
+const GRADE_BADGE_STYLE: Record<
+  string,
+  { backgroundColor: string; color: string }
+> = {
+  A1: { backgroundColor: 'rgba(34,139,230,0.15)', color: '#1864ab' },
+  A2: { backgroundColor: 'rgba(116,192,252,0.25)', color: '#1971c2' },
+  B3: { backgroundColor: 'rgba(18,184,134,0.15)', color: '#0ca678' },
+  B4: { backgroundColor: 'rgba(99,230,190,0.25)', color: '#0ca678' },
+  C5: { backgroundColor: 'rgba(253,126,20,0.15)', color: '#e8590c' },
+  C6: { backgroundColor: 'rgba(255,169,77,0.25)', color: '#e8590c' },
+  D7: { backgroundColor: 'rgba(250,82,82,0.15)', color: '#c92a2a' },
+  VR: { backgroundColor: 'rgba(173,181,189,0.3)', color: '#495057' },
 }
 
 const BOX_PLOT_DATA = [
@@ -746,7 +749,7 @@ export function LevelDropdown({ value, onValueChange }: LevelDropdownProps) {
         render={
           <button
             type="button"
-            className="border-border bg-white hover:bg-muted flex h-8 items-center gap-1.5 rounded-full border px-3 text-sm transition-colors outline-none"
+            className="border-border bg-white hover:bg-muted flex h-8 items-center gap-1.5 rounded-full border px-3 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
           />
         }
       >
@@ -866,7 +869,7 @@ function IndicatorDropdown({ value, onValueChange }: IndicatorDropdownProps) {
         render={
           <button
             type="button"
-            className="border-border bg-white hover:bg-muted flex h-8 items-center gap-1.5 rounded-full border px-3 text-sm transition-colors outline-none"
+            className="border-border bg-white hover:bg-muted flex h-8 items-center gap-1.5 rounded-full border px-3 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
           />
         }
       >
@@ -1587,10 +1590,13 @@ export function MonitoringAcademicAnalytics() {
               </p>
               {selectedGrade && (
                 <span
-                  className={cn(
-                    'rounded-full px-2 py-0.5 text-xs font-medium',
-                    GRADE_BADGE[selectedGrade] ?? 'bg-gray-100 text-gray-600',
-                  )}
+                  className="rounded-full px-2 py-0.5 text-xs font-medium"
+                  style={
+                    GRADE_BADGE_STYLE[selectedGrade] ?? {
+                      backgroundColor: 'rgba(173,181,189,0.3)',
+                      color: '#495057',
+                    }
+                  }
                 >
                   {selectedGrade} — {filteredCandidates.length} students
                 </span>
@@ -1619,7 +1625,7 @@ export function MonitoringAcademicAnalytics() {
                   <button
                     type="button"
                     className={cn(
-                      'border-border flex h-8 items-center gap-1.5 rounded-full border px-3 text-sm transition-colors outline-none',
+                      'border-border flex h-8 items-center gap-1.5 rounded-full border px-3 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
                       hasActiveTableFilters
                         ? 'bg-blue-50 border-blue-300 text-blue-700'
                         : 'bg-white hover:bg-muted',
