@@ -316,7 +316,7 @@ function MsfUpliftSheetContent({
                   side="top"
                   className="max-w-xs whitespace-pre-line"
                 >
-                  {`Social Service Offices (SSOs) nearest to student's residential address. MSF via Uplift Office • As of 19 Sep 2026`}
+                  {`Social Service Offices (SSOs) nearest to student's residential address. MSF via Uplift Office • As of 19 May 2025`}
                 </TooltipContent>
               </Tooltip>
             </div>
@@ -341,7 +341,7 @@ function NonIntactFamilySheetContent({ value }: { value: string }) {
           <p className="text-sm font-medium">Parents are divorced</p>
         </div>
         <p className="mb-2 text-xs text-muted-foreground">
-          MSF via Uplift Office • As of 1 May 2026
+          MSF via Uplift Office • As of 19 May 2025
         </p>
         <div className="rounded-lg bg-muted px-4 py-3">
           <ul className="space-y-1 text-sm">
@@ -368,7 +368,7 @@ function NonIntactFamilySheetContent({ value }: { value: string }) {
                   side="top"
                   className="max-w-xs whitespace-pre-line"
                 >
-                  {`Social Service Offices (SSOs) nearest to student's residential address. MSF via Uplift Office • As of 19 Sep 2026`}
+                  {`Social Service Offices (SSOs) nearest to student's residential address. MSF via Uplift Office • As of 19 May 2025`}
                 </TooltipContent>
               </Tooltip>
             </div>
