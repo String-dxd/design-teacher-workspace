@@ -79,6 +79,7 @@ export interface Student {
   /** Name of the FSC or SSO providing ComLink+ support (shown on the profile) */
   supportedByComLinkBy?: string
   supportedByFsc?: 'Yes' | 'No'
+  parentsConsideringDivorce?: 'Yes' | 'No'
   nonIntactFamily?: 'Yes' | 'No' | '-'
   // Personal
   birthday?: string
@@ -164,6 +165,7 @@ export type FilterField =
   | 'externalAgencies'
   | 'supportedByComLink'
   | 'supportedByFsc'
+  | 'parentsConsideringDivorce'
   | 'nonIntactFamily'
 
 export type FilterOperator =

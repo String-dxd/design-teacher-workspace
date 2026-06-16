@@ -589,6 +589,18 @@ export function StudentTable({
           className="min-w-[200px]"
         />
       )}
+      {isVisible('parentsConsideringDivorce') && (
+        <ColumnHeaderMenu
+          column={columns.find((c) => c.id === 'parentsConsideringDivorce')!}
+          currentSort={sort}
+          activeFilterFields={activeFilterFields}
+          onSort={onSort}
+          onClearSort={onClearSort}
+          onAddQuickFilter={onAddQuickFilter}
+          onClearFilter={onClearFilter}
+          className="min-w-[180px]"
+        />
+      )}
       {isVisible('nonIntactFamily') && (
         <ColumnHeaderMenu
           column={columns.find((c) => c.id === 'nonIntactFamily')!}
@@ -881,6 +893,9 @@ export function StudentTable({
         <TableCell className="max-w-[150px] truncate">
           {student.postSecEligibility}
         </TableCell>
+      )}
+      {isVisible('parentsConsideringDivorce') && (
+        <TableCell>{student.parentsConsideringDivorce ?? 'No'}</TableCell>
       )}
       {isVisible('nonIntactFamily') && (
         <TableCell>

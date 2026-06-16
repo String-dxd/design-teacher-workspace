@@ -35,6 +35,7 @@ export const KNOWN_FILTER_FIELDS: Set<string> = new Set<string>([
   'externalAgencies',
   'supportedByComLink',
   'supportedByFsc',
+  'parentsConsideringDivorce',
   'nonIntactFamily',
 ])
 

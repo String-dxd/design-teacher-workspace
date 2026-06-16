@@ -207,6 +207,7 @@ export function MultiFilterPopover({
         (opt) =>
           opt.field !== 'supportedByComLink' &&
           opt.field !== 'supportedByFsc' &&
+          opt.field !== 'parentsConsideringDivorce' &&
           opt.field !== 'nonIntactFamily',
       )
     }

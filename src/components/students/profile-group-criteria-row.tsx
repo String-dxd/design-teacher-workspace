@@ -96,6 +96,7 @@ export function ProfileGroupCriteriaRow({
       !msfUpliftEnabled &&
       (f.field === 'supportedByComLink' ||
         f.field === 'supportedByFsc' ||
+        f.field === 'parentsConsideringDivorce' ||
         f.field === 'nonIntactFamily')
     )
       return false

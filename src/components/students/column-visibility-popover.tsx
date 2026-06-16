@@ -244,6 +244,18 @@ export const defaultColumns: Array<ColumnConfig> = [
     lastUpdated: '16 Sep 2025',
   },
   {
+    id: 'parentsConsideringDivorce',
+    label: 'Parents considering divorce',
+    visible: true,
+    sortable: true,
+    filterable: true,
+    filterField: 'parentsConsideringDivorce',
+    source: 'MSF via Uplift Office',
+    lastUpdated: '19 May 2025',
+    dateLabel: 'Last synced:',
+    temporalType: 'fixed',
+  },
+  {
     id: 'nonIntactFamily',
     label: 'Parents are divorced',
     visible: true,
@@ -384,6 +396,7 @@ export function ColumnVisibilityPopover({
           (c) =>
             c.id !== 'supportedByComLink' &&
             c.id !== 'supportedByFsc' &&
+            c.id !== 'parentsConsideringDivorce' &&
             c.id !== 'nonIntactFamily',
         )
     onColumnsChange(resetColumns)

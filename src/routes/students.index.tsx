@@ -127,6 +127,7 @@ function StudentsPage() {
           (c) =>
             c.id !== 'supportedByComLink' &&
             c.id !== 'supportedByFsc' &&
+            c.id !== 'parentsConsideringDivorce' &&
             c.id !== 'nonIntactFamily',
         )
     const saved = getImportedColumns()
@@ -157,7 +158,12 @@ function StudentsPage() {
 
   // Sync MSF via Uplift Office columns when the feature flag toggles at runtime
   useEffect(() => {
-    const MSF_IDS = ['supportedByComLink', 'supportedByFsc', 'nonIntactFamily']
+    const MSF_IDS = [
+      'supportedByComLink',
+      'supportedByFsc',
+      'parentsConsideringDivorce',
+      'nonIntactFamily',
+    ]
     setColumns((prev) => {
       const hasMsf = prev.some((c) => MSF_IDS.includes(c.id))
       if (msfUpliftEnabled && !hasMsf) {

@@ -333,38 +333,15 @@ function MsfUpliftSheetContent({
   )
 }
 
-function NonIntactFamilySheetContent({
-  value,
-  ccpEnrolled,
-  titleTooltip,
-}: {
-  value: string
-  ccpEnrolled: 'Yes' | 'No'
-  titleTooltip?: string
-}) {
+function NonIntactFamilySheetContent({ value }: { value: string }) {
   return (
     <div className="space-y-5">
       <div>
         <div className="mb-1 flex items-center gap-1">
           <p className="text-sm font-medium">Parents are divorced</p>
-          {titleTooltip && (
-            <Tooltip>
-              <TooltipTrigger
-                render={<span className="inline-flex shrink-0" />}
-              >
-                <Info className="h-3.5 w-3.5 text-muted-foreground" />
-              </TooltipTrigger>
-              <TooltipContent
-                side="top"
-                className="max-w-xs whitespace-pre-line"
-              >
-                {titleTooltip}
-              </TooltipContent>
-            </Tooltip>
-          )}
         </div>
         <p className="mb-2 text-xs text-muted-foreground">
-          School Cockpit, MSF via Uplift Office • As of 1 May 2026
+          MSF via Uplift Office • As of 1 May 2026
         </p>
         <div className="rounded-lg bg-muted px-4 py-3">
           <ul className="space-y-1 text-sm">
@@ -378,30 +355,6 @@ function NonIntactFamilySheetContent({
       <div>
         <p className="mb-2 text-sm font-medium">Remarks</p>
         <div className="rounded-lg bg-muted px-4 py-3 space-y-4 text-sm">
-          <div>
-            <div className="flex items-start gap-1">
-              <p className="font-medium">Parent enrolled in CCP</p>
-              <Tooltip>
-                <TooltipTrigger
-                  render={<span className="mt-0.5 inline-flex shrink-0" />}
-                >
-                  <Info className="h-3.5 w-3.5 text-muted-foreground" />
-                </TooltipTrigger>
-                <TooltipContent side="top" className="max-w-xs">
-                  {`"Yes" indicates that at least one parent is enrolled in the Mandatory Co-Parenting Programme (CCP). All parents with children below 21 years old are required to attend the CCP before filing for divorce. Under the CPP, parents receive support from counsellors to help them make informed decisions that prioritise the well-being of their children, such as working out co-parenting arrangements arising from a divorce.`}
-                </TooltipContent>
-              </Tooltip>
-            </div>
-            <p className="mb-1.5 text-xs text-muted-foreground">
-              MSF via Uplift Office • As of 19 May 2025
-            </p>
-            <ul className="space-y-1">
-              <li className="flex items-center gap-2">
-                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-foreground" />
-                {ccpEnrolled}
-              </li>
-            </ul>
-          </div>
           <div>
             <div className="mb-1.5 flex items-start gap-1">
               <p className="font-medium">Nearest SSO</p>
@@ -1572,8 +1525,28 @@ export function StudentProfile({
                 {primaryContactField}
                 {custodyField}
                 {(() => {
+                  const consideringDivorce =
+                    student.parentsConsideringDivorce ?? 'No'
+                  const consideringDivorceTooltip = `"Yes" indicates that at least one parent is enrolled in the Mandatory Co-Parenting Programme (CCP). All parents with children below 21 years old are required to attend the CCP before filing for divorce. Under the CCP, parents receive support from counsellors to help them make informed decisions that prioritise the well-being of their children, such as working out co-parenting arrangements arising from a divorce.`
+                  return (
+                    <FieldWithDetails
+                      label="Parent enrolled in CCP"
+                      tooltip="Parent enrolled in CCP"
+                      description="MSF via Uplift Office • 19 May 2025"
+                      value={consideringDivorce}
+                      sideSheetTitle="Parent enrolled in CCP"
+                      sideSheetContent={
+                        <MsfUpliftSheetContent
+                          title="Parent enrolled in CCP"
+                          value={consideringDivorce}
+                          titleTooltip={consideringDivorceTooltip}
+                        />
+                      }
+                    />
+                  )
+                })()}
+                {(() => {
                   const nonIntact = student.nonIntactFamily ?? '-'
-                  const nonIntactTooltip = `"Yes" if any of the following is provided:\n• Parents' divorced status\n• Parents' considering divorce status based on enrolment the Mandatory Co-Parenting Programme (CCP)`
                   return (
                     <FieldWithDetails
                       label="Parents are divorced"
@@ -1582,11 +1555,7 @@ export function StudentProfile({
                       value={nonIntact}
                       sideSheetTitle="Parents are divorced"
                       sideSheetContent={
-                        <NonIntactFamilySheetContent
-                          value={nonIntact}
-                          ccpEnrolled="Yes"
-                          titleTooltip={nonIntactTooltip}
-                        />
+                        <NonIntactFamilySheetContent value={nonIntact} />
                       }
                     />
                   )
