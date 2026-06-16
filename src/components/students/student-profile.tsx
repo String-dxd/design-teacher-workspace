@@ -32,6 +32,7 @@ import type { HolisticReport, ReviewStatus, Term } from '@/types/report'
 import type { AgencyReport } from '@/data/mock-agency-reports'
 import { useFeatureFlag } from '@/hooks/use-feature-flag'
 import { getImportedColumns } from '@/lib/imported-columns'
+import type { ImportedColumn } from '@/lib/imported-columns'
 import {
   TERMS,
   filterReports,
@@ -385,6 +386,14 @@ function NonIntactFamilySheetContent({ value }: { value: string }) {
   )
 }
 
+// Default fields shown in the Others section when the Import Data flag is on
+// but no columns have been imported yet. Mirrors the wizard's incoming fields.
+const DEFAULT_OTHERS_COLUMNS: Array<ImportedColumn> = [
+  { id: 'via_missed', label: 'VIA missed' },
+  { id: 'next_steps', label: 'Next steps' },
+  { id: 'teacher_remarks', label: "Teacher's remarks" },
+]
+
 // Subject data used to compute Overall % across selected subjects
 const SUBJECT_COMPUTATION = [
   { subject: 'EL', band: 'G3', percentage: 80 },
@@ -695,10 +704,19 @@ export function StudentProfile({
   const studentAnalyticsEnabled = useFeatureFlag('student-analytics')
   const studentAnalyticsBasicEnabled = useFeatureFlag('student-analytics-basic')
   const msfUpliftEnabled = useFeatureFlag('msf-uplift-data')
+  const importDataEnabled = useFeatureFlag('import-data')
   // Default "Student Insights" view — applies when both analytics flags are off
   const isStudentInsightsView =
     !studentAnalyticsEnabled && !studentAnalyticsBasicEnabled
-  const importedColumns = useMemo(() => getImportedColumns(), [])
+  const savedImportedColumns = useMemo(() => getImportedColumns(), [])
+  // The Others section surfaces fields imported without a category tag. Its
+  // visibility is gated entirely on the Import Data flag — when the flag is
+  // off the section is hidden even if columns were imported in this browser
+  // previously. When on, it shows the saved imported columns (falling back to
+  // the default uncategorised fields when nothing has been imported yet).
+  const importedColumns =
+    savedImportedColumns.length > 0 ? savedImportedColumns : DEFAULT_OTHERS_COLUMNS
+  const showOthers = importDataEnabled
 
   const gradeCounts = getStudentGradeCounts(student)
   const studentReports = filterReports({ studentId: student.id })
@@ -916,7 +934,7 @@ export function StudentProfile({
     ...(!msfUpliftEnabled && (holisticReportsEnabled || agencyReportsEnabled)
       ? [{ id: 'reports', label: 'Reports' }]
       : []),
-    ...(importedColumns.length > 0 ? [{ id: 'others', label: 'Others' }] : []),
+    ...(showOthers ? [{ id: 'others', label: 'Others' }] : []),
   ]
 
   return (
@@ -1802,7 +1820,7 @@ export function StudentProfile({
             </Section>
           )}
         {/* Others Section — imported fields */}
-        {importedColumns.length > 0 && (
+        {showOthers && (
           <Section
             id="others"
             title="Others"
