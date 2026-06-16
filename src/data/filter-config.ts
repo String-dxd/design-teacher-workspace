@@ -334,6 +334,15 @@ export const filterFieldConfigs: Array<FilterFieldConfig> = [
   },
   // Family, Housing, Finance
   {
+    field: 'parentsConsideringDivorce',
+    label: 'Parent enrolled in CCP',
+    type: 'multiselect',
+    group: 'family',
+    defaultOperator: 'is',
+    defaultValue: '',
+    enumValues: ['Yes', 'No'],
+  },
+  {
     field: 'nonIntactFamily',
     label: 'Parents are divorced',
     type: 'multiselect',

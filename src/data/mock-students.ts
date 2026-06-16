@@ -5301,30 +5301,50 @@ export const mockStudents: Array<Student> = [
 const MSF_VALUES: Array<'Yes' | 'No' | '-'> = ['Yes', 'No', '-']
 const COMLINK_VALUES: Array<'Yes' | 'No'> = ['Yes', 'No']
 const FSC_VALUES: Array<'Yes' | 'No'> = ['Yes', 'No']
+// "Parents are divorced" and "Parent enrolled in CCP" are mutually exclusive:
+// CCP enrolment happens before filing for divorce, so at most one can be "Yes".
+const assignDivorceFields = (
+  s: Student,
+  divorcedCandidate: 'Yes' | 'No' | '-',
+  ccpCandidate: 'Yes' | 'No',
+) => {
+  if (divorcedCandidate === 'Yes') {
+    s.nonIntactFamily = 'Yes'
+    s.parentsConsideringDivorce = 'No'
+  } else if (ccpCandidate === 'Yes') {
+    s.nonIntactFamily = 'No'
+    s.parentsConsideringDivorce = 'Yes'
+  } else {
+    s.nonIntactFamily = divorcedCandidate
+    s.parentsConsideringDivorce = 'No'
+  }
+}
 mockStudents.forEach((s, i) => {
   if (s.name === 'Chen Jun Kai') {
     s.supportedByComLink = 'Yes'
     s.supportedByFsc = 'Yes'
     s.nonIntactFamily = 'Yes'
+    s.parentsConsideringDivorce = 'No'
     return
   }
   if (s.name === 'Sim Xin Yi') {
     s.supportedByComLink = 'Yes'
     s.supportedByComLinkBy = 'Fei Yue FSC (Choa Chu Kang)'
     s.supportedByFsc = 'Yes'
-    s.nonIntactFamily = 'Yes'
+    s.nonIntactFamily = 'No'
+    s.parentsConsideringDivorce = 'Yes'
     return
   }
   if (s.name === 'Jing Wei Tan') {
     s.supportedByComLink = 'Yes'
     s.supportedByComLinkBy = 'SSO Woodlands'
     s.supportedByFsc = FSC_VALUES[i % 2]
-    s.nonIntactFamily = MSF_VALUES[(i + 2) % 3]
+    assignDivorceFields(s, MSF_VALUES[(i + 2) % 3], COMLINK_VALUES[(i + 1) % 2])
     return
   }
   s.supportedByComLink = COMLINK_VALUES[i % 2]
   s.supportedByFsc = FSC_VALUES[i % 3]
-  s.nonIntactFamily = MSF_VALUES[(i + 2) % 3]
+  assignDivorceFields(s, MSF_VALUES[(i + 2) % 3], COMLINK_VALUES[(i + 1) % 2])
 })
 
 export const classOptions: Array<ClassOption> = [

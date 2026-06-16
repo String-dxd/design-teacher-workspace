@@ -244,6 +244,18 @@ export const defaultColumns: Array<ColumnConfig> = [
     lastUpdated: '16 Sep 2025',
   },
   {
+    id: 'parentsConsideringDivorce',
+    label: 'Parent enrolled in CCP',
+    visible: true,
+    sortable: true,
+    filterable: true,
+    filterField: 'parentsConsideringDivorce',
+    source: 'MSF via Uplift Office',
+    lastUpdated: '19 May 2025',
+    dateLabel: 'Last synced:',
+    temporalType: 'fixed',
+  },
+  {
     id: 'nonIntactFamily',
     label: 'Parents are divorced',
     visible: true,
@@ -251,7 +263,7 @@ export const defaultColumns: Array<ColumnConfig> = [
     filterable: true,
     filterField: 'nonIntactFamily',
     source: 'School Cockpit, MSF via Uplift Office',
-    lastUpdated: '1 May 2026',
+    lastUpdated: '19 May 2025',
     dateLabel: 'Last synced:',
     temporalType: 'fixed',
   },
@@ -263,7 +275,7 @@ export const defaultColumns: Array<ColumnConfig> = [
     filterable: true,
     filterField: 'supportedByComLink',
     source: 'MSF via Uplift Office',
-    lastUpdated: '19 Sep 2025',
+    lastUpdated: '19 May 2025',
     dateLabel: 'Last synced:',
     temporalType: 'fixed',
   },
@@ -275,7 +287,7 @@ export const defaultColumns: Array<ColumnConfig> = [
     filterable: true,
     filterField: 'supportedByFsc',
     source: 'MSF via Uplift Office',
-    lastUpdated: '19 Sep 2025',
+    lastUpdated: '19 May 2025',
     dateLabel: 'Last synced:',
     temporalType: 'fixed',
   },
@@ -384,6 +396,7 @@ export function ColumnVisibilityPopover({
           (c) =>
             c.id !== 'supportedByComLink' &&
             c.id !== 'supportedByFsc' &&
+            c.id !== 'parentsConsideringDivorce' &&
             c.id !== 'nonIntactFamily',
         )
     onColumnsChange(resetColumns)
