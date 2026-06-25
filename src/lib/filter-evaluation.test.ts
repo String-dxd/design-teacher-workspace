@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { evaluateCriterion, computeStudentOverall } from './filter-evaluation'
+import { computeStudentOverall, evaluateCriterion } from './filter-evaluation'
 import { assignBucket } from './profile-group-evaluation'
-import type { Student, FilterCriterion } from '@/types/student'
+import type { FilterCriterion, Student } from '@/types/student'
 import type { ProfileGroupBucket } from '@/types/profile-group'
 
 // ---------------------------------------------------------------------------
@@ -71,37 +71,61 @@ describe('numeric operators', () => {
 
   it('gt: 5 > 3 → true', () => {
     expect(
-      evaluateCriterion(student, makeCriterion({ field: 'absences', operator: 'gt', value: 3 }), { unknownField: 'reject' }),
+      evaluateCriterion(
+        student,
+        makeCriterion({ field: 'absences', operator: 'gt', value: 3 }),
+        { unknownField: 'reject' },
+      ),
     ).toBe(true)
   })
 
   it('gt: 5 > 5 → false', () => {
     expect(
-      evaluateCriterion(student, makeCriterion({ field: 'absences', operator: 'gt', value: 5 }), { unknownField: 'reject' }),
+      evaluateCriterion(
+        student,
+        makeCriterion({ field: 'absences', operator: 'gt', value: 5 }),
+        { unknownField: 'reject' },
+      ),
     ).toBe(false)
   })
 
   it('gte: 5 >= 5 → true', () => {
     expect(
-      evaluateCriterion(student, makeCriterion({ field: 'absences', operator: 'gte', value: 5 }), { unknownField: 'reject' }),
+      evaluateCriterion(
+        student,
+        makeCriterion({ field: 'absences', operator: 'gte', value: 5 }),
+        { unknownField: 'reject' },
+      ),
     ).toBe(true)
   })
 
   it('lt: 5 < 10 → true', () => {
     expect(
-      evaluateCriterion(student, makeCriterion({ field: 'absences', operator: 'lt', value: 10 }), { unknownField: 'reject' }),
+      evaluateCriterion(
+        student,
+        makeCriterion({ field: 'absences', operator: 'lt', value: 10 }),
+        { unknownField: 'reject' },
+      ),
     ).toBe(true)
   })
 
   it('lte: 5 <= 5 → true', () => {
     expect(
-      evaluateCriterion(student, makeCriterion({ field: 'absences', operator: 'lte', value: 5 }), { unknownField: 'reject' }),
+      evaluateCriterion(
+        student,
+        makeCriterion({ field: 'absences', operator: 'lte', value: 5 }),
+        { unknownField: 'reject' },
+      ),
     ).toBe(true)
   })
 
   it('eq: 5 === 5 → true', () => {
     expect(
-      evaluateCriterion(student, makeCriterion({ field: 'absences', operator: 'eq', value: 5 }), { unknownField: 'reject' }),
+      evaluateCriterion(
+        student,
+        makeCriterion({ field: 'absences', operator: 'eq', value: 5 }),
+        { unknownField: 'reject' },
+      ),
     ).toBe(true)
   })
 })
@@ -116,13 +140,21 @@ describe('NaN guard', () => {
 
   it('eq with non-numeric stored value → false', () => {
     expect(
-      evaluateCriterion(student, makeCriterion({ field: 'conduct', operator: 'eq', value: 0 }), { unknownField: 'reject' }),
+      evaluateCriterion(
+        student,
+        makeCriterion({ field: 'conduct', operator: 'eq', value: 0 }),
+        { unknownField: 'reject' },
+      ),
     ).toBe(false)
   })
 
   it('neq with non-numeric stored value → false (not truthy-for-all)', () => {
     expect(
-      evaluateCriterion(student, makeCriterion({ field: 'conduct', operator: 'neq', value: 0 }), { unknownField: 'reject' }),
+      evaluateCriterion(
+        student,
+        makeCriterion({ field: 'conduct', operator: 'neq', value: 0 }),
+        { unknownField: 'reject' },
+      ),
     ).toBe(false)
   })
 })
@@ -136,25 +168,57 @@ describe('between / not_between', () => {
 
   it('between: 5 inside [3, 7] → true', () => {
     expect(
-      evaluateCriterion(student, makeCriterion({ field: 'absences', operator: 'between', value: { min: 3, max: 7 } }), { unknownField: 'reject' }),
+      evaluateCriterion(
+        student,
+        makeCriterion({
+          field: 'absences',
+          operator: 'between',
+          value: { min: 3, max: 7 },
+        }),
+        { unknownField: 'reject' },
+      ),
     ).toBe(true)
   })
 
   it('between: 5 outside [6, 10] → false', () => {
     expect(
-      evaluateCriterion(student, makeCriterion({ field: 'absences', operator: 'between', value: { min: 6, max: 10 } }), { unknownField: 'reject' }),
+      evaluateCriterion(
+        student,
+        makeCriterion({
+          field: 'absences',
+          operator: 'between',
+          value: { min: 6, max: 10 },
+        }),
+        { unknownField: 'reject' },
+      ),
     ).toBe(false)
   })
 
   it('not_between: 5 outside [6, 10] → true', () => {
     expect(
-      evaluateCriterion(student, makeCriterion({ field: 'absences', operator: 'not_between', value: { min: 6, max: 10 } }), { unknownField: 'reject' }),
+      evaluateCriterion(
+        student,
+        makeCriterion({
+          field: 'absences',
+          operator: 'not_between',
+          value: { min: 6, max: 10 },
+        }),
+        { unknownField: 'reject' },
+      ),
     ).toBe(true)
   })
 
   it('not_between: 5 inside [3, 7] → false', () => {
     expect(
-      evaluateCriterion(student, makeCriterion({ field: 'absences', operator: 'not_between', value: { min: 3, max: 7 } }), { unknownField: 'reject' }),
+      evaluateCriterion(
+        student,
+        makeCriterion({
+          field: 'absences',
+          operator: 'not_between',
+          value: { min: 3, max: 7 },
+        }),
+        { unknownField: 'reject' },
+      ),
     ).toBe(false)
   })
 })
@@ -168,51 +232,99 @@ describe('text operators', () => {
 
   it('contains: case-insensitive match → true', () => {
     expect(
-      evaluateCriterion(student, makeCriterion({ field: 'class', operator: 'contains', value: 'excellence' }), { unknownField: 'reject' }),
+      evaluateCriterion(
+        student,
+        makeCriterion({
+          field: 'class',
+          operator: 'contains',
+          value: 'excellence',
+        }),
+        { unknownField: 'reject' },
+      ),
     ).toBe(true)
   })
 
   it('not_contains: no match → true', () => {
     expect(
-      evaluateCriterion(student, makeCriterion({ field: 'class', operator: 'not_contains', value: 'xyz' }), { unknownField: 'reject' }),
+      evaluateCriterion(
+        student,
+        makeCriterion({
+          field: 'class',
+          operator: 'not_contains',
+          value: 'xyz',
+        }),
+        { unknownField: 'reject' },
+      ),
     ).toBe(true)
   })
 
   it('is: exact string match → true', () => {
     expect(
-      evaluateCriterion(student, makeCriterion({ field: 'class', operator: 'is', value: '2B-Excellence' }), { unknownField: 'reject' }),
+      evaluateCriterion(
+        student,
+        makeCriterion({
+          field: 'class',
+          operator: 'is',
+          value: '2B-Excellence',
+        }),
+        { unknownField: 'reject' },
+      ),
     ).toBe(true)
   })
 
   it('is: array (multiselect) includes value → true', () => {
     expect(
-      evaluateCriterion(student, makeCriterion({ field: 'class', operator: 'is', value: ['1A', '2B-Excellence', '3C'] }), { unknownField: 'reject' }),
+      evaluateCriterion(
+        student,
+        makeCriterion({
+          field: 'class',
+          operator: 'is',
+          value: ['1A', '2B-Excellence', '3C'],
+        }),
+        { unknownField: 'reject' },
+      ),
     ).toBe(true)
   })
 
   it('is: array does not include value → false', () => {
     expect(
-      evaluateCriterion(student, makeCriterion({ field: 'class', operator: 'is', value: ['1A', '3C'] }), { unknownField: 'reject' }),
+      evaluateCriterion(
+        student,
+        makeCriterion({ field: 'class', operator: 'is', value: ['1A', '3C'] }),
+        { unknownField: 'reject' },
+      ),
     ).toBe(false)
   })
 
   it('is_not: value differs → true', () => {
     expect(
-      evaluateCriterion(student, makeCriterion({ field: 'class', operator: 'is_not', value: '1A' }), { unknownField: 'reject' }),
+      evaluateCriterion(
+        student,
+        makeCriterion({ field: 'class', operator: 'is_not', value: '1A' }),
+        { unknownField: 'reject' },
+      ),
     ).toBe(true)
   })
 
   it('is_empty: null field → true', () => {
     const s = makeStudent({ sen: null })
     expect(
-      evaluateCriterion(s, makeCriterion({ field: 'sen', operator: 'is_empty', value: '' }), { unknownField: 'reject' }),
+      evaluateCriterion(
+        s,
+        makeCriterion({ field: 'sen', operator: 'is_empty', value: '' }),
+        { unknownField: 'reject' },
+      ),
     ).toBe(true)
   })
 
   it('is_not_empty: non-null field → true', () => {
     const s = makeStudent({ sen: 'ASD' })
     expect(
-      evaluateCriterion(s, makeCriterion({ field: 'sen', operator: 'is_not_empty', value: '' }), { unknownField: 'reject' }),
+      evaluateCriterion(
+        s,
+        makeCriterion({ field: 'sen', operator: 'is_not_empty', value: '' }),
+        { unknownField: 'reject' },
+      ),
     ).toBe(true)
   })
 })
@@ -226,19 +338,31 @@ describe('unknown field', () => {
 
   it('unknownField "match": imported col → true', () => {
     expect(
-      evaluateCriterion(student, makeCriterion({ field: 'importedCol42', operator: 'eq', value: 0 }), { unknownField: 'match' }),
+      evaluateCriterion(
+        student,
+        makeCriterion({ field: 'importedCol42', operator: 'eq', value: 0 }),
+        { unknownField: 'match' },
+      ),
     ).toBe(true)
   })
 
   it('unknownField "reject": imported col → false', () => {
     expect(
-      evaluateCriterion(student, makeCriterion({ field: 'importedCol42', operator: 'eq', value: 0 }), { unknownField: 'reject' }),
+      evaluateCriterion(
+        student,
+        makeCriterion({ field: 'importedCol42', operator: 'eq', value: 0 }),
+        { unknownField: 'reject' },
+      ),
     ).toBe(false)
   })
 
   it('dateRange with unknownField "match" → true (drift addendum)', () => {
     expect(
-      evaluateCriterion(student, makeCriterion({ field: 'dateRange', operator: 'is', value: '2025-T4' }), { unknownField: 'match' }),
+      evaluateCriterion(
+        student,
+        makeCriterion({ field: 'dateRange', operator: 'is', value: '2025-T4' }),
+        { unknownField: 'match' },
+      ),
     ).toBe(true)
   })
 })
@@ -251,14 +375,22 @@ describe('attendance', () => {
   it('daysPresent 45 / totalSchoolDays 50 = 90% → gte 90 true', () => {
     const student = makeStudent({ daysPresent: 45, totalSchoolDays: 50 })
     expect(
-      evaluateCriterion(student, makeCriterion({ field: 'attendance', operator: 'gte', value: 90 }), { unknownField: 'reject' }),
+      evaluateCriterion(
+        student,
+        makeCriterion({ field: 'attendance', operator: 'gte', value: 90 }),
+        { unknownField: 'reject' },
+      ),
     ).toBe(true)
   })
 
   it('totalSchoolDays 0 → attendance evaluates as 0', () => {
     const student = makeStudent({ daysPresent: 30, totalSchoolDays: 0 })
     expect(
-      evaluateCriterion(student, makeCriterion({ field: 'attendance', operator: 'eq', value: 0 }), { unknownField: 'reject' }),
+      evaluateCriterion(
+        student,
+        makeCriterion({ field: 'attendance', operator: 'eq', value: 0 }),
+        { unknownField: 'reject' },
+      ),
     ).toBe(true)
   })
 })
@@ -271,14 +403,26 @@ describe('housingType', () => {
   it('raw "Owned" maps to "Owner-occupied" → is "Owner-occupied" true', () => {
     const student = makeStudent({ housingType: 'Owned' })
     expect(
-      evaluateCriterion(student, makeCriterion({ field: 'housingType', operator: 'is', value: 'Owner-occupied' }), { unknownField: 'reject' }),
+      evaluateCriterion(
+        student,
+        makeCriterion({
+          field: 'housingType',
+          operator: 'is',
+          value: 'Owner-occupied',
+        }),
+        { unknownField: 'reject' },
+      ),
     ).toBe(true)
   })
 
   it('raw null maps to "-" → is "-" true', () => {
     const student = makeStudent({ housingType: null })
     expect(
-      evaluateCriterion(student, makeCriterion({ field: 'housingType', operator: 'is', value: '-' }), { unknownField: 'reject' }),
+      evaluateCriterion(
+        student,
+        makeCriterion({ field: 'housingType', operator: 'is', value: '-' }),
+        { unknownField: 'reject' },
+      ),
     ).toBe(true)
   })
 })
@@ -288,32 +432,64 @@ describe('housingType', () => {
 // ---------------------------------------------------------------------------
 
 describe('counsellingSessions bucketing', () => {
-  it('count 3 → "Complex cases"', () => {
-    const student = makeStudent({ counsellingSessions: 3 })
+  it('complexity "Complex cases" → "Complex cases"', () => {
+    const student = makeStudent({ counsellingComplexity: 'Complex cases' })
     expect(
-      evaluateCriterion(student, makeCriterion({ field: 'counsellingSessions', operator: 'is', value: 'Complex cases' }), { unknownField: 'reject' }),
+      evaluateCriterion(
+        student,
+        makeCriterion({
+          field: 'counsellingSessions',
+          operator: 'is',
+          value: 'Complex cases',
+        }),
+        { unknownField: 'reject' },
+      ),
     ).toBe(true)
   })
 
-  it('count 1 → "Less complex cases"', () => {
-    const student = makeStudent({ counsellingSessions: 1 })
+  it('complexity "Less complex cases" → "Less complex cases"', () => {
+    const student = makeStudent({ counsellingComplexity: 'Less complex cases' })
     expect(
-      evaluateCriterion(student, makeCriterion({ field: 'counsellingSessions', operator: 'is', value: 'Less complex cases' }), { unknownField: 'reject' }),
+      evaluateCriterion(
+        student,
+        makeCriterion({
+          field: 'counsellingSessions',
+          operator: 'is',
+          value: 'Less complex cases',
+        }),
+        { unknownField: 'reject' },
+      ),
     ).toBe(true)
   })
 
-  it('count 0 → "-"', () => {
-    const student = makeStudent({ counsellingSessions: 0 })
+  it('no complexity → "-"', () => {
+    const student = makeStudent({ counsellingComplexity: undefined })
     expect(
-      evaluateCriterion(student, makeCriterion({ field: 'counsellingSessions', operator: 'is', value: '-' }), { unknownField: 'reject' }),
+      evaluateCriterion(
+        student,
+        makeCriterion({
+          field: 'counsellingSessions',
+          operator: 'is',
+          value: '-',
+        }),
+        { unknownField: 'reject' },
+      ),
     ).toBe(true)
   })
 
-  it('count undefined (cast 0) → "-"', () => {
-    const student = makeStudent({ counsellingSessions: undefined as unknown as number })
+  it('"Complex cases" student does not match "Less complex cases" filter', () => {
+    const student = makeStudent({ counsellingComplexity: 'Complex cases' })
     expect(
-      evaluateCriterion(student, makeCriterion({ field: 'counsellingSessions', operator: 'is', value: '-' }), { unknownField: 'reject' }),
-    ).toBe(true)
+      evaluateCriterion(
+        student,
+        makeCriterion({
+          field: 'counsellingSessions',
+          operator: 'is',
+          value: 'Less complex cases',
+        }),
+        { unknownField: 'reject' },
+      ),
+    ).toBe(false)
   })
 })
 
@@ -333,7 +509,11 @@ describe('overallPercentage with selectedSubjects', () => {
     expect(
       evaluateCriterion(
         student,
-        makeCriterion({ field: 'overallPercentage', operator: 'gte', value: 80 }),
+        makeCriterion({
+          field: 'overallPercentage',
+          operator: 'gte',
+          value: 80,
+        }),
         { unknownField: 'reject', selectedSubjects: ['EL'] },
       ),
     ).toBe(true)
@@ -344,7 +524,11 @@ describe('overallPercentage with selectedSubjects', () => {
     expect(
       evaluateCriterion(
         student,
-        makeCriterion({ field: 'overallPercentage', operator: 'eq', value: 55 }),
+        makeCriterion({
+          field: 'overallPercentage',
+          operator: 'eq',
+          value: 55,
+        }),
         { unknownField: 'reject', selectedSubjects: null },
       ),
     ).toBe(true)
@@ -369,7 +553,11 @@ describe('overallPercentage with selectedSubjects', () => {
 describe('assignBucket', () => {
   const buckets: Array<ProfileGroupBucket> = [
     { id: 'b1', name: 'High Risk', rule: { kind: 'meet_at_least', count: 3 } },
-    { id: 'b2', name: 'Moderate Risk', rule: { kind: 'meet_at_least', count: 1 } },
+    {
+      id: 'b2',
+      name: 'Moderate Risk',
+      rule: { kind: 'meet_at_least', count: 1 },
+    },
     { id: 'b3', name: 'Low Risk', rule: { kind: 'all_remaining' } },
   ]
 

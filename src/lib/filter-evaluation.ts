@@ -90,10 +90,9 @@ function getStudentValue(
   }
   if (field === 'counsellingSessions') {
     // Filter config exposes this as multiselect with values
-    // 'Complex cases' | 'Less complex cases' | '-'. Map the numeric count.
-    const count = student.counsellingSessions
-    if (!count) return '-'
-    return count >= 2 ? 'Complex cases' : 'Less complex cases'
+    // 'Complex cases' | 'Less complex cases' | '-'. The severity bucket is
+    // stored on the student; absence of a bucket means no counselling case.
+    return student.counsellingComplexity ?? '-'
   }
   if (field === 'housingType') {
     return student.housingType === 'Owned'
@@ -121,7 +120,11 @@ export function evaluateCriterion(
     return options.unknownField === 'match'
   }
 
-  const value = getStudentValue(student, criterion.field, options.selectedSubjects)
+  const value = getStudentValue(
+    student,
+    criterion.field,
+    options.selectedSubjects,
+  )
 
   switch (criterion.operator) {
     case 'gt':

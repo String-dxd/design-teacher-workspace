@@ -240,16 +240,16 @@ export const filterFieldConfigs: Array<FilterFieldConfig> = [
   },
   {
     field: 'counsellingSessions',
-    label: 'Counselling cases',
+    label: 'Counselling',
     type: 'multiselect',
     group: 'behaviour',
     defaultOperator: 'is',
     defaultValue: '',
-    enumValues: ['Complex cases', 'Less complex cases', '-'],
+    enumValues: ['Complex cases', 'Less complex cases', 'None'],
   },
   {
     field: 'sen',
-    label: 'SEN',
+    label: 'Special Educational Needs (SEN)',
     type: 'multiselect',
     group: 'behaviour',
     defaultOperator: 'is',
@@ -335,7 +335,7 @@ export const filterFieldConfigs: Array<FilterFieldConfig> = [
   // Family, Housing, Finance
   {
     field: 'parentsConsideringDivorce',
-    label: 'Parent enrolled in CCP',
+    label: 'Parent enrolled in CPP',
     type: 'multiselect',
     group: 'family',
     defaultOperator: 'is',

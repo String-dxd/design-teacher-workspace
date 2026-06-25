@@ -4,19 +4,6 @@ export interface OffenceDetail {
   latestDate: string
 }
 
-export interface CounsellingSubcase {
-  name: string
-  count: number
-  latestDate: string
-}
-
-export interface CounsellingCase {
-  category: string
-  subcases?: Array<CounsellingSubcase>
-  count?: number
-  latestDate?: string
-}
-
 export interface RiskIndicatorRecord {
   year: number
   term: string
@@ -62,7 +49,8 @@ export interface Student {
   selectedBy?: Array<SocialLinkPerson>
   selectedFriends?: Array<SocialLinkPerson>
   counsellingSessions: number
-  counsellingCases?: Array<CounsellingCase>
+  /** Severity bucket for the single counselling case, shown in the table/filter. */
+  counsellingComplexity?: 'Less complex cases' | 'Complex cases'
   sen: string | null
   fas: string | null
   // Family, Housing, Finance

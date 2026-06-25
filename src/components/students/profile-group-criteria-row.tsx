@@ -80,10 +80,15 @@ export function ProfileGroupCriteriaRow({
   const isStudentInsightsView =
     !isEnabled('student-analytics') && !isEnabled('student-analytics-basic')
   const msfUpliftEnabled = isEnabled('msf-uplift-data')
+  const overallPercentageEnabled = isEnabled('overall-percentage')
+  const socialLinksEnabled = isEnabled('social-links')
 
   const visibleFields = filterFieldConfigs.filter((f) => {
     // Date range is a data-view setting, not a student attribute to group by
     if (f.field === 'dateRange') return false
+    if (!overallPercentageEnabled && f.field === 'overallPercentage')
+      return false
+    if (!socialLinksEnabled && f.field === 'socialLinks') return false
     if (
       isStudentInsightsView &&
       (f.field === 'approvedMtl' ||
