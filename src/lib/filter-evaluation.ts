@@ -75,6 +75,15 @@ export function computeStudentOverall(
  * Extract the comparable value for a given field from a student record.
  * Handles fields whose raw storage differs from their filter-config representation.
  */
+// Non-numerical fields whose absent value is shown as 'None' in the table and
+// must be selectable as 'None' in the filter dropdown.
+const NONE_WHEN_EMPTY_FIELDS = new Set([
+  'sen',
+  'fas',
+  'learningSupport',
+  'nonIntactFamily',
+])
+
 function getStudentValue(
   student: Student,
   field: string,
@@ -90,16 +99,16 @@ function getStudentValue(
   }
   if (field === 'counsellingSessions') {
     // Filter config exposes this as multiselect with values
-    // 'Complex cases' | 'Less complex cases' | '-'. The severity bucket is
+    // 'Complex cases' | 'Less complex cases' | 'None'. The severity bucket is
     // stored on the student; absence of a bucket means no counselling case.
-    return student.counsellingComplexity ?? '-'
+    return student.counsellingComplexity ?? 'None'
   }
   if (field === 'housingType') {
     return student.housingType === 'Owned'
       ? 'Owner-occupied'
       : student.housingType === 'Rented'
         ? 'Rented'
-        : '-'
+        : 'None'
   }
   return student[field as keyof Student] as unknown
 }
@@ -160,11 +169,19 @@ export function evaluateCriterion(
       return !String(value ?? '')
         .toLowerCase()
         .includes(String(criterion.value).toLowerCase())
-    case 'is':
+    case 'is': {
+      // Non-numerical fields with data show an absent value as 'None' (matching
+      // the table), so an empty value must match the 'None' filter option.
+      const norm =
+        NONE_WHEN_EMPTY_FIELDS.has(criterion.field) &&
+        (value == null || value === '' || value === '-')
+          ? 'None'
+          : String(value ?? '')
       if (Array.isArray(criterion.value)) {
-        return criterion.value.includes(String(value ?? ''))
+        return criterion.value.includes(norm)
       }
-      return String(value ?? '') === String(criterion.value)
+      return norm === String(criterion.value)
+    }
     case 'is_not':
       return String(value ?? '') !== String(criterion.value)
     case 'is_empty':

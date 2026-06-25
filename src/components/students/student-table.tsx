@@ -787,7 +787,7 @@ export function StudentTable({
                 {meta.primaryTag}
               </Badge>
             ) : (
-              <span className="text-muted-foreground">-</span>
+              <span className="text-muted-foreground">None</span>
             )}
           </TableCell>
         </>
@@ -814,7 +814,7 @@ export function StudentTable({
                 ))}
             </div>
           ) : (
-            <span className="text-muted-foreground">-</span>
+            <span className="text-muted-foreground">None</span>
           )}
         </TableCell>
       )}
@@ -831,19 +831,11 @@ export function StudentTable({
           )
         })()}
       {isVisible('lateComing') && (
-        <TableCell>
-          {getTermlyData(student, selectedTermKey).lateComing}
-        </TableCell>
+        <TableCell>{student.lateComing}</TableCell>
       )}
-      {isVisible('absences') && (
-        <TableCell>
-          {getTermlyData(student, selectedTermKey).absences}
-        </TableCell>
-      )}
+      {isVisible('absences') && <TableCell>{student.absences}</TableCell>}
       {isVisible('ccaMissed') && (
-        <TableCell>
-          {getTermlyData(student, selectedTermKey).ccaMissed}
-        </TableCell>
+        <TableCell>{100 - student.ccaMissed * 5}%</TableCell>
       )}
       {isVisible('conduct') && <TableCell>{student.conduct}</TableCell>}
       {isVisible('offences') && (
@@ -856,7 +848,7 @@ export function StudentTable({
       )}
       {isVisible('sen') && (
         <TableCell>
-          {student.sen || <span className="text-muted-foreground">-</span>}
+          {student.sen || <span className="text-muted-foreground">None</span>}
         </TableCell>
       )}
       {isVisible('riskIndicators') && (
@@ -882,14 +874,14 @@ export function StudentTable({
       {isVisible('approvedMtl') && (
         <TableCell>
           {student.approvedMtl || (
-            <span className="text-muted-foreground">-</span>
+            <span className="text-muted-foreground">None</span>
           )}
         </TableCell>
       )}
       {isVisible('learningSupport') && (
         <TableCell>
           {student.learningSupport || (
-            <span className="text-muted-foreground">-</span>
+            <span className="text-muted-foreground">None</span>
           )}
         </TableCell>
       )}
@@ -904,7 +896,7 @@ export function StudentTable({
       {isVisible('nonIntactFamily') && (
         <TableCell>
           {student.nonIntactFamily === '-' || !student.nonIntactFamily ? (
-            <span className="text-muted-foreground">-</span>
+            <span className="text-muted-foreground">None</span>
           ) : (
             student.nonIntactFamily
           )}
@@ -918,12 +910,12 @@ export function StudentTable({
       )}
       {isVisible('fas') && (
         <TableCell>
-          {student.fas || <span className="text-muted-foreground">-</span>}
+          {student.fas || <span className="text-muted-foreground">None</span>}
         </TableCell>
       )}
       {isVisible('housing') && (
         <TableCell>
-          {student.housing || <span className="text-muted-foreground">-</span>}
+          {student.housing || <span className="text-muted-foreground">None</span>}
         </TableCell>
       )}
       {isVisible('housingType') && (
@@ -933,7 +925,7 @@ export function StudentTable({
           ) : student.housingType === 'Owned' ? (
             'Owner-occupied'
           ) : (
-            <span className="text-muted-foreground">-</span>
+            <span className="text-muted-foreground">None</span>
           )}
         </TableCell>
       )}
