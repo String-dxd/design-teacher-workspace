@@ -55,6 +55,7 @@ import { PG_SHORTCUT_PRESETS } from '@/data/pg-shortcuts'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Separator } from '@/components/ui/separator'
 import { Calendar } from '@/components/ui/calendar'
 import {
   Popover,
@@ -95,6 +96,31 @@ function linkifyHtml(html: string): string {
       return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`
     },
   )
+}
+
+// ---------------------------------------------------------------------------
+// Event schedule helpers
+// ---------------------------------------------------------------------------
+
+/** Advance a HH:MM time by 30 minutes, capped at 23:30. */
+function nextSlot(time: string): string {
+  const [hStr, mStr] = time.split(':')
+  const totalMin = Number(hStr) * 60 + Number(mStr) + 30
+  if (totalMin >= 24 * 60) return '23:30'
+  const h = Math.floor(totalMin / 60)
+  const m = totalMin % 60
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+}
+
+/** Return true when both datetimes are fully set and start ≥ end. */
+function hasTimeConflict(
+  sDate: string,
+  sTime: string,
+  eDate: string,
+  eTime: string,
+): boolean {
+  if (!sDate || !eDate || !sTime || !eTime) return false
+  return `${sDate}T${sTime}` >= `${eDate}T${eTime}`
 }
 
 // ---------------------------------------------------------------------------
@@ -349,8 +375,17 @@ function AnnouncementPreview({
     else setScreen('submitted')
   }
   function handleNavBack() {
-    if (isQuestionScreen || isSubmittedScreen || isPhotoScreen)
+    if (isPhotoScreen || isSubmittedScreen) {
       setScreen('main')
+    } else if (isQuestionScreen) {
+      if (currentQIndex > 0) {
+        const prev = relevantQuestions[currentQIndex - 1]
+        if (prev)
+          setScreen({ questionId: prev.id, responseChoice: screenChoice })
+      } else {
+        setScreen('main')
+      }
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -1023,6 +1058,7 @@ function NewAnnouncementPage() {
   const [eventEnd, setEventEnd] = useState('')
   const [eventEndTime, setEventEndTime] = useState('')
   const [venue, setVenue] = useState('')
+  const [endTimeError, setEndTimeError] = useState(false)
 
   function handleResponseTypeChange(type: ResponseType) {
     setResponseType(type)
@@ -1037,6 +1073,7 @@ function NewAnnouncementPage() {
       setEventEnd('')
       setEventEndTime('')
       setVenue('')
+      setEndTimeError(false)
     }
   }
 
@@ -1953,6 +1990,8 @@ function NewAnnouncementPage() {
                   )}
                 </div>
 
+                <Separator />
+
                 {/* Staff in charge */}
                 <div className="space-y-1.5">
                   <Label>Staff-in-charge</Label>
@@ -1994,6 +2033,8 @@ function NewAnnouncementPage() {
                     }}
                   />
                 </div>
+
+                <Separator />
 
                 {/* Enquiry email */}
                 <div className="space-y-1.5">
@@ -2111,7 +2152,7 @@ function NewAnnouncementPage() {
               {/* Zone B — optional extras (locked for posted posts) */}
               <div
                 className={cn(
-                  'mt-5 border-t pt-5 space-y-5',
+                  'mt-5 border-t pt-5 space-y-4',
                   isEditingPosted && 'pointer-events-none opacity-50',
                 )}
               >
@@ -2130,6 +2171,8 @@ function NewAnnouncementPage() {
                     onChange={setShortcuts}
                   />
                 </div>
+
+                <Separator />
 
                 {/* Links */}
                 <div className="space-y-2">
@@ -2209,6 +2252,8 @@ function NewAnnouncementPage() {
                     </button>
                   )}
                 </div>
+
+                <Separator />
 
                 {/* Files */}
                 <div className="space-y-2">
@@ -2323,6 +2368,8 @@ function NewAnnouncementPage() {
                     onChange={handleFileChange}
                   />
                 </div>
+
+                <Separator />
 
                 {/* Photos */}
                 <div className="space-y-2">
@@ -2617,13 +2664,42 @@ function NewAnnouncementPage() {
                         <input
                           type="date"
                           value={eventStart}
-                          onChange={(e) => setEventStart(e.target.value)}
+                          onChange={(e) => {
+                            const newStart = e.target.value
+                            setEventStart(newStart)
+                            if (eventEnd && newStart > eventEnd) {
+                              setEventEnd('')
+                              setEventEndTime('')
+                              setEndTimeError(false)
+                            } else if (
+                              eventEnd &&
+                              newStart === eventEnd &&
+                              eventStartTime &&
+                              eventEndTime &&
+                              eventStartTime >= eventEndTime
+                            ) {
+                              setEventEndTime(nextSlot(eventStartTime))
+                              setEndTimeError(false)
+                            }
+                          }}
                           className="flex-1 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
                         />
                         <input
                           type="time"
                           value={eventStartTime}
-                          onChange={(e) => setEventStartTime(e.target.value)}
+                          onChange={(e) => {
+                            const newTime = e.target.value
+                            setEventStartTime(newTime)
+                            if (
+                              eventEnd &&
+                              eventStart === eventEnd &&
+                              eventEndTime &&
+                              newTime >= eventEndTime
+                            ) {
+                              setEventEndTime(nextSlot(newTime))
+                              setEndTimeError(false)
+                            }
+                          }}
                           className="w-32 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
                         />
                       </div>
@@ -2634,16 +2710,63 @@ function NewAnnouncementPage() {
                         <input
                           type="date"
                           value={eventEnd}
-                          onChange={(e) => setEventEnd(e.target.value)}
+                          onChange={(e) => {
+                            setEventEnd(e.target.value)
+                            setEndTimeError(false)
+                          }}
                           className="flex-1 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
                         />
                         <input
                           type="time"
                           value={eventEndTime}
-                          onChange={(e) => setEventEndTime(e.target.value)}
-                          className="w-32 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
+                          aria-invalid={
+                            endTimeError ||
+                            hasTimeConflict(
+                              eventStart,
+                              eventStartTime,
+                              eventEnd,
+                              eventEndTime,
+                            )
+                              ? true
+                              : undefined
+                          }
+                          onChange={(e) => {
+                            const newTime = e.target.value
+                            setEventEndTime(newTime)
+                            setEndTimeError(
+                              hasTimeConflict(
+                                eventStart,
+                                eventStartTime,
+                                eventEnd,
+                                newTime,
+                              ),
+                            )
+                          }}
+                          className={cn(
+                            'w-32 rounded-md border bg-background px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring',
+                            endTimeError ||
+                              hasTimeConflict(
+                                eventStart,
+                                eventStartTime,
+                                eventEnd,
+                                eventEndTime,
+                              )
+                              ? 'border-destructive focus:ring-destructive'
+                              : 'border-input',
+                          )}
                         />
                       </div>
+                      {(endTimeError ||
+                        hasTimeConflict(
+                          eventStart,
+                          eventStartTime,
+                          eventEnd,
+                          eventEndTime,
+                        )) && (
+                        <p role="alert" className="text-xs text-destructive">
+                          End time must be after the start.
+                        </p>
+                      )}
                     </div>
                   </div>
                   <div className="space-y-1.5">
