@@ -30,9 +30,9 @@ import { ProfileCriteriaDetailsCard } from './profile-criteria-details-card'
 import type { Student } from '@/types/student'
 import type { HolisticReport, ReviewStatus, Term } from '@/types/report'
 import type { AgencyReport } from '@/data/mock-agency-reports'
+import type { ImportedColumn } from '@/lib/imported-columns'
 import { useFeatureFlag } from '@/hooks/use-feature-flag'
 import { getImportedColumns } from '@/lib/imported-columns'
-import type { ImportedColumn } from '@/lib/imported-columns'
 import {
   TERMS,
   filterReports,
@@ -85,7 +85,7 @@ function Section({
   children,
 }: SectionProps) {
   return (
-    <section id={id} className="scroll-mt-24 rounded-lg border bg-white p-6">
+    <section id={id} className="scroll-mt-24 rounded-3xl border bg-white p-6">
       <div className="mb-4 flex items-center gap-3">
         <span
           className={cn(
@@ -111,12 +111,31 @@ interface FieldProps {
   className?: string
 }
 
+// Source/date-period tooltip shown 4px above a field label when the user
+// hovers the info icon. Renders the dark popup defined by TooltipContent.
+function FieldTooltip({ text }: { text: string }) {
+  return (
+    <Tooltip>
+      <TooltipTrigger render={<span className="inline-flex shrink-0" />}>
+        <Info className="h-3.5 w-3.5 text-muted-foreground" />
+      </TooltipTrigger>
+      <TooltipContent
+        side="top"
+        sideOffset={4}
+        className="max-w-xs whitespace-pre-line"
+      >
+        {text}
+      </TooltipContent>
+    </Tooltip>
+  )
+}
+
 function Field({ label, value, tooltip, description, className }: FieldProps) {
   return (
     <div className={cn('flex flex-col gap-1', className)}>
       <dt className="flex items-center gap-1 text-sm text-muted-foreground">
         {label}
-        {tooltip && <Info className="h-3.5 w-3.5 shrink-0" />}
+        {tooltip && <FieldTooltip text={tooltip} />}
       </dt>
       {description && (
         <p className="text-xs text-muted-foreground">{description}</p>
@@ -137,7 +156,7 @@ function RemarksField({ label, value, tooltip }: RemarksFieldProps) {
     <div className="flex flex-col gap-1">
       <dt className="flex items-center gap-1 text-sm text-muted-foreground">
         {label}
-        {tooltip && <Info className="h-3.5 w-3.5 shrink-0" />}
+        {tooltip && <FieldTooltip text={tooltip} />}
       </dt>
       <dd className="text-sm font-medium">
         {value || <span className="font-normal text-muted-foreground">-</span>}
@@ -179,12 +198,15 @@ function FieldWithDetails({
       >
         <dt className="flex items-center gap-1 text-sm text-muted-foreground">
           {label}
-          <Info className="h-3.5 w-3.5 shrink-0" />
+          <FieldTooltip text={tooltip} />
         </dt>
         {description && (
           <p className="text-xs text-muted-foreground">{description}</p>
         )}
-        <dd className="text-sm font-medium">{value ?? '-'}</dd>
+        <dd className="flex items-center gap-1 text-sm font-medium">
+          <span className="min-w-0">{value ?? '-'}</span>
+          <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+        </dd>
 
         {isOpen ? (
           <button
@@ -268,7 +290,7 @@ function MsfUpliftSheetContent({
           )}
         </div>
         <p className="mb-2 text-xs text-muted-foreground">
-          MSF via Uplift Office • As of 19 May 2025
+          MSF via Uplift Office • As of 19 Jan 2026
         </p>
         <div className="rounded-lg bg-muted px-4 py-3">
           <ul className="space-y-1 text-sm">
@@ -317,7 +339,7 @@ function MsfUpliftSheetContent({
                   side="top"
                   className="max-w-xs whitespace-pre-line"
                 >
-                  {`Social Service Offices (SSOs) nearest to student's residential address. MSF via Uplift Office • As of 19 May 2025`}
+                  {`Social Service Offices (SSOs) nearest to student's residential address. MSF via Uplift Office • As of 19 Jan 2026`}
                 </TooltipContent>
               </Tooltip>
             </div>
@@ -342,7 +364,7 @@ function NonIntactFamilySheetContent({ value }: { value: string }) {
           <p className="text-sm font-medium">Parents are divorced</p>
         </div>
         <p className="mb-2 text-xs text-muted-foreground">
-          MSF via Uplift Office • As of 19 May 2025
+          MSF via Uplift Office • As of 19 Jan 2026
         </p>
         <div className="rounded-lg bg-muted px-4 py-3">
           <ul className="space-y-1 text-sm">
@@ -369,7 +391,7 @@ function NonIntactFamilySheetContent({ value }: { value: string }) {
                   side="top"
                   className="max-w-xs whitespace-pre-line"
                 >
-                  {`Social Service Offices (SSOs) nearest to student's residential address. MSF via Uplift Office • As of 19 May 2025`}
+                  {`Social Service Offices (SSOs) nearest to student's residential address. MSF via Uplift Office • As of 19 Jan 2026`}
                 </TooltipContent>
               </Tooltip>
             </div>
@@ -705,6 +727,9 @@ export function StudentProfile({
   const studentAnalyticsBasicEnabled = useFeatureFlag('student-analytics-basic')
   const msfUpliftEnabled = useFeatureFlag('msf-uplift-data')
   const importDataEnabled = useFeatureFlag('import-data')
+  const overallPercentageEnabled = useFeatureFlag('overall-percentage')
+  const socialLinksEnabled = useFeatureFlag('social-links')
+  const primaryContactEnabled = useFeatureFlag('primary-contact')
   // Default "Student Insights" view — applies when both analytics flags are off
   const isStudentInsightsView =
     !studentAnalyticsEnabled && !studentAnalyticsBasicEnabled
@@ -715,7 +740,9 @@ export function StudentProfile({
   // previously. When on, it shows the saved imported columns (falling back to
   // the default uncategorised fields when nothing has been imported yet).
   const importedColumns =
-    savedImportedColumns.length > 0 ? savedImportedColumns : DEFAULT_OTHERS_COLUMNS
+    savedImportedColumns.length > 0
+      ? savedImportedColumns
+      : DEFAULT_OTHERS_COLUMNS
   const showOthers = importDataEnabled
 
   const gradeCounts = getStudentGradeCounts(student)
@@ -724,63 +751,21 @@ export function StudentProfile({
   const missingTerms = TERMS.filter((t): t is Term => !existingTerms.has(t))
   const agencyReports = getAgencyReportsByStudent(student.id)
 
-  const fasField = <Field label="FAS" value={student.fas || '-'} />
+  const fasField = (
+    <Field label="FAS" value={student.fas || '-'} tooltip="School Cockpit" />
+  )
   const custodyField = (
     <Field
       label="Custody"
       value={student.custody || 'Mother (Sole custody with care and control)'}
+      tooltip="School Cockpit"
     />
   )
   const housingField = (
-    <FieldWithDetails
+    <Field
       label="Housing"
       value={student.housing || '-'}
-      tooltip="Housing details"
-      sideSheetTitle="Housing"
-      sideSheetContent={
-        <div className="space-y-5">
-          <div>
-            <p className="mb-2 text-sm font-medium">Housing</p>
-            <div className="rounded-lg bg-muted px-4 py-3">
-              <ul className="space-y-1 text-sm">
-                <li className="flex items-center gap-2">
-                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-foreground" />
-                  {student.housing || '-'}
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div>
-            <p className="mb-2 text-sm font-medium">Remarks</p>
-            <div className="rounded-lg bg-muted px-4 py-3 space-y-4 text-sm">
-              <div>
-                <p className="font-medium mb-1.5">Address</p>
-                <ul className="space-y-1">
-                  <li className="flex items-center gap-2">
-                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-foreground" />
-                    Blk/Hse-1 #1-1 MOE St Singapore 111111
-                  </li>
-                </ul>
-              </div>
-              {!isStudentInsightsView && (
-                <div>
-                  <p className="font-medium mb-1.5">Living arrangement</p>
-                  <ul className="space-y-1">
-                    <li className="flex items-center gap-2">
-                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-foreground" />
-                      Not staying with parents
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-foreground" />
-                      Father deceased
-                    </li>
-                  </ul>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      }
+      tooltip="School Cockpit"
     />
   )
   const housingOwnershipField = (
@@ -793,6 +778,7 @@ export function StudentProfile({
             ? 'Owner-occupied'
             : '-'
       }
+      tooltip="School Cockpit"
     />
   )
   const primaryContactField = (
@@ -864,7 +850,7 @@ export function StudentProfile({
       <FieldWithDetails
         label="Siblings"
         value={student.siblings}
-        tooltip="Sibling details"
+        tooltip="School Cockpit"
         sideSheetTitle="Siblings"
         sideSheetContent={
           <div className="space-y-5">
@@ -919,6 +905,7 @@ export function StudentProfile({
       <Field
         label="Siblings"
         value={student.siblings > 0 ? student.siblings : '-'}
+        tooltip="School Cockpit"
       />
     )
 
@@ -954,15 +941,17 @@ export function StudentProfile({
               Class {student.class} · {student.cca}
             </p>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-2 text-sm"
-            onClick={() => setPrimaryContactOpen(true)}
-          >
-            <Phone className="h-3.5 w-3.5" />
-            Primary contact
-          </Button>
+          {primaryContactEnabled && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 text-sm"
+              onClick={() => setPrimaryContactOpen(true)}
+            >
+              <Phone className="h-3.5 w-3.5" />
+              Primary contact
+            </Button>
+          )}
         </div>
 
         <Sheet open={primaryContactOpen} onOpenChange={setPrimaryContactOpen}>
@@ -1048,8 +1037,8 @@ export function StudentProfile({
           <InterventionBanner student={student} />
         )}
 
-        {/* Overview Cards */}
-        <StudentOverviewCards student={student} />
+        {/* Overview Cards — only shown when Student Analytics is enabled */}
+        {studentAnalyticsEnabled && <StudentOverviewCards student={student} />}
 
         {/* Criteria details (only when an applied profile group matches) */}
         <ProfileCriteriaDetailsCard student={student} />
@@ -1072,12 +1061,22 @@ export function StudentProfile({
                       )
                     : 0
                 }
+                tooltip="School Cockpit • Term 2, 2026"
               />
-              <Field label="Late-coming (days)" value={student.lateComing} />
-              <Field label="Non-VR absences (days)" value={student.absences} />
+              <Field
+                label="Late-coming (days)"
+                value={student.lateComing}
+                tooltip="School Cockpit • Term 2, 2026"
+              />
+              <Field
+                label="Non-VR absences (days)"
+                value={student.absences}
+                tooltip="School Cockpit • Term 2, 2026"
+              />
               <Field
                 label="CCA attendance(%)"
                 value={`${100 - student.ccaMissed * 5}`}
+                tooltip="School Cockpit • Term 2, 2026"
               />
             </dl>
 
@@ -1106,10 +1105,60 @@ export function StudentProfile({
           iconClassName="bg-indigo-100 text-indigo-600"
         >
           <dl className="grid grid-cols-3 gap-x-8 gap-y-4">
+            {/* In the Uplift default view the standalone Attendance section is
+                hidden, so surface its core attendance metrics here. When
+                Student Analytics is on, the Attendance section renders on its
+                own and these are intentionally omitted to avoid duplication. */}
+            {msfUpliftEnabled && isStudentInsightsView && (
+              <>
+                <Field
+                  label="Attendance (%)"
+                  value={
+                    student.totalSchoolDays > 0
+                      ? Math.round(
+                          (student.daysPresent / student.totalSchoolDays) * 100,
+                        )
+                      : 0
+                  }
+                  tooltip="School Cockpit • Term 2, 2026"
+                />
+                <Field
+                  label="Late-coming (days)"
+                  value={student.lateComing}
+                  tooltip="School Cockpit • Term 2, 2026"
+                />
+                <Field
+                  label="Non-VR absences (days)"
+                  value={student.absences}
+                  tooltip="School Cockpit • Term 2, 2026"
+                />
+                <Field
+                  label="CCA attendance(%)"
+                  value={`${100 - student.ccaMissed * 5}`}
+                  tooltip="School Cockpit • Term 2, 2026"
+                />
+              </>
+            )}
+            <Field
+              label="Conduct grade"
+              value={
+                student.conduct ? (
+                  <>
+                    {student.conduct}{' '}
+                    <span className="font-normal text-muted-foreground">
+                      (2025, Overall)
+                    </span>
+                  </>
+                ) : (
+                  '-'
+                )
+              }
+              tooltip="School Cockpit • Term 2, 2026"
+            />
             <FieldWithDetails
               label="Offences"
               value={student.offences}
-              tooltip="Total disciplinary offences this year"
+              tooltip="School Cockpit • All records"
               sideSheetTitle="Offences"
               sideSheetContent={
                 <div className="space-y-5">
@@ -1144,16 +1193,14 @@ export function StudentProfile({
               }
             />
             <FieldWithDetails
-              label="Counselling cases"
+              label="Counselling"
               value={student.counsellingSessions}
-              tooltip="Number of counselling sessions this year"
-              sideSheetTitle="Counselling cases"
+              tooltip="School Cockpit • All records"
+              sideSheetTitle="Counselling"
               sideSheetContent={
                 <div className="space-y-5">
                   <div>
-                    <p className="mb-2 text-sm font-medium">
-                      Counselling cases
-                    </p>
+                    <p className="mb-2 text-sm font-medium">Counselling</p>
                     <div className="rounded-lg bg-muted px-4 py-3">
                       <ul className="space-y-1 text-sm">
                         <li className="flex items-center gap-2">
@@ -1163,55 +1210,30 @@ export function StudentProfile({
                       </ul>
                     </div>
                   </div>
-                  {student.counsellingCases &&
-                    student.counsellingCases.length > 0 && (
-                      <div>
-                        <p className="mb-2 text-sm font-medium">Remarks</p>
-                        <div className="rounded-lg bg-muted px-4 py-3">
-                          <ul className="space-y-1.5 text-sm">
-                            {student.counsellingCases.map((c, i) => (
-                              <li key={i} className="flex items-start gap-2">
-                                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-foreground" />
-                                {c.subcases && c.subcases.length > 0 ? (
-                                  <span>
-                                    {c.category}:{' '}
-                                    {c.subcases
-                                      .map(
-                                        (s) =>
-                                          `${s.name} x${s.count} (latest ${s.latestDate})`,
-                                      )
-                                      .join(', ')}
-                                  </span>
-                                ) : (
-                                  <span>
-                                    {c.category} x{c.count} (latest{' '}
-                                    {c.latestDate})
-                                  </span>
-                                )}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
+                  {student.counsellingComplexity && (
+                    <div>
+                      <p className="mb-2 text-sm font-medium">Remarks</p>
+                      <div className="rounded-lg bg-muted px-4 py-3">
+                        <ul className="space-y-1.5 text-sm">
+                          <li className="flex items-start gap-2">
+                            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-foreground" />
+                            <span>
+                              {student.counsellingComplexity === 'Complex cases'
+                                ? 'Physical Bullying (aggressor) x 1 (latest 15 Aug 2026)'
+                                : 'Disruptive Behaviour x 1 (latest 2 Aug 2025)'}
+                            </span>
+                          </li>
+                        </ul>
                       </div>
-                    )}
+                    </div>
+                  )}
                 </div>
               }
             />
-            <Field label="SEN" value={student.sen || '-'} />
             <Field
-              label="Conduct grade"
-              value={
-                student.conduct ? (
-                  <>
-                    {student.conduct}{' '}
-                    <span className="font-normal text-muted-foreground">
-                      (2025, Overall)
-                    </span>
-                  </>
-                ) : (
-                  '-'
-                )
-              }
+              label="Special Educational Needs (SEN)"
+              value={student.sen || '-'}
+              tooltip="School Cockpit"
             />
           </dl>
 
@@ -1234,7 +1256,7 @@ export function StudentProfile({
           iconClassName="bg-pink-100 text-pink-600"
         >
           {(() => {
-            const socialLinks = (
+            const socialLinks = socialLinksEnabled ? (
               <FieldWithDetails
                 label="Social links"
                 value={student.socialLinks}
@@ -1303,12 +1325,12 @@ export function StudentProfile({
                   </div>
                 }
               />
-            )
+            ) : null
             const riskIndicators = (
               <FieldWithDetails
                 label="TCI risk indicators"
                 value={`${student.riskIndicators} of 5 indicators`}
-                tooltip="Risk indicators from TCI survey"
+                tooltip="Termly Check-in Survey • Term 2, 2026"
                 sideSheetTitle="TCI risk indicators"
                 sideSheetContent={
                   <div className="space-y-5">
@@ -1367,7 +1389,7 @@ export function StudentProfile({
               <FieldWithDetails
                 label="Low mood flagged 2+ terms"
                 value={lowMoodValue}
-                tooltip="Flagged for persistent low mood"
+                tooltip="Termly Check-in Survey • within past 4 terms"
                 sideSheetTitle="Low mood flagged 2+ terms"
                 sideSheetContent={
                   <div className="space-y-5">
@@ -1441,45 +1463,50 @@ export function StudentProfile({
           iconClassName="bg-blue-100 text-blue-600"
         >
           <dl className="grid grid-cols-3 gap-x-8 gap-y-4">
-            <FieldWithDetails
-              label="Overall % across selected subjects"
-              value={`${COMPUTED_OVERALL_PERCENTAGE}%`}
-              tooltip="Average percentage across subjects selected for computation"
-              sideSheetTitle="Overall % across selected subjects"
-              sideSheetContent={
-                <div className="space-y-5">
-                  <div>
-                    <p className="mb-2 text-sm font-medium">
-                      Overall % across selected subjects
-                    </p>
-                    <div className="rounded-lg bg-muted px-4 py-3">
-                      <ul className="space-y-1 text-sm">
-                        <li className="flex items-center gap-2">
-                          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-foreground" />
-                          {COMPUTED_OVERALL_PERCENTAGE}%
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                  <div>
-                    <p className="mb-2 text-sm font-medium">Remarks</p>
-                    <div className="rounded-lg bg-muted px-4 py-3 space-y-4 text-sm">
-                      <div>
-                        <p className="font-medium mb-1.5">Selected subjects</p>
-                        <ul className="space-y-1.5">
-                          {SUBJECT_COMPUTATION.map((item, i) => (
-                            <li key={i} className="flex items-center gap-2">
-                              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-foreground" />
-                              {item.subject} - {item.band} ({item.percentage}%)
-                            </li>
-                          ))}
+            {overallPercentageEnabled && (
+              <FieldWithDetails
+                label="Overall % across selected subjects"
+                value={`${COMPUTED_OVERALL_PERCENTAGE}%`}
+                tooltip="Average percentage across subjects selected for computation"
+                sideSheetTitle="Overall % across selected subjects"
+                sideSheetContent={
+                  <div className="space-y-5">
+                    <div>
+                      <p className="mb-2 text-sm font-medium">
+                        Overall % across selected subjects
+                      </p>
+                      <div className="rounded-lg bg-muted px-4 py-3">
+                        <ul className="space-y-1 text-sm">
+                          <li className="flex items-center gap-2">
+                            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-foreground" />
+                            {COMPUTED_OVERALL_PERCENTAGE}%
+                          </li>
                         </ul>
                       </div>
                     </div>
+                    <div>
+                      <p className="mb-2 text-sm font-medium">Remarks</p>
+                      <div className="rounded-lg bg-muted px-4 py-3 space-y-4 text-sm">
+                        <div>
+                          <p className="font-medium mb-1.5">
+                            Selected subjects
+                          </p>
+                          <ul className="space-y-1.5">
+                            {SUBJECT_COMPUTATION.map((item, i) => (
+                              <li key={i} className="flex items-center gap-2">
+                                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-foreground" />
+                                {item.subject} - {item.band} ({item.percentage}
+                                %)
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              }
-            />
+                }
+              />
+            )}
 
             {!isStudentInsightsView && (
               <>
@@ -1505,6 +1532,7 @@ export function StudentProfile({
             <Field
               label="Learning support"
               value={student.learningSupport || '-'}
+              tooltip="School Cockpit"
             />
             {!isStudentInsightsView && (
               <Field
@@ -1540,22 +1568,22 @@ export function StudentProfile({
           <dl className="grid grid-cols-3 gap-x-8 gap-y-4">
             {msfUpliftEnabled ? (
               <>
-                {primaryContactField}
+                {primaryContactEnabled && primaryContactField}
                 {custodyField}
                 {(() => {
                   const consideringDivorce =
                     student.parentsConsideringDivorce ?? 'No'
-                  const consideringDivorceTooltip = `"Yes" indicates that at least one parent is enrolled in the Mandatory Co-Parenting Programme (CCP). All parents with children below 21 years old are required to attend the CCP before filing for divorce. Under the CCP, parents receive support from counsellors to help them make informed decisions that prioritise the well-being of their children, such as working out co-parenting arrangements arising from a divorce.`
+                  const consideringDivorceTooltip = `"Yes" indicates that at least one parent is enrolled in the Mandatory Co-Parenting Programme (CPP). All parents with children below 21 years old are required to attend the CPP before filing for divorce. Under the CPP, parents receive support from counsellors to help them make informed decisions that prioritise the well-being of their children, such as working out co-parenting arrangements arising from a divorce.`
                   return (
                     <FieldWithDetails
-                      label="Parent enrolled in CCP"
-                      tooltip="Parent enrolled in CCP"
-                      description="MSF via Uplift Office • 19 May 2025"
+                      label="Parent enrolled in CPP"
+                      tooltip="MSF via Uplift Office • as of 19 Jan 2026"
+                      description="MSF via Uplift Office • 19 Jan 2026"
                       value={consideringDivorce}
-                      sideSheetTitle="Parent enrolled in CCP"
+                      sideSheetTitle="Parent enrolled in CPP"
                       sideSheetContent={
                         <MsfUpliftSheetContent
-                          title="Parent enrolled in CCP"
+                          title="Parent enrolled in CPP"
                           value={consideringDivorce}
                           titleTooltip={consideringDivorceTooltip}
                         />
@@ -1568,8 +1596,8 @@ export function StudentProfile({
                   return (
                     <FieldWithDetails
                       label="Parents are divorced"
-                      tooltip="Parents are divorced"
-                      description="MSF via Uplift Office • 19 May 2025"
+                      tooltip="MSF via Uplift Office • as of 19 Jan 2026"
+                      description="MSF via Uplift Office • 19 Jan 2026"
                       value={nonIntact}
                       sideSheetTitle="Parents are divorced"
                       sideSheetContent={
@@ -1587,8 +1615,8 @@ export function StudentProfile({
                   return (
                     <FieldWithDetails
                       label="Supported by ComLink+"
-                      tooltip="Supported by ComLink+"
-                      description="MSF via Uplift Office • 19 May 2025"
+                      tooltip="MSF via Uplift Office • as of 19 Jan 2026"
+                      description="MSF via Uplift Office • 19 Jan 2026"
                       value={comLinkDisplay}
                       sideSheetTitle="Supported by ComLink+"
                       sideSheetContent={
@@ -1603,14 +1631,12 @@ export function StudentProfile({
                 {(() => {
                   const fsc = student.supportedByFsc ?? 'No'
                   const fscDisplay =
-                    fsc === 'Yes'
-                      ? 'Yes by Fei Yue FSC (Choa Chu Kang)'
-                      : fsc
+                    fsc === 'Yes' ? 'Yes by Fei Yue FSC (Choa Chu Kang)' : fsc
                   return (
                     <FieldWithDetails
                       label="Supported by FSC"
-                      tooltip="Supported by FSC"
-                      description="MSF via Uplift Office • 19 May 2025"
+                      tooltip="MSF via Uplift Office • as of 19 Jan 2026"
+                      description="MSF via Uplift Office • 19 Jan 2026"
                       value={fscDisplay}
                       sideSheetTitle="Supported by FSC"
                       sideSheetContent={
@@ -1650,7 +1676,7 @@ export function StudentProfile({
                     value={student.afterSchoolArrangement || 'No arrangement'}
                   />
                 )}
-                {primaryContactField}
+                {primaryContactEnabled && primaryContactField}
                 {siblingsField}
               </>
             )}

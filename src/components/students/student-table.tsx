@@ -455,6 +455,18 @@ export function StudentTable({
           className="min-w-[130px]"
         />
       )}
+      {isVisible('conduct') && (
+        <ColumnHeaderMenu
+          column={columns.find((c) => c.id === 'conduct')!}
+          currentSort={sort}
+          activeFilterFields={activeFilterFields}
+          onSort={onSort}
+          onClearSort={onClearSort}
+          onAddQuickFilter={onAddQuickFilter}
+          onClearFilter={onClearFilter}
+          className="min-w-[115px]"
+        />
+      )}
       {isVisible('offences') && (
         <ColumnHeaderMenu
           column={columns.find((c) => c.id === 'offences')!}
@@ -489,18 +501,6 @@ export function StudentTable({
           onAddQuickFilter={onAddQuickFilter}
           onClearFilter={onClearFilter}
           className="min-w-[80px]"
-        />
-      )}
-      {isVisible('conduct') && (
-        <ColumnHeaderMenu
-          column={columns.find((c) => c.id === 'conduct')!}
-          currentSort={sort}
-          activeFilterFields={activeFilterFields}
-          onSort={onSort}
-          onClearSort={onClearSort}
-          onAddQuickFilter={onAddQuickFilter}
-          onClearFilter={onClearFilter}
-          className="min-w-[115px]"
         />
       )}
       {isVisible('riskIndicators') && (
@@ -757,14 +757,20 @@ export function StudentTable({
         >
           <div className="flex items-center gap-2">
             {student.name}
-            <Link
-              to="/students/$id"
-              params={{ id: student.id }}
-              className="text-muted-foreground hover:text-foreground"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <FileText className="size-4" />
-            </Link>
+            {/* Profile shortcut — only an experiment feature (Student
+                Analytics), hidden on the base "Student Insights" view to
+                match production. */}
+            {(isEnabled('student-analytics') ||
+              isEnabled('student-analytics-basic')) && (
+              <Link
+                to="/students/$id"
+                params={{ id: student.id }}
+                className="text-muted-foreground hover:text-foreground"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <FileText className="size-4" />
+              </Link>
+            )}
           </div>
         </TableCell>
       )}
@@ -839,22 +845,20 @@ export function StudentTable({
           {getTermlyData(student, selectedTermKey).ccaMissed}
         </TableCell>
       )}
+      {isVisible('conduct') && <TableCell>{student.conduct}</TableCell>}
       {isVisible('offences') && (
         <TableCell>
           {getTermlyData(student, selectedTermKey).offences}
         </TableCell>
       )}
       {isVisible('counsellingSessions') && (
-        <TableCell>
-          {getTermlyData(student, selectedTermKey).counsellingSessions}
-        </TableCell>
+        <TableCell>{student.counsellingComplexity ?? 'None'}</TableCell>
       )}
       {isVisible('sen') && (
         <TableCell>
           {student.sen || <span className="text-muted-foreground">-</span>}
         </TableCell>
       )}
-      {isVisible('conduct') && <TableCell>{student.conduct}</TableCell>}
       {isVisible('riskIndicators') && (
         <TableCell>{student.riskIndicators}</TableCell>
       )}

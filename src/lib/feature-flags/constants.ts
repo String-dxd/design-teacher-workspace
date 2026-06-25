@@ -17,4 +17,10 @@ export const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
   'report-generation': true,
   'msf-uplift-data': false,
   'date-range-filter': false,
+  'attention-tag': false,
+  'column-visibility': false,
+  'overall-percentage': false,
+  'social-links': false,
+  export: false,
+  'primary-contact': false,
 }

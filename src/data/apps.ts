@@ -21,7 +21,7 @@ export interface AppCategory {
 
 export const featuredApp: App = {
   id: 'featured-students',
-  name: 'Students',
+  name: 'Student Insights',
   description: 'Holistic insights that help every student thrive',
   icon: '/logos/students-logo.svg',
   color: 'purple',
@@ -78,7 +78,7 @@ export const appCategories: Array<AppCategory> = [
       },
       {
         id: 'sdt-data-tool',
-        name: 'Students',
+        name: 'Student Insights',
         description: 'Holistic insights that help every student thrive',
         icon: '/logos/students-logo.svg',
         color: 'blue',

@@ -120,6 +120,9 @@ export function MultiFilterPopover({
   const isStudentInsightsView =
     !isEnabled('student-analytics') && !isEnabled('student-analytics-basic')
   const msfUpliftEnabled = isEnabled('msf-uplift-data')
+  const dateRangeFilterEnabled = isEnabled('date-range-filter')
+  const overallPercentageEnabled = isEnabled('overall-percentage')
+  const socialLinksEnabled = isEnabled('social-links')
   const [open, setOpen] = useState(false)
   const [selectorOpen, setSelectorOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -211,8 +214,23 @@ export function MultiFilterPopover({
           opt.field !== 'nonIntactFamily',
       )
     }
+    if (!dateRangeFilterEnabled) {
+      opts = opts.filter((opt) => opt.field !== 'dateRange')
+    }
+    if (!overallPercentageEnabled) {
+      opts = opts.filter((opt) => opt.field !== 'overallPercentage')
+    }
+    if (!socialLinksEnabled) {
+      opts = opts.filter((opt) => opt.field !== 'socialLinks')
+    }
     return opts
-  }, [isStudentInsightsView, msfUpliftEnabled])
+  }, [
+    isStudentInsightsView,
+    msfUpliftEnabled,
+    dateRangeFilterEnabled,
+    overallPercentageEnabled,
+    socialLinksEnabled,
+  ])
 
   const allFieldOptions = useMemo(
     () => [...visibleFilterFieldOptions, ...importedFieldOptions],

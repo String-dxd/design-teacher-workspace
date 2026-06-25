@@ -113,6 +113,48 @@ const featureFlagConfigs: Array<FeatureFlagConfig> = [
       'Show the Date range selector in the student list filter bar for filtering data by period',
     stage: 'Experiment',
   },
+  {
+    key: 'attention-tag',
+    label: 'Attention tag',
+    description:
+      'Show the Attention tag column in the student list with tags such as LTA, SEN, and FAS',
+    stage: 'Experiment',
+  },
+  {
+    key: 'column-visibility',
+    label: 'Show/hide columns',
+    description:
+      'Show the Show/hide columns control in the student list to toggle which columns are visible',
+    stage: 'Experiment',
+  },
+  {
+    key: 'overall-percentage',
+    label: 'Overall % across selected subjects',
+    description:
+      'Show the Overall % across selected subjects field in the student list column, student profile, filters, and group-by dropdown',
+    stage: 'Experiment',
+  },
+  {
+    key: 'social-links',
+    label: 'Social links',
+    description:
+      'Show the Social links field in the student list column, student profile, filters, and group-by dropdown',
+    stage: 'Experiment',
+  },
+  {
+    key: 'export',
+    label: 'Export',
+    description:
+      'Show the Export data option in the student list to export student data',
+    stage: 'Experiment',
+  },
+  {
+    key: 'primary-contact',
+    label: 'Primary contact',
+    description:
+      'Show the Primary contact button in the student profile header and the Primary contact field in the Family section',
+    stage: 'Experiment',
+  },
 ]
 
 function FeatureFlagsPage() {

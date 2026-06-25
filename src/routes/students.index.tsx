@@ -100,6 +100,10 @@ function StudentsPage() {
   const studentAnalyticsEnabled = useFeatureFlag('student-analytics')
   const studentAnalyticsBasicEnabled = useFeatureFlag('student-analytics-basic')
   const msfUpliftEnabled = useFeatureFlag('msf-uplift-data')
+  const attentionTagEnabled = useFeatureFlag('attention-tag')
+  const overallPercentageEnabled = useFeatureFlag('overall-percentage')
+  const socialLinksEnabled = useFeatureFlag('social-links')
+  const importDataEnabled = useFeatureFlag('import-data')
   const isStudentInsightsView =
     !studentAnalyticsEnabled && !studentAnalyticsBasicEnabled
   const pageTitle = isStudentInsightsView
@@ -121,7 +125,7 @@ function StudentsPage() {
             c.id !== 'afterSchoolArrangement',
         )
       : defaultColumns
-    const baseColumns = msfUpliftEnabled
+    const msfFiltered = msfUpliftEnabled
       ? insightsFiltered
       : insightsFiltered.filter(
           (c) =>
@@ -130,7 +134,21 @@ function StudentsPage() {
             c.id !== 'parentsConsideringDivorce' &&
             c.id !== 'nonIntactFamily',
         )
-    const saved = getImportedColumns()
+    const attentionFiltered = attentionTagEnabled
+      ? msfFiltered
+      : msfFiltered.filter((c) => c.id !== 'attentionTags')
+    // The Social links column only appears when its flag is on.
+    const socialFiltered = socialLinksEnabled
+      ? attentionFiltered
+      : attentionFiltered.filter((c) => c.id !== 'socialLinks')
+    // The Overall % across selected subjects column only appears when its flag
+    // is on.
+    const baseColumns = overallPercentageEnabled
+      ? socialFiltered
+      : socialFiltered.filter((c) => c.id !== 'overallPercentage')
+    // Imported columns (e.g. "VIA missed", "Next steps", "Teacher's remarks")
+    // only appear when the Import Data flag is on.
+    const saved = importDataEnabled ? getImportedColumns() : []
     if (saved.length === 0) return baseColumns
     const now = new Date()
     const dateStr = now.toLocaleDateString('en-GB', {
@@ -182,6 +200,111 @@ function StudentsPage() {
       return prev
     })
   }, [msfUpliftEnabled])
+
+  // Sync the Attention tag column when the feature flag toggles at runtime
+  useEffect(() => {
+    setColumns((prev) => {
+      const hasAttentionTag = prev.some((c) => c.id === 'attentionTags')
+      if (attentionTagEnabled && !hasAttentionTag) {
+        const attentionColumn = defaultColumns.find(
+          (c) => c.id === 'attentionTags',
+        )
+        if (!attentionColumn) return prev
+        const ccaIndex = prev.findIndex((c) => c.id === 'cca')
+        const insertAt = ccaIndex >= 0 ? ccaIndex + 1 : prev.length
+        return [
+          ...prev.slice(0, insertAt),
+          attentionColumn,
+          ...prev.slice(insertAt),
+        ]
+      }
+      if (!attentionTagEnabled && hasAttentionTag) {
+        return prev.filter((c) => c.id !== 'attentionTags')
+      }
+      return prev
+    })
+  }, [attentionTagEnabled])
+
+  // Sync the Social links column when the feature flag toggles at runtime
+  useEffect(() => {
+    setColumns((prev) => {
+      const hasSocial = prev.some((c) => c.id === 'socialLinks')
+      if (socialLinksEnabled && !hasSocial) {
+        const socialColumn = defaultColumns.find((c) => c.id === 'socialLinks')
+        if (!socialColumn) return prev
+        const lowMoodIndex = prev.findIndex((c) => c.id === 'lowMoodFlagged')
+        const insertAt = lowMoodIndex >= 0 ? lowMoodIndex + 1 : prev.length
+        return [
+          ...prev.slice(0, insertAt),
+          socialColumn,
+          ...prev.slice(insertAt),
+        ]
+      }
+      if (!socialLinksEnabled && hasSocial) {
+        return prev.filter((c) => c.id !== 'socialLinks')
+      }
+      return prev
+    })
+  }, [socialLinksEnabled])
+
+  // Sync the Overall % column when the feature flag toggles at runtime
+  useEffect(() => {
+    setColumns((prev) => {
+      const hasOverall = prev.some((c) => c.id === 'overallPercentage')
+      if (overallPercentageEnabled && !hasOverall) {
+        const overallColumn = defaultColumns.find(
+          (c) => c.id === 'overallPercentage',
+        )
+        if (!overallColumn) return prev
+        const socialIndex = prev.findIndex((c) => c.id === 'socialLinks')
+        const insertAt = socialIndex >= 0 ? socialIndex + 1 : prev.length
+        return [
+          ...prev.slice(0, insertAt),
+          overallColumn,
+          ...prev.slice(insertAt),
+        ]
+      }
+      if (!overallPercentageEnabled && hasOverall) {
+        return prev.filter((c) => c.id !== 'overallPercentage')
+      }
+      return prev
+    })
+  }, [overallPercentageEnabled])
+
+  // Sync imported columns when the Import Data flag toggles at runtime.
+  // When off, hide previously-imported columns; when on, restore them from
+  // the saved import (localStorage).
+  useEffect(() => {
+    setColumns((prev) => {
+      const hasImported = prev.some((c) => c.imported)
+      if (!importDataEnabled && hasImported) {
+        return prev.filter((c) => !c.imported)
+      }
+      if (importDataEnabled && !hasImported) {
+        const saved = getImportedColumns()
+        if (saved.length === 0) return prev
+        const dateStr = new Date().toLocaleDateString('en-GB', {
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
+        })
+        const restoredImported: Array<ColumnConfig> = saved.map((c) => ({
+          id: c.id,
+          label: c.label,
+          visible: true,
+          sortable: true,
+          imported: true,
+          source: 'Imported by user',
+          lastUpdated: `${dateStr} by You`,
+        }))
+        return [
+          ...prev.filter((c) => !restoredImported.some((ic) => ic.id === c.id)),
+          ...restoredImported,
+        ]
+      }
+      return prev
+    })
+  }, [importDataEnabled])
 
   const [sort, setSort] = useState<SortConfig | null>(null)
   const [selectedSubjects, setSelectedSubjects] =
@@ -238,7 +361,10 @@ function StudentsPage() {
       const matchesFilters =
         !hasFilterCriteria ||
         completeFilters.every((filter) =>
-          evaluateCriterion(student, filter, { unknownField: 'match', selectedSubjects }),
+          evaluateCriterion(student, filter, {
+            unknownField: 'match',
+            selectedSubjects,
+          }),
         )
 
       if (matchesSearch && matchesFilters) {
@@ -366,27 +492,29 @@ function StudentsPage() {
           />
         </div>
 
-        {/* Metrics Cards */}
-        <div className="grid grid-cols-1 gap-4 px-6 md:grid-cols-3">
-          <DataCard
-            label="Attendance"
-            value={`${metrics.absenteeismRate}%`}
-            description="Current term"
-            trend="declining"
-          />
-          <DataCard
-            label="Attendance"
-            value={metrics.lateComing}
-            description="Late-coming"
-            trend="improving"
-          />
-          <DataCard
-            label="Tier 2-3"
-            value={metrics.tier2_3Students}
-            description="Students needing support"
-            trend="stable"
-          />
-        </div>
+        {/* Metrics Cards — only shown when Student Analytics is enabled */}
+        {studentAnalyticsEnabled && (
+          <div className="grid grid-cols-1 gap-4 px-6 md:grid-cols-3">
+            <DataCard
+              label="Attendance"
+              value={`${metrics.absenteeismRate}%`}
+              description="Current term"
+              trend="declining"
+            />
+            <DataCard
+              label="Attendance"
+              value={metrics.lateComing}
+              description="Late-coming"
+              trend="improving"
+            />
+            <DataCard
+              label="Attendance"
+              value={metrics.tier2_3Students}
+              description="Non-VR absences (days)"
+              trend="stable"
+            />
+          </div>
+        )}
 
         {/* Filters */}
         <StudentFilters

@@ -232,32 +232,38 @@ export function StudentFilters({
 
         <div className="flex items-center gap-2">
           {rightSlot}
-          <ColumnVisibilityPopover
-            columns={columns}
-            onColumnsChange={onColumnsChange}
-          />
-
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              render={
-                <Button variant="outline" size="icon">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              }
+          {flags['column-visibility'] && (
+            <ColumnVisibilityPopover
+              columns={columns}
+              onColumnsChange={onColumnsChange}
             />
-            <DropdownMenuContent align="end" className="p-3">
-              <DropdownMenuItem onClick={() => setExportModalOpen(true)}>
-                <Download className="mr-2 size-4" />
-                Export data
-              </DropdownMenuItem>
-              {flags['import-data'] && (
-                <DropdownMenuItem onClick={() => setImportDialogOpen(true)}>
-                  <Upload className="mr-2 size-4" />
-                  Import data
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          )}
+
+          {(flags['export'] || flags['import-data']) && (
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <Button variant="outline" size="icon">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                }
+              />
+              <DropdownMenuContent align="end" className="p-3">
+                {flags['export'] && (
+                  <DropdownMenuItem onClick={() => setExportModalOpen(true)}>
+                    <Download className="mr-2 size-4" />
+                    Export data
+                  </DropdownMenuItem>
+                )}
+                {flags['import-data'] && (
+                  <DropdownMenuItem onClick={() => setImportDialogOpen(true)}>
+                    <Upload className="mr-2 size-4" />
+                    Import data
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
 
