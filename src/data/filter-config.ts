@@ -255,7 +255,7 @@ export const filterFieldConfigs: Array<FilterFieldConfig> = [
     defaultOperator: 'is',
     defaultValue: '',
     enumValues: [
-      '-',
+      'None',
       'Intellectual disability',
       'Attention Deficit Hyperactivity Disorder',
       'Depression',
@@ -296,7 +296,7 @@ export const filterFieldConfigs: Array<FilterFieldConfig> = [
     group: 'academic',
     defaultOperator: 'is',
     defaultValue: '',
-    enumValues: ['LSP', 'LSM'],
+    enumValues: ['LSP', 'LSM', 'None'],
   },
   {
     field: 'postSecEligibility',
@@ -322,7 +322,7 @@ export const filterFieldConfigs: Array<FilterFieldConfig> = [
     group: 'wellbeing',
     defaultOperator: 'is',
     defaultValue: '',
-    enumValues: ['-', 'Yes', 'No'],
+    enumValues: ['Yes', 'No'],
   },
   {
     field: 'socialLinks',
@@ -349,7 +349,7 @@ export const filterFieldConfigs: Array<FilterFieldConfig> = [
     group: 'family',
     defaultOperator: 'is',
     defaultValue: '',
-    enumValues: ['Yes', 'No', '-'],
+    enumValues: ['Yes', 'No', 'None'],
   },
   {
     field: 'supportedByComLink',
@@ -376,7 +376,7 @@ export const filterFieldConfigs: Array<FilterFieldConfig> = [
     group: 'family',
     defaultOperator: 'is',
     defaultValue: '',
-    enumValues: ['MOE FAS', 'School based FAS', '-'],
+    enumValues: ['MOE FAS', 'School based FAS', 'None'],
   },
   {
     field: 'housing',
@@ -406,7 +406,7 @@ export const filterFieldConfigs: Array<FilterFieldConfig> = [
     group: 'family',
     defaultOperator: 'is',
     defaultValue: '',
-    enumValues: ['-', 'Not applicable', 'Rented', 'Owner-occupied', 'Others'],
+    enumValues: ['None', 'Not applicable', 'Rented', 'Owner-occupied', 'Others'],
   },
   {
     field: 'siblings',

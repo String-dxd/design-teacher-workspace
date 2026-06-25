@@ -629,11 +629,11 @@ export function MultiFilterPopover({
                               : []
                             const q = multiselectQuery.trim().toLowerCase()
                             const sortedEnumValues = [
-                              ...((fieldOption.enumValues ?? []).includes('-')
-                                ? ['-']
+                              ...((fieldOption.enumValues ?? []).includes('None')
+                                ? ['None']
                                 : []),
                               ...(fieldOption.enumValues ?? []).filter(
-                                (v) => v !== '-',
+                                (v) => v !== 'None',
                               ),
                             ]
                             const visibleOptions = q

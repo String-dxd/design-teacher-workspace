@@ -415,12 +415,12 @@ describe('housingType', () => {
     ).toBe(true)
   })
 
-  it('raw null maps to "-" → is "-" true', () => {
+  it('raw null maps to "None" → is "None" true', () => {
     const student = makeStudent({ housingType: null })
     expect(
       evaluateCriterion(
         student,
-        makeCriterion({ field: 'housingType', operator: 'is', value: '-' }),
+        makeCriterion({ field: 'housingType', operator: 'is', value: 'None' }),
         { unknownField: 'reject' },
       ),
     ).toBe(true)
@@ -462,7 +462,7 @@ describe('counsellingSessions bucketing', () => {
     ).toBe(true)
   })
 
-  it('no complexity → "-"', () => {
+  it('no complexity → "None"', () => {
     const student = makeStudent({ counsellingComplexity: undefined })
     expect(
       evaluateCriterion(
@@ -470,7 +470,7 @@ describe('counsellingSessions bucketing', () => {
         makeCriterion({
           field: 'counsellingSessions',
           operator: 'is',
-          value: '-',
+          value: 'None',
         }),
         { unknownField: 'reject' },
       ),

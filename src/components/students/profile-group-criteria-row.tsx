@@ -409,8 +409,8 @@ function MultiselectValue({
   searchRef,
 }: MultiselectValueProps) {
   const sortedOptions = [
-    ...(options.includes('-') ? ['-'] : []),
-    ...options.filter((v) => v !== '-'),
+    ...(options.includes('None') ? ['None'] : []),
+    ...options.filter((v) => v !== 'None'),
   ]
   const q = query.trim().toLowerCase()
   const visible = q
