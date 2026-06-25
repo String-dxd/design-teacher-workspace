@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 import {
   ArrowDown,
@@ -8,7 +8,6 @@ import {
   CalendarDays,
   Check,
   CheckCircle2,
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
   ExternalLink,
@@ -31,7 +30,6 @@ import type { ChangeEvent } from 'react'
 import type {
   PGAnnouncement,
   PGRecipient,
-  PGRole,
   PGWebsiteLink,
   Shortcut,
 } from '@/types/pg-announcement'
@@ -56,6 +54,13 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Calendar } from '@/components/ui/calendar'
 import {
   Popover,
@@ -122,6 +127,29 @@ function hasTimeConflict(
   if (!sDate || !eDate || !sTime || !eTime) return false
   return `${sDate}T${sTime}` >= `${eDate}T${eTime}`
 }
+
+// ---------------------------------------------------------------------------
+// Schedule-picker helpers
+// ---------------------------------------------------------------------------
+
+function buildScheduleSlots(): { value: string; label: string }[] {
+  const slots: { value: string; label: string }[] = []
+  let min = 7 * 60
+  const endMin = 21 * 60 + 45
+  while (min <= endMin) {
+    const h = Math.floor(min / 60)
+    const m = min % 60
+    const value = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+    const period = h < 12 ? 'AM' : 'PM'
+    const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h
+    const label = `${h12}:${String(m).padStart(2, '0')} ${period}`
+    slots.push({ value, label })
+    min += 15
+  }
+  return slots
+}
+
+const SCHEDULE_SLOTS = buildScheduleSlots()
 
 // ---------------------------------------------------------------------------
 // Upload helpers
@@ -1018,7 +1046,7 @@ function NewAnnouncementPage() {
   const [websiteLinks, setWebsiteLinks] = useState<Array<PGWebsiteLink>>([])
   const [recipients, setRecipients] = useState<Array<SelectedEntity>>([])
   const [staffInCharge, setStaffInCharge] = useState<Array<SelectedEntity>>([])
-  const [staffRoles, setStaffRoles] = useState<Record<string, PGRole>>({})
+
   const [enquiryEmail, setEnquiryEmail] = useState('')
 
   // Attachment state
@@ -1136,7 +1164,6 @@ function NewAnnouncementPage() {
         filesMeta: [...draftFilesMeta, ...filesMeta],
         photosMeta: [...draftPhotosMeta, ...photosMeta],
         coverPhotoIndices: [...coverPhotoIndices],
-        staffRoles,
       })
       setTimeout(() => {
         setIsSaving(false)
@@ -1152,7 +1179,6 @@ function NewAnnouncementPage() {
     websiteLinks,
     recipients,
     staffInCharge,
-    staffRoles,
     enquiryEmail,
     responseType,
     dueDate,
@@ -1200,7 +1226,6 @@ function NewAnnouncementPage() {
         setScheduledDate(draft.scheduledDate ?? '')
         setScheduledTime(draft.scheduledTime ?? '08:00')
         setCoverPhotoIndices(new Set(draft.coverPhotoIndices ?? []))
-        setStaffRoles(draft.staffRoles ?? {})
         setDraftFilesMeta(draft.filesMeta ?? [])
         setDraftPhotosMeta(draft.photosMeta ?? [])
         setSavedAt(new Date(draft.savedAt))
@@ -1223,9 +1248,6 @@ function NewAnnouncementPage() {
           type: 'individual' as const,
         })),
       )
-      const roleMap: Record<string, PGRole> = {}
-      for (const m of existingAnnouncement.staffInCharge) roleMap[m.id] = m.role
-      setStaffRoles(roleMap)
     }
 
     // Re-hydrate recipients: group PGRecipients by classLabel
@@ -1489,6 +1511,42 @@ function NewAnnouncementPage() {
     Date | undefined
   >(undefined)
 
+  const scheduleMaxDate = useMemo(() => {
+    const d = new Date()
+    d.setDate(d.getDate() + 21)
+    return d
+  }, [])
+
+  const filteredScheduleSlots = useMemo(() => {
+    const today = new Date()
+    const isToday =
+      selectedScheduleDate &&
+      selectedScheduleDate.toDateString() === today.toDateString()
+    if (!isToday) return SCHEDULE_SLOTS
+    const nowMin = today.getHours() * 60 + today.getMinutes()
+    return SCHEDULE_SLOTS.filter(({ value }) => {
+      const [h, m] = value.split(':').map(Number)
+      return h * 60 + m >= nowMin + 15
+    })
+  }, [selectedScheduleDate])
+
+  // Auto-advance time to first valid slot when today is selected
+  useEffect(() => {
+    if (!selectedScheduleDate) return
+    const today = new Date()
+    const isToday =
+      selectedScheduleDate.toDateString() === today.toDateString()
+    if (!isToday) return
+    const nowMin = today.getHours() * 60 + today.getMinutes()
+    const valid = SCHEDULE_SLOTS.find(({ value }) => {
+      const [h, m] = value.split(':').map(Number)
+      return h * 60 + m >= nowMin + 15
+    })
+    if (valid && (!scheduledTime || scheduledTime < valid.value)) {
+      setScheduledTime(valid.value)
+    }
+  }, [selectedScheduleDate])
+
   // Inline field error highlights — set on submit attempt, cleared when form becomes valid
   const [showErrors, setShowErrors] = useState(false)
 
@@ -1592,7 +1650,7 @@ function NewAnnouncementPage() {
     // Expand entity selections → flat deduplicated StaffInChargeMember list
     const seen = new Set<string>()
     const staffInChargeList = staffInCharge.flatMap((entity) => {
-      const entityRole = staffRoles[entity.id] ?? 'viewer'
+      const entityRole = 'editor'
       if (entity.type === 'individual') {
         const m = MOCK_STAFF.find((s) => s.id === entity.id)
         if (!m || seen.has(m.id)) return []
@@ -1666,7 +1724,7 @@ function NewAnnouncementPage() {
     if (!editId) return
     const seen = new Set<string>()
     const staffInChargeList = staffInCharge.flatMap((entity) => {
-      const entityRole = staffRoles[entity.id] ?? 'viewer'
+      const entityRole = 'editor'
       if (entity.type === 'individual') {
         const m = MOCK_STAFF.find((s) => s.id === entity.id)
         if (!m || seen.has(m.id)) return []
@@ -1840,7 +1898,7 @@ function NewAnnouncementPage() {
                       mode="single"
                       selected={selectedScheduleDate}
                       onSelect={setSelectedScheduleDate}
-                      disabled={{ before: new Date() }}
+                      disabled={{ before: new Date(), after: scheduleMaxDate }}
                       initialFocus
                     />
                     <div className="flex items-center gap-3 border-t px-4 py-3">
@@ -1848,17 +1906,29 @@ function NewAnnouncementPage() {
                         <span className="shrink-0 text-xs text-muted-foreground">
                           Time
                         </span>
-                        <input
-                          type="time"
+                        <Select
                           value={scheduledTime}
-                          onChange={(e) => setScheduledTime(e.target.value)}
-                          className="flex-1 rounded-md border border-input bg-background px-2.5 py-1 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring"
-                        />
+                          onValueChange={setScheduledTime}
+                        >
+                          <SelectTrigger size="sm" className="flex-1">
+                            <SelectValue placeholder="Select time" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {filteredScheduleSlots.map((slot) => (
+                              <SelectItem key={slot.value} value={slot.value}>
+                                {slot.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                       <Button
                         size="sm"
                         onClick={handleScheduleConfirm}
-                        disabled={!selectedScheduleDate}
+                        disabled={
+                          !selectedScheduleDate ||
+                          filteredScheduleSlots.length === 0
+                        }
                       >
                         Confirm
                       </Button>
@@ -1995,42 +2065,9 @@ function NewAnnouncementPage() {
                 {/* Staff in charge */}
                 <div className="space-y-1.5">
                   <Label>Staff-in-charge</Label>
-                  <p className="text-xs text-muted-foreground">
-                    Editors can edit and delete the post. Viewers can only view
-                    read status.
-                  </p>
                   <StaffSelector
                     value={staffInCharge}
                     onChange={setStaffInCharge}
-                    renderChipExtra={(entity) => {
-                      const isEditor =
-                        (staffRoles[entity.id] ?? 'viewer') === 'editor'
-                      return (
-                        <button
-                          type="button"
-                          title={
-                            isEditor ? 'Switch to Viewer' : 'Switch to Editor'
-                          }
-                          onMouseDown={(e) => e.preventDefault()}
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            setStaffRoles((prev) => ({
-                              ...prev,
-                              [entity.id]: isEditor ? 'viewer' : 'editor',
-                            }))
-                          }}
-                          className={cn(
-                            'flex items-center gap-0.5 rounded border px-1.5 py-0.5 text-[10px] font-semibold transition-colors',
-                            isEditor
-                              ? 'border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100'
-                              : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50',
-                          )}
-                        >
-                          {isEditor ? 'Editor' : 'Viewer'}
-                          <ChevronDown className="h-2.5 w-2.5 opacity-50" />
-                        </button>
-                      )
-                    }}
                   />
                 </div>
 
