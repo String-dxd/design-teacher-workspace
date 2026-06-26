@@ -5341,7 +5341,7 @@ export const mockStudents: Array<Student> = [
   },
 ]
 
-const MSF_VALUES: Array<'Yes' | 'No' | '-'> = ['Yes', 'No', '-']
+const MSF_VALUES: Array<'Yes' | 'No'> = ['Yes', 'No']
 const COMLINK_VALUES: Array<'Yes' | 'No'> = ['Yes', 'No']
 const FSC_VALUES: Array<'Yes' | 'No'> = ['Yes', 'No']
 // "Parents are divorced" and "Parent enrolled in CPP" are mutually exclusive:
@@ -5382,12 +5382,12 @@ mockStudents.forEach((s, i) => {
     s.supportedByComLink = 'Yes'
     s.supportedByComLinkBy = 'SSO Woodlands'
     s.supportedByFsc = FSC_VALUES[i % 2]
-    assignDivorceFields(s, MSF_VALUES[(i + 2) % 3], COMLINK_VALUES[(i + 1) % 2])
+    assignDivorceFields(s, MSF_VALUES[(i + 2) % 2], COMLINK_VALUES[(i + 1) % 2])
     return
   }
   s.supportedByComLink = COMLINK_VALUES[i % 2]
   s.supportedByFsc = FSC_VALUES[i % 3]
-  assignDivorceFields(s, MSF_VALUES[(i + 2) % 3], COMLINK_VALUES[(i + 1) % 2])
+  assignDivorceFields(s, MSF_VALUES[(i + 2) % 2], COMLINK_VALUES[(i + 1) % 2])
 })
 
 export const classOptions: Array<ClassOption> = [
