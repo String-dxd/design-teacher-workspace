@@ -120,15 +120,15 @@ function getFormStatusBadge(status: FormStatus) {
   const config = {
     active: {
       label: 'Open',
-      className: 'bg-green-100 text-green-700 hover:bg-green-100',
+      className: 'bg-lime-3 text-lime-11 hover:bg-lime-3',
     },
     draft: {
       label: 'Draft',
-      className: 'bg-slate-100 text-slate-700 hover:bg-slate-100',
+      className: 'bg-muted text-muted-foreground hover:bg-muted',
     },
     closed: {
       label: 'Closed',
-      className: 'bg-amber-100 text-amber-700 hover:bg-amber-100',
+      className: 'bg-amber-3 text-amber-11 hover:bg-amber-3',
     },
   }
   const { label, className } = config[status]
@@ -604,7 +604,7 @@ function ParentsGatewayPage() {
                                 )}
                                 {announcement.responseType ===
                                   'acknowledge' && (
-                                  <span className="shrink-0 rounded-full bg-blue-50 px-1.5 py-0.5 text-[10px] font-medium text-blue-600 ring-1 ring-inset ring-blue-200">
+                                  <span className="shrink-0 rounded-full bg-twblue-3 px-1.5 py-0.5 text-[10px] font-medium text-twblue-11 ring-1 ring-inset ring-twblue-6">
                                     Acknowledge
                                   </span>
                                 )}
@@ -614,7 +614,7 @@ function ParentsGatewayPage() {
                                   </span>
                                 )}
                                 {showUrgency && (
-                                  <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-500" />
+                                  <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-9" />
                                 )}
                               </div>
                               <div className="mt-0.5 line-clamp-1 text-sm text-muted-foreground">
@@ -631,7 +631,7 @@ function ParentsGatewayPage() {
                             <span
                               className={
                                 announcement.status === 'scheduled'
-                                  ? 'text-amber-600'
+                                  ? 'text-amber-11'
                                   : undefined
                               }
                             >
@@ -649,7 +649,7 @@ function ParentsGatewayPage() {
                                 <Users className="h-3.5 w-3.5 shrink-0" />
                                 <span>Shared</span>
                                 {isViewer && (
-                                  <Lock className="h-3 w-3 shrink-0 text-slate-400" />
+                                  <Lock className="h-3 w-3 shrink-0 text-muted-foreground" />
                                 )}
                               </>
                             ) : (
@@ -719,7 +719,7 @@ function ParentsGatewayPage() {
             {/* Floating bulk action bar — same pattern as Reports */}
             {selectedIds.size > 0 && tab !== 'custom-forms' && (
               <div className="fixed inset-x-0 bottom-6 z-50 flex justify-center">
-                <div className="flex items-center gap-3 rounded-full border bg-white px-5 py-2.5 shadow-lg">
+                <div className="flex items-center gap-3 rounded-full border bg-popover px-5 py-2.5 shadow-lg">
                   <span className="text-sm font-medium text-muted-foreground">
                     {selectedIds.size} selected
                   </span>
@@ -808,11 +808,11 @@ function ParentsGatewayPage() {
                       'mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border',
                       deleteMode === 'remove-from-list'
                         ? 'border-primary bg-primary'
-                        : 'border-slate-300',
+                        : 'border-input',
                     )}
                   >
                     {deleteMode === 'remove-from-list' && (
-                      <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-primary-foreground" />
                     )}
                   </span>
                   <div>
@@ -842,11 +842,11 @@ function ParentsGatewayPage() {
                       'mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border',
                       deleteMode === 'delete-for-everyone'
                         ? 'border-destructive bg-destructive'
-                        : 'border-slate-300',
+                        : 'border-input',
                     )}
                   >
                     {deleteMode === 'delete-for-everyone' && (
-                      <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-primary-foreground" />
                     )}
                   </span>
                   <div>
