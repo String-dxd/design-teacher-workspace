@@ -1,7 +1,15 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 
 // Page content for /ds — a living reference of the design tokens defined in
 // src/styles.css. Like component-example.tsx, this is a showcase module composed
@@ -106,35 +114,6 @@ function useResolvedColors() {
   return resolved
 }
 
-function SemanticRow({
-  name,
-  maps,
-  resolved,
-}: {
-  name: string
-  maps: string
-  resolved: Record<string, string>
-}) {
-  return (
-    <div className="flex items-center gap-3 py-1">
-      <div
-        data-tok={name}
-        className="h-9 w-9 shrink-0 rounded-md border border-border"
-        style={{ backgroundColor: `var(${name})` }}
-      />
-      <div className="min-w-0 flex-1">
-        <div className="truncate font-mono text-xs text-foreground">{name}</div>
-        <div className="truncate font-mono text-[11px] text-muted-foreground">
-          → {maps}
-        </div>
-      </div>
-      <code className="shrink-0 font-mono text-[11px] tabular-nums text-muted-foreground">
-        {resolved[name] ?? ''}
-      </code>
-    </div>
-  )
-}
-
 function ScaleRow({
   name,
   label,
@@ -174,49 +153,84 @@ export function DesignTokens() {
   const resolved = useResolvedColors()
 
   return (
-    <div className="w-full bg-background">
-      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-        <header className="mb-8">
+    <div className="space-y-6">
+      <header className="mb-2">
           <h1 className="text-xl font-semibold text-foreground">Design Tokens</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Semantic Shadcn tokens and the Radix / brand scales they map to.
-            Source:{' '}
-            <code className="font-mono text-xs">src/styles.css</code>.
+            Source: <code className="font-mono text-xs">src/styles.css</code>.
           </p>
         </header>
 
-        <Card className="mb-6">
+        <Card
+          id="semantic-tokens"
+          data-ds-section="Semantic tokens"
+          data-ds-group="Design Tokens"
+          className="mb-6 scroll-mt-6"
+        >
           <CardHeader>
             <CardTitle>Semantic tokens</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-x-10 gap-y-6 sm:grid-cols-2">
-              {SEMANTIC_GROUPS.map((group) => (
-                <section key={group.title}>
-                  <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    {group.title}
-                  </h3>
-                  <div className="space-y-0.5">
-                    {group.tokens.map((token) => (
-                      <SemanticRow
-                        key={token.name}
-                        name={token.name}
-                        maps={token.maps}
-                        resolved={resolved}
-                      />
-                    ))}
-                  </div>
-                </section>
-              ))}
+            <div className="overflow-x-auto rounded-lg border border-border">
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="h-9 w-20">Preview</TableHead>
+                    <TableHead className="h-9">Token</TableHead>
+                    <TableHead className="h-9">Maps to</TableHead>
+                    <TableHead className="h-9 text-right">Value</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {SEMANTIC_GROUPS.map((group) => (
+                    <Fragment key={group.title}>
+                      <TableRow className="hover:bg-transparent">
+                        <TableCell
+                          colSpan={4}
+                          className="bg-muted/50 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+                        >
+                          {group.title}
+                        </TableCell>
+                      </TableRow>
+                      {group.tokens.map((token) => (
+                        <TableRow key={token.name}>
+                          <TableCell className="py-2">
+                            <div
+                              data-tok={token.name}
+                              className="h-7 w-10 rounded-md border border-border"
+                              style={{ backgroundColor: `var(${token.name})` }}
+                            />
+                          </TableCell>
+                          <TableCell className="py-2 font-mono text-xs text-foreground">
+                            {token.name}
+                          </TableCell>
+                          <TableCell className="py-2 font-mono text-xs text-muted-foreground">
+                            {token.maps}
+                          </TableCell>
+                          <TableCell className="py-2 text-right font-mono text-[11px] tabular-nums text-muted-foreground">
+                            {resolved[token.name] ?? ''}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </Fragment>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
-            <p className="mt-6 border-t border-border pt-4 font-mono text-[11px] text-muted-foreground">
+            <p className="mt-4 font-mono text-[11px] text-muted-foreground">
               --radius-input: 14px&nbsp;&nbsp;·&nbsp;&nbsp;--overlay:
               rgba(0,0,0,0.8)
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card
+          id="color-scales"
+          data-ds-section="Color scales"
+          data-ds-group="Design Tokens"
+          className="scroll-mt-6"
+        >
           <CardHeader>
             <CardTitle>Color scales</CardTitle>
           </CardHeader>
@@ -238,7 +252,6 @@ export function DesignTokens() {
             </div>
           </CardContent>
         </Card>
-      </div>
     </div>
   )
 }
