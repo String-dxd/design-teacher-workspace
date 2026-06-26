@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { Upload, Users, X } from 'lucide-react'
+import { Upload, Users } from 'lucide-react'
 
-import { Button } from '@/components/ui/button'
+import { PageHeader } from '@/components/page-header'
 
 export const Route = createFileRoute('/groups/create')({
   component: GroupsCreate,
@@ -58,18 +58,10 @@ function GroupsCreate() {
 
   return (
     <div className="flex min-h-[calc(100vh-57px)] flex-col bg-muted/30">
-      {/* Top bar */}
-      <div className="flex items-center justify-between px-6 py-4">
-        <span className="text-sm font-medium text-foreground">New group</span>
-        <Button
-          variant="outline"
-          size="icon"
-          className="rounded-full"
-          onClick={() => navigate({ to: '/groups' })}
-        >
-          <X className="h-4 w-4" />
-        </Button>
-      </div>
+      <PageHeader
+        title="New group"
+        onClose={() => navigate({ to: '/groups' })}
+      />
 
       {/* Content */}
       <div className="flex flex-1 items-start justify-center px-6 pt-12 sm:items-center sm:pt-0">
