@@ -5390,6 +5390,40 @@ mockStudents.forEach((s, i) => {
   assignDivorceFields(s, MSF_VALUES[(i + 2) % 2], COMLINK_VALUES[(i + 1) % 2])
 })
 
+// Students enrolled in more than one CCA. The `cca` string is derived from
+// these names (comma-separated) so the table and profile header stay in sync.
+const multiCcaAssignments: Record<
+  string,
+  Array<{ name: string; attendance: number }>
+> = {
+  'Sim Xin Yi': [
+    { name: 'Volleyball', attendance: 100 },
+    { name: 'Robotics', attendance: 100 },
+    { name: 'Choir', attendance: 40 },
+  ],
+  'Chen Jun Kai': [
+    { name: 'Basketball', attendance: 80 },
+    { name: 'Choir', attendance: 90 },
+  ],
+  'Lam Wei Jie': [
+    { name: 'Volleyball', attendance: 85 },
+    { name: 'Robotics', attendance: 95 },
+    { name: 'Photography', attendance: 100 },
+  ],
+  'Sarah Chan Jun Kai': [
+    { name: 'Football', attendance: 90 },
+    { name: 'Drama', attendance: 100 },
+  ],
+}
+mockStudents.forEach((s) => {
+  const details = multiCcaAssignments[s.name]
+  if (details) {
+    const sorted = [...details].sort((a, b) => a.name.localeCompare(b.name))
+    s.ccaDetails = sorted
+    s.cca = sorted.map((d) => d.name).join(', ')
+  }
+})
+
 export const classOptions: Array<ClassOption> = [
   { value: 'all', label: 'All Classes' },
   { value: '3A', label: 'Secondary 3A' },

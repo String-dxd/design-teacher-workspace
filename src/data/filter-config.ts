@@ -158,14 +158,6 @@ export const filterFieldConfigs: Array<FilterFieldConfig> = [
     defaultValue: LATEST_PERIOD,
   },
   {
-    field: 'class',
-    label: 'Class',
-    type: 'text',
-    group: 'general',
-    defaultOperator: 'contains',
-    defaultValue: '',
-  },
-  {
     field: 'cca',
     label: 'CCA',
     type: 'multiselect',

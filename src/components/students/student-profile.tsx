@@ -909,6 +909,68 @@ export function StudentProfile({
       />
     )
 
+  // Per-CCA attendance, alphabetically ordered. Falls back to the single-CCA
+  // value for students without explicit per-CCA details.
+  const ccaAttendance = (
+    student.ccaDetails ?? [
+      { name: student.cca, attendance: 100 - student.ccaMissed * 5 },
+    ]
+  )
+    .slice()
+    .sort((a, b) => a.name.localeCompare(b.name))
+  const primaryCca = ccaAttendance[0]
+  const extraCcaCount = ccaAttendance.length - 1
+
+  // Single field always. With more than one CCA, show the first plus a "+N"
+  // affordance that opens a side sheet listing every CCA's attendance.
+  const ccaAttendanceField =
+    extraCcaCount > 0 ? (
+      <FieldWithDetails
+        label="CCA attendance (%)"
+        value={
+          <>
+            {primaryCca.attendance}%{' '}
+            <span className="font-normal text-muted-foreground">
+              ({primaryCca.name})
+            </span>{' '}
+            <span className="font-normal text-muted-foreground">
+              + {extraCcaCount} more
+            </span>
+          </>
+        }
+        tooltip="School Cockpit • Term 2, 2026"
+        sideSheetTitle="CCA attendance (%)"
+        sideSheetContent={
+          <div>
+            <p className="mb-2 text-sm font-medium">CCA attendance (%)</p>
+            <div className="rounded-lg bg-muted px-4 py-3">
+              <ul className="space-y-1 text-sm">
+                {ccaAttendance.map((item) => (
+                  <li key={item.name} className="flex items-center gap-2">
+                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-foreground" />
+                    {item.name}: {item.attendance}%
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        }
+      />
+    ) : (
+      <Field
+        label="CCA attendance (%)"
+        value={
+          <>
+            {primaryCca.attendance}%{' '}
+            <span className="font-normal text-muted-foreground">
+              ({primaryCca.name})
+            </span>
+          </>
+        }
+        tooltip="School Cockpit • Term 2, 2026"
+      />
+    )
+
   const sections = [
     ...(msfUpliftEnabled && isStudentInsightsView
       ? []
@@ -1073,11 +1135,7 @@ export function StudentProfile({
                 value={student.absences}
                 tooltip="School Cockpit • Term 2, 2026"
               />
-              <Field
-                label="CCA attendance(%)"
-                value={`${100 - student.ccaMissed * 5}`}
-                tooltip="School Cockpit • Term 2, 2026"
-              />
+              {ccaAttendanceField}
             </dl>
 
             {analyticsOpen && <AttendanceAnalytics student={student} />}
@@ -1132,11 +1190,7 @@ export function StudentProfile({
                   value={student.absences}
                   tooltip="School Cockpit • Term 2, 2026"
                 />
-                <Field
-                  label="CCA attendance(%)"
-                  value={`${100 - student.ccaMissed * 5}`}
-                  tooltip="School Cockpit • Term 2, 2026"
-                />
+                {ccaAttendanceField}
               </>
             )}
             <Field
