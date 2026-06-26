@@ -25,7 +25,10 @@ export interface Student {
   id: string
   name: string
   class: string
+  /** Comma-separated CCA names for table/header display. */
   cca: string
+  /** Per-CCA attendance, set for students enrolled in more than one CCA. */
+  ccaDetails?: Array<{ name: string; attendance: number }>
   attentionTags: Array<AttentionTag>
   // Academic Performance
   overallPercentage: number
