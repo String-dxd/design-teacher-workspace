@@ -263,7 +263,7 @@ function WizardStepper({ current }: { current: number }) {
                   'flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-white transition-colors',
                   (isActive || isCompleted) &&
                     'bg-[var(--color-twblue-9,#0064ff)]',
-                  isDimmed && 'bg-[var(--btn-color-fill-disabled,#b9bbc6)]',
+                  isDimmed && 'bg-muted',
                 )}
               >
                 {isCompleted ? (
@@ -277,8 +277,7 @@ function WizardStepper({ current }: { current: number }) {
                   'hidden text-sm min-[562px]:inline',
                   (isActive || isCompleted) &&
                     'text-[var(--color-slate-12,#1c2024)]',
-                  isDimmed &&
-                    'text-[var(--btn-color-foreground-disabled,#b9bbc6)]',
+                  isDimmed && 'text-muted-foreground',
                 )}
               >
                 {label}
@@ -460,7 +459,7 @@ function Step2({
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto">
         <div className="px-8 pb-2 pt-8">
-          <h1 className="text-2xl font-semibold text-slate-900">Review</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Review</h1>
           <Badge
             variant="outline"
             className="mt-6 border-transparent bg-[var(--color-slate-3)] text-[var(--color-slate-11)] text-sm"
@@ -500,22 +499,22 @@ function Step2({
                   <TableBody>
                     {MOCK_REVIEW_ROWS.map((r) => (
                       <TableRow key={r.row} className="hover:bg-transparent">
-                        <TableCell className="text-center text-base tabular-nums text-slate-400">
+                        <TableCell className="text-center text-base tabular-nums text-muted-foreground">
                           {r.row}
                         </TableCell>
-                        <TableCell className="text-base text-slate-700">
+                        <TableCell className="text-base text-foreground">
                           {r.name}
                         </TableCell>
-                        <TableCell className="text-base text-slate-500">
+                        <TableCell className="text-base text-muted-foreground">
                           {r.class}
                         </TableCell>
-                        <TableCell className="text-base text-slate-500">
+                        <TableCell className="text-base text-muted-foreground">
                           {r.viaMissed}
                         </TableCell>
-                        <TableCell className="max-w-0 text-base text-slate-500">
+                        <TableCell className="max-w-0 text-base text-muted-foreground">
                           <span className="block truncate">{r.nextSteps}</span>
                         </TableCell>
-                        <TableCell className="max-w-0 text-base text-slate-500">
+                        <TableCell className="max-w-0 text-base text-muted-foreground">
                           <span className="block truncate">
                             {r.teacherRemarks}
                           </span>
@@ -556,7 +555,7 @@ function Step2({
                           <p className="text-base font-semibold text-[var(--crimson-11)]">
                             {iss.title}
                           </p>
-                          <p className="text-sm text-slate-500">
+                          <p className="text-sm text-muted-foreground">
                             {iss.description}
                           </p>
                         </div>
@@ -650,7 +649,7 @@ function CategorySelectRow({
     return (
       <TableRow className="hover:bg-transparent">
         <TableCell className="w-1/2 py-4 pl-5">
-          <span className="text-sm font-medium text-slate-800">
+          <span className="text-sm font-medium text-foreground">
             {fieldName}
           </span>
         </TableCell>
@@ -674,13 +673,13 @@ function CategorySelectRow({
                   'h-9 flex-1 rounded-lg border bg-white px-3 text-sm outline-none transition-colors',
                   state.newError
                     ? 'border-[var(--crimson-9)] ring-1 ring-[var(--crimson-9)]'
-                    : 'border-blue-400 ring-1 ring-blue-300',
+                    : 'border-twblue-7 ring-1 ring-twblue-6',
                 )}
               />
               <button
                 type="button"
                 onClick={handleConfirmNew}
-                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-slate-400 hover:text-slate-600"
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:text-foreground"
               >
                 <Check className="h-4 w-4" />
               </button>
@@ -700,11 +699,11 @@ function CategorySelectRow({
     <TableRow className="hover:bg-transparent">
       <TableCell className="w-1/2 py-4 pl-5">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-slate-800">
+          <span className="text-sm font-medium text-foreground">
             {fieldName}
           </span>
           {state.mode === 'selected' && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-[#E0F8F3] px-2 py-0.5 text-xs font-medium text-[#008573]">
+            <span className="inline-flex items-center gap-1 rounded-full bg-lime-3 px-2 py-0.5 text-xs font-medium text-lime-11">
               <Check className="h-3 w-3" />
               Done
             </span>
@@ -872,18 +871,18 @@ function Step3({
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto w-[632px] pt-8">
-          <h1 className="text-2xl font-semibold text-slate-900">
+          <h1 className="text-2xl font-semibold text-foreground">
             Choose where new fields appear
           </h1>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-muted-foreground">
             Pick the section where each field should appear in the student
             profile
           </p>
         </div>
 
         {/* Hint note */}
-        <div className="mx-auto mb-4 mt-12 w-[632px] border-l-2 border-slate-300 pl-3">
-          <p className="text-sm text-slate-500">
+        <div className="mx-auto mb-4 mt-12 w-[632px] border-l-2 border-border pl-3">
+          <p className="text-sm text-muted-foreground">
             If a field fits more than one section, pick the best match. You can
             edit it later
           </p>
@@ -1048,10 +1047,10 @@ export function ImportWizard({
       {/* Header */}
       <div className="flex shrink-0 items-center justify-between gap-6 px-6 py-4">
         <div className="flex items-center gap-4">
-          <span className="text-base font-semibold text-slate-900">
+          <span className="text-base font-semibold text-foreground">
             Import data
           </span>
-          <div className="h-4 w-px bg-slate-200" />
+          <div className="h-4 w-px bg-border" />
           <WizardStepper current={step} />
         </div>
         <Button
@@ -1088,7 +1087,7 @@ export function ImportWizard({
         <PopoverTrigger
           render={
             <button className="fixed bottom-4 right-4 flex h-10 w-10 items-center justify-center rounded-full border bg-white shadow-lg transition-shadow hover:shadow-xl">
-              <Settings2 className="h-4 w-4 text-slate-500" />
+              <Settings2 className="h-4 w-4 text-muted-foreground" />
             </button>
           }
         />
@@ -1098,7 +1097,7 @@ export function ImportWizard({
           </PopoverHeader>
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
-              <label className="text-xs font-medium text-slate-500">
+              <label className="text-xs font-medium text-muted-foreground">
                 Step 1 — Upload state
               </label>
               <Select
@@ -1115,7 +1114,7 @@ export function ImportWizard({
               </Select>
             </div>
             <div className="flex flex-col gap-2">
-              <label className="text-xs font-medium text-slate-500">
+              <label className="text-xs font-medium text-muted-foreground">
                 Step 2 — Review state
               </label>
               <Select

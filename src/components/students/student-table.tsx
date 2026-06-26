@@ -782,7 +782,7 @@ export function StudentTable({
             {meta?.primaryTag ? (
               <Badge
                 variant="secondary"
-                className="border-emerald-300 bg-emerald-50 text-emerald-700"
+                className="border-lime-6 bg-lime-3 text-lime-11"
               >
                 {meta.primaryTag}
               </Badge>

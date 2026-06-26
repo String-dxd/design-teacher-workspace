@@ -184,7 +184,7 @@ export function SubjectSelectorDialog({
         <DialogFooter className="flex-row items-center gap-2 sm:justify-between">
           <p className="text-xs text-muted-foreground">
             {isCustom ? (
-              <span className="text-blue-600 font-medium">
+              <span className="text-twblue-11 font-medium">
                 {selectedCount} of {totalCount} subjects selected
               </span>
             ) : (

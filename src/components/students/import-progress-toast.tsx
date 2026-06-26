@@ -54,7 +54,7 @@ export function ImportProgressToast({
       <div className={`${SHELL} flex items-start gap-3 pt-4 pr-4 pb-2 pl-4`}>
         <div className="flex min-w-0 flex-1 flex-col items-start">
           <div className="flex w-full items-start gap-3">
-            <CircleCheck className="h-5 w-5 shrink-0 text-green-600" />
+            <CircleCheck className="h-5 w-5 shrink-0 text-lime-11" />
             <div className="flex min-w-0 flex-1 flex-col gap-1">
               <p className="text-sm font-semibold leading-5 text-slate-12">
                 Import complete

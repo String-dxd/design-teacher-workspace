@@ -92,7 +92,7 @@ export function ImportSuccessPage({
                 <div
                   className={cn(
                     'absolute bottom-0 left-0 right-0 flex h-[64px] items-center justify-end px-6',
-                    !expanded && 'bg-[rgba(240,240,243,0.85)]',
+                    !expanded && 'bg-muted/85',
                   )}
                 >
                   <button

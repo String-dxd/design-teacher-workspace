@@ -492,7 +492,7 @@ export function MultiFilterPopover({
                           className="w-[480px] gap-0 p-3"
                           align="start"
                         >
-                          <div className="mb-1 flex items-center gap-2 rounded-lg border border-blue-400 px-3 py-2 focus-within:border-blue-500">
+                          <div className="mb-1 flex items-center gap-2 rounded-lg border border-twblue-7 px-3 py-2 focus-within:border-twblue-8">
                             <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
                             <input
                               ref={fieldSelectorSearchRef}
@@ -704,7 +704,7 @@ export function MultiFilterPopover({
                                   align="start"
                                 >
                                   {/* Search */}
-                                  <div className="mb-1 flex items-center gap-2 rounded-lg border border-blue-400 px-3 py-2 focus-within:border-blue-500">
+                                  <div className="mb-1 flex items-center gap-2 rounded-lg border border-twblue-7 px-3 py-2 focus-within:border-twblue-8">
                                     <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
                                     <input
                                       ref={multiselectSearchRef}
@@ -961,7 +961,7 @@ export function MultiFilterPopover({
                   </PopoverTrigger>
                   <PopoverContent className="w-[582px] gap-0 p-3" align="start">
                     {/* Search */}
-                    <div className="mb-1 flex items-center gap-2 rounded-lg border border-blue-400 px-3 py-2 focus-within:border-blue-500">
+                    <div className="mb-1 flex items-center gap-2 rounded-lg border border-twblue-7 px-3 py-2 focus-within:border-twblue-8">
                       <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
                       <input
                         ref={searchRef}
