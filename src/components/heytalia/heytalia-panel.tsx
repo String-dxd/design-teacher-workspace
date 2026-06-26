@@ -27,7 +27,6 @@ import { useIsMobile } from '@/hooks/use-mobile'
 // ---------------------------------------------------------------------------
 const HT = {
   primary: 'var(--primary)',
-  hover: 'var(--twblue-10)',
   ultraLight: 'var(--slate-2)',
   light: 'var(--slate-3)',
   border: 'var(--slate-6)',
