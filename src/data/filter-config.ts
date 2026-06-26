@@ -349,7 +349,7 @@ export const filterFieldConfigs: Array<FilterFieldConfig> = [
     group: 'family',
     defaultOperator: 'is',
     defaultValue: '',
-    enumValues: ['Yes', 'No', 'None'],
+    enumValues: ['Yes', 'No'],
   },
   {
     field: 'supportedByComLink',

@@ -1592,7 +1592,7 @@ export function StudentProfile({
                   )
                 })()}
                 {(() => {
-                  const nonIntact = student.nonIntactFamily ?? '-'
+                  const nonIntact = student.nonIntactFamily ?? 'None'
                   return (
                     <FieldWithDetails
                       label="Parents are divorced"

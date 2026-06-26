@@ -895,7 +895,7 @@ export function StudentTable({
       )}
       {isVisible('nonIntactFamily') && (
         <TableCell>
-          {student.nonIntactFamily === '-' || !student.nonIntactFamily ? (
+          {!student.nonIntactFamily ? (
             <span className="text-muted-foreground">None</span>
           ) : (
             student.nonIntactFamily
