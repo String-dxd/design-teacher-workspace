@@ -15,9 +15,47 @@ your row when done.
 | 004 | Dependency hygiene: single lockfile, pin nitro (currently `latest` → alpha), patch vite/vitest CVEs | P2 | S | — | DONE — branch `advisor/004-dependency-hygiene`, reviewer-verified 2026-06-11 |
 | 005 | Harden localStorage persistence (imported columns + drafts) to the profile-group-storage standard | P2 | S | 001 | DONE — branch `advisor/005-localstorage-robustness` (includes 001), reviewer-verified 2026-06-11 |
 | 006 | Remove Flow DS: migrate `/attendance` + `/student-login` to Shadcn/Base UI, delete the entire `/ds` playground, `flow-ds-theme.css`, `@flow/*` deps, and `apps/flow-ds-test` | P2 | M | — | DONE — branch `advisor/006-remove-flow-ds` at `4fb0af0` (includes main + one browser-review fix: selected toggle colors vs `aria-pressed:bg-muted`), reviewer-verified incl. browser QA 2026-06-11. MERGED to main (fast-forward to `4fb0af0`), gates re-verified post-merge. |
+| 007 | Fix broken color-token registration: register `slate-3..12` in `@theme inline` (fixes app-wide disabled-button bug + Import-feature styling), define `--destructive-foreground`, align `--accent`/`--input` to reference | P1 | S | — | DONE — advisor/color-system-007-009, build+browser validated 2026-06-26 |
+| 008 | Remove HeyTalia's purple: neutralize `heytalia-panel.tsx` to slate/`--primary`, retire the unused `twpurple` alias, register Radix `violet` utilities, move two stray Tailwind-violet badges onto Radix violet | P2 | M | 007 (shared `styles.css`) | DONE — advisor/color-system-007-009, browser-validated (HeyTalia neutral, no purple) 2026-06-26 |
+| 009 | Add a `/ds` route rendering the existing (unrouted) Shadcn component gallery `component-example.tsx` | P3 | S | — | DONE — advisor/color-system-007-009, /ds renders 2026-06-26 |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) |
 REJECTED (with one-line rationale).
+
+## Round 2 — design-system color mapping (2026-06-26)
+
+Focused design-system review at commit `9eb7dee` (token mapping vs the team's
+canonical `:root` reference; shadcn `base-maia` style + `@base-ui/react` 1.2.0
+confirmed in place; no `/ds` page exists today). Produced plans 007–009.
+
+- **Suggested order: 007 → 008 → 009.** **007 and 008 both edit `src/styles.css`**
+  (007 adds the slate registration / `--destructive-foreground` / accent-input;
+  008 deletes `twpurple` and registers Radix `violet`): land 007 first, then 008
+  (its drift check re-matches by content). Do NOT run them in parallel worktrees —
+  they conflict in `styles.css`. 009 is independent but reads best after both.
+- **Root cause shared by the disabled-button bug and the Import-feature styling**:
+  only `slate-1`/`slate-2` were registered in `@theme inline` (of 1–12). Confirmed
+  empirically (Tailwind v4.3.1 compile): bare `slate-3..12` utilities aren't
+  generated and `var(--color-slate-3..12)` doesn't resolve (raw `var(--slate-N)`
+  does — only the `--color-`-prefixed namespace + bare utilities were missing).
+  Plan 007 fixes every site by registering the scale — no component edits needed.
+
+### Discovered regression (NOT addressed by these plans — investigate separately)
+
+- **16 unit tests fail at `9eb7dee`**: `src/lib/draft-storage.test.ts` (10) and
+  `src/lib/imported-columns.test.ts` (6) — both created/extended by merged plans
+  003/005 and green at merge; now failing (timing points to the student-insights
+  merges #135–137). 37 tests still pass. Plans 007–009 deliberately gate on
+  "37 passed / 16 failed (unchanged)" rather than "all pass", so they neither mask
+  nor inherit this. Worth a dedicated debug pass.
+- **~30 Tailwind-default `purple-*` usages remain** across 8 files (the
+  "Experiment"/stage badges in `app-sidebar.tsx`, `flags.tsx`, `insight-buddy.tsx`,
+  `student-analytics.tsx`; report tints in `report-table.tsx`,
+  `academic-aggregates-section.tsx`, `student-profile.tsx`,
+  `agency-report.new.tsx`; plus `app-card.tsx` WIP). Discovered during 008 browser
+  QA — Tailwind's `purple` palette (separate from `violet`), out of the confirmed
+  008 scope (HeyTalia + the two violet badges). Recoloring semantic stage badges is
+  a design call; left for a follow-up plan if wanted.
 
 ## Execution record (2026-06-11)
 
