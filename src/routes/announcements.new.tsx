@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import {
   ArrowDown,
-  ArrowLeft,
   ArrowUp,
   CalendarClock,
   CalendarDays,
@@ -38,6 +37,7 @@ import type {
 import type { FormQuestion, ReminderType, ResponseType } from '@/types/form'
 import type { SelectedEntity } from '@/components/comms/entity-selector'
 import type { FileMeta } from '@/lib/draft-storage'
+import { PageHeader } from '@/components/page-header'
 import { QuestionBuilder } from '@/components/comms/question-builder'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
 import { StudentRecipientSelector } from '@/components/comms/student-recipient-selector'
@@ -1654,161 +1654,153 @@ function NewAnnouncementPage() {
       {/* Sticky header */}
       <div className="sticky top-0 z-10 bg-white">
         {/* Top bar */}
-        <div className="flex items-center gap-3 border-b px-6 py-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="shrink-0"
-            render={
-              <Link
-                to="/announcements"
-                search={{
-                  tab:
-                    responseType !== 'view-only'
-                      ? 'with-responses'
-                      : 'view-only',
-                }}
-              />
-            }
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <h1 className="flex-1 text-base font-semibold">
-            {isEditing ? 'Edit Post' : 'New Post'}
-          </h1>
+        <PageHeader
+          title={isEditing ? 'Edit Post' : 'New Post'}
+          onClose={() =>
+            navigate({
+              to: '/announcements',
+              search: {
+                tab:
+                  responseType !== 'view-only' ? 'with-responses' : 'view-only',
+              },
+            })
+          }
+          actions={
+            <>
+              {/* Autosave status — replaces Save Draft button */}
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                {isSaving ? (
+                  <span>Saving…</span>
+                ) : savedAt ? (
+                  <>
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                    <span>Saved · {savedTimeLabel}</span>
+                  </>
+                ) : title ? (
+                  <span className="text-slate-400">Draft</span>
+                ) : null}
+              </div>
 
-          {/* Autosave status — replaces Save Draft button */}
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            {isSaving ? (
-              <span>Saving…</span>
-            ) : savedAt ? (
-              <>
-                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-                <span>Saved · {savedTimeLabel}</span>
-              </>
-            ) : title ? (
-              <span className="text-slate-400">Draft</span>
-            ) : null}
-          </div>
-
-          {/* Preview toggle */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowPreview((v) => !v)}
-            className="gap-1.5"
-          >
-            {showPreview ? (
-              <>
-                <EyeOff className="h-4 w-4" />
-                Hide Preview
-              </>
-            ) : (
-              <>
-                <Eye className="h-4 w-4" />
-                Show Preview
-              </>
-            )}
-          </Button>
-
-          {/* Split button + validation hint */}
-          <div className="flex flex-col items-end gap-1">
-            {isEditingPosted ? (
-              /* Posted edit: single "Save changes" button, no schedule option */
-              <Button size="sm" onClick={handleSavePostedEdit}>
-                <Check className="mr-2 h-3.5 w-3.5" />
-                Save changes
-              </Button>
-            ) : (
-              <Popover
-                open={showValidationPopover}
-                onOpenChange={setShowValidationPopover}
+              {/* Preview toggle */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowPreview((v) => !v)}
+                className="gap-1.5"
               >
-                <div
-                  ref={postBtnWrapRef}
-                  className="flex overflow-hidden rounded-md"
-                >
-                  <Button
-                    size="sm"
-                    className={cn(
-                      'rounded-r-none',
-                      !canSubmit && 'cursor-not-allowed opacity-50',
-                    )}
-                    onClick={handlePostClick}
-                  >
-                    {sendOption === 'scheduled' ? (
-                      <>
-                        <CalendarClock className="mr-2 h-3.5 w-3.5" />
-                        Schedule
-                      </>
-                    ) : (
-                      <>
-                        <Send className="mr-2 h-3.5 w-3.5" />
-                        Post
-                      </>
-                    )}
+                {showPreview ? (
+                  <>
+                    <EyeOff className="h-4 w-4" />
+                    Hide Preview
+                  </>
+                ) : (
+                  <>
+                    <Eye className="h-4 w-4" />
+                    Show Preview
+                  </>
+                )}
+              </Button>
+
+              {/* Split button + validation hint */}
+              <div className="flex flex-col items-end gap-1">
+                {isEditingPosted ? (
+                  /* Posted edit: single "Save changes" button, no schedule option */
+                  <Button size="sm" onClick={handleSavePostedEdit}>
+                    <Check className="mr-2 h-3.5 w-3.5" />
+                    Save changes
                   </Button>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger
-                      render={
-                        <Button
-                          size="sm"
-                          className={cn(
-                            'rounded-l-none border-l border-primary-foreground/25 px-2',
-                            !canSubmit && 'cursor-not-allowed opacity-50',
-                          )}
-                          aria-label="Choose send option"
-                        />
-                      }
+                ) : (
+                  <Popover
+                    open={showValidationPopover}
+                    onOpenChange={setShowValidationPopover}
+                  >
+                    <div
+                      ref={postBtnWrapRef}
+                      className="flex overflow-hidden rounded-md"
                     >
-                      <ChevronDown className="h-3.5 w-3.5" />
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
-                      <DropdownMenuItem onClick={() => setSendOption('now')}>
-                        <Send className="h-4 w-4" />
-                        Post now
-                        {sendOption === 'now' && (
-                          <Check className="ml-auto h-3.5 w-3.5 text-primary" />
+                      <Button
+                        size="sm"
+                        className={cn(
+                          'rounded-r-none',
+                          !canSubmit && 'cursor-not-allowed opacity-50',
                         )}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => setSendOption('scheduled')}
+                        onClick={handlePostClick}
                       >
-                        <CalendarClock className="h-4 w-4" />
-                        Schedule for later
-                        {sendOption === 'scheduled' && (
-                          <Check className="ml-auto h-3.5 w-3.5 text-primary" />
+                        {sendOption === 'scheduled' ? (
+                          <>
+                            <CalendarClock className="mr-2 h-3.5 w-3.5" />
+                            Schedule
+                          </>
+                        ) : (
+                          <>
+                            <Send className="mr-2 h-3.5 w-3.5" />
+                            Post
+                          </>
                         )}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-                {/* Validation popover — shown when Post is clicked but form is incomplete */}
-                <PopoverContent
-                  anchor={postBtnWrapRef}
-                  side="bottom"
-                  align="end"
-                  className="w-64 gap-2 p-3"
-                >
-                  <p className="text-sm font-medium text-slate-800">
-                    Complete these fields before posting
-                  </p>
-                  <ul className="mt-1.5 space-y-1">
-                    {missingFields.map((f) => (
-                      <li
-                        key={f.field}
-                        className="flex items-start gap-1.5 text-xs text-slate-600"
-                      >
-                        <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-destructive" />
-                        {f.hint}
-                      </li>
-                    ))}
-                  </ul>
-                </PopoverContent>
-              </Popover>
-            )}
-          </div>
-        </div>
+                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger
+                          render={
+                            <Button
+                              size="sm"
+                              className={cn(
+                                'rounded-l-none border-l border-primary-foreground/25 px-2',
+                                !canSubmit && 'cursor-not-allowed opacity-50',
+                              )}
+                              aria-label="Choose send option"
+                            />
+                          }
+                        >
+                          <ChevronDown className="h-3.5 w-3.5" />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuItem onClick={() => setSendOption('now')}>
+                            <Send className="h-4 w-4" />
+                            Post now
+                            {sendOption === 'now' && (
+                              <Check className="ml-auto h-3.5 w-3.5 text-primary" />
+                            )}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => setSendOption('scheduled')}
+                          >
+                            <CalendarClock className="h-4 w-4" />
+                            Schedule for later
+                            {sendOption === 'scheduled' && (
+                              <Check className="ml-auto h-3.5 w-3.5 text-primary" />
+                            )}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                    {/* Validation popover — shown when Post is clicked but form is incomplete */}
+                    <PopoverContent
+                      anchor={postBtnWrapRef}
+                      side="bottom"
+                      align="end"
+                      className="w-64 gap-2 p-3"
+                    >
+                      <p className="text-sm font-medium text-slate-800">
+                        Complete these fields before posting
+                      </p>
+                      <ul className="mt-1.5 space-y-1">
+                        {missingFields.map((f) => (
+                          <li
+                            key={f.field}
+                            className="flex items-start gap-1.5 text-xs text-slate-600"
+                          >
+                            <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-destructive" />
+                            {f.hint}
+                          </li>
+                        ))}
+                      </ul>
+                    </PopoverContent>
+                  </Popover>
+                )}
+              </div>
+            </>
+          }
+        />
 
         {/* Scheduling strip — hidden when editing a posted post */}
         {!isEditingPosted && sendOption === 'scheduled' && (
