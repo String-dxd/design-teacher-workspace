@@ -5348,7 +5348,7 @@ const FSC_VALUES: Array<'Yes' | 'No'> = ['Yes', 'No']
 // CPP enrolment happens before filing for divorce, so at most one can be "Yes".
 const assignDivorceFields = (
   s: Student,
-  divorcedCandidate: 'Yes' | 'No' | '-',
+  divorcedCandidate: 'Yes' | 'No',
   cppCandidate: 'Yes' | 'No',
 ) => {
   if (divorcedCandidate === 'Yes') {

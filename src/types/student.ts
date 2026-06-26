@@ -68,7 +68,7 @@ export interface Student {
   supportedByComLinkBy?: string
   supportedByFsc?: 'Yes' | 'No'
   parentsConsideringDivorce?: 'Yes' | 'No'
-  nonIntactFamily?: 'Yes' | 'No' | '-'
+  nonIntactFamily?: 'Yes' | 'No'
   // Personal
   birthday?: string
   citizenship?: 'Singapore citizen' | 'Permanent resident' | 'Foreigner'
