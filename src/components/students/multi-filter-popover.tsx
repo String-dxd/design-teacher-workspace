@@ -390,7 +390,7 @@ export function MultiFilterPopover({
         render={
           <Button
             variant="outline"
-            className={cn('gap-2 aria-expanded:bg-white', className)}
+            className={cn('gap-2 aria-expanded:bg-card', className)}
             aria-label="Filter students"
             aria-expanded={open}
           />
@@ -479,7 +479,7 @@ export function MultiFilterPopover({
                           render={
                             <button
                               type="button"
-                              className="border-input flex h-9 w-[152px] shrink-0 items-center justify-between gap-1.5 rounded-[14px] border bg-white px-3 text-sm outline-none"
+                              className="border-input flex h-9 w-[152px] shrink-0 items-center justify-between gap-1.5 rounded-[14px] border bg-card px-3 text-sm outline-none"
                             />
                           }
                         >
@@ -557,7 +557,7 @@ export function MultiFilterPopover({
                       handleOperatorChange(index, value as FilterOperator)
                     }
                   >
-                    <SelectTrigger className="w-[104px] shrink-0 rounded-[14px] bg-white">
+                    <SelectTrigger className="w-[104px] shrink-0 rounded-[14px] bg-card">
                       <SelectValue>
                         {
                           fieldOption?.operators.find(
@@ -606,7 +606,7 @@ export function MultiFilterPopover({
                                   <button
                                     type="button"
                                     className={cn(
-                                      'border-input flex h-9 w-full items-center justify-between gap-1.5 rounded-[14px] border bg-white px-3 text-sm outline-none',
+                                      'border-input flex h-9 w-full items-center justify-between gap-1.5 rounded-[14px] border bg-card px-3 text-sm outline-none',
                                       selected.length === 0 &&
                                         'text-muted-foreground',
                                     )}
@@ -683,7 +683,7 @@ export function MultiFilterPopover({
                                     <button
                                       type="button"
                                       className={cn(
-                                        'border-input flex h-9 w-full items-center justify-between gap-1.5 rounded-[14px] border bg-white px-3 text-sm outline-none',
+                                        'border-input flex h-9 w-full items-center justify-between gap-1.5 rounded-[14px] border bg-card px-3 text-sm outline-none',
                                         selectedValues.length === 0 &&
                                           'text-muted-foreground',
                                       )}
@@ -888,7 +888,7 @@ export function MultiFilterPopover({
                               handleValueChange(index, value)
                             }
                           >
-                            <SelectTrigger className="w-full rounded-[14px] bg-white">
+                            <SelectTrigger className="w-full rounded-[14px] bg-card">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>

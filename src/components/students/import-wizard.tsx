@@ -261,22 +261,20 @@ function WizardStepper({ current }: { current: number }) {
               <div
                 className={cn(
                   'flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-white transition-colors',
-                  (isActive || isCompleted) &&
-                    'bg-[var(--color-twblue-9,#0064ff)]',
+                  (isActive || isCompleted) && 'bg-twblue-9',
                   isDimmed && 'bg-muted',
                 )}
               >
                 {isCompleted ? (
                   <Check className="h-3 w-3" strokeWidth={2.5} />
                 ) : (
-                  <span className="text-[11px]">{stepNum}</span>
+                  <span className="text-xs">{stepNum}</span>
                 )}
               </div>
               <span
                 className={cn(
                   'hidden text-sm min-[562px]:inline',
-                  (isActive || isCompleted) &&
-                    'text-[var(--color-slate-12,#1c2024)]',
+                  (isActive || isCompleted) && 'text-slate-12',
                   isDimmed && 'text-muted-foreground',
                 )}
               >
@@ -329,7 +327,7 @@ function DropZone({
           : 'border-twblue-7 bg-twblue-2 hover:border-twblue-9',
       )}
     >
-      <div className="flex items-center justify-center rounded-full bg-white p-3 shadow-xs">
+      <div className="flex items-center justify-center rounded-full bg-card p-3 shadow-xs">
         <Upload className="h-6 w-6 text-twblue-9" />
       </div>
       <p className="text-base text-slate-12">
@@ -364,7 +362,7 @@ function Step1({
       <div className="mx-auto flex w-full max-w-[632px] flex-col gap-6 px-6 pt-10 pb-16">
         {/* Prepare your file section */}
         <section className="flex flex-col gap-6">
-          <h1 className="text-[23px] font-semibold leading-7 text-slate-12">
+          <h1 className="text-2xl font-semibold leading-7 text-slate-12">
             Prepare your file
           </h1>
           <ul className="flex list-disc flex-col gap-3 pl-6 text-base leading-6 text-slate-12 marker:text-slate-11">
@@ -399,13 +397,13 @@ function Step1({
 
         {/* Upload your file section */}
         <section className="flex flex-col gap-6">
-          <h2 className="text-[23px] font-semibold leading-7 text-slate-12">
+          <h2 className="text-2xl font-semibold leading-7 text-slate-12">
             Upload your file
           </h2>
 
           <div className="flex flex-col gap-4">
             {hasError && (
-              <Alert className="rounded-2xl border-slate-6 bg-white [&>svg]:text-[var(--crimson-11)]">
+              <Alert className="rounded-2xl border-slate-6 bg-card [&>svg]:text-[var(--crimson-11)]">
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle className="font-semibold text-[var(--crimson-11)]">
                   File upload failed
@@ -471,7 +469,7 @@ function Step2({
         <div className="flex flex-col gap-4 px-8 pb-6 sm:flex-row sm:items-start">
           {/* Table — second on mobile, first on desktop */}
           <div className="order-2 flex min-w-0 flex-1 flex-col gap-2 sm:order-1">
-            <div className="overflow-hidden rounded-2xl border bg-white">
+            <div className="overflow-hidden rounded-2xl border bg-card">
               <div className="overflow-x-auto [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar]:border-t [&::-webkit-scrollbar]:border-[var(--color-slate-6)] [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[var(--color-slate-5)] [&::-webkit-scrollbar-track]:ml-4 [&::-webkit-scrollbar-track]:mr-4 [&::-webkit-scrollbar-track]:rounded-full">
                 <Table>
                   <TableHeader className="bg-[var(--color-slate-2)]">
@@ -533,7 +531,7 @@ function Step2({
           {/* Validation panel — first on mobile (top), second on desktop (right) */}
           <div className="order-1 w-full sm:order-2 sm:h-[620px] sm:w-[412px] sm:shrink-0">
             {hasIssues ? (
-              <div className="flex flex-col rounded-2xl border bg-white px-6 py-6 sm:min-h-[620px] sm:p-6">
+              <div className="flex flex-col rounded-2xl border bg-card px-6 py-6 sm:min-h-[620px] sm:p-6">
                 <div className="mb-5 flex items-center justify-between">
                   <p className="text-lg font-semibold text-[var(--color-slate-11)]">
                     Few issues found
@@ -547,7 +545,7 @@ function Step2({
                   {REVIEW_ISSUES.map((iss) => (
                     <li
                       key={iss.id}
-                      className="flex items-start gap-3 rounded-xl border border-[var(--color-slate-3)] bg-slate-50 p-3"
+                      className="flex items-start gap-3 rounded-xl border border-[var(--color-slate-3)] bg-muted p-3"
                     >
                       <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-[var(--crimson-11)]" />
                       <div className="flex min-w-0 flex-col gap-2">
@@ -571,7 +569,7 @@ function Step2({
                 </ul>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center rounded-[var(--radius-3xl,24px)] border border-[var(--color-slate-6)] bg-white px-6 py-6 sm:h-full sm:py-5">
+              <div className="flex flex-col items-center justify-center rounded-[var(--radius-3xl,24px)] border border-[var(--color-slate-6)] bg-card px-6 py-6 sm:h-full sm:py-5">
                 <div className="flex flex-col items-center">
                   <img
                     src="/no-issues-illustration.png"
@@ -579,7 +577,7 @@ function Step2({
                     className="size-[200px] object-cover"
                   />
                   <div className="mt-3 flex flex-col items-center gap-3 text-center">
-                    <p className="text-[23px] font-semibold leading-7 text-[var(--color-slate-12)]">
+                    <p className="text-2xl font-semibold leading-7 text-[var(--color-slate-12)]">
                       No issues found
                     </p>
                     <p className="text-base text-[var(--color-slate-11)]">
@@ -594,7 +592,7 @@ function Step2({
       </div>
 
       {/* Bottom nav */}
-      <div className="flex items-center justify-between border-t bg-white px-8 py-4">
+      <div className="flex items-center justify-between border-t bg-card px-8 py-4">
         <Button variant="outline" onClick={onBack} className="gap-2">
           <ArrowLeft className="h-4 w-4" />
           Back
@@ -670,7 +668,7 @@ function CategorySelectRow({
                     onChange({ mode: 'unset', newValue: '', newError: '' })
                 }}
                 className={cn(
-                  'h-9 flex-1 rounded-lg border bg-white px-3 text-sm outline-none transition-colors',
+                  'h-9 flex-1 rounded-lg border bg-card px-3 text-sm outline-none transition-colors',
                   state.newError
                     ? 'border-[var(--crimson-9)] ring-1 ring-[var(--crimson-9)]'
                     : 'border-twblue-7 ring-1 ring-twblue-6',
@@ -717,7 +715,7 @@ function CategorySelectRow({
               'flex h-9 w-full items-center justify-between rounded-lg border border-[var(--color-slate-6)] px-3 text-sm',
               state.mode === 'skipped'
                 ? 'bg-[var(--color-slate-2)]'
-                : 'bg-white',
+                : 'bg-card',
             )}
           >
             <span
@@ -889,17 +887,17 @@ function Step3({
         </div>
 
         {/* Table */}
-        <div className="mx-auto mb-6 w-[632px] overflow-hidden rounded-xl border bg-white">
+        <div className="mx-auto mb-6 w-[632px] overflow-hidden rounded-xl border bg-card">
           <Table>
             <TableHeader className="bg-[var(--color-slate-2)]">
               <TableRow className="hover:bg-[var(--color-slate-2)]">
-                <TableHead className="w-1/2 pl-5 pr-0 typography-label-md-strong text-[var(--color-slate-11)]">
+                <TableHead className="w-1/2 pl-5 pr-0 text-sm font-semibold text-[var(--color-slate-11)]">
                   <span className="flex items-center justify-between">
                     New fields
                     <ArrowRight className="h-3.5 w-3.5 text-[var(--color-slate-9)]" />
                   </span>
                 </TableHead>
-                <TableHead className="w-1/2 pr-5 typography-label-md-strong text-[var(--color-slate-11)]">
+                <TableHead className="w-1/2 pr-5 text-sm font-semibold text-[var(--color-slate-11)]">
                   Place under
                 </TableHead>
               </TableRow>
@@ -921,7 +919,7 @@ function Step3({
       </div>
 
       {/* Bottom nav */}
-      <div className="flex shrink-0 items-center justify-between border-t bg-white px-8 py-4">
+      <div className="flex shrink-0 items-center justify-between border-t bg-card px-8 py-4">
         <Button variant="outline" onClick={onBack} className="gap-2">
           <ArrowLeft className="h-4 w-4" />
           Back
@@ -1086,7 +1084,7 @@ export function ImportWizard({
       <Popover>
         <PopoverTrigger
           render={
-            <button className="fixed bottom-4 right-4 flex h-10 w-10 items-center justify-center rounded-full border bg-white shadow-lg transition-shadow hover:shadow-xl">
+            <button className="fixed bottom-4 right-4 flex h-10 w-10 items-center justify-center rounded-full border bg-card shadow-lg transition-shadow hover:shadow-xl">
               <Settings2 className="h-4 w-4 text-muted-foreground" />
             </button>
           }

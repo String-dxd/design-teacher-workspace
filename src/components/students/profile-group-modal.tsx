@@ -391,7 +391,7 @@ function EditStep({
           <button
             type="button"
             onClick={onAddCriterion}
-            className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-input bg-white px-3.5 py-1.5 text-sm font-semibold shadow-sm hover:bg-accent"
+            className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-input bg-card px-3.5 py-1.5 text-sm font-semibold shadow-sm hover:bg-accent"
           >
             <Plus className="h-4 w-4" />
             Add criteria
@@ -419,7 +419,7 @@ function EditStep({
           <span
             className={
               completeCount > 0
-                ? 'inline-flex rounded-md bg-blue-600 px-2 py-0.5 text-xs font-medium text-white'
+                ? 'inline-flex rounded-md bg-primary px-2 py-0.5 text-xs font-medium text-primary-foreground'
                 : 'inline-flex rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground'
             }
           >
@@ -495,7 +495,7 @@ function EditStep({
         <button
           type="button"
           onClick={onAddBucket}
-          className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-700"
+          className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-twblue-11 hover:text-twblue-12"
         >
           <Plus className="h-4 w-4" />
           Add group

@@ -219,7 +219,7 @@ export function StudentFilters({
                 <button
                   type="button"
                   aria-label="Filter by date range"
-                  className="border-border flex h-9 items-center gap-1.5 rounded-full border bg-white px-3 text-sm font-medium outline-none transition-colors hover:bg-muted aria-expanded:bg-muted"
+                  className="border-border flex h-9 items-center gap-1.5 rounded-full border bg-card px-3 text-sm font-medium outline-none transition-colors hover:bg-muted aria-expanded:bg-muted"
                 >
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                   Date

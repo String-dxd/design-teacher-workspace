@@ -54,7 +54,7 @@ export function ImportSuccessPage({
         <div className="flex flex-1 items-start justify-end px-8">
           <div className="flex w-[412px] flex-col gap-8 pt-[140px]">
             <div className="flex flex-col gap-3">
-              <h1 className="text-[26px] font-semibold leading-8 text-slate-12">
+              <h1 className="text-2xl font-semibold leading-8 text-slate-12">
                 You're all set, import done!
               </h1>
               <p className="text-lg font-semibold leading-7 text-twblue-9">
