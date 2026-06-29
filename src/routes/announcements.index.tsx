@@ -61,7 +61,6 @@ import { useFeatureFlag } from '@/hooks/use-feature-flag'
 export const Route = createFileRoute('/announcements/')({
   validateSearch: (search) => ({
     tab: (search.tab as PostTab) ?? 'with-responses',
-    scope: (search.scope as 'my' | 'school') ?? 'my',
   }),
   component: ParentsGatewayPage,
 })
@@ -139,14 +138,14 @@ function getFormStatusBadge(status: FormStatus) {
   return <Badge className={className}>{label}</Badge>
 }
 
-type PostTab = 'view-only' | 'with-responses' | 'custom-forms'
+type PostTab = 'view-only' | 'with-responses' | 'custom-forms' | 'school-wide'
 
 // Prototype: hardcoded as admin. In production this comes from the session.
 const IS_ADMIN = true
 
 function ParentsGatewayPage() {
-  const { tab, scope } = Route.useSearch()
-  const isSchoolWide = IS_ADMIN && scope === 'school'
+  const { tab } = Route.useSearch()
+  const isSchoolWide = IS_ADMIN && tab === 'school-wide'
   const [searchQuery, setSearchQuery] = useState('')
   const [filters, setFilters] = useState<AnnouncementFilters>(
     EMPTY_ANNOUNCEMENT_FILTERS,
@@ -302,6 +301,7 @@ function ParentsGatewayPage() {
     { value: 'with-responses', label: 'With responses' },
     { value: 'view-only', label: 'Read only' },
     { value: 'custom-forms', label: 'Custom forms', hidden: !formsEnabled },
+    { value: 'school-wide', label: 'School-wide', hidden: !IS_ADMIN },
   ]
   const visibleTabs = tabs.filter((t) => !t.hidden)
 
@@ -371,21 +371,26 @@ function ParentsGatewayPage() {
       <div className="mt-4 space-y-4">
         <div className="flex items-center justify-between gap-4 px-6 pb-0">
           <div className="flex shrink-0 rounded-full bg-muted p-1 gap-1">
-            {visibleTabs.map((t) => (
-              <SegmentedTab
-                key={t.value}
-                active={tab === t.value}
-                onClick={() =>
-                  navigate({
-                    to: '/announcements',
-                    search: (prev) => ({ ...prev, tab: t.value }),
-                    replace: true,
-                  })
-                }
-              >
-                {t.label}
-              </SegmentedTab>
-            ))}
+            {visibleTabs.flatMap((t) => {
+              const el = (
+                <SegmentedTab
+                  key={t.value}
+                  active={tab === t.value}
+                  onClick={() =>
+                    navigate({
+                      to: '/announcements',
+                      search: { tab: t.value },
+                      replace: true,
+                    })
+                  }
+                >
+                  {t.label}
+                </SegmentedTab>
+              )
+              return t.value === 'school-wide'
+                ? [<div key="sep" className="my-1 w-px bg-border/60" />, el]
+                : [el]
+            })}
           </div>
           <div className="flex items-center gap-2">
             <div className="relative">
