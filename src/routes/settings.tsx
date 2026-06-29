@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, createFileRoute } from '@tanstack/react-router'
-import { FlagIcon } from 'lucide-react'
+import { FlagIcon, PaletteIcon } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { useAuth } from '@/lib/auth'
@@ -8,6 +8,7 @@ import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Separator } from '@/components/ui/separator'
 
 export const Route = createFileRoute('/settings')({
   component: SettingsPage,
@@ -118,6 +119,19 @@ function SettingsPage() {
             <Button variant="outline" render={<Link to="/flags" />}>
               <FlagIcon className="mr-2 size-4" />
               Manage Flags
+            </Button>
+
+            <Separator />
+
+            <div>
+              <p className="font-medium">Design System</p>
+              <p className="text-muted-foreground text-sm">
+                Browse design tokens and the component gallery
+              </p>
+            </div>
+            <Button variant="outline" render={<Link to="/ds" />}>
+              <PaletteIcon className="mr-2 size-4" />
+              Open Design System
             </Button>
           </div>
         </div>

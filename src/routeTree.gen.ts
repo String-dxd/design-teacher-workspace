@@ -17,6 +17,7 @@ import { Route as InsightBuddyRouteImport } from './routes/insight-buddy'
 import { Route as GroupsRouteImport } from './routes/groups'
 import { Route as FormsRouteImport } from './routes/forms'
 import { Route as FlagsRouteImport } from './routes/flags'
+import { Route as DsRouteImport } from './routes/ds'
 import { Route as AttendanceRouteImport } from './routes/attendance'
 import { Route as AnnouncementsRouteImport } from './routes/announcements'
 import { Route as GuestRouteImport } from './routes/_guest'
@@ -84,6 +85,11 @@ const FormsRoute = FormsRouteImport.update({
 const FlagsRoute = FlagsRouteImport.update({
   id: '/flags',
   path: '/flags',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DsRoute = DsRouteImport.update({
+  id: '/ds',
+  path: '/ds',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AttendanceRoute = AttendanceRouteImport.update({
@@ -232,6 +238,7 @@ export interface FileRoutesByFullPath {
   '/$': typeof SplatRoute
   '/announcements': typeof AnnouncementsRouteWithChildren
   '/attendance': typeof AttendanceRoute
+  '/ds': typeof DsRoute
   '/flags': typeof FlagsRoute
   '/forms': typeof FormsRouteWithChildren
   '/groups': typeof GroupsRouteWithChildren
@@ -268,6 +275,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
   '/attendance': typeof AttendanceRoute
+  '/ds': typeof DsRoute
   '/flags': typeof FlagsRoute
   '/insight-buddy': typeof InsightBuddyRoute
   '/settings': typeof SettingsRoute
@@ -303,6 +311,7 @@ export interface FileRoutesById {
   '/_guest': typeof GuestRouteWithChildren
   '/announcements': typeof AnnouncementsRouteWithChildren
   '/attendance': typeof AttendanceRoute
+  '/ds': typeof DsRoute
   '/flags': typeof FlagsRoute
   '/forms': typeof FormsRouteWithChildren
   '/groups': typeof GroupsRouteWithChildren
@@ -342,6 +351,7 @@ export interface FileRouteTypes {
     | '/$'
     | '/announcements'
     | '/attendance'
+    | '/ds'
     | '/flags'
     | '/forms'
     | '/groups'
@@ -378,6 +388,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$'
     | '/attendance'
+    | '/ds'
     | '/flags'
     | '/insight-buddy'
     | '/settings'
@@ -412,6 +423,7 @@ export interface FileRouteTypes {
     | '/_guest'
     | '/announcements'
     | '/attendance'
+    | '/ds'
     | '/flags'
     | '/forms'
     | '/groups'
@@ -451,6 +463,7 @@ export interface RootRouteChildren {
   GuestRoute: typeof GuestRouteWithChildren
   AnnouncementsRoute: typeof AnnouncementsRouteWithChildren
   AttendanceRoute: typeof AttendanceRoute
+  DsRoute: typeof DsRoute
   FlagsRoute: typeof FlagsRoute
   FormsRoute: typeof FormsRouteWithChildren
   GroupsRoute: typeof GroupsRouteWithChildren
@@ -519,6 +532,13 @@ declare module '@tanstack/react-router' {
       path: '/flags'
       fullPath: '/flags'
       preLoaderRoute: typeof FlagsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ds': {
+      id: '/ds'
+      path: '/ds'
+      fullPath: '/ds'
+      preLoaderRoute: typeof DsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/attendance': {
@@ -822,6 +842,7 @@ const rootRouteChildren: RootRouteChildren = {
   GuestRoute: GuestRouteWithChildren,
   AnnouncementsRoute: AnnouncementsRouteWithChildren,
   AttendanceRoute: AttendanceRoute,
+  DsRoute: DsRoute,
   FlagsRoute: FlagsRoute,
   FormsRoute: FormsRouteWithChildren,
   GroupsRoute: GroupsRouteWithChildren,
