@@ -1,4 +1,4 @@
-import type { Shortcut, PGWebsiteLink, PGRole } from '@/types/pg-announcement'
+import type { PGRole, PGWebsiteLink, Shortcut } from '@/types/pg-announcement'
 import type { FormQuestion, ReminderType, ResponseType } from '@/types/form'
 import type { SelectedEntity } from '@/components/comms/entity-selector'
 
@@ -56,7 +56,24 @@ export function loadDraft(): DraftData | null {
   try {
     const raw = localStorage.getItem(DRAFT_KEY)
     if (!raw) return null
-    return JSON.parse(raw) as DraftData
+    const parsed: unknown = JSON.parse(raw)
+    if (typeof parsed !== 'object' || parsed === null) return null
+    const draft = parsed as Partial<DraftData>
+    if (typeof draft.savedAt !== 'string') return null
+    const arrayFields = [
+      'shortcuts',
+      'websiteLinks',
+      'recipients',
+      'staffInCharge',
+      'questions',
+      'filesMeta',
+      'photosMeta',
+      'coverPhotoIndices',
+    ] as const
+    for (const f of arrayFields) {
+      if (!Array.isArray(draft[f])) (draft as Record<string, unknown>)[f] = []
+    }
+    return draft as DraftData
   } catch {
     return null
   }

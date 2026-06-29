@@ -1,5 +1,5 @@
-import type React from 'react'
 import { EntitySelector } from './entity-selector'
+import type React from 'react'
 import type {
   EntityItem,
   EntityScope,

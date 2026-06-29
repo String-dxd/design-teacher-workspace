@@ -96,7 +96,7 @@ function getWellbeingResponse(student: Student): string {
 **Social Links**
 • ${student.socialLinks} peer connection(s) recorded${socialNote}
 
-**Risk Indicators**
+**TCI Risk Indicators**
 • ${student.riskIndicators} risk indicator(s) flagged${riskNote}
 
 **Mood**
@@ -163,7 +163,7 @@ Key indicators:
 • Attendance: ${attendancePct}%
 • Overall score: ${student.overallPercentage}%
 • Conduct: ${student.conduct}
-• Risk indicators: ${student.riskIndicators}`
+• TCI risk indicators: ${student.riskIndicators}`
   }
 
   return `Here are the key risk factors for **${student.name}**:

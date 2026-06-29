@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 import {
   Bar,
   BarChart,
@@ -27,6 +27,7 @@ import {
   X,
 } from 'lucide-react'
 
+import type { Student } from '@/types/student'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -53,42 +54,10 @@ import { AttendanceRing } from '@/components/reports/attendance-ring'
 
 const studentIdByName = new Map(mockStudents.map((s) => [s.name, s.id]))
 
-// Mock data – replace with real data props as needed
-const CURRENT_ATTENDANCE = {
-  present: 10,
-  total: 12,
-}
-
 const RING_SIZE = 140
 const RING_STROKE = 22
 const RING_RADIUS = (RING_SIZE - RING_STROKE) / 2
 const RING_C = 2 * Math.PI * RING_RADIUS
-
-const RING_SEGMENTS = (() => {
-  const total = CURRENT_ATTENDANCE.total
-  let acc = 0
-  return [
-    { name: 'Present', value: 9, color: '#12b886' },
-    { name: 'Late', value: 1, color: '#fd7e14' },
-    { name: 'Absent pending reason', value: 1, color: '#fa5252' },
-    { name: 'Absent (excl pending reason)', value: 1, color: '#ffa94d' },
-  ].map((seg) => {
-    const len = (seg.value / total) * RING_C
-    const dashoffset = acc === 0 ? 0 : RING_C - acc
-    acc += len
-    return { ...seg, len, dashoffset }
-  })
-})()
-
-const RING_LEGEND = RING_SEGMENTS.filter((s) => s.name !== 'Present')
-
-const WEEKLY_RATE = [
-  { week: 'Week 1', rate: 100 },
-  { week: 'Week 2', rate: 50 },
-  { week: 'Week 3', rate: 100 },
-  { week: 'Week 4', rate: 83 },
-  { week: 'Week 5', rate: 93 },
-]
 
 interface MonthlyEntry {
   month: string
@@ -1049,12 +1018,13 @@ function AttSortableHeader({
         )}
         <PopoverContent
           align={align === 'right' ? 'end' : 'start'}
-          className="w-48 gap-1 p-3"
+          className="w-52 gap-1 p-3"
         >
           <button
             type="button"
             onClick={() => {
-              onSort(field, 'asc')
+              if (dir === 'asc') onClearSort()
+              else onSort(field, 'asc')
               setOpen(false)
             }}
             className={cn(
@@ -1071,7 +1041,8 @@ function AttSortableHeader({
           <button
             type="button"
             onClick={() => {
-              onSort(field, 'desc')
+              if (dir === 'desc') onClearSort()
+              else onSort(field, 'desc')
               setOpen(false)
             }}
             className={cn(
@@ -1085,19 +1056,6 @@ function AttSortableHeader({
               <Check className="ml-auto h-4 w-4 text-[var(--slate-11)]" />
             )}
           </button>
-          {active && (
-            <button
-              type="button"
-              onClick={() => {
-                onClearSort()
-                setOpen(false)
-              }}
-              className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-[var(--slate-5)]"
-            >
-              <X className="h-4 w-4 text-[var(--slate-11)]" />
-              Clear sort
-            </button>
-          )}
         </PopoverContent>
       </Popover>
     </th>
@@ -1113,9 +1071,10 @@ function NumericFilterRow({
   filter: NumericFilter
   onChange: (f: NumericFilter) => void
 }) {
+  const id = `filter-${label.toLowerCase().replace(/[^a-z0-9]/g, '-')}`
   return (
     <div className="space-y-1.5">
-      <label className="text-xs font-medium text-muted-foreground">
+      <label htmlFor={id} className="text-xs font-medium text-muted-foreground">
         {label}
       </label>
       <div className="flex items-center gap-2">
@@ -1141,6 +1100,7 @@ function NumericFilterRow({
           </SelectContent>
         </Select>
         <Input
+          id={id}
           placeholder="Enter number"
           value={filter.value}
           onChange={(e) => onChange({ ...filter, value: e.target.value })}
@@ -1160,6 +1120,7 @@ function AttendanceStudentsTable({
   segment?: SegmentSelection | null
   onClearSegment?: () => void
 }) {
+  const navigate = useNavigate()
   const tableRef = useRef<HTMLDivElement>(null)
   const [search, setSearch] = useState('')
   const [filterClass, setFilterClass] = useState('all')
@@ -1197,6 +1158,8 @@ function AttendanceStudentsTable({
     else if (categoryKey === 'absentValidPrivate') setFilterValidPrivate(active)
     else if (categoryKey === 'absentValidOfficial')
       setFilterValidOfficial(active)
+    // LTA uses an explicit student-ID filter (top N by total absences),
+    // so no numeric filter is applied here.
     setPage(1)
     // Scroll table into view
     setTimeout(() => {
@@ -1245,9 +1208,24 @@ function AttendanceStudentsTable({
     setPage(1)
   }
 
+  const ltaStudentIds = useMemo(() => {
+    if (segment?.categoryKey !== 'lta') return null
+    const totalOf = (s: AttendanceStudent) =>
+      s.nonVRAbsences +
+      s.absentPendingReason +
+      s.mc +
+      s.absentValidPrivate +
+      s.absentValidOfficial
+    const ranked = [...ATTENDANCE_STUDENTS].sort(
+      (a, b) => totalOf(b) - totalOf(a),
+    )
+    return new Set(ranked.slice(0, segment.count).map((s) => s.id))
+  }, [segment])
+
   const filtered = useMemo(() => {
     const q = search.toLowerCase()
     return ATTENDANCE_STUDENTS.filter((s, i) => {
+      if (ltaStudentIds && !ltaStudentIds.has(s.id)) return false
       if (q && !s.name.toLowerCase().includes(q)) return false
       if (filterClass !== 'all' && s.class !== filterClass) return false
       if (filterMonth !== 'all' && !STUDENT_MONTHS[i]?.includes(filterMonth))
@@ -1263,6 +1241,7 @@ function AttendanceStudentsTable({
       return true
     })
   }, [
+    ltaStudentIds,
     search,
     filterClass,
     filterMonth,
@@ -1282,14 +1261,12 @@ function AttendanceStudentsTable({
       else if (sortField === 'class') cmp = a.class.localeCompare(b.class)
       else if (sortField === 'total')
         cmp =
-          a.late +
           a.nonVRAbsences +
           a.absentPendingReason +
           a.mc +
           a.absentValidPrivate +
           a.absentValidOfficial -
-          (b.late +
-            b.nonVRAbsences +
+          (b.nonVRAbsences +
             b.absentPendingReason +
             b.mc +
             b.absentValidPrivate +
@@ -1303,7 +1280,9 @@ function AttendanceStudentsTable({
   const paged = sorted.slice((page - 1) * ATT_PAGE_SIZE, page * ATT_PAGE_SIZE)
 
   const segmentCat = segment
-    ? BAR_CATEGORIES.find((c) => c.key === segment.categoryKey)
+    ? segment.categoryKey === 'lta'
+      ? { key: 'lta', label: 'LTA', color: '#fd7e14' }
+      : BAR_CATEGORIES.find((c) => c.key === segment.categoryKey)
     : null
 
   return (
@@ -1318,7 +1297,8 @@ function AttendanceStudentsTable({
               className="inline-block h-2 w-2 shrink-0 rounded-sm"
               style={{ backgroundColor: segmentCat.color }}
             />
-            {segment.month} · {segmentCat.label}
+            {segment.month !== 'all' && `${segment.month} · `}
+            {segmentCat.label}
             <button
               type="button"
               onClick={onClearSegment}
@@ -1522,13 +1502,13 @@ function AttendanceStudentsTable({
                 className="w-[140px]"
               />
               <AttSortableHeader
-                label="Total"
+                label="Total absences (days)"
                 field="total"
                 sortField={sortField}
                 sortDir={sortDir}
                 onSort={handleSort}
                 onClearSort={clearSort}
-                className="w-[140px]"
+                className="w-[200px]"
               />
               <AttSortableHeader
                 label="Late"
@@ -1591,69 +1571,77 @@ function AttendanceStudentsTable({
             </tr>
           </thead>
           <tbody className="divide-y">
-            {paged.map((s) => (
-              <tr key={s.id} className="transition-colors hover:bg-muted/50">
-                <td className="w-[96px] p-4 align-middle">
-                  {(() => {
-                    const realId = studentIdByName.get(s.name)
-                    return (
-                      <TooltipUI>
-                        <TooltipTrigger>
-                          {realId ? (
-                            <Link
-                              to="/students/$id"
-                              params={{ id: realId }}
-                              className="flex items-center justify-center rounded p-0.5 text-blue-500 hover:bg-blue-50 hover:text-blue-600"
-                            >
-                              <FileText className="h-4 w-4" />
-                            </Link>
-                          ) : (
-                            <span className="flex items-center justify-center rounded p-0.5 text-muted-foreground">
-                              <FileText className="h-4 w-4" />
-                            </span>
-                          )}
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          {realId
-                            ? 'View student profile'
-                            : 'Profile not available'}
-                        </TooltipContent>
-                      </TooltipUI>
-                    )
-                  })()}
-                </td>
-                <td className="w-[192px] p-4 align-middle font-medium">
-                  {s.name}
-                </td>
-                <td className="min-w-[140px] p-4 align-middle">{s.class}</td>
-                <td className="min-w-[140px] p-4 align-middle tabular-nums">
-                  {s.late +
-                    s.nonVRAbsences +
-                    s.absentPendingReason +
-                    s.mc +
-                    s.absentValidPrivate +
-                    s.absentValidOfficial}
-                </td>
-                <td className="min-w-[140px] p-4 align-middle tabular-nums">
-                  {s.late}
-                </td>
-                <td className="min-w-[140px] p-4 align-middle tabular-nums">
-                  {s.nonVRAbsences}
-                </td>
-                <td className="min-w-[140px] p-4 align-middle tabular-nums">
-                  {s.absentPendingReason}
-                </td>
-                <td className="min-w-[140px] p-4 align-middle tabular-nums">
-                  {s.mc}
-                </td>
-                <td className="min-w-[140px] p-4 align-middle tabular-nums">
-                  {s.absentValidPrivate}
-                </td>
-                <td className="min-w-[140px] p-4 align-middle tabular-nums">
-                  {s.absentValidOfficial}
-                </td>
-              </tr>
-            ))}
+            {paged.map((s) => {
+              const realId = studentIdByName.get(s.name)
+              return (
+                <tr
+                  key={s.id}
+                  className={cn(
+                    'transition-colors hover:bg-muted/50',
+                    realId && 'cursor-pointer',
+                  )}
+                  onClick={() => {
+                    if (realId)
+                      navigate({ to: '/students/$id', params: { id: realId } })
+                  }}
+                >
+                  <td className="w-[96px] p-4 align-middle">
+                    <TooltipUI>
+                      <TooltipTrigger>
+                        {realId ? (
+                          <Link
+                            to="/students/$id"
+                            params={{ id: realId }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="flex items-center justify-center rounded p-0.5 text-blue-500 hover:bg-blue-50 hover:text-blue-600"
+                          >
+                            <FileText className="h-4 w-4" />
+                          </Link>
+                        ) : (
+                          <span className="flex items-center justify-center rounded p-0.5 text-muted-foreground">
+                            <FileText className="h-4 w-4" />
+                          </span>
+                        )}
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {realId
+                          ? 'View student profile'
+                          : 'Profile not available'}
+                      </TooltipContent>
+                    </TooltipUI>
+                  </td>
+                  <td className="w-[192px] p-4 align-middle font-medium">
+                    {s.name}
+                  </td>
+                  <td className="min-w-[140px] p-4 align-middle">{s.class}</td>
+                  <td className="min-w-[200px] p-4 align-middle tabular-nums">
+                    {s.nonVRAbsences +
+                      s.absentPendingReason +
+                      s.mc +
+                      s.absentValidPrivate +
+                      s.absentValidOfficial}
+                  </td>
+                  <td className="min-w-[140px] p-4 align-middle tabular-nums">
+                    {s.late}
+                  </td>
+                  <td className="min-w-[140px] p-4 align-middle tabular-nums">
+                    {s.nonVRAbsences}
+                  </td>
+                  <td className="min-w-[140px] p-4 align-middle tabular-nums">
+                    {s.absentPendingReason}
+                  </td>
+                  <td className="min-w-[140px] p-4 align-middle tabular-nums">
+                    {s.mc}
+                  </td>
+                  <td className="min-w-[140px] p-4 align-middle tabular-nums">
+                    {s.absentValidPrivate}
+                  </td>
+                  <td className="min-w-[140px] p-4 align-middle tabular-nums">
+                    {s.absentValidOfficial}
+                  </td>
+                </tr>
+              )
+            })}
             {paged.length === 0 && (
               <tr>
                 <td
@@ -1808,14 +1796,32 @@ export function AttendanceLevelAnalytics() {
                       Present ({presentPct}%)
                     </span>
                   </p>
-                  <p className="flex items-baseline gap-2">
-                    <span className="w-8 text-right font-semibold tabular-nums text-foreground">
-                      {attendance.lta}
-                    </span>
-                    <span className="text-muted-foreground">
-                      LTA ({ltaPct}%)
-                    </span>
-                  </p>
+                  <TooltipUI>
+                    <TooltipTrigger
+                      render={
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setSelectedSegment({
+                              month: 'all',
+                              categoryKey: 'lta',
+                              count: attendance.lta,
+                            })
+                          }
+                          className="-mx-2 flex items-center gap-2 rounded-md px-2 py-1 transition-colors hover:bg-accent cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        />
+                      }
+                    >
+                      <span className="w-8 text-right font-semibold tabular-nums text-foreground">
+                        {attendance.lta}
+                      </span>
+                      <span className="text-muted-foreground">
+                        LTA ({ltaPct}%)
+                      </span>
+                      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent side="top">View students</TooltipContent>
+                  </TooltipUI>
                 </div>
               </div>
             </div>
@@ -1829,7 +1835,7 @@ export function AttendanceLevelAnalytics() {
               </p>
               <button
                 onClick={() => setChartExpanded(true)}
-                className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 aria-label="Expand chart"
               >
                 <Maximize2 className="h-4 w-4" />
@@ -1880,7 +1886,7 @@ export function AttendanceLevelAnalytics() {
               </h3>
               <button
                 onClick={() => setChartExpanded(false)}
-                className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 aria-label="Close chart"
               >
                 <X className="h-4 w-4" />
@@ -1910,11 +1916,63 @@ export function AttendanceLevelAnalytics() {
 
 const DETAILS_TYPE_OPTIONS = [...new Set(ABSENCE_DETAILS.map((r) => r.type))]
 
-export function AttendanceAnalytics() {
+interface AttendanceAnalyticsProps {
+  student: Student
+}
+
+export function AttendanceAnalytics({ student }: AttendanceAnalyticsProps) {
   const [chartExpanded, setChartExpanded] = useState(false)
   const [detailsPage, setDetailsPage] = useState(1)
   const [detailsFilterMonth, setDetailsFilterMonth] = useState('all')
   const [detailsFilterType, setDetailsFilterType] = useState('all')
+
+  const attendancePct =
+    student.totalSchoolDays > 0
+      ? Math.round((student.daysPresent / student.totalSchoolDays) * 100)
+      : 0
+
+  const currentAttendance = useMemo(() => {
+    const total = 12
+    const present = Math.max(
+      0,
+      Math.min(total, Math.round((attendancePct * total) / 100)),
+    )
+    return { present, total }
+  }, [attendancePct])
+
+  const ringSegments = useMemo(() => {
+    const total = currentAttendance.total
+    const present = currentAttendance.present
+    const remaining = total - present
+    // Distribute remaining days across Late, Absent pending, Absent excl
+    const late = Math.max(0, Math.round(remaining * 0.2))
+    const absentPending = Math.max(0, Math.round(remaining * 0.45))
+    const absentExcl = Math.max(0, remaining - late - absentPending)
+    let acc = 0
+    return [
+      { name: 'Present', value: present, color: '#12b886' },
+      { name: 'Late', value: late, color: '#fd7e14' },
+      { name: 'Absent pending reason', value: absentPending, color: '#fa5252' },
+      {
+        name: 'Absent (excl pending reason)',
+        value: absentExcl,
+        color: '#ffa94d',
+      },
+    ].map((seg) => {
+      const len = total > 0 ? (seg.value / total) * RING_C : 0
+      const dashoffset = acc === 0 ? 0 : RING_C - acc
+      acc += len
+      return { ...seg, len, dashoffset }
+    })
+  }, [currentAttendance])
+
+  const weeklyRate = useMemo(() => {
+    const variations = [1.15, 0.6, 1.1, 0.95, 1.2]
+    return variations.map((v, i) => ({
+      week: `Week ${i + 1}`,
+      rate: Math.max(0, Math.min(100, Math.round(attendancePct * v))),
+    }))
+  }, [attendancePct])
 
   const filteredDetails = ABSENCE_DETAILS.filter((r) => {
     const month = r.date.split(' ')[1]
@@ -1944,7 +2002,7 @@ export function AttendanceAnalytics() {
         <div className="flex items-center gap-6">
           <AttendanceRing
             percentage={
-              (CURRENT_ATTENDANCE.present / CURRENT_ATTENDANCE.total) * 100
+              (currentAttendance.present / currentAttendance.total) * 100
             }
             size={100}
             color="#228be6"
@@ -1953,19 +2011,21 @@ export function AttendanceAnalytics() {
             <div>
               <p className="text-xs text-muted-foreground">Attendance</p>
               <p className="text-2xl font-semibold">
-                {CURRENT_ATTENDANCE.present} / {CURRENT_ATTENDANCE.total}
+                {currentAttendance.present} / {currentAttendance.total}
               </p>
               <p className="text-xs text-muted-foreground">Days present</p>
             </div>
             <div className="space-y-1 border-l pl-5 text-xs text-muted-foreground">
-              {RING_SEGMENTS.filter((s) => s.name !== 'Present').map((s) => (
-                <p key={s.name} className="flex items-baseline gap-2">
-                  <span className="font-semibold text-foreground">
-                    {s.value}
-                  </span>
-                  {s.name}
-                </p>
-              ))}
+              {ringSegments
+                .filter((s) => s.name !== 'Present')
+                .map((s) => (
+                  <p key={s.name} className="flex items-baseline gap-2">
+                    <span className="font-semibold text-foreground">
+                      {s.value}
+                    </span>
+                    {s.name}
+                  </p>
+                ))}
             </div>
           </div>
         </div>
@@ -1978,7 +2038,7 @@ export function AttendanceAnalytics() {
         </h3>
         <ResponsiveContainer width="100%" height={180}>
           <LineChart
-            data={WEEKLY_RATE}
+            data={weeklyRate}
             margin={{ top: 4, right: 8, left: -20, bottom: 0 }}
           >
             <CartesianGrid
@@ -2032,7 +2092,7 @@ export function AttendanceAnalytics() {
           </h3>
           <button
             onClick={() => setChartExpanded(true)}
-            className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+            className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             aria-label="Expand chart"
           >
             <Maximize2 className="h-4 w-4" />
@@ -2070,7 +2130,7 @@ export function AttendanceAnalytics() {
               </h3>
               <button
                 onClick={() => setChartExpanded(false)}
-                className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 aria-label="Close chart"
               >
                 <X className="h-4 w-4" />

@@ -11,8 +11,8 @@ export const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
   'student-analytics': false,
   'lta-intervention': false,
   'student-groups': false,
-  'reports': false,
-  'calendar': false,
-  'meetings': false,
+  reports: false,
+  calendar: false,
+  meetings: false,
   'import-data': false,
 }

@@ -1,4 +1,4 @@
-import { GripVertical, HelpCircle, Plus, Trash2, X } from 'lucide-react'
+import { ArrowDown, ArrowUp, GripVertical, Plus, Trash2, X } from 'lucide-react'
 import type { FormQuestion, QuestionType, ResponseType } from '@/types/form'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -41,6 +41,20 @@ export function QuestionBuilder({
 
   function deleteQuestion(id: string) {
     onChange(questions.filter((q) => q.id !== id))
+  }
+
+  function moveUp(index: number) {
+    if (index === 0) return
+    const next = [...questions]
+    ;[next[index - 1], next[index]] = [next[index], next[index - 1]]
+    onChange(next)
+  }
+
+  function moveDown(index: number) {
+    if (index === questions.length - 1) return
+    const next = [...questions]
+    ;[next[index], next[index + 1]] = [next[index + 1], next[index]]
+    onChange(next)
   }
 
   function addOption(questionId: string) {
@@ -92,17 +106,9 @@ export function QuestionBuilder({
       </div>
 
       {questions.length === 0 && (
-        <button
-          type="button"
-          onClick={addQuestion}
-          className="flex w-full flex-col items-center gap-2 rounded-xl border border-dashed py-8 text-center text-muted-foreground transition-colors hover:border-primary/40 hover:bg-primary/5 hover:text-primary"
-        >
-          <HelpCircle className="h-6 w-6 opacity-40" />
-          <div>
-            <p className="text-sm font-medium">No questions added yet</p>
-            <p className="mt-0.5 text-xs opacity-70">Click to add your first question</p>
-          </div>
-        </button>
+        <p className="text-sm italic text-muted-foreground/60">
+          No questions added yet.
+        </p>
       )}
 
       <div className="space-y-3">
@@ -126,6 +132,24 @@ export function QuestionBuilder({
                 className="h-8 flex-1 text-sm"
               />
               <div className="flex shrink-0 items-center gap-0.5 mt-0.5">
+                <button
+                  type="button"
+                  onClick={() => moveUp(i)}
+                  disabled={i === 0}
+                  className="rounded p-1 text-slate-400 hover:bg-slate-200 hover:text-slate-600 disabled:opacity-30"
+                  aria-label="Move up"
+                >
+                  <ArrowUp className="h-3 w-3" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => moveDown(i)}
+                  disabled={i === questions.length - 1}
+                  className="rounded p-1 text-slate-400 hover:bg-slate-200 hover:text-slate-600 disabled:opacity-30"
+                  aria-label="Move down"
+                >
+                  <ArrowDown className="h-3 w-3" />
+                </button>
                 <button
                   type="button"
                   onClick={() => deleteQuestion(q.id)}
@@ -211,6 +235,34 @@ export function QuestionBuilder({
                     Add option
                   </button>
                 )}
+              </div>
+            )}
+
+            {/* Show after (yes-no forms only) */}
+            {isYesNo && (
+              <div className="mt-2.5 ml-10 flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">
+                  Show after response:
+                </span>
+                {(['yes', 'no', 'both'] as const).map((choice) => (
+                  <button
+                    key={choice}
+                    type="button"
+                    onClick={() => updateQuestion(q.id, { showAfter: choice })}
+                    className={cn(
+                      'rounded-md px-2 py-0.5 text-xs font-medium transition-colors',
+                      (q.showAfter ?? 'both') === choice
+                        ? choice === 'yes'
+                          ? 'bg-emerald-100 text-emerald-700'
+                          : choice === 'no'
+                            ? 'bg-red-100 text-red-600'
+                            : 'bg-slate-200 text-slate-700'
+                        : 'text-slate-400 hover:bg-slate-100 hover:text-slate-600',
+                    )}
+                  >
+                    {choice === 'yes' ? 'Yes' : choice === 'no' ? 'No' : 'Both'}
+                  </button>
+                ))}
               </div>
             )}
           </div>

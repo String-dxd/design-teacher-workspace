@@ -1,22 +1,25 @@
-import { useEffect, useRef, useState } from 'react'
+import React, { useRef, useState } from 'react'
 import {
   AlertCircle,
   ArrowLeft,
   ArrowRight,
   Check,
-  CheckCircle2,
   ChevronDown,
-  Lightbulb,
+  ChevronsDown,
+  ExternalLink,
   Plus,
   Settings2,
+  ShieldCheck,
   Upload,
   X,
 } from 'lucide-react'
 
 import { toast } from 'sonner'
 
+import type { ColumnConfig } from './column-visibility-popover'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import {
   Popover,
   PopoverContent,
@@ -24,6 +27,12 @@ import {
   PopoverTitle,
   PopoverTrigger,
 } from '@/components/ui/popover'
+import { Separator } from '@/components/ui/separator'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import {
   Select,
   SelectContent,
@@ -31,6 +40,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+
 import {
   Table,
   TableBody,
@@ -49,34 +59,126 @@ const INCOMING_FIELDS = [
   { id: 'teacher_remarks', name: "Teacher's remarks" },
 ]
 
-const MOCK_REVIEW_ROWS = Array.from({ length: 10 }, (_, i) => ({
-  row: i + 1,
-  name: 'Alice Lee Jia Min Lim...',
-  class: 'S1-INTELLIGENCE rff...',
-  viaMissed: '2',
-  nextSteps: 'Follow up with...',
-  teacherRemarks: 'Needs support in...',
-}))
+const MOCK_REVIEW_ROWS = [
+  {
+    row: 1,
+    name: 'Chan Jun Kai',
+    class: '3A',
+    viaMissed: '2',
+    nextSteps: 'Schedule a one-on-one session',
+    teacherRemarks:
+      'Absent for 3 consecutive VIA sessions without valid reason',
+  },
+  {
+    row: 2,
+    name: 'Vincent Koh Kin Yi',
+    class: '3A',
+    viaMissed: '3',
+    nextSteps: 'Watch the recorded session',
+    teacherRemarks: 'No visible effort to make up missed sessions',
+  },
+  {
+    row: 3,
+    name: 'Lam Wei Jie',
+    class: '3A',
+    viaMissed: '7',
+    nextSteps: 'Join the upcoming cohort',
+    teacherRemarks: 'Missing most sessions, needs immediate intervention',
+  },
+  {
+    row: 4,
+    name: 'Sarah Chan Jun Kai',
+    class: '3A',
+    viaMissed: '5',
+    nextSteps: 'Review the VIA schedule',
+    teacherRemarks: 'Absent without prior notice on multiple occasions',
+  },
+  {
+    row: 5,
+    name: 'Kenneth Koh Kin Yi',
+    class: '3A',
+    viaMissed: '6',
+    nextSteps: 'Attend the supplementary class',
+    teacherRemarks: 'No sign of engagement in VIA activities this term',
+  },
+  {
+    row: 6,
+    name: 'Liang Mei Jie',
+    class: '3A',
+    viaMissed: '1',
+    nextSteps: 'Complete an online module',
+    teacherRemarks: 'Medical leave accounted for; follow up on make-up session',
+  },
+  {
+    row: 7,
+    name: 'Diana Tan Hui Lin',
+    class: '3A',
+    viaMissed: '5',
+    nextSteps: 'Arrange a peer tutoring session',
+    teacherRemarks: 'No valid reasons provided for absences',
+  },
+  {
+    row: 8,
+    name: 'Samuel Tan Jun Kai',
+    class: '3A',
+    viaMissed: '3',
+    nextSteps: 'Participate in a future cohort',
+    teacherRemarks: 'Missing sessions due to CCA clashes; monitor closely',
+  },
+  {
+    row: 9,
+    name: 'Priya Nair',
+    class: '3A',
+    viaMissed: '2',
+    nextSteps: 'Submit a set of reflection notes',
+    teacherRemarks: 'Absent on days with no prior communication',
+  },
+  {
+    row: 10,
+    name: 'Ethan Ong Wei Ming',
+    class: '3A',
+    viaMissed: '1',
+    nextSteps: 'Access additional resources',
+    teacherRemarks: 'Absent once; parent informed and acknowledged',
+  },
+]
 
 const REVIEW_ISSUES = [
   {
     id: 'not-found',
     title: 'Names not found in MOE records',
-    description:
-      'Check names match the School Cockpit format or upload MOE data first',
-    rows: [5, 6, 8],
+    description: 'Check names match the School Cockpit format.',
+    ref: 'Row 5, 6, 8',
+    highlightRows: [5, 6, 8],
   },
   {
     id: 'duplicate',
     title: 'Duplicate records',
     description: 'Remove repeated records',
-    rows: [3, 200, 5, 6],
+    ref: 'Row 3 and 100, 5 and 8',
+    highlightRows: [3, 5, 8],
+  },
+  {
+    id: 'same-name-class',
+    title: 'Same name and class',
+    description:
+      'If these are different students, add their NRIC in a separate column',
+    ref: 'Row 2 and 3',
+    highlightRows: [2, 3],
   },
   {
     id: 'dup-cols',
     title: 'Duplicate columns',
     description: 'Remove or rename repeated columns',
-    rows: [3, 200, 5, 6],
+    ref: 'Column 0 and H, I and J',
+    highlightRows: [],
+  },
+  {
+    id: 'col-exists',
+    title: 'Column header already exist',
+    description: 'Rename the column',
+    ref: 'Column F',
+    highlightRows: [],
   },
 ]
 
@@ -89,13 +191,26 @@ const DEFAULT_CATEGORIES = [
   'Personal',
 ]
 
+const CATEGORY_DESCRIPTIONS: Record<string, string> = {
+  Academics: 'Overall percentage, Learning support...',
+  Attendance: 'Attendance, Late-coming...',
+  Behaviour: 'Conduct grade, Offences...',
+  Wellbeing: 'Social links, Low mood...',
+  Family: 'Housing, FAS...',
+  Personal: 'Health alerts, Citizenship...',
+}
+
 const EXISTING_FIELDS_MAP: Record<string, Array<string>> = {
   Academics: [
     'Overall % across selected subjects',
     'No. of subjects',
     'Learning support',
   ],
-  Attendance: ['Attendance(%)', 'Late-coming(%)', 'Non-VR absences(%)'],
+  Attendance: [
+    'Attendance (%)',
+    'Late-coming (days)',
+    'Non-VR absences (days)',
+  ],
   Behaviour: ['Offences', 'Counselling cases', 'Conduct grade'],
   Wellbeing: ['Social links', 'Risk indicators', 'Low mood flagged 2+ terms'],
   Family: ['FAS', 'Housing', 'Custody'],
@@ -113,7 +228,7 @@ const STEP1_UPLOAD_ERRORS = [
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-type WizardStep = 1 | 2 | 3 | 4
+type WizardStep = 1 | 2 | 3
 
 interface FieldState {
   // 'unset' | 'selected' | 'skipped' | 'creating'
@@ -127,13 +242,55 @@ function makeFieldState(): FieldState {
   return { mode: 'unset', selected: null, newValue: '', newError: '' }
 }
 
-// ─── Step indicator ─────────────────────────────────────────────────────────
+// ─── Wizard stepper ──────────────────────────────────────────────────────────
 
-function StepIndicator({ current, total }: { current: number; total: number }) {
+const WIZARD_STEPS = ['Upload', 'Review', 'Organise'] as const
+
+function WizardStepper({ current }: { current: number }) {
   return (
-    <p className="text-sm text-muted-foreground">
-      Step {current} of {total}
-    </p>
+    <div className="flex h-fit items-center">
+      {WIZARD_STEPS.map((label, i) => {
+        const stepNum = i + 1
+        const isActive = stepNum === current
+        const isCompleted = stepNum < current
+        const isDimmed = stepNum > current
+
+        return (
+          <React.Fragment key={label}>
+            <div className="flex items-center gap-2">
+              <div
+                className={cn(
+                  'flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-white transition-colors',
+                  (isActive || isCompleted) &&
+                    'bg-[var(--color-twblue-9,#0064ff)]',
+                  isDimmed && 'bg-[var(--btn-color-fill-disabled,#b9bbc6)]',
+                )}
+              >
+                {isCompleted ? (
+                  <Check className="h-3 w-3" strokeWidth={2.5} />
+                ) : (
+                  <span className="text-[11px]">{stepNum}</span>
+                )}
+              </div>
+              <span
+                className={cn(
+                  'hidden text-sm min-[562px]:inline',
+                  (isActive || isCompleted) &&
+                    'text-[var(--color-slate-12,#1c2024)]',
+                  isDimmed &&
+                    'text-[var(--btn-color-foreground-disabled,#b9bbc6)]',
+                )}
+              >
+                {label}
+              </span>
+            </div>
+            {i < WIZARD_STEPS.length - 1 && (
+              <Separator className="mx-2 data-[orientation=horizontal]:w-[16px] min-[562px]:mx-3 min-[562px]:data-[orientation=horizontal]:w-[24px]" />
+            )}
+          </React.Fragment>
+        )
+      })}
+    </div>
   )
 }
 
@@ -141,8 +298,10 @@ function StepIndicator({ current, total }: { current: number; total: number }) {
 
 function DropZone({
   onFileAccepted,
+  className,
 }: {
   onFileAccepted: (file: File) => void
+  className?: string
 }) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [isDragging, setIsDragging] = useState(false)
@@ -164,36 +323,20 @@ function DropZone({
       onDrop={handleDrop}
       onClick={() => inputRef.current?.click()}
       className={cn(
-        'flex h-full min-h-[320px] w-full cursor-pointer flex-col items-center justify-center gap-4 rounded-xl border-2 border-dashed transition-colors',
+        'flex w-full cursor-pointer flex-col items-center justify-center gap-4 rounded-xl border-2 border-dashed p-12 transition-colors',
+        className,
         isDragging
-          ? 'border-primary bg-primary/5'
-          : 'border-slate-300 bg-slate-50/50 hover:border-slate-400 hover:bg-slate-50',
+          ? 'border-twblue-9 bg-twblue-2'
+          : 'border-twblue-7 bg-twblue-2 hover:border-twblue-9',
       )}
     >
-      <div
-        className={cn(
-          'flex h-14 w-14 items-center justify-center rounded-full transition-colors',
-          isDragging ? 'bg-primary/10' : 'bg-slate-100',
-        )}
-      >
-        <Upload
-          className={cn(
-            'h-6 w-6 transition-colors',
-            isDragging ? 'text-primary' : 'text-slate-400',
-          )}
-        />
+      <div className="flex items-center justify-center rounded-full bg-white p-3 shadow-xs">
+        <Upload className="h-6 w-6 text-twblue-9" />
       </div>
-      <div className="text-center">
-        <p className="text-sm font-medium text-slate-700">
-          Drop your files here or{' '}
-          <span className="text-primary underline underline-offset-2">
-            browse
-          </span>
-        </p>
-        <p className="mt-1 text-xs text-slate-500">
-          Supported file types: .csv, .xls, .xlsx
-        </p>
-      </div>
+      <p className="text-base text-slate-12">
+        Drop your files here or{' '}
+        <span className="font-semibold text-twblue-9">browse</span>
+      </p>
       <input
         ref={inputRef}
         type="file"
@@ -218,102 +361,82 @@ function Step1({
   onFileAccepted: (file: File) => void
 }) {
   return (
-    <div className="flex flex-1 flex-col overflow-hidden">
-      <div className="px-8 pb-6 pt-8">
-        <StepIndicator current={1} total={3} />
-        <h1 className="mt-1 text-2xl font-bold text-slate-900">
-          Upload any spreadsheet
-        </h1>
-        <p className="mt-1 text-sm text-slate-500">
-          Add your own data for a more complete student view
-        </p>
-      </div>
+    <div className="flex flex-1 flex-col overflow-y-auto">
+      <div className="mx-auto flex w-full max-w-[632px] flex-col gap-6 px-6 pt-10 pb-16">
+        {/* Prepare your file section */}
+        <section className="flex flex-col gap-6">
+          <h1 className="text-[23px] font-semibold leading-7 text-slate-12">
+            Prepare your file
+          </h1>
+          <ul className="flex list-disc flex-col gap-3 pl-6 text-base leading-6 text-slate-12 marker:text-slate-11">
+            <li>
+              Use the{' '}
+              <a className="cursor-pointer border-b border-twblue-9 text-twblue-9">
+                template
+              </a>
+              , or check the{' '}
+              <a className="cursor-pointer border-b border-twblue-9 text-twblue-9">
+                file guide
+              </a>
+            </li>
+            <li>Name and Class, or NRIC column included</li>
+            <li>Spreadsheet file (.csv, .xls, or .xlsx)</li>
+            <li>Not password-protected</li>
+          </ul>
+          <div className="flex items-center gap-2 pl-1">
+            <ShieldCheck className="h-4 w-4 shrink-0 text-slate-11" />
+            <p className="text-sm leading-5 text-slate-11">
+              We'll check your file before importing
+            </p>
+          </div>
+        </section>
 
-      {hasError && (
-        <div className="mx-8 mb-4 rounded-lg border border-red-200 bg-red-50 p-4">
-          <div className="flex items-start gap-2">
-            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
-            <div>
-              <p className="text-sm font-semibold text-red-800">
-                File upload failed
+        {/* Divider with chevrons-down */}
+        <div className="flex h-6 items-center gap-3">
+          <div className="h-px flex-1 bg-slate-6" />
+          <ChevronsDown className="h-4 w-4 shrink-0 text-slate-11" />
+          <div className="h-px flex-1 bg-slate-6" />
+        </div>
+
+        {/* Upload your file section */}
+        <section className="flex flex-col gap-6">
+          <h2 className="text-[23px] font-semibold leading-7 text-slate-12">
+            Upload your file
+          </h2>
+
+          <div className="flex flex-col gap-4">
+            {hasError && (
+              <Alert className="rounded-2xl border-slate-6 bg-white [&>svg]:text-[var(--crimson-11)]">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle className="font-semibold text-[var(--crimson-11)]">
+                  File upload failed
+                </AlertTitle>
+                <AlertDescription className="text-slate-12">
+                  <ul className="mt-1 list-disc space-y-0.5 pl-4">
+                    {STEP1_UPLOAD_ERRORS.map((err, i) => (
+                      <li key={i}>{err}</li>
+                    ))}
+                  </ul>
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <DropZone onFileAccepted={onFileAccepted} />
+
+            <div className="flex flex-col gap-1">
+              <p className="text-sm leading-5 text-slate-11">
+                Examples: teacher's remarks, students' achievements, and
+                enrichment activities
               </p>
-              <ul className="mt-1.5 list-disc space-y-0.5 pl-4 text-xs text-red-700">
-                {STEP1_UPLOAD_ERRORS.map((err, i) => (
-                  <li key={i}>{err}</li>
-                ))}
-              </ul>
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4 shrink-0 text-slate-11" />
+                <p className="text-sm leading-5 text-slate-11">
+                  Only you can view the data you upload. It will not be shared.
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-
-      <div className="flex flex-1 gap-6 overflow-hidden px-8 pb-8">
-        {/* Left panel */}
-        <div className="flex w-[340px] shrink-0 flex-col gap-4">
-          <div className="rounded-xl border bg-white p-5">
-            <p className="mb-3 font-semibold text-slate-900">
-              Prepare your custom file
-            </p>
-            <ul className="space-y-2.5">
-              {[
-                <>
-                  Check that your{' '}
-                  <span className="cursor-pointer text-primary underline underline-offset-2">
-                    file is ready
-                  </span>
-                </>,
-                'Upload .csv, .xls, or .xlsx file',
-                'Ensure files are not password-protected',
-              ].map((text, i) => (
-                <li key={i} className="flex items-start gap-2.5 text-sm">
-                  <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100">
-                    <Check className="h-3 w-3 text-emerald-600" />
-                  </div>
-                  <span className="text-slate-600">{text}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="rounded-xl border bg-white p-5">
-            <p className="mb-3 font-semibold text-slate-900">
-              Frequently added files
-            </p>
-            <ul className="space-y-3">
-              {[
-                {
-                  label: "Teacher's remarks",
-                  desc: 'Add insights from observations and interactions',
-                },
-                {
-                  label: 'Follow-up notes',
-                  desc: 'Track next steps and conversations for continuity',
-                },
-                {
-                  label: 'Other aspects of student life',
-                  desc: 'Include LEAPS, awards, or enrichment details',
-                },
-              ].map(({ label, desc }) => (
-                <li key={label} className="flex items-start gap-2.5">
-                  <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded bg-slate-100">
-                    <div className="h-2 w-2 rounded-full bg-slate-400" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-slate-700">
-                      {label}
-                    </p>
-                    <p className="text-xs text-slate-500">{desc}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-
-        {/* Right panel */}
-        <div className="flex flex-1 flex-col">
-          <DropZone onFileAccepted={onFileAccepted} />
-        </div>
+        </section>
       </div>
     </div>
   )
@@ -330,135 +453,144 @@ function Step2({
   onBack: () => void
   onNext: () => void
 }) {
-  const issueRows = new Set(REVIEW_ISSUES.flatMap((i) => i.rows))
+  const issueRows = new Set(REVIEW_ISSUES.flatMap((i) => i.highlightRows))
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      <div className="px-8 pb-4 pt-8">
-        <StepIndicator current={2} total={3} />
-        <h1 className="mt-1 text-2xl font-bold text-slate-900">
-          Review and Clean
-        </h1>
-        <p className="mt-0.5 text-xs font-medium uppercase tracking-wide text-slate-400">
-          UPLOADED 1023 RECORDS · 3 FIELDS
-        </p>
-      </div>
-
-      <div className="flex flex-1 gap-6 overflow-hidden px-8 pb-6">
-        {/* Table */}
-        <div className="flex flex-1 flex-col overflow-hidden rounded-xl border bg-white">
-          <div className="overflow-y-auto">
-            <Table>
-              <TableHeader className="sticky top-0 bg-white">
-                <TableRow>
-                  <TableHead className="w-10 pl-4 text-right text-xs">
-                    #
-                  </TableHead>
-                  <TableHead className="text-xs">Name</TableHead>
-                  <TableHead className="text-xs">Class</TableHead>
-                  <TableHead className="text-xs">VIA missed</TableHead>
-                  <TableHead className="text-xs">Next steps</TableHead>
-                  <TableHead className="text-xs">Teacher's remarks</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {MOCK_REVIEW_ROWS.map((r) => (
-                  <TableRow
-                    key={r.row}
-                    className={cn(
-                      hasIssues && issueRows.has(r.row) && 'bg-red-50/50',
-                    )}
-                  >
-                    <TableCell className="pl-4 text-right text-xs tabular-nums text-slate-400">
-                      {r.row}
-                    </TableCell>
-                    <TableCell
-                      className={cn(
-                        'text-sm',
-                        hasIssues && issueRows.has(r.row) && 'text-red-600',
-                      )}
-                    >
-                      {r.name}
-                    </TableCell>
-                    <TableCell className="text-sm text-slate-500">
-                      {r.class}
-                    </TableCell>
-                    <TableCell className="text-sm text-slate-500">
-                      {r.viaMissed}
-                    </TableCell>
-                    <TableCell className="max-w-[140px] truncate text-sm text-slate-500">
-                      {r.nextSteps}
-                    </TableCell>
-                    <TableCell className="max-w-[140px] truncate text-sm text-slate-500">
-                      {r.teacherRemarks}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+      {/* Scrollable content */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="px-8 pb-2 pt-8">
+          <h1 className="text-2xl font-semibold text-slate-900">Review</h1>
+          <Badge
+            variant="outline"
+            className="mt-6 border-transparent bg-[var(--color-slate-3)] text-[var(--color-slate-11)] text-sm"
+          >
+            1023 records, 5 columns
+          </Badge>
         </div>
 
-        {/* Validation panel */}
-        <div className="flex w-[300px] shrink-0 flex-col">
-          {hasIssues ? (
-            <div className="flex flex-1 flex-col rounded-xl border bg-white p-5">
-              <div className="mb-4 flex items-center justify-between">
-                <p className="font-semibold text-slate-900">Few issues found</p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-1.5"
-                  onClick={onBack}
-                >
-                  <Upload className="h-3.5 w-3.5" />
-                  Upload again
-                </Button>
+        <div className="flex flex-col gap-4 px-8 pb-6 sm:flex-row sm:items-start">
+          {/* Table — second on mobile, first on desktop */}
+          <div className="order-2 flex min-w-0 flex-1 flex-col gap-2 sm:order-1">
+            <div className="overflow-hidden rounded-2xl border bg-white">
+              <div className="overflow-x-auto [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar]:border-t [&::-webkit-scrollbar]:border-[var(--color-slate-6)] [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[var(--color-slate-5)] [&::-webkit-scrollbar-track]:ml-4 [&::-webkit-scrollbar-track]:mr-4 [&::-webkit-scrollbar-track]:rounded-full">
+                <Table>
+                  <TableHeader className="bg-[var(--color-slate-2)]">
+                    <TableRow className="hover:bg-[var(--color-slate-2)]">
+                      <TableHead className="w-10 text-center text-base font-semibold text-[var(--color-slate-11)]">
+                        #
+                      </TableHead>
+                      <TableHead className="text-base font-semibold text-[var(--color-slate-11)]">
+                        Name
+                      </TableHead>
+                      <TableHead className="text-base font-semibold text-[var(--color-slate-11)]">
+                        Class
+                      </TableHead>
+                      <TableHead className="text-base font-semibold text-[var(--color-slate-11)]">
+                        VIA missed
+                      </TableHead>
+                      <TableHead className="text-base font-semibold text-[var(--color-slate-11)]">
+                        Next steps
+                      </TableHead>
+                      <TableHead className="text-base font-semibold text-[var(--color-slate-11)]">
+                        Teacher's remarks
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {MOCK_REVIEW_ROWS.map((r) => (
+                      <TableRow key={r.row} className="hover:bg-transparent">
+                        <TableCell className="text-center text-base tabular-nums text-slate-400">
+                          {r.row}
+                        </TableCell>
+                        <TableCell className="text-base text-slate-700">
+                          {r.name}
+                        </TableCell>
+                        <TableCell className="text-base text-slate-500">
+                          {r.class}
+                        </TableCell>
+                        <TableCell className="text-base text-slate-500">
+                          {r.viaMissed}
+                        </TableCell>
+                        <TableCell className="max-w-0 text-base text-slate-500">
+                          <span className="block truncate">{r.nextSteps}</span>
+                        </TableCell>
+                        <TableCell className="max-w-0 text-base text-slate-500">
+                          <span className="block truncate">
+                            {r.teacherRemarks}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
-              <ul className="space-y-3">
-                {REVIEW_ISSUES.map((iss) => (
-                  <li
-                    key={iss.id}
-                    className="rounded-lg border border-red-100 bg-red-50/50 p-3"
-                  >
-                    <div className="flex items-start gap-2">
-                      <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold text-slate-900">
-                          {iss.title}
-                        </p>
-                        <p className="mt-0.5 text-xs text-slate-500">
-                          {iss.description}
-                        </p>
-                        <div className="mt-2 flex flex-wrap gap-1">
-                          {iss.rows.map((row) => (
-                            <span
-                              key={row}
-                              className="rounded bg-white px-1.5 py-0.5 text-[10px] font-medium text-slate-600 ring-1 ring-slate-200"
-                            >
-                              ROW {row}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
             </div>
-          ) : (
-            <div className="flex flex-1 items-center justify-center rounded-xl border bg-emerald-50/40 p-8">
-              <div className="text-center">
-                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
-                  <CheckCircle2 className="h-6 w-6 text-emerald-600" />
+            <p className="text-sm text-[var(--color-slate-11)]">
+              Preview of first 10 rows
+            </p>
+          </div>
+
+          {/* Validation panel — first on mobile (top), second on desktop (right) */}
+          <div className="order-1 w-full sm:order-2 sm:h-[620px] sm:w-[412px] sm:shrink-0">
+            {hasIssues ? (
+              <div className="flex flex-col rounded-2xl border bg-white px-6 py-6 sm:min-h-[620px] sm:p-6">
+                <div className="mb-5 flex items-center justify-between">
+                  <p className="text-lg font-semibold text-[var(--color-slate-11)]">
+                    Few issues found
+                  </p>
+                  <Button size="sm" className="gap-1.5" onClick={onBack}>
+                    Upload again
+                    <Upload className="h-3.5 w-3.5" />
+                  </Button>
                 </div>
-                <p className="font-semibold text-slate-900">No issues found</p>
-                <p className="mt-1 text-sm text-slate-500">
-                  Your file is good to go!
-                </p>
+                <ul className="flex flex-col gap-3">
+                  {REVIEW_ISSUES.map((iss) => (
+                    <li
+                      key={iss.id}
+                      className="flex items-start gap-3 rounded-xl border border-[var(--color-slate-3)] bg-slate-50 p-3"
+                    >
+                      <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-[var(--crimson-11)]" />
+                      <div className="flex min-w-0 flex-col gap-2">
+                        <div className="flex flex-col gap-1">
+                          <p className="text-base font-semibold text-[var(--crimson-11)]">
+                            {iss.title}
+                          </p>
+                          <p className="text-sm text-slate-500">
+                            {iss.description}
+                          </p>
+                        </div>
+                        <Badge
+                          variant="outline"
+                          className="border-transparent bg-[var(--color-slate-3)] text-[var(--color-slate-11)] text-sm"
+                        >
+                          {iss.ref}
+                        </Badge>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
               </div>
-            </div>
-          )}
+            ) : (
+              <div className="flex flex-col items-center justify-center rounded-[var(--radius-3xl,24px)] border border-[var(--color-slate-6)] bg-white px-6 py-6 sm:h-full sm:py-5">
+                <div className="flex flex-col items-center">
+                  <img
+                    src="/no-issues-illustration.png"
+                    alt="No issues found"
+                    className="size-[200px] object-cover"
+                  />
+                  <div className="mt-3 flex flex-col items-center gap-3 text-center">
+                    <p className="text-[23px] font-semibold leading-7 text-[var(--color-slate-12)]">
+                      No issues found
+                    </p>
+                    <p className="text-base text-[var(--color-slate-11)]">
+                      Your file is good to go!
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -468,7 +600,7 @@ function Step2({
           <ArrowLeft className="h-4 w-4" />
           Back
         </Button>
-        <Button onClick={onNext} className="gap-2">
+        <Button onClick={onNext} disabled={hasIssues} className="gap-2">
           Next
           <ArrowRight className="h-4 w-4" />
         </Button>
@@ -484,60 +616,27 @@ function CategorySelectRow({
   state,
   categories,
   onChange,
-  onCreateCategory,
+  onAddCategory,
 }: {
   fieldName: string
   state: FieldState
   categories: Array<string>
   onChange: (next: Partial<FieldState>) => void
-  onCreateCategory: (name: string) => void
+  onAddCategory: (name: string) => void
 }) {
-  const [dropdownOpen, setDropdownOpen] = useState(false)
-  const containerRef = useRef<HTMLDivElement>(null)
+  const [open, setOpen] = useState(false)
 
-  // Close dropdown on outside click
-  useEffect(() => {
-    if (!dropdownOpen) return
-    function handleClick(e: MouseEvent) {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(e.target as Node)
-      ) {
-        setDropdownOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [dropdownOpen])
-
-  const existingFields =
-    state.selected && state.mode === 'selected'
-      ? (EXISTING_FIELDS_MAP[state.selected] ?? [])
-      : []
-
-  function handleSelectCategory(cat: string) {
-    setDropdownOpen(false)
-    onChange({ mode: 'selected', selected: cat, newValue: '', newError: '' })
-  }
-
-  function handleSkipForNow() {
-    setDropdownOpen(false)
-    onChange({ mode: 'skipped', selected: null })
-  }
-
-  function handleCreateCategory() {
-    setDropdownOpen(false)
-    onChange({ mode: 'creating', newValue: '', newError: '' })
-  }
-
-  function handleConfirmNewCategory() {
+  function handleConfirmNew() {
     const trimmed = state.newValue.trim()
-    if (trimmed.toLowerCase() === 'others') {
-      onChange({ newError: 'Please select "Skip for now" instead' })
+    if (!trimmed) return
+    const exists = categories.some(
+      (c) => c.toLowerCase() === trimmed.toLowerCase(),
+    )
+    if (exists) {
+      onChange({ newError: 'This section already exist' })
       return
     }
-    if (!trimmed) return
-    onCreateCategory(trimmed)
+    onAddCategory(trimmed)
     onChange({
       mode: 'selected',
       selected: trimmed,
@@ -546,154 +645,177 @@ function CategorySelectRow({
     })
   }
 
-  function handleCancelNew() {
-    onChange({ mode: 'unset', newValue: '', newError: '' })
-  }
-
-  // ── Render the "CATEGORISE UNDER" cell content
-  function renderSelectCell() {
-    if (state.mode === 'creating') {
-      return (
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2">
-            <Input
-              autoFocus
-              value={state.newValue}
-              onChange={(e) =>
-                onChange({ newValue: e.target.value, newError: '' })
-              }
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleConfirmNewCategory()
-                if (e.key === 'Escape') handleCancelNew()
-              }}
-              placeholder="New category"
-              className={cn(
-                'h-8 text-sm',
-                state.newError && 'border-red-400 focus-visible:ring-red-300',
-              )}
-            />
-            <Button
-              size="icon"
-              className="h-8 w-8 shrink-0 bg-emerald-600 hover:bg-emerald-700"
-              onClick={handleConfirmNewCategory}
-            >
-              <Check className="h-3.5 w-3.5" />
-            </Button>
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-8 w-8 shrink-0"
-              onClick={handleCancelNew}
-            >
-              <X className="h-3.5 w-3.5" />
-            </Button>
-          </div>
-          {state.newError && (
-            <p className="flex items-center gap-1 text-xs text-red-500">
-              <AlertCircle className="h-3 w-3 shrink-0" />
-              {state.newError}
-            </p>
-          )}
-        </div>
-      )
-    }
-
-    const label =
-      state.mode === 'selected'
-        ? (state.selected ?? '')
-        : state.mode === 'skipped'
-          ? 'Skip for now'
-          : 'Select'
-
-    const isPlaceholder = state.mode === 'unset'
-    const isSkipped = state.mode === 'skipped'
-
+  // "creating" mode: show inline input + confirm button
+  if (state.mode === 'creating') {
     return (
-      <div ref={containerRef} className="relative">
-        <button
-          type="button"
-          onClick={() => setDropdownOpen((v) => !v)}
-          className={cn(
-            'flex h-9 w-full items-center justify-between gap-2 rounded-md border bg-white px-3 text-left text-sm transition-colors hover:bg-slate-50',
-            dropdownOpen && 'border-primary ring-1 ring-primary/30',
-            isPlaceholder && 'text-slate-400',
-            isSkipped && 'text-slate-500 italic',
-          )}
-        >
-          <span className="truncate">{label}</span>
-          <ChevronDown
-            className={cn(
-              'h-4 w-4 shrink-0 text-slate-400 transition-transform',
-              dropdownOpen && 'rotate-180',
-            )}
-          />
-        </button>
-
-        {dropdownOpen && (
-          <div className="absolute left-0 top-full z-20 mt-1 w-full min-w-[220px] overflow-hidden rounded-lg border bg-white py-1 shadow-lg">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                type="button"
-                onClick={() => handleSelectCategory(cat)}
+      <TableRow className="hover:bg-transparent">
+        <TableCell className="w-1/2 py-4 pl-5">
+          <span className="text-sm font-medium text-slate-800">
+            {fieldName}
+          </span>
+        </TableCell>
+        <TableCell className="w-1/2 py-4 pr-5">
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+              <input
+                autoFocus
+                type="text"
+                value={state.newValue}
+                placeholder="Name this section"
+                onChange={(e) =>
+                  onChange({ newValue: e.target.value, newError: '' })
+                }
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleConfirmNew()
+                  if (e.key === 'Escape')
+                    onChange({ mode: 'unset', newValue: '', newError: '' })
+                }}
                 className={cn(
-                  'flex w-full items-center px-3 py-2 text-left text-sm hover:bg-slate-50',
-                  state.selected === cat && 'font-medium text-primary',
+                  'h-9 flex-1 rounded-lg border bg-white px-3 text-sm outline-none transition-colors',
+                  state.newError
+                    ? 'border-[var(--crimson-9)] ring-1 ring-[var(--crimson-9)]'
+                    : 'border-blue-400 ring-1 ring-blue-300',
                 )}
+              />
+              <button
+                type="button"
+                onClick={handleConfirmNew}
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-slate-400 hover:text-slate-600"
               >
-                {cat}
+                <Check className="h-4 w-4" />
               </button>
-            ))}
-            <div className="my-1 border-t" />
-            <button
-              type="button"
-              onClick={handleCreateCategory}
-              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-primary hover:bg-slate-50"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              Create new category
-            </button>
-            <button
-              type="button"
-              onClick={handleSkipForNow}
-              className="flex w-full items-center gap-1 px-3 py-2 text-left text-sm text-slate-500 hover:bg-slate-50"
-            >
-              <ArrowRight className="h-3.5 w-3.5" />
-              Skip for now
-            </button>
+            </div>
+            {state.newError && (
+              <p className="text-xs text-[var(--crimson-11)]">
+                {state.newError}
+              </p>
+            )}
           </div>
-        )}
-      </div>
-    )
-  }
-
-  // ── Render the "EXISTING FIELDS PREVIEW" cell
-  function renderPreviewCell() {
-    if (state.mode !== 'selected' || existingFields.length === 0) {
-      return <span className="text-sm text-slate-400">–</span>
-    }
-    return (
-      <ul className="space-y-1">
-        {existingFields.slice(0, 3).map((f) => (
-          <li
-            key={f}
-            className="flex items-center gap-1.5 text-sm text-slate-700"
-          >
-            <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
-            {f}
-          </li>
-        ))}
-      </ul>
+        </TableCell>
+      </TableRow>
     )
   }
 
   return (
-    <TableRow>
-      <TableCell className="py-4 pl-5 text-sm font-medium text-slate-800">
-        {fieldName}
+    <TableRow className="hover:bg-transparent">
+      <TableCell className="w-1/2 py-4 pl-5">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-slate-800">
+            {fieldName}
+          </span>
+          {state.mode === 'selected' && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-[#E0F8F3] px-2 py-0.5 text-xs font-medium text-[#008573]">
+              <Check className="h-3 w-3" />
+              Done
+            </span>
+          )}
+        </div>
       </TableCell>
-      <TableCell className="py-4 pr-4">{renderSelectCell()}</TableCell>
-      <TableCell className="py-4 pl-2 pr-5">{renderPreviewCell()}</TableCell>
+      <TableCell className="w-1/2 py-4 pr-5">
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger
+            className={cn(
+              'flex h-9 w-full items-center justify-between rounded-lg border border-[var(--color-slate-6)] px-3 text-sm',
+              state.mode === 'skipped'
+                ? 'bg-[var(--color-slate-2)]'
+                : 'bg-white',
+            )}
+          >
+            <span
+              className={
+                state.selected || state.mode === 'skipped'
+                  ? 'text-[var(--color-slate-12)]'
+                  : 'text-[var(--color-slate-11)]'
+              }
+            >
+              {state.mode === 'skipped'
+                ? 'Skip for now'
+                : (state.selected ?? 'Select')}
+            </span>
+            <ChevronDown className="h-4 w-4 shrink-0 text-[var(--color-slate-11)]" />
+          </PopoverTrigger>
+          <PopoverContent
+            className="w-[280px] rounded-3xl border-[var(--color-slate-6)] p-3 shadow-[0px_4px_6px_0px_rgba(0,0,45,0.09),0px_2px_4px_0px_rgba(0,0,45,0.09)]"
+            align="start"
+            sideOffset={4}
+          >
+            <div className="flex flex-col gap-1">
+              {categories
+                .slice()
+                .sort()
+                .map((cat) => {
+                  const isSelected = state.selected === cat
+                  const description = CATEGORY_DESCRIPTIONS[cat]
+                  return (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => {
+                        onChange({ mode: 'selected', selected: cat })
+                        setOpen(false)
+                      }}
+                      className={cn(
+                        'flex w-full items-center gap-2 rounded-xl p-2 text-left transition-colors',
+                        isSelected
+                          ? 'bg-[var(--color-slate-5)]'
+                          : 'hover:bg-[var(--color-slate-4)]',
+                      )}
+                    >
+                      <div className="flex min-w-0 flex-1 flex-col gap-1">
+                        <span
+                          className={cn(
+                            'text-base text-[var(--color-slate-12)]',
+                            isSelected && 'font-semibold',
+                          )}
+                        >
+                          {cat}
+                        </span>
+                        {description && (
+                          <span className="truncate text-sm text-[var(--color-slate-11)]">
+                            {description}
+                          </span>
+                        )}
+                      </div>
+                      {isSelected && (
+                        <Check className="h-4 w-4 shrink-0 text-[var(--color-slate-11)]" />
+                      )}
+                    </button>
+                  )
+                })}
+
+              <div className="my-1 h-px bg-[var(--color-slate-6)]" />
+
+              <button
+                type="button"
+                onClick={() => {
+                  onChange({ mode: 'creating', newValue: '', newError: '' })
+                  setOpen(false)
+                }}
+                className="flex w-full items-center gap-2 rounded-xl p-2 text-left hover:bg-[var(--color-slate-4)]"
+              >
+                <Plus className="h-4 w-4 shrink-0 text-[var(--color-slate-12)]" />
+                <span className="text-base text-[var(--color-slate-12)]">
+                  Create new section
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  onChange({ mode: 'skipped', selected: null })
+                  setOpen(false)
+                }}
+                className="flex w-full items-center gap-2 rounded-xl p-2 text-left hover:bg-[var(--color-slate-4)]"
+              >
+                <ArrowRight className="h-4 w-4 shrink-0 text-[var(--color-slate-12)]" />
+                <span className="text-base text-[var(--color-slate-12)]">
+                  Skip for now
+                </span>
+              </button>
+            </div>
+          </PopoverContent>
+        </Popover>
+      </TableCell>
     </TableRow>
   )
 }
@@ -715,7 +837,6 @@ function Step3({
   )
   const [categories, setCategories] =
     useState<Array<string>>(DEFAULT_CATEGORIES)
-  const [bannerDismissed, setBannerDismissed] = useState(false)
 
   function updateField(id: string, patch: Partial<FieldState>) {
     setFieldStates((prev) => ({
@@ -725,9 +846,7 @@ function Step3({
   }
 
   function addCategory(name: string) {
-    if (!categories.includes(name)) {
-      setCategories((prev) => [...prev, name])
-    }
+    setCategories((prev) => [...prev, name])
   }
 
   const allResolved = INCOMING_FIELDS.every(
@@ -752,60 +871,37 @@ function Step3({
     <div className="flex flex-1 flex-col overflow-hidden">
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto">
-        <div className="px-8 pt-8">
-          <StepIndicator current={3} total={3} />
-          <h1 className="mt-1 text-2xl font-bold text-slate-900">
-            Organise your new fields
+        <div className="mx-auto w-[632px] pt-8">
+          <h1 className="text-2xl font-semibold text-slate-900">
+            Choose where new fields appear
           </h1>
+          <p className="mt-1 text-sm text-slate-500">
+            Pick the section where each field should appear in the student
+            profile
+          </p>
         </div>
 
-        {/* Banner */}
-        {!bannerDismissed && (
-          <div className="mx-8 mt-4 flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100">
-              <Lightbulb className="h-4 w-4 text-emerald-600" />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-emerald-900">
-                Keep your student view tidy
-              </p>
-              <p className="text-xs text-emerald-700">
-                Categorise each field to bring related details together. Make
-                patterns clearer and decisions easier.
-              </p>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              className="shrink-0 border-emerald-300 bg-white text-emerald-700 hover:bg-emerald-50"
-              onClick={() => onSkipAll(buildMappings())}
-            >
-              Skip for now
-            </Button>
-            <button
-              type="button"
-              onClick={() => setBannerDismissed(true)}
-              className="ml-1 text-emerald-500 hover:text-emerald-700"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        )}
+        {/* Hint note */}
+        <div className="mx-auto mb-4 mt-12 w-[632px] border-l-2 border-slate-300 pl-3">
+          <p className="text-sm text-slate-500">
+            If a field fits more than one section, pick the best match. You can
+            edit it later
+          </p>
+        </div>
 
         {/* Table */}
-        <div className="mx-8 mt-4 mb-6 rounded-xl border bg-white">
+        <div className="mx-auto mb-6 w-[632px] overflow-hidden rounded-xl border bg-white">
           <Table>
-            <TableHeader className="bg-white">
-              <TableRow>
-                <TableHead className="pl-5 text-xs uppercase tracking-wide text-slate-400">
-                  Incoming fields
-                  <span className="mx-2 text-slate-300">→</span>
+            <TableHeader className="bg-[var(--color-slate-2)]">
+              <TableRow className="hover:bg-[var(--color-slate-2)]">
+                <TableHead className="w-1/2 pl-5 pr-0 typography-label-md-strong text-[var(--color-slate-11)]">
+                  <span className="flex items-center justify-between">
+                    New fields
+                    <ArrowRight className="h-3.5 w-3.5 text-[var(--color-slate-9)]" />
+                  </span>
                 </TableHead>
-                <TableHead className="text-xs uppercase tracking-wide text-slate-400">
-                  Categorise under
-                </TableHead>
-                <TableHead className="pl-2 pr-5 text-xs uppercase tracking-wide text-slate-400">
-                  Existing fields preview
+                <TableHead className="w-1/2 pr-5 typography-label-md-strong text-[var(--color-slate-11)]">
+                  Place under
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -817,7 +913,7 @@ function Step3({
                   state={fieldStates[field.id]}
                   categories={categories}
                   onChange={(patch) => updateField(field.id, patch)}
-                  onCreateCategory={addCategory}
+                  onAddCategory={addCategory}
                 />
               ))}
             </TableBody>
@@ -831,121 +927,31 @@ function Step3({
           <ArrowLeft className="h-4 w-4" />
           Back
         </Button>
-        <Button
-          onClick={() => onComplete(buildMappings())}
-          disabled={!allResolved}
-          className="gap-2"
-        >
-          Complete
-          <ArrowRight className="h-4 w-4" />
-        </Button>
-      </div>
-    </div>
-  )
-}
-
-// ─── Confirmation page ───────────────────────────────────────────────────────
-
-function ConfirmationPage({
-  fieldsByCategory,
-  onExplore,
-}: {
-  fieldsByCategory: Record<string, Array<string>>
-  onExplore: () => void
-}) {
-  const [accordionOpen, setAccordionOpen] = useState(true)
-  const categories = Object.keys(fieldsByCategory)
-  const totalFields = Object.values(fieldsByCategory).flat().length
-  const isSingleCategory = categories.length === 1
-
-  return (
-    <div className="flex flex-1 flex-col overflow-hidden">
-      {/* Center content */}
-      <div className="flex flex-1 flex-col items-center overflow-y-auto px-8 py-12">
-        {/* Success icon */}
-        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100">
-          <CheckCircle2 className="h-7 w-7 text-emerald-600" />
-        </div>
-
-        {/* Title */}
-        <h1 className="mt-4 text-2xl font-bold text-slate-900">
-          Import done! 🎉
-        </h1>
-        <p className="mt-1 text-sm text-slate-500">Custom fields added</p>
-
-        {/* Stats */}
-        <div className="mt-6 w-full max-w-xl">
-          <div className="grid grid-cols-2 divide-x overflow-hidden rounded-xl border bg-white">
-            <div className="px-8 py-5 text-center">
-              <p className="text-3xl font-bold text-primary">1023</p>
-              <p className="mt-1 text-sm text-slate-500">Student records</p>
-            </div>
-            <div className="px-8 py-5 text-center">
-              <p className="text-3xl font-bold text-primary">{totalFields}</p>
-              <p className="mt-1 text-sm text-slate-500">Data fields</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Data fields accordion */}
-        <div className="mt-4 w-full max-w-xl overflow-hidden rounded-xl border bg-white">
-          <button
-            type="button"
-            onClick={() => setAccordionOpen((v) => !v)}
-            className="flex w-full items-center justify-between px-5 py-4 text-left"
+        <div className="flex items-center gap-3">
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  variant="outline"
+                  onClick={() => onSkipAll(buildMappings())}
+                />
+              }
+            >
+              Skip for now
+            </TooltipTrigger>
+            <TooltipContent>
+              New fields go under "Others" for now
+            </TooltipContent>
+          </Tooltip>
+          <Button
+            onClick={() => onComplete(buildMappings())}
+            disabled={!allResolved}
+            className="gap-2"
           >
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-              <span className="text-sm font-semibold text-slate-800">
-                Data fields imported
-              </span>
-            </div>
-            <ChevronDown
-              className={cn(
-                'h-4 w-4 text-slate-400 transition-transform',
-                accordionOpen && 'rotate-180',
-              )}
-            />
-          </button>
-
-          {accordionOpen && (
-            <div className="border-t px-4 pb-4 pt-3">
-              <div
-                className={cn(
-                  'grid gap-3',
-                  isSingleCategory ? 'grid-cols-1' : 'grid-cols-2',
-                )}
-              >
-                {categories.map((cat) => (
-                  <div key={cat} className="rounded-lg bg-slate-50 p-4">
-                    <p className="mb-2 text-sm font-semibold text-slate-800">
-                      {cat}
-                    </p>
-                    <ul className="space-y-1.5">
-                      {fieldsByCategory[cat].map((fieldName, i) => (
-                        <li
-                          key={`${fieldName}-${i}`}
-                          className="flex items-center gap-2 text-sm text-slate-600"
-                        >
-                          <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
-                          {fieldName}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+            Complete
+            <ArrowRight className="h-4 w-4" />
+          </Button>
         </div>
-      </div>
-
-      {/* Bottom CTA */}
-      <div className="shrink-0 border-t bg-white px-8 py-4 text-center">
-        <Button onClick={onExplore} size="lg" className="gap-2 px-8">
-          Explore your holistic view
-          <ArrowRight className="h-4 w-4" />
-        </Button>
       </div>
     </div>
   )
@@ -953,16 +959,27 @@ function ConfirmationPage({
 
 // ─── Wizard root ─────────────────────────────────────────────────────────────
 
-export function ImportWizard({ onClose }: { onClose: () => void }) {
+export interface ImportResult {
+  columns: Array<ColumnConfig>
+  fileName: string
+  fieldsByCategory: Record<string, Array<string>>
+}
+
+export function ImportWizard({
+  onClose,
+  onImportComplete,
+}: {
+  onClose: () => void
+  onImportComplete?: (result: ImportResult) => void
+}) {
   const [step, setStep] = useState<WizardStep>(1)
   const [uploadError, setUploadError] = useState(false)
-  const [hasIssues, setHasIssues] = useState(true)
-  const [fieldsByCategory, setFieldsByCategory] = useState<
-    Record<string, Array<string>>
-  >({})
+  const [hasIssues, setHasIssues] = useState(false)
+  const [fileName, setFileName] = useState<string>('')
 
   function handleFileAccepted(file: File) {
     setUploadError(false)
+    setFileName(file.name)
     const toastId = toast.loading('Processing file…')
     setTimeout(() => {
       toast.dismiss(toastId)
@@ -975,59 +992,76 @@ export function ImportWizard({ onClose }: { onClose: () => void }) {
     }, 1800)
   }
 
+  function buildColumns(): Array<ColumnConfig> {
+    const now = new Date()
+    const dateStr = now.toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    })
+    return INCOMING_FIELDS.map((f) => ({
+      id: f.id,
+      label: f.name,
+      visible: true,
+      sortable: true,
+      imported: true,
+      source: 'Imported by user',
+      lastUpdated: `${dateStr} by You`,
+    }))
+  }
+
   function buildFieldsByCategory(
     mappings: Record<string, string>,
   ): Record<string, Array<string>> {
     const result: Record<string, Array<string>> = {}
     for (const field of INCOMING_FIELDS) {
       const category = mappings[field.id] ?? 'Others'
-      if (!result[category]) result[category] = []
-      result[category].push(field.name)
+      const bucket = result[category] ?? (result[category] = [])
+      bucket.push(field.name)
     }
     return result
   }
 
   function handleComplete(mappings: Record<string, string>) {
-    const toastId = toast.loading('Merging data…')
-    setTimeout(() => {
-      toast.dismiss(toastId)
-      setFieldsByCategory(buildFieldsByCategory(mappings))
-      setStep(4)
-    }, 2000)
+    onImportComplete?.({
+      columns: buildColumns(),
+      fileName,
+      fieldsByCategory: buildFieldsByCategory(mappings),
+    })
+    onClose()
   }
 
   function handleSkipAll(mappings: Record<string, string>) {
-    // All fields go to "Others"
     const allOthers = Object.fromEntries(
       INCOMING_FIELDS.map((f) => [f.id, 'Others']),
     )
-    const toastId = toast.loading('Merging data…')
-    setTimeout(() => {
-      toast.dismiss(toastId)
-      setFieldsByCategory(buildFieldsByCategory({ ...mappings, ...allOthers }))
-      setStep(4)
-    }, 2000)
+    onImportComplete?.({
+      columns: buildColumns(),
+      fileName,
+      fieldsByCategory: buildFieldsByCategory({ ...mappings, ...allOthers }),
+    })
+    onClose()
   }
-
-  const isConfirmation = step === 4
 
   return (
     <>
       {/* Header */}
-      <div className="flex shrink-0 items-center justify-between px-6 py-4">
-        <span className="text-sm font-medium text-slate-700">
-          {isConfirmation ? 'Add custom fields' : 'Import data'}
-        </span>
-        {!isConfirmation && (
-          <Button
-            variant="outline"
-            size="icon"
-            className="rounded-full"
-            onClick={onClose}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        )}
+      <div className="flex shrink-0 items-center justify-between gap-6 px-6 py-4">
+        <div className="flex items-center gap-4">
+          <span className="text-base font-semibold text-slate-900">
+            Import data
+          </span>
+          <div className="h-4 w-px bg-slate-200" />
+          <WizardStepper current={step} />
+        </div>
+        <Button
+          variant="outline"
+          size="icon"
+          className="rounded-full"
+          onClick={onClose}
+        >
+          <X className="h-4 w-4" />
+        </Button>
       </div>
 
       {/* Step content */}
@@ -1048,71 +1082,58 @@ export function ImportWizard({ onClose }: { onClose: () => void }) {
           onSkipAll={handleSkipAll}
         />
       )}
-      {step === 4 && (
-        <ConfirmationPage
-          fieldsByCategory={fieldsByCategory}
-          onExplore={onClose}
-        />
-      )}
 
       {/* Floating design tools — dev only */}
-      {!isConfirmation && (
-        <Popover>
-          <PopoverTrigger
-            render={
-              <button className="fixed bottom-4 right-4 flex h-10 w-10 items-center justify-center rounded-full border bg-white shadow-lg transition-shadow hover:shadow-xl">
-                <Settings2 className="h-4 w-4 text-slate-500" />
-              </button>
-            }
-          />
-          <PopoverContent
-            side="top"
-            sideOffset={8}
-            align="end"
-            className="w-64"
-          >
-            <PopoverHeader>
-              <PopoverTitle>Design Tools</PopoverTitle>
-            </PopoverHeader>
-            <div className="flex flex-col gap-4">
-              <div className="flex flex-col gap-2">
-                <label className="text-xs font-medium text-slate-500">
-                  Step 1 — Upload state
-                </label>
-                <Select
-                  value={uploadError ? 'error' : 'idle'}
-                  onValueChange={(val) => setUploadError(val === 'error')}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="idle">Idle</SelectItem>
-                    <SelectItem value="error">Upload error</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex flex-col gap-2">
-                <label className="text-xs font-medium text-slate-500">
-                  Step 2 — Review state
-                </label>
-                <Select
-                  value={hasIssues ? 'issues' : 'clean'}
-                  onValueChange={(val) => setHasIssues(val === 'issues')}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="clean">No issues</SelectItem>
-                    <SelectItem value="issues">Few issues found</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+      <Popover>
+        <PopoverTrigger
+          render={
+            <button className="fixed bottom-4 right-4 flex h-10 w-10 items-center justify-center rounded-full border bg-white shadow-lg transition-shadow hover:shadow-xl">
+              <Settings2 className="h-4 w-4 text-slate-500" />
+            </button>
+          }
+        />
+        <PopoverContent side="top" sideOffset={8} align="end" className="w-64">
+          <PopoverHeader>
+            <PopoverTitle>Design Tools</PopoverTitle>
+          </PopoverHeader>
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-medium text-slate-500">
+                Step 1 — Upload state
+              </label>
+              <Select
+                value={uploadError ? 'error' : 'idle'}
+                onValueChange={(val) => setUploadError(val === 'error')}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="idle">Idle</SelectItem>
+                  <SelectItem value="error">Upload error</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-          </PopoverContent>
-        </Popover>
-      )}
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-medium text-slate-500">
+                Step 2 — Review state
+              </label>
+              <Select
+                value={hasIssues ? 'issues' : 'clean'}
+                onValueChange={(val) => setHasIssues(val === 'issues')}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="clean">No issues</SelectItem>
+                  <SelectItem value="issues">Few issues found</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </PopoverContent>
+      </Popover>
     </>
   )
 }

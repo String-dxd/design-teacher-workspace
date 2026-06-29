@@ -74,8 +74,7 @@ const featureFlagConfigs: Array<FeatureFlagConfig> = [
   {
     key: 'reports',
     label: 'Reports',
-    description:
-      'Show the Reports page in the sidebar under Manage',
+    description: 'Show the Reports page in the sidebar under Manage',
     stage: 'Concept',
   },
   {

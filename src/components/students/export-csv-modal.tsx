@@ -90,19 +90,19 @@ export function ExportCsvModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Export view</DialogTitle>
+          <DialogTitle>Export data</DialogTitle>
         </DialogHeader>
 
         <div className="flex flex-col gap-2">
           <CheckboxCard
-            label="As shown"
-            description="Export data as shown in the table"
+            label="Standard"
+            description="Export all available data"
             checked={senFormats.has('sen-high')}
             onChange={() => toggleFormat('sen-high')}
           />
           <CheckboxCard
             label="Redacted"
-            description="Export with sensitive-high data masked"
+            description="Export all data with sensitive-high data masked"
             checked={senFormats.has('sen-norm')}
             onChange={() => toggleFormat('sen-norm')}
           />

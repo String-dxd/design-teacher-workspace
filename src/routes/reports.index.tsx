@@ -11,23 +11,21 @@ import { cn } from '@/lib/utils'
 type ReportTab = 'onboarding' | 'travel-declaration'
 type DeclarationStatus = 'not-declared' | 'declared'
 
-const IS_ADMIN = true
 const MY_CLASS = '3A'
 const SCHOOL_NAME = 'Fruits Primary School'
 
 export const Route = createFileRoute('/reports/')({
   validateSearch: (search) => ({
-    tab: (search.tab as ReportTab) ?? 'onboarding',
-    scope: (search.scope as 'my' | 'school') ?? 'my',
+    tab: (search.tab as ReportTab | undefined) ?? 'onboarding',
+    scope: (search.scope as 'my' | 'school' | undefined) ?? 'my',
   }),
   component: ReportsPage,
 })
 
-
 function ReportsPage() {
   const { tab, scope } = Route.useSearch()
   const navigate = useNavigate()
-  const isSchoolWide = IS_ADMIN && scope === 'school'
+  const isSchoolWide = scope === 'school'
 
   const [declarationStatus, setDeclarationStatus] =
     useState<DeclarationStatus | null>(null)
@@ -76,7 +74,6 @@ function ReportsPage() {
   return (
     <div className="flex flex-col">
       <div className="shrink-0 space-y-5 pt-6">
-
         {/* ── Title ───────────────────────────────────────────────────────────── */}
         <div className="border-b px-6 pb-6">
           <div className="flex items-center gap-2">
@@ -119,20 +116,18 @@ function ReportsPage() {
                 Travel Declaration
               </button>
             </div>
-            {IS_ADMIN && (
-              <button
-                type="button"
-                onClick={toggleSchoolWide}
-                className={cn(
-                  'flex items-center rounded-full border px-3 py-1.5 text-sm font-medium transition-all',
-                  isSchoolWide
-                    ? 'border-foreground/20 bg-foreground text-background'
-                    : 'border-border text-muted-foreground hover:border-foreground/20 hover:text-foreground',
-                )}
-              >
-                School-wide
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={toggleSchoolWide}
+              className={cn(
+                'flex items-center rounded-full border px-3 py-1.5 text-sm font-medium transition-all',
+                isSchoolWide
+                  ? 'border-foreground/20 bg-foreground text-background'
+                  : 'border-border text-muted-foreground hover:border-foreground/20 hover:text-foreground',
+              )}
+            >
+              School-wide
+            </button>
           </div>
         </div>
 
@@ -174,7 +169,6 @@ function ReportsPage() {
             {/* Travel Declaration */}
             {tab === 'travel-declaration' && (
               <div className="space-y-5">
-
                 {/* Declaration status */}
                 <div className="space-y-1.5">
                   <p className="text-sm font-medium">Declaration status</p>
@@ -187,9 +181,13 @@ function ReportsPage() {
                         },
                         {
                           value: 'declared' as const,
-                          label: 'Declared (Include travelling and not travelling)',
+                          label:
+                            'Declared (Include travelling and not travelling)',
                         },
-                      ] satisfies Array<{ value: DeclarationStatus; label: string }>
+                      ] satisfies Array<{
+                        value: DeclarationStatus
+                        label: string
+                      }>
                     ).map((opt) => {
                       const isSelected = declarationStatus === opt.value
                       return (
@@ -256,13 +254,10 @@ function ReportsPage() {
                     {exportButtonLabel}
                   </Button>
                 </div>
-
               </div>
             )}
-
           </section>
         </div>
-
       </div>
     </div>
   )

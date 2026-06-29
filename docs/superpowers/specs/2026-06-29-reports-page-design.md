@@ -1,4 +1,5 @@
 # Reports Page — Design Spec
+
 Date: 2026-06-29
 
 ## Overview
@@ -28,6 +29,7 @@ border-b px-6 py-4
 ```
 
 Subtitle differs by mode:
+
 - My class: "Export reports for your class."
 - School-wide (admin): "Export reports for any class or the whole school."
 
@@ -43,6 +45,7 @@ px-6 py-3 flex items-center gap-2 border-b
 Segmented pill tabs: **Onboarding** | **Travel Declaration**
 
 School-wide toggle styling (active state = bg-foreground text-background):
+
 ```tsx
 className={cn(
   'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-all',
@@ -67,10 +70,7 @@ Placed below banner, `px-6 mt-4`. Uses the existing `ClassSelector` component fr
 State: `selectedClass` — defaults to `'all'` when school-wide is activated.
 
 ```tsx
-<ClassSelector
-  value={selectedClass}
-  onValueChange={setSelectedClass}
-/>
+<ClassSelector value={selectedClass} onValueChange={setSelectedClass} />
 ```
 
 The "All classes (school-wide)" option is the first item. When selected, export button label becomes "Export all classes to Excel".
@@ -95,9 +95,11 @@ Content area (`px-6 py-6`):
 - Export simulated via `toast.success('Exporting onboarding report...')`
 
 Description text:
+
 > "Form and Co-Form teachers can export custodian onboarding status reports for their form class. To allow or remove PG access for custodians, please do so in School Cockpit. Updates will be reflected within 24 hours."
 
 Admin school-wide: same content, button label changes based on `selectedClass`:
+
 - `'all'` → "Export all classes to Excel"
 - specific class → "Export [class] to Excel"
 
@@ -112,6 +114,7 @@ Content area (`px-6 py-6`):
 - Export button (disabled unless both status and date range are filled)
 
 Description:
+
 > "Form and Co-Form teachers can generate travel declaration reports for their form class."
 
 ### Declaration status radio group
@@ -133,6 +136,7 @@ Unselected: border-border bg-background.
 ```
 
 Both are `<Input type="date" />` using the app's Input component. Helper text below:
+
 > "E.g. For the June 2025 School Holidays, enter Start Date (30 May) and End Date (28 June)."
 
 ### Export button state
@@ -158,6 +162,7 @@ Tab and scope are URL-driven via `useNavigate` (same pattern as Posts).
 ## State
 
 All local React state (not persisted to URL):
+
 - `declarationStatus: 'not-declared' | 'declared' | null` — null initially
 - `startDate: string` — empty initially
 - `endDate: string` — empty initially
@@ -175,16 +180,16 @@ No new mock data files needed — exports are simulated with toast.
 
 ## Design tokens / component reuse
 
-| Element | Component |
-|---|---|
-| Tab pill | Inline `SegmentedTab` (copy pattern from `announcements.index.tsx`) |
-| School-wide toggle | Inline button with same className logic as Posts |
-| Banner | Inline div matching Posts banner |
-| Class selector | `ClassSelector` from `@/components/students/class-selector` |
-| Export button | `Button` from `@/components/ui/button` |
-| Date inputs | `Input` from `@/components/ui/input` |
-| Toast | `toast` from `sonner` |
-| Breadcrumbs | `useSetBreadcrumbs` from `@/hooks/use-breadcrumbs` |
+| Element            | Component                                                           |
+| ------------------ | ------------------------------------------------------------------- |
+| Tab pill           | Inline `SegmentedTab` (copy pattern from `announcements.index.tsx`) |
+| School-wide toggle | Inline button with same className logic as Posts                    |
+| Banner             | Inline div matching Posts banner                                    |
+| Class selector     | `ClassSelector` from `@/components/students/class-selector`         |
+| Export button      | `Button` from `@/components/ui/button`                              |
+| Date inputs        | `Input` from `@/components/ui/input`                                |
+| Toast              | `toast` from `sonner`                                               |
+| Breadcrumbs        | `useSetBreadcrumbs` from `@/hooks/use-breadcrumbs`                  |
 
 ## Out of scope
 

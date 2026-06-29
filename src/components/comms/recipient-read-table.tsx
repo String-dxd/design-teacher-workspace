@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react'
 import {
   CheckCircle2,
-  RotateCcw,
   Clock,
   Columns2,
   Download,
+  RotateCcw,
   Search,
   SlidersHorizontal,
   ThumbsDown,
@@ -49,7 +49,7 @@ type ColumnKey = 'indexNo' | 'readAt' | 'readBy' | 'pgStatus'
 const COLUMN_LABELS: Record<ColumnKey, string> = {
   indexNo: 'Index No.',
   readAt: 'Read at',
-  readBy: 'Parent / Guardian',
+  readBy: 'Read by',
   pgStatus: 'PG Status',
 }
 
@@ -94,72 +94,45 @@ function exportCSV(
   rows: Array<PGRecipient>,
   title: string,
   responseType: ResponseType,
-  questions: Array<PGQuestion> = [],
 ) {
-  const statusHeader =
-    responseType === 'acknowledge'
-      ? 'Acknowledged'
-      : responseType === 'yes-no'
-        ? 'Response'
-        : 'Read Status'
-
-  const timestampHeader =
-    responseType === 'acknowledge'
-      ? 'Acknowledged At'
-      : responseType === 'yes-no'
-        ? 'Responded At'
-        : 'Read At'
-
   const headers = [
     'Student',
     'Index No.',
     'Class',
     'PG Status',
-    statusHeader,
-    timestampHeader,
-    // one column per question
-    ...questions.map((q) => q.text),
+    responseType === 'acknowledge'
+      ? 'Acknowledged'
+      : responseType === 'yes-no'
+        ? 'Response'
+        : 'Read Status',
+    'Timestamp',
     'Parent / Guardian',
     'Relationship',
     'Contact',
   ]
-
-  const data = rows.map((r) => {
-    const statusCell =
-      responseType === 'acknowledge'
-        ? r.respondedAt
-          ? 'Acknowledged'
-          : 'Pending'
-        : responseType === 'yes-no'
-          ? r.formResponse
-            ? r.formResponse.charAt(0).toUpperCase() + r.formResponse.slice(1)
-            : 'No Response'
-          : r.readStatus === 'read'
-            ? 'Read'
-            : 'Unread'
-
-    const ts = getTimestamp(r, responseType)
-
-    const questionCells = questions.map((q) => {
-      const applies =
-        !q.showAfter || q.showAfter === 'both' || q.showAfter === r.formResponse
-      return applies ? (r.questionAnswers?.[q.id] ?? '') : ''
-    })
-
-    return [
-      r.studentName,
-      r.indexNo ?? '',
-      r.classLabel,
-      r.pgStatus === 'onboarded' ? 'Onboarded' : 'Not Onboarded',
-      statusCell,
-      ts ? formatTimestamp(ts) : '',
-      ...questionCells,
-      r.parentName,
-      r.parentRelationship ?? '',
-      r.parentContact ?? '',
-    ]
-  })
-
+  const data = rows.map((r) => [
+    r.studentName,
+    r.indexNo ?? '',
+    r.classLabel,
+    r.pgStatus === 'onboarded' ? 'Onboarded' : 'Not Onboarded',
+    responseType === 'acknowledge'
+      ? r.respondedAt
+        ? 'Acknowledged'
+        : 'Pending'
+      : responseType === 'yes-no'
+        ? r.formResponse
+          ? r.formResponse.charAt(0).toUpperCase() + r.formResponse.slice(1)
+          : 'No Response'
+        : r.readStatus === 'read'
+          ? 'Read'
+          : 'Unread',
+    getTimestamp(r, responseType)
+      ? formatTimestamp(getTimestamp(r, responseType)!)
+      : '',
+    r.parentName,
+    r.parentRelationship ?? '',
+    r.parentContact ?? '',
+  ])
   const csv = [headers, ...data]
     .map((row) =>
       row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(','),
@@ -186,8 +159,8 @@ export function RecipientReadTable({
   responseType = 'view-only',
   questions = [],
 }: RecipientReadTableProps) {
-  // Questions only apply to response-required posts (not view-only)
-  const visibleQuestions = responseType !== 'view-only' ? (questions ?? []) : []
+  // Only show questions that are relevant to yes-no type
+  const visibleQuestions = responseType === 'yes-no' ? questions : []
   const [search, setSearch] = useState('')
   const [classFilter, setClassFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
@@ -319,23 +292,25 @@ export function RecipientReadTable({
 
         {/* Filter popover */}
         <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              className={cn(
-                'gap-1.5',
-                activeFilterCount > 0 && 'border-twblue-9 text-twblue-9',
-              )}
-            >
-              <SlidersHorizontal className="h-3.5 w-3.5" />
-              Filter
-              {activeFilterCount > 0 && (
-                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-twblue-9 text-[10px] font-semibold text-white">
-                  {activeFilterCount}
-                </span>
-              )}
-            </Button>
+          <PopoverTrigger
+            render={
+              <Button
+                variant="outline"
+                size="sm"
+                className={cn(
+                  'gap-1.5',
+                  activeFilterCount > 0 && 'border-twblue-9 text-twblue-9',
+                )}
+              />
+            }
+          >
+            <SlidersHorizontal className="h-3.5 w-3.5" />
+            Filter
+            {activeFilterCount > 0 && (
+              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-twblue-9 text-[10px] font-semibold text-white">
+                {activeFilterCount}
+              </span>
+            )}
           </PopoverTrigger>
           <PopoverContent align="end" className="w-52 p-0">
             <div className="px-3 pt-3">
@@ -453,11 +428,11 @@ export function RecipientReadTable({
 
         {/* Column visibility */}
         <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-1.5">
-              <Columns2 className="h-3.5 w-3.5" />
-              Columns
-            </Button>
+          <PopoverTrigger
+            render={<Button variant="outline" size="sm" className="gap-1.5" />}
+          >
+            <Columns2 className="h-3.5 w-3.5" />
+            Columns
           </PopoverTrigger>
           <PopoverContent align="end" className="w-[280px] p-0">
             {/* Quick actions */}
@@ -525,14 +500,7 @@ export function RecipientReadTable({
           variant="outline"
           size="sm"
           className="gap-1.5"
-          onClick={() =>
-            exportCSV(
-              filtered,
-              announcementTitle,
-              responseType,
-              visibleQuestions,
-            )
-          }
+          onClick={() => exportCSV(filtered, announcementTitle, responseType)}
         >
           <Download className="h-3.5 w-3.5" />
           Export
@@ -713,39 +681,24 @@ export function RecipientReadTable({
                     })}
                     {show('readBy') && (
                       <TableCell className="text-sm">
-                        {(() => {
-                          const hasActed =
-                            status !== 'pending' && status !== 'unread'
-                          return (
-                            <div className="flex flex-col gap-0.5">
-                              <span
-                                className={cn(
-                                  'flex items-center gap-1',
-                                  hasActed
-                                    ? 'font-medium text-foreground'
-                                    : 'text-muted-foreground',
-                                )}
-                              >
-                                {hasActed && (
-                                  <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-green-600" />
-                                )}
-                                {r.parentRelationship
-                                  ? `${r.parentRelationship} · ${r.parentName}`
-                                  : r.parentName}
-                              </span>
-                              {r.parentContact && (
-                                <span
-                                  className={cn(
-                                    'text-xs text-muted-foreground',
-                                    hasActed && 'pl-5',
-                                  )}
-                                >
-                                  {r.parentContact}
-                                </span>
-                              )}
-                            </div>
-                          )
-                        })()}
+                        <div className="flex flex-col gap-0.5">
+                          <span
+                            className={
+                              status !== 'pending' && status !== 'unread'
+                                ? 'font-medium text-foreground'
+                                : 'text-muted-foreground'
+                            }
+                          >
+                            {r.parentRelationship
+                              ? `${r.parentRelationship} · ${r.parentName}`
+                              : r.parentName}
+                          </span>
+                          {r.parentContact && (
+                            <span className="text-xs text-muted-foreground">
+                              {r.parentContact}
+                            </span>
+                          )}
+                        </div>
                       </TableCell>
                     )}
                     {show('pgStatus') && (
