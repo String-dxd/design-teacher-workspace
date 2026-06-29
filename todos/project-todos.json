@@ -1,6 +1,6 @@
 {
   "project": "moe-teacher-workspace",
-  "lastUpdated": "2026-01-09T12:00:00.000Z",
+  "lastUpdated": "2026-06-29T12:25:00.000Z",
   "todos": [
     {
       "id": "tw-001",
@@ -253,6 +253,16 @@
       "category": "enhancement",
       "createdAt": "2026-01-09T10:00:00.000Z",
       "completedAt": "2026-01-09T12:00:00.000Z"
+    },
+    {
+      "id": "tw-028",
+      "title": "Make Featured card vertical on mobile",
+      "description": "Update FeaturedAppCard at src/components/app-card.tsx to stack vertically (icon on top, then title, then description) below the sm breakpoint, consistent with the Frequently Used AppCards; original horizontal layout preserved at >=640px.",
+      "status": "completed",
+      "priority": "low",
+      "category": "enhancement",
+      "createdAt": "2026-06-29T12:10:00.000Z",
+      "completedAt": "2026-06-29T12:25:00.000Z"
     }
   ]
 }
