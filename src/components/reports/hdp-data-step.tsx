@@ -44,8 +44,8 @@ const SECTION_DEFS: Array<SectionDef> = [
     key: 'academic',
     label: 'Academic Performance',
     description: 'Subject results, grades, and learning outcomes',
-    icon: <GraduationCap className="size-4 text-violet-600" />,
-    iconBg: 'bg-violet-50',
+    icon: <GraduationCap className="size-4 text-violet-11" />,
+    iconBg: 'bg-violet-3',
   },
   {
     key: 'teacherComments',
