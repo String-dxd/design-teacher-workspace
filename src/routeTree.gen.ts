@@ -13,22 +13,26 @@ import { Route as StudentsRouteImport } from './routes/students'
 import { Route as StudentAnalyticsRouteImport } from './routes/student-analytics'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ReportsRouteImport } from './routes/reports'
+import { Route as MeetingsRouteImport } from './routes/meetings'
 import { Route as InsightBuddyRouteImport } from './routes/insight-buddy'
 import { Route as HolisticReportsRouteImport } from './routes/holistic-reports'
 import { Route as GroupsRouteImport } from './routes/groups'
 import { Route as FormsRouteImport } from './routes/forms'
 import { Route as FlagsRouteImport } from './routes/flags'
 import { Route as DsRouteImport } from './routes/ds'
+import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as AnnouncementsRouteImport } from './routes/announcements'
 import { Route as GuestRouteImport } from './routes/_guest'
 import { Route as SplatRouteImport } from './routes/$'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as StudentsIndexRouteImport } from './routes/students.index'
 import { Route as ReportsIndexRouteImport } from './routes/reports.index'
+import { Route as MeetingsIndexRouteImport } from './routes/meetings.index'
 import { Route as HolisticReportsIndexRouteImport } from './routes/holistic-reports.index'
 import { Route as GroupsIndexRouteImport } from './routes/groups.index'
 import { Route as FormsIndexRouteImport } from './routes/forms.index'
 import { Route as DsIndexRouteImport } from './routes/ds.index'
+import { Route as CalendarIndexRouteImport } from './routes/calendar.index'
 import { Route as AnnouncementsIndexRouteImport } from './routes/announcements.index'
 import { Route as StudentsIdRouteImport } from './routes/students.$id'
 import { Route as HolisticReportsIdRouteImport } from './routes/holistic-reports.$id'
@@ -70,6 +74,11 @@ const ReportsRoute = ReportsRouteImport.update({
   path: '/reports',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MeetingsRoute = MeetingsRouteImport.update({
+  id: '/meetings',
+  path: '/meetings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InsightBuddyRoute = InsightBuddyRouteImport.update({
   id: '/insight-buddy',
   path: '/insight-buddy',
@@ -98,6 +107,11 @@ const FlagsRoute = FlagsRouteImport.update({
 const DsRoute = DsRouteImport.update({
   id: '/ds',
   path: '/ds',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CalendarRoute = CalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AnnouncementsRoute = AnnouncementsRouteImport.update({
@@ -129,6 +143,11 @@ const ReportsIndexRoute = ReportsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => ReportsRoute,
 } as any)
+const MeetingsIndexRoute = MeetingsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => MeetingsRoute,
+} as any)
 const HolisticReportsIndexRoute = HolisticReportsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -148,6 +167,11 @@ const DsIndexRoute = DsIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => DsRoute,
+} as any)
+const CalendarIndexRoute = CalendarIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CalendarRoute,
 } as any)
 const AnnouncementsIndexRoute = AnnouncementsIndexRouteImport.update({
   id: '/',
@@ -254,12 +278,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
   '/announcements': typeof AnnouncementsRouteWithChildren
+  '/calendar': typeof CalendarRouteWithChildren
   '/ds': typeof DsRouteWithChildren
   '/flags': typeof FlagsRoute
   '/forms': typeof FormsRouteWithChildren
   '/groups': typeof GroupsRouteWithChildren
   '/holistic-reports': typeof HolisticReportsRouteWithChildren
   '/insight-buddy': typeof InsightBuddyRoute
+  '/meetings': typeof MeetingsRouteWithChildren
   '/reports': typeof ReportsRouteWithChildren
   '/settings': typeof SettingsRoute
   '/student-analytics': typeof StudentAnalyticsRoute
@@ -282,10 +308,12 @@ export interface FileRoutesByFullPath {
   '/holistic-reports/$id': typeof HolisticReportsIdRoute
   '/students/$id': typeof StudentsIdRoute
   '/announcements/': typeof AnnouncementsIndexRoute
+  '/calendar/': typeof CalendarIndexRoute
   '/ds/': typeof DsIndexRoute
   '/forms/': typeof FormsIndexRoute
   '/groups/': typeof GroupsIndexRoute
   '/holistic-reports/': typeof HolisticReportsIndexRoute
+  '/meetings/': typeof MeetingsIndexRoute
   '/reports/': typeof ReportsIndexRoute
   '/students/': typeof StudentsIndexRoute
   '/report-view/$token': typeof GuestReportViewTokenRoute
@@ -316,10 +344,12 @@ export interface FileRoutesByTo {
   '/holistic-reports/$id': typeof HolisticReportsIdRoute
   '/students/$id': typeof StudentsIdRoute
   '/announcements': typeof AnnouncementsIndexRoute
+  '/calendar': typeof CalendarIndexRoute
   '/ds': typeof DsIndexRoute
   '/forms': typeof FormsIndexRoute
   '/groups': typeof GroupsIndexRoute
   '/holistic-reports': typeof HolisticReportsIndexRoute
+  '/meetings': typeof MeetingsIndexRoute
   '/reports': typeof ReportsIndexRoute
   '/students': typeof StudentsIndexRoute
   '/report-view/$token': typeof GuestReportViewTokenRoute
@@ -331,12 +361,14 @@ export interface FileRoutesById {
   '/$': typeof SplatRoute
   '/_guest': typeof GuestRouteWithChildren
   '/announcements': typeof AnnouncementsRouteWithChildren
+  '/calendar': typeof CalendarRouteWithChildren
   '/ds': typeof DsRouteWithChildren
   '/flags': typeof FlagsRoute
   '/forms': typeof FormsRouteWithChildren
   '/groups': typeof GroupsRouteWithChildren
   '/holistic-reports': typeof HolisticReportsRouteWithChildren
   '/insight-buddy': typeof InsightBuddyRoute
+  '/meetings': typeof MeetingsRouteWithChildren
   '/reports': typeof ReportsRouteWithChildren
   '/settings': typeof SettingsRoute
   '/student-analytics': typeof StudentAnalyticsRoute
@@ -359,10 +391,12 @@ export interface FileRoutesById {
   '/holistic-reports/$id': typeof HolisticReportsIdRoute
   '/students/$id': typeof StudentsIdRoute
   '/announcements/': typeof AnnouncementsIndexRoute
+  '/calendar/': typeof CalendarIndexRoute
   '/ds/': typeof DsIndexRoute
   '/forms/': typeof FormsIndexRoute
   '/groups/': typeof GroupsIndexRoute
   '/holistic-reports/': typeof HolisticReportsIndexRoute
+  '/meetings/': typeof MeetingsIndexRoute
   '/reports/': typeof ReportsIndexRoute
   '/students/': typeof StudentsIndexRoute
   '/_guest/report-view/$token': typeof GuestReportViewTokenRoute
@@ -374,12 +408,14 @@ export interface FileRouteTypes {
     | '/'
     | '/$'
     | '/announcements'
+    | '/calendar'
     | '/ds'
     | '/flags'
     | '/forms'
     | '/groups'
     | '/holistic-reports'
     | '/insight-buddy'
+    | '/meetings'
     | '/reports'
     | '/settings'
     | '/student-analytics'
@@ -402,10 +438,12 @@ export interface FileRouteTypes {
     | '/holistic-reports/$id'
     | '/students/$id'
     | '/announcements/'
+    | '/calendar/'
     | '/ds/'
     | '/forms/'
     | '/groups/'
     | '/holistic-reports/'
+    | '/meetings/'
     | '/reports/'
     | '/students/'
     | '/report-view/$token'
@@ -436,10 +474,12 @@ export interface FileRouteTypes {
     | '/holistic-reports/$id'
     | '/students/$id'
     | '/announcements'
+    | '/calendar'
     | '/ds'
     | '/forms'
     | '/groups'
     | '/holistic-reports'
+    | '/meetings'
     | '/reports'
     | '/students'
     | '/report-view/$token'
@@ -450,12 +490,14 @@ export interface FileRouteTypes {
     | '/$'
     | '/_guest'
     | '/announcements'
+    | '/calendar'
     | '/ds'
     | '/flags'
     | '/forms'
     | '/groups'
     | '/holistic-reports'
     | '/insight-buddy'
+    | '/meetings'
     | '/reports'
     | '/settings'
     | '/student-analytics'
@@ -478,10 +520,12 @@ export interface FileRouteTypes {
     | '/holistic-reports/$id'
     | '/students/$id'
     | '/announcements/'
+    | '/calendar/'
     | '/ds/'
     | '/forms/'
     | '/groups/'
     | '/holistic-reports/'
+    | '/meetings/'
     | '/reports/'
     | '/students/'
     | '/_guest/report-view/$token'
@@ -493,12 +537,14 @@ export interface RootRouteChildren {
   SplatRoute: typeof SplatRoute
   GuestRoute: typeof GuestRouteWithChildren
   AnnouncementsRoute: typeof AnnouncementsRouteWithChildren
+  CalendarRoute: typeof CalendarRouteWithChildren
   DsRoute: typeof DsRouteWithChildren
   FlagsRoute: typeof FlagsRoute
   FormsRoute: typeof FormsRouteWithChildren
   GroupsRoute: typeof GroupsRouteWithChildren
   HolisticReportsRoute: typeof HolisticReportsRouteWithChildren
   InsightBuddyRoute: typeof InsightBuddyRoute
+  MeetingsRoute: typeof MeetingsRouteWithChildren
   ReportsRoute: typeof ReportsRouteWithChildren
   SettingsRoute: typeof SettingsRoute
   StudentAnalyticsRoute: typeof StudentAnalyticsRoute
@@ -534,6 +580,13 @@ declare module '@tanstack/react-router' {
       path: '/reports'
       fullPath: '/reports'
       preLoaderRoute: typeof ReportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/meetings': {
+      id: '/meetings'
+      path: '/meetings'
+      fullPath: '/meetings'
+      preLoaderRoute: typeof MeetingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/insight-buddy': {
@@ -578,6 +631,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/calendar': {
+      id: '/calendar'
+      path: '/calendar'
+      fullPath: '/calendar'
+      preLoaderRoute: typeof CalendarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/announcements': {
       id: '/announcements'
       path: '/announcements'
@@ -620,6 +680,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReportsIndexRouteImport
       parentRoute: typeof ReportsRoute
     }
+    '/meetings/': {
+      id: '/meetings/'
+      path: '/'
+      fullPath: '/meetings/'
+      preLoaderRoute: typeof MeetingsIndexRouteImport
+      parentRoute: typeof MeetingsRoute
+    }
     '/holistic-reports/': {
       id: '/holistic-reports/'
       path: '/'
@@ -647,6 +714,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/ds/'
       preLoaderRoute: typeof DsIndexRouteImport
       parentRoute: typeof DsRoute
+    }
+    '/calendar/': {
+      id: '/calendar/'
+      path: '/'
+      fullPath: '/calendar/'
+      preLoaderRoute: typeof CalendarIndexRouteImport
+      parentRoute: typeof CalendarRoute
     }
     '/announcements/': {
       id: '/announcements/'
@@ -823,6 +897,18 @@ const AnnouncementsRouteWithChildren = AnnouncementsRoute._addFileChildren(
   AnnouncementsRouteChildren,
 )
 
+interface CalendarRouteChildren {
+  CalendarIndexRoute: typeof CalendarIndexRoute
+}
+
+const CalendarRouteChildren: CalendarRouteChildren = {
+  CalendarIndexRoute: CalendarIndexRoute,
+}
+
+const CalendarRouteWithChildren = CalendarRoute._addFileChildren(
+  CalendarRouteChildren,
+)
+
 interface DsRouteChildren {
   DsFlowComponentsRoute: typeof DsFlowComponentsRoute
   DsFlowTokensRoute: typeof DsFlowTokensRoute
@@ -888,6 +974,18 @@ const HolisticReportsRouteWithChildren = HolisticReportsRoute._addFileChildren(
   HolisticReportsRouteChildren,
 )
 
+interface MeetingsRouteChildren {
+  MeetingsIndexRoute: typeof MeetingsIndexRoute
+}
+
+const MeetingsRouteChildren: MeetingsRouteChildren = {
+  MeetingsIndexRoute: MeetingsIndexRoute,
+}
+
+const MeetingsRouteWithChildren = MeetingsRoute._addFileChildren(
+  MeetingsRouteChildren,
+)
+
 interface ReportsRouteChildren {
   ReportsIndexRoute: typeof ReportsIndexRoute
 }
@@ -918,12 +1016,14 @@ const rootRouteChildren: RootRouteChildren = {
   SplatRoute: SplatRoute,
   GuestRoute: GuestRouteWithChildren,
   AnnouncementsRoute: AnnouncementsRouteWithChildren,
+  CalendarRoute: CalendarRouteWithChildren,
   DsRoute: DsRouteWithChildren,
   FlagsRoute: FlagsRoute,
   FormsRoute: FormsRouteWithChildren,
   GroupsRoute: GroupsRouteWithChildren,
   HolisticReportsRoute: HolisticReportsRouteWithChildren,
   InsightBuddyRoute: InsightBuddyRoute,
+  MeetingsRoute: MeetingsRouteWithChildren,
   ReportsRoute: ReportsRouteWithChildren,
   SettingsRoute: SettingsRoute,
   StudentAnalyticsRoute: StudentAnalyticsRoute,

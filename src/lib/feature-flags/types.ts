@@ -8,6 +8,8 @@ export type FeatureFlagKey =
   | 'lta-intervention'
   | 'student-groups'
   | 'reports'
+  | 'calendar'
+  | 'meetings'
   | 'import-data'
 
 export type FeatureFlags = {

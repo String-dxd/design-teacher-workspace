@@ -4,7 +4,9 @@ import {
   ArrowUpRight,
   BarChart3,
   Bot,
+  CalendarDays,
   CircleHelp,
+  CalendarClock,
   FileText,
   Home,
   Layers,
@@ -118,6 +120,20 @@ const manageItems: Array<MenuItem> = [
     stage: 'Concept',
     featureFlag: 'reports',
   },
+  {
+    title: 'Calendar',
+    url: '/calendar',
+    icon: CalendarDays,
+    stage: 'Concept',
+    featureFlag: 'calendar',
+  },
+  {
+    title: 'Meetings',
+    url: '/meetings',
+    icon: CalendarClock,
+    stage: 'Concept',
+    featureFlag: 'meetings',
+  },
 ]
 
 const parentsCommItems: Array<MenuItem> = [
@@ -212,6 +228,8 @@ export function AppSidebar() {
   const studentAnalyticsEnabled = useFeatureFlag('student-analytics')
   const studentGroupsEnabled = useFeatureFlag('student-groups')
   const reportsEnabled = useFeatureFlag('reports')
+  const calendarEnabled = useFeatureFlag('calendar')
+  const meetingsEnabled = useFeatureFlag('meetings')
 
   React.useEffect(() => {
     if (localStorage.getItem(COACHMARK_KEY)) return
@@ -250,6 +268,8 @@ export function AppSidebar() {
       if (item.featureFlag === 'parents-gateway') return parentsGatewayEnabled
       if (item.featureFlag === 'student-groups') return studentGroupsEnabled
       if (item.featureFlag === 'reports') return reportsEnabled
+      if (item.featureFlag === 'calendar') return calendarEnabled
+      if (item.featureFlag === 'meetings') return meetingsEnabled
       return true
     })
 
