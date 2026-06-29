@@ -22,7 +22,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { useIsMobile } from '@/hooks/use-mobile'
+import { useIsPhone, useIsTablet } from '@/hooks/use-mobile'
 
 const SIDEBAR_STORAGE_KEY = 'sidebar_state'
 const SIDEBAR_WIDTH = '16rem'
@@ -64,8 +64,13 @@ function SidebarProvider({
   open?: boolean
   onOpenChange?: (open: boolean) => void
 }) {
-  const isMobile = useIsMobile()
+  // Off-canvas drawer on phones only; tablets get the collapsed icon rail.
+  const isMobile = useIsPhone()
+  const isTablet = useIsTablet()
   const [openMobile, setOpenMobile] = React.useState(false)
+  // Tablet shows the icon rail by default but can be expanded on demand,
+  // kept separate from the persisted desktop open/closed preference.
+  const [tabletExpanded, setTabletExpanded] = React.useState(false)
 
   // This is the internal state of the sidebar.
   // We use openProp and setOpenProp for control from outside the component.
@@ -92,8 +97,10 @@ function SidebarProvider({
 
   // Helper to toggle the sidebar.
   const toggleSidebar = React.useCallback(() => {
-    return isMobile ? setOpenMobile((prev) => !prev) : setOpen((prev) => !prev)
-  }, [isMobile, setOpen, setOpenMobile])
+    if (isMobile) return setOpenMobile((prev) => !prev)
+    if (isTablet) return setTabletExpanded((prev) => !prev)
+    return setOpen((prev) => !prev)
+  }, [isMobile, isTablet, setOpen, setOpenMobile])
 
   // Sync sidebar state from localStorage after hydration (SSR returns defaultOpen,
   // and React hydration skips re-running useState initializers).
@@ -124,19 +131,30 @@ function SidebarProvider({
 
   // We add a state so that we can do data-state="expanded" or "collapsed".
   // This makes it easier to style the sidebar with Tailwind classes.
-  const state = open ? 'expanded' : 'collapsed'
+  // Tablet uses its own expand state (defaults to the collapsed icon rail);
+  // desktop uses the persisted open/closed preference.
+  const effectiveOpen = isTablet ? tabletExpanded : open
+  const state = effectiveOpen ? 'expanded' : 'collapsed'
 
   const contextValue = React.useMemo<SidebarContextProps>(
     () => ({
       state,
-      open,
+      open: effectiveOpen,
       setOpen,
       isMobile,
       openMobile,
       setOpenMobile,
       toggleSidebar,
     }),
-    [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar],
+    [
+      state,
+      effectiveOpen,
+      setOpen,
+      isMobile,
+      openMobile,
+      setOpenMobile,
+      toggleSidebar,
+    ],
   )
 
   return (
