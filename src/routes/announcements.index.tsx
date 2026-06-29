@@ -6,6 +6,7 @@ import {
   Lock,
   MoreHorizontal,
   Paperclip,
+  School,
   Search,
   Trash2,
   Users,
@@ -16,7 +17,10 @@ import { clearDraft, loadDraft } from '@/lib/draft-storage'
 import type { FormStatus } from '@/types/form'
 import type { AnnouncementFilters } from '@/components/comms/announcement-filter-bar'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
-import { mockPGAnnouncements } from '@/data/mock-pg-announcements'
+import {
+  mockPGAnnouncements,
+  mockSchoolWidePosts,
+} from '@/data/mock-pg-announcements'
 import { mockForms } from '@/data/mock-forms'
 import { StatusBadge } from '@/components/comms/status-badge'
 import { ReadRate } from '@/components/comms/read-rate'
@@ -55,9 +59,12 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useFeatureFlag } from '@/hooks/use-feature-flag'
 
+type ViewScope = 'my' | 'school'
+
 export const Route = createFileRoute('/announcements/')({
   validateSearch: (search) => ({
     tab: (search.tab as PostTab) ?? 'with-responses',
+    scope: (search.scope as ViewScope) ?? 'my',
   }),
   component: ParentsGatewayPage,
 })
@@ -137,12 +144,17 @@ function getFormStatusBadge(status: FormStatus) {
 
 type PostTab = 'view-only' | 'with-responses' | 'custom-forms'
 
+// Prototype: hardcoded as admin. In production this comes from the session.
+const IS_ADMIN = true
+
 function ParentsGatewayPage() {
-  const { tab } = Route.useSearch()
+  const { tab, scope } = Route.useSearch()
+  const isSchoolWide = IS_ADMIN && scope === 'school'
   const [searchQuery, setSearchQuery] = useState('')
   const [filters, setFilters] = useState<AnnouncementFilters>(
     EMPTY_ANNOUNCEMENT_FILTERS,
   )
+  const [schoolTeacherFilter, setSchoolTeacherFilter] = useState<string>('all')
   const formsEnabled = useFeatureFlag('forms')
 
   // Multi-select + delete state
@@ -267,6 +279,43 @@ function ParentsGatewayPage() {
       )
   }, [searchQuery])
 
+  // School-wide: all posted posts (my own + other teachers'), sorted by postedAt desc
+  const allSchoolPosts = useMemo(() => {
+    const myPosted = mockPGAnnouncements.filter((a) => a.status === 'posted')
+    return [...myPosted, ...mockSchoolWidePosts].sort((a, b) => {
+      const dateA = a.postedAt ?? a.createdAt ?? ''
+      const dateB = b.postedAt ?? b.createdAt ?? ''
+      return new Date(dateB).getTime() - new Date(dateA).getTime()
+    })
+  }, [refreshKey])
+
+  const schoolTeachers = useMemo(() => {
+    const names = new Set<string>()
+    allSchoolPosts.forEach((a) => {
+      names.add(a.ownership === 'mine' ? 'Me (Daniel Tan)' : (a.postedBy ?? 'Unknown'))
+    })
+    return Array.from(names).sort()
+  }, [allSchoolPosts])
+
+  const schoolFiltered = useMemo(() => {
+    return allSchoolPosts.filter((a) => {
+      if (
+        schoolTeacherFilter !== 'all' &&
+        (a.ownership === 'mine' ? 'Me (Daniel Tan)' : (a.postedBy ?? 'Unknown')) !==
+          schoolTeacherFilter
+      )
+        return false
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase()
+        return (
+          a.title.toLowerCase().includes(q) ||
+          a.description.toLowerCase().includes(q)
+        )
+      }
+      return true
+    })
+  }, [allSchoolPosts, schoolTeacherFilter, searchQuery])
+
   const tabs: Array<{ value: PostTab; label: string; hidden?: boolean }> = [
     { value: 'with-responses', label: 'With responses' },
     { value: 'view-only', label: 'Read only' },
@@ -336,48 +385,239 @@ function ParentsGatewayPage() {
 
   return (
     <div className="flex flex-col">
-      {/* Segmented tabs, Search & Filter */}
-      <div className="mt-4 space-y-4">
-        <div className="flex items-center justify-between gap-4 px-6 pb-0">
-          <div className="flex shrink-0 rounded-full bg-muted p-1 gap-1">
-            {visibleTabs.map((t) => (
+      {/* Scope toggle (admin only) + type tabs + search */}
+      <div className="mt-4 space-y-3">
+        {/* Scope toggle row */}
+        {IS_ADMIN && (
+          <div className="flex items-center gap-3 px-6">
+            <div className="flex shrink-0 rounded-full bg-muted p-1 gap-1">
               <SegmentedTab
-                key={t.value}
-                active={tab === t.value}
+                active={!isSchoolWide}
                 onClick={() =>
                   navigate({
                     to: '/announcements',
-                    search: { tab: t.value },
+                    search: { tab, scope: 'my' },
                     replace: true,
                   })
                 }
               >
-                {t.label}
+                My Posts
               </SegmentedTab>
-            ))}
+              <SegmentedTab
+                active={isSchoolWide}
+                onClick={() =>
+                  navigate({
+                    to: '/announcements',
+                    search: { tab, scope: 'school' },
+                    replace: true,
+                  })
+                }
+              >
+                <School className="mr-1.5 inline h-3.5 w-3.5 opacity-70" />
+                School-wide
+              </SegmentedTab>
+            </div>
+            {isSchoolWide && (
+              <span className="text-xs text-muted-foreground">
+                Viewing all sent posts across the school
+              </span>
+            )}
           </div>
+        )}
+
+        {/* Type tabs + search/filter row */}
+        <div className="flex items-center justify-between gap-4 px-6 pb-0">
+          {isSchoolWide ? (
+            /* School-wide: teacher filter */
+            <div className="flex shrink-0 items-center gap-2">
+              <span className="text-sm text-muted-foreground">Teacher</span>
+              <select
+                value={schoolTeacherFilter}
+                onChange={(e) => setSchoolTeacherFilter(e.target.value)}
+                className="rounded-lg border border-input bg-background px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-ring"
+              >
+                <option value="all">All teachers</option>
+                {schoolTeachers.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : (
+            <div className="flex shrink-0 rounded-full bg-muted p-1 gap-1">
+              {visibleTabs.map((t) => (
+                <SegmentedTab
+                  key={t.value}
+                  active={tab === t.value}
+                  onClick={() =>
+                    navigate({
+                      to: '/announcements',
+                      search: { tab: t.value, scope: 'my' },
+                      replace: true,
+                    })
+                  }
+                >
+                  {t.label}
+                </SegmentedTab>
+              ))}
+            </div>
+          )}
           <div className="flex items-center gap-2">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 type="text"
-                placeholder={
-                  tab === 'custom-forms' ? 'Search forms...' : 'Search posts...'
-                }
+                placeholder="Search posts..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-[240px] pl-9"
-                aria-label={
-                  tab === 'custom-forms' ? 'Search forms' : 'Search posts'
-                }
+                aria-label="Search posts"
               />
             </div>
-            <AnnouncementFilterBar filters={filters} onChange={setFilters} />
+            {!isSchoolWide && (
+              <AnnouncementFilterBar filters={filters} onChange={setFilters} />
+            )}
           </div>
         </div>
 
         {/* Table */}
-        {tab === 'custom-forms' ? (
+        {isSchoolWide ? (
+          /* ── School-wide table ── */
+          <div className="max-w-full overflow-x-auto bg-background">
+            {schoolFiltered.length === 0 ? (
+              <div className="flex flex-col items-center py-16">
+                <EmptyState
+                  title="No posts found"
+                  description="Try adjusting your search or teacher filter."
+                />
+              </div>
+            ) : (
+              <Table tableClassName="table-fixed w-full">
+                <TableHeader className="border-b bg-background">
+                  <TableRow className="border-0 hover:bg-transparent">
+                    <TableHead className="w-[420px] pl-6">Title</TableHead>
+                    <TableHead className="w-[110px]">Date sent</TableHead>
+                    <TableHead className="w-[160px]">Teacher</TableHead>
+                    <TableHead className="w-[150px]">Read</TableHead>
+                    <TableHead className="w-[80px] pr-4 text-right">
+                      Actions
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {schoolFiltered.map((a) => {
+                    const totalCount = a.recipients.length
+                    const readCount = a.recipients.filter(
+                      (r) => r.readStatus === 'read',
+                    ).length
+                    const responseCount = a.recipients.filter(
+                      (r) => r.respondedAt != null,
+                    ).length
+                    const hasResponseType =
+                      a.responseType === 'acknowledge' ||
+                      a.responseType === 'yes-no'
+                    const teacherLabel =
+                      a.ownership === 'mine'
+                        ? 'Me (Daniel Tan)'
+                        : (a.postedBy ?? 'Unknown')
+                    const isOwnPost = a.ownership === 'mine'
+                    return (
+                      <TableRow
+                        key={a.id}
+                        className="cursor-pointer"
+                        onClick={() =>
+                          navigate({
+                            to: '/announcements/$id',
+                            params: { id: a.id },
+                          })
+                        }
+                      >
+                        <TableCell className="overflow-hidden whitespace-normal pl-6">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className="truncate font-medium">
+                                {a.title}
+                              </span>
+                              {(a.attachments?.length ?? 0) > 0 && (
+                                <Paperclip className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                              )}
+                              {a.responseType === 'acknowledge' && (
+                                <span className="shrink-0 rounded-full bg-blue-50 px-1.5 py-0.5 text-[10px] font-medium text-blue-600 ring-1 ring-inset ring-blue-200">
+                                  Acknowledge
+                                </span>
+                              )}
+                              {a.responseType === 'yes-no' && (
+                                <span className="shrink-0 rounded-full bg-violet-50 px-1.5 py-0.5 text-[10px] font-medium text-violet-600 ring-1 ring-inset ring-violet-200">
+                                  Yes/No
+                                </span>
+                              )}
+                            </div>
+                            <div className="mt-0.5 line-clamp-1 text-sm text-muted-foreground">
+                              {a.description.replace(/<[^>]*>/g, '')}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {formatDate(a.postedAt)}
+                        </TableCell>
+                        <TableCell>
+                          <span
+                            className={cn(
+                              'text-sm',
+                              isOwnPost
+                                ? 'font-medium text-foreground'
+                                : 'text-muted-foreground',
+                            )}
+                          >
+                            {teacherLabel}
+                          </span>
+                        </TableCell>
+                        <TableCell className="pr-6">
+                          <ReadRate
+                            readCount={
+                              hasResponseType ? responseCount : readCount
+                            }
+                            totalCount={totalCount}
+                          />
+                        </TableCell>
+                        <TableCell
+                          className="w-[80px] pr-4 text-right"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                aria-label="More actions"
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  navigate({
+                                    to: '/announcements/new',
+                                    search: { edit: a.id },
+                                  })
+                                }
+                              >
+                                Edit post
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+            )}
+          </div>
+        ) : tab === 'custom-forms' ? (
           <div className="max-w-full overflow-x-auto bg-background">
             {filteredForms.length === 0 ? (
               <div className="flex flex-col items-center py-16">

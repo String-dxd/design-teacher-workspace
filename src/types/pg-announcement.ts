@@ -1,6 +1,6 @@
 export type PGStatus = 'draft' | 'posted' | 'scheduled'
 export type ReadStatus = 'read' | 'unread'
-export type PGOwnership = 'mine' | 'shared'
+export type PGOwnership = 'mine' | 'shared' | 'other'
 export type PGRole = 'editor' | 'viewer'
 
 export interface StaffInChargeMember {
@@ -69,4 +69,5 @@ export interface PGAnnouncement {
   dueDate?: string // ISO date string for acknowledge/yes-no
   questions?: Array<PGQuestion>
   linkedFormId?: string // links to a standalone form from the Forms section
+  postedBy?: string // display name of the teacher who posted (used in school-wide view)
 }
