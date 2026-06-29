@@ -6,7 +6,6 @@ import {
   Lock,
   MoreHorizontal,
   Paperclip,
-  School,
   Search,
   Trash2,
   Users,
@@ -59,12 +58,9 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useFeatureFlag } from '@/hooks/use-feature-flag'
 
-type ViewScope = 'my' | 'school'
-
 export const Route = createFileRoute('/announcements/')({
   validateSearch: (search) => ({
     tab: (search.tab as PostTab) ?? 'with-responses',
-    scope: (search.scope as ViewScope) ?? 'my',
   }),
   component: ParentsGatewayPage,
 })
@@ -142,14 +138,14 @@ function getFormStatusBadge(status: FormStatus) {
   return <Badge className={className}>{label}</Badge>
 }
 
-type PostTab = 'view-only' | 'with-responses' | 'custom-forms'
+type PostTab = 'view-only' | 'with-responses' | 'custom-forms' | 'school-wide'
 
 // Prototype: hardcoded as admin. In production this comes from the session.
 const IS_ADMIN = true
 
 function ParentsGatewayPage() {
-  const { tab, scope } = Route.useSearch()
-  const isSchoolWide = IS_ADMIN && scope === 'school'
+  const { tab } = Route.useSearch()
+  const isSchoolWide = IS_ADMIN && tab === 'school-wide'
   const [searchQuery, setSearchQuery] = useState('')
   const [filters, setFilters] = useState<AnnouncementFilters>(
     EMPTY_ANNOUNCEMENT_FILTERS,
@@ -320,6 +316,7 @@ function ParentsGatewayPage() {
     { value: 'with-responses', label: 'With responses' },
     { value: 'view-only', label: 'Read only' },
     { value: 'custom-forms', label: 'Custom forms', hidden: !formsEnabled },
+    { value: 'school-wide', label: 'School-wide', hidden: !IS_ADMIN },
   ]
   const visibleTabs = tabs.filter((t) => !t.hidden)
 
@@ -385,52 +382,44 @@ function ParentsGatewayPage() {
 
   return (
     <div className="flex flex-col">
-      {/* Scope toggle (admin only) + type tabs + search */}
-      <div className="mt-4 space-y-3">
-        {/* Scope toggle row */}
-        {IS_ADMIN && (
-          <div className="flex items-center gap-3 px-6">
-            <div className="flex shrink-0 rounded-full bg-muted p-1 gap-1">
-              <SegmentedTab
-                active={!isSchoolWide}
-                onClick={() =>
-                  navigate({
-                    to: '/announcements',
-                    search: { tab, scope: 'my' },
-                    replace: true,
-                  })
-                }
-              >
-                My Posts
-              </SegmentedTab>
-              <SegmentedTab
-                active={isSchoolWide}
-                onClick={() =>
-                  navigate({
-                    to: '/announcements',
-                    search: { tab, scope: 'school' },
-                    replace: true,
-                  })
-                }
-              >
-                <School className="mr-1.5 inline h-3.5 w-3.5 opacity-70" />
-                School-wide
-              </SegmentedTab>
-            </div>
-            {isSchoolWide && (
-              <span className="text-xs text-muted-foreground">
-                Viewing all sent posts across the school
-              </span>
-            )}
-          </div>
-        )}
-
-        {/* Type tabs + search/filter row */}
+      {/* Tabs + search/filter — single row */}
+      <div className="mt-4 space-y-4">
         <div className="flex items-center justify-between gap-4 px-6 pb-0">
-          {isSchoolWide ? (
-            /* School-wide: teacher filter */
-            <div className="flex shrink-0 items-center gap-2">
-              <span className="text-sm text-muted-foreground">Teacher</span>
+          <div className="flex shrink-0 rounded-full bg-muted p-1 gap-1">
+            {visibleTabs.flatMap((t) => {
+              const tab_el = (
+                <SegmentedTab
+                  key={t.value}
+                  active={tab === t.value}
+                  onClick={() =>
+                    navigate({
+                      to: '/announcements',
+                      search: { tab: t.value },
+                      replace: true,
+                    })
+                  }
+                >
+                  {t.label}
+                </SegmentedTab>
+              )
+              return t.value === 'school-wide'
+                ? [<div key="school-sep" className="my-1 w-px bg-border/60" />, tab_el]
+                : [tab_el]
+            })}
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder={tab === 'custom-forms' ? 'Search forms...' : 'Search posts...'}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-[240px] pl-9"
+                aria-label={tab === 'custom-forms' ? 'Search forms' : 'Search posts'}
+              />
+            </div>
+            {isSchoolWide ? (
               <select
                 value={schoolTeacherFilter}
                 onChange={(e) => setSchoolTeacherFilter(e.target.value)}
@@ -443,39 +432,7 @@ function ParentsGatewayPage() {
                   </option>
                 ))}
               </select>
-            </div>
-          ) : (
-            <div className="flex shrink-0 rounded-full bg-muted p-1 gap-1">
-              {visibleTabs.map((t) => (
-                <SegmentedTab
-                  key={t.value}
-                  active={tab === t.value}
-                  onClick={() =>
-                    navigate({
-                      to: '/announcements',
-                      search: { tab: t.value, scope: 'my' },
-                      replace: true,
-                    })
-                  }
-                >
-                  {t.label}
-                </SegmentedTab>
-              ))}
-            </div>
-          )}
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                type="text"
-                placeholder="Search posts..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-[240px] pl-9"
-                aria-label="Search posts"
-              />
-            </div>
-            {!isSchoolWide && (
+            ) : (
               <AnnouncementFilterBar filters={filters} onChange={setFilters} />
             )}
           </div>
