@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
-  Link,
   createFileRoute,
   useNavigate,
   useSearch,
 } from '@tanstack/react-router'
-import { ArrowLeft, ChevronDown, ChevronRight, Search, X } from 'lucide-react'
+import { ChevronDown, ChevronRight, Search, X } from 'lucide-react'
 
 import { toast } from 'sonner'
 import type { StudentGroup } from '@/types/student-group'
@@ -19,6 +18,7 @@ import {
   LEVEL_GROUPS,
   TEACHING_GROUPS,
 } from '@/data/mock-student-groups'
+import { PageHeader } from '@/components/page-header'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -353,40 +353,23 @@ function GroupsNew() {
   return (
     <div className="flex min-h-screen flex-col bg-muted/30">
       {/* ── Sticky header (mirrors announcements.new.tsx) ────────────────────── */}
-      <div className="sticky top-0 z-10 bg-white">
-        <div className="flex items-center gap-3 border-b px-6 py-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="shrink-0"
-            render={<Link to="/groups" />}
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <h1 className="flex-1 text-base font-semibold">
-            {isEditing ? editGroup.name : 'New Group'}
-          </h1>
-          <Button
-            variant="ghost"
-            size="sm"
-            render={
-              isEditing ? (
-                <Link
-                  to="/groups/$groupId"
-                  params={{ groupId: editGroup.id }}
-                />
-              ) : (
-                <Link to="/groups" />
-              )
-            }
-          >
-            Cancel
-          </Button>
+      <PageHeader
+        className="sticky top-0 z-10"
+        title={isEditing ? editGroup.name : 'New Group'}
+        onClose={() =>
+          isEditing
+            ? navigate({
+                to: '/groups/$groupId',
+                params: { groupId: editGroup.id },
+              })
+            : navigate({ to: '/groups' })
+        }
+        actions={
           <Button size="sm" disabled={!canSave} onClick={handleSave}>
             {isEditing ? 'Update Group' : 'Save Group'}
           </Button>
-        </div>
-      </div>
+        }
+      />
 
       {/* ── Body: two-column grid (mirrors announcements preview layout) ───────── */}
       <div className="mx-auto w-full px-6 py-8 max-w-5xl">
