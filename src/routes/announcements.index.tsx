@@ -151,6 +151,7 @@ function ParentsGatewayPage() {
     EMPTY_ANNOUNCEMENT_FILTERS,
   )
   const [schoolTeacherFilter, setSchoolTeacherFilter] = useState<string>('all')
+  const [schoolTypeFilter, setSchoolTypeFilter] = useState<'all' | 'with-responses' | 'view-only'>('all')
   const formsEnabled = useFeatureFlag('forms')
 
   // Multi-select + delete state
@@ -301,6 +302,11 @@ function ParentsGatewayPage() {
           schoolTeacherFilter
       )
         return false
+      if (schoolTypeFilter === 'with-responses') {
+        if (a.responseType !== 'acknowledge' && a.responseType !== 'yes-no') return false
+      } else if (schoolTypeFilter === 'view-only') {
+        if (a.responseType === 'acknowledge' || a.responseType === 'yes-no') return false
+      }
       if (searchQuery) {
         const q = searchQuery.toLowerCase()
         return (
@@ -310,7 +316,7 @@ function ParentsGatewayPage() {
       }
       return true
     })
-  }, [allSchoolPosts, schoolTeacherFilter, searchQuery])
+  }, [allSchoolPosts, schoolTeacherFilter, schoolTypeFilter, searchQuery])
 
   const tabs: Array<{ value: PostTab; label: string; hidden?: boolean }> = [
     { value: 'with-responses', label: 'With responses' },
@@ -420,18 +426,37 @@ function ParentsGatewayPage() {
               />
             </div>
             {isSchoolWide ? (
-              <select
-                value={schoolTeacherFilter}
-                onChange={(e) => setSchoolTeacherFilter(e.target.value)}
-                className="rounded-lg border border-input bg-background px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-ring"
-              >
-                <option value="all">All teachers</option>
-                {schoolTeachers.map((name) => (
-                  <option key={name} value={name}>
-                    {name}
-                  </option>
-                ))}
-              </select>
+              <>
+                <div className="flex shrink-0 rounded-md border border-input bg-muted/40 p-0.5 gap-0.5">
+                  {(['all', 'with-responses', 'view-only'] as const).map((v) => (
+                    <button
+                      key={v}
+                      type="button"
+                      onClick={() => setSchoolTypeFilter(v)}
+                      className={cn(
+                        'rounded px-2.5 py-1 text-xs font-medium transition-colors',
+                        schoolTypeFilter === v
+                          ? 'bg-background text-foreground shadow-sm'
+                          : 'text-muted-foreground hover:text-foreground',
+                      )}
+                    >
+                      {v === 'all' ? 'All' : v === 'with-responses' ? 'With responses' : 'Read only'}
+                    </button>
+                  ))}
+                </div>
+                <select
+                  value={schoolTeacherFilter}
+                  onChange={(e) => setSchoolTeacherFilter(e.target.value)}
+                  className="rounded-lg border border-input bg-background px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option value="all">All teachers</option>
+                  {schoolTeachers.map((name) => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+              </>
             ) : (
               <AnnouncementFilterBar filters={filters} onChange={setFilters} />
             )}
@@ -564,6 +589,22 @@ function ParentsGatewayPage() {
                               >
                                 Edit post
                               </DropdownMenuItem>
+                              {isOwnPost && (
+                                <>
+                                  <DropdownMenuItem>
+                                    <Copy className="mr-2 h-4 w-4" />
+                                    Duplicate
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    className="text-destructive focus:text-destructive"
+                                    onClick={() => openDeleteDialog(a.id)}
+                                  >
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    Delete
+                                  </DropdownMenuItem>
+                                </>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>
