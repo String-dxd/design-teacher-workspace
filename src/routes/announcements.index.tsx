@@ -61,6 +61,7 @@ import { useFeatureFlag } from '@/hooks/use-feature-flag'
 export const Route = createFileRoute('/announcements/')({
   validateSearch: (search) => ({
     tab: (search.tab as PostTab) ?? 'with-responses',
+    scope: (search.scope as 'my' | 'school') ?? 'my',
   }),
   component: ParentsGatewayPage,
 })
@@ -138,20 +139,18 @@ function getFormStatusBadge(status: FormStatus) {
   return <Badge className={className}>{label}</Badge>
 }
 
-type PostTab = 'view-only' | 'with-responses' | 'custom-forms' | 'school-wide'
+type PostTab = 'view-only' | 'with-responses' | 'custom-forms'
 
 // Prototype: hardcoded as admin. In production this comes from the session.
 const IS_ADMIN = true
 
 function ParentsGatewayPage() {
-  const { tab } = Route.useSearch()
-  const isSchoolWide = IS_ADMIN && tab === 'school-wide'
+  const { tab, scope } = Route.useSearch()
+  const isSchoolWide = IS_ADMIN && scope === 'school'
   const [searchQuery, setSearchQuery] = useState('')
   const [filters, setFilters] = useState<AnnouncementFilters>(
     EMPTY_ANNOUNCEMENT_FILTERS,
   )
-  const [schoolTypeFilter, setSchoolTypeFilter] = useState<'all' | 'with-responses' | 'view-only'>('all')
-  const [schoolOwnerFilter, setSchoolOwnerFilter] = useState<'all' | 'mine' | 'others'>('all')
   const formsEnabled = useFeatureFlag('forms')
 
   // Multi-select + delete state
@@ -288,13 +287,6 @@ function ParentsGatewayPage() {
 
   const schoolFiltered = useMemo(() => {
     return allSchoolPosts.filter((a) => {
-      if (schoolOwnerFilter === 'mine' && a.ownership !== 'mine') return false
-      if (schoolOwnerFilter === 'others' && a.ownership === 'mine') return false
-      if (schoolTypeFilter === 'with-responses') {
-        if (a.responseType !== 'acknowledge' && a.responseType !== 'yes-no') return false
-      } else if (schoolTypeFilter === 'view-only') {
-        if (a.responseType === 'acknowledge' || a.responseType === 'yes-no') return false
-      }
       if (searchQuery) {
         const q = searchQuery.toLowerCase()
         return (
@@ -304,13 +296,12 @@ function ParentsGatewayPage() {
       }
       return true
     })
-  }, [allSchoolPosts, schoolOwnerFilter, schoolTypeFilter, searchQuery])
+  }, [allSchoolPosts, searchQuery])
 
   const tabs: Array<{ value: PostTab; label: string; hidden?: boolean }> = [
     { value: 'with-responses', label: 'With responses' },
     { value: 'view-only', label: 'Read only' },
     { value: 'custom-forms', label: 'Custom forms', hidden: !formsEnabled },
-    { value: 'school-wide', label: 'School-wide', hidden: !IS_ADMIN },
   ]
   const visibleTabs = tabs.filter((t) => !t.hidden)
 
@@ -380,26 +371,21 @@ function ParentsGatewayPage() {
       <div className="mt-4 space-y-4">
         <div className="flex items-center justify-between gap-4 px-6 pb-0">
           <div className="flex shrink-0 rounded-full bg-muted p-1 gap-1">
-            {visibleTabs.flatMap((t) => {
-              const tab_el = (
-                <SegmentedTab
-                  key={t.value}
-                  active={tab === t.value}
-                  onClick={() =>
-                    navigate({
-                      to: '/announcements',
-                      search: { tab: t.value },
-                      replace: true,
-                    })
-                  }
-                >
-                  {t.label}
-                </SegmentedTab>
-              )
-              return t.value === 'school-wide'
-                ? [<div key="school-sep" className="my-1 w-px bg-border/60" />, tab_el]
-                : [tab_el]
-            })}
+            {visibleTabs.map((t) => (
+              <SegmentedTab
+                key={t.value}
+                active={tab === t.value}
+                onClick={() =>
+                  navigate({
+                    to: '/announcements',
+                    search: (prev) => ({ ...prev, tab: t.value }),
+                    replace: true,
+                  })
+                }
+              >
+                {t.label}
+              </SegmentedTab>
+            ))}
           </div>
           <div className="flex items-center gap-2">
             <div className="relative">
@@ -413,59 +399,7 @@ function ParentsGatewayPage() {
                 aria-label={tab === 'custom-forms' ? 'Search forms' : 'Search posts'}
               />
             </div>
-            {isSchoolWide ? (
-              <>
-                <div className="flex shrink-0 rounded-md border border-input bg-muted/40 p-0.5 gap-0.5">
-                  {(
-                    [
-                      { value: 'all', label: 'All types' },
-                      { value: 'with-responses', label: 'With responses' },
-                      { value: 'view-only', label: 'Read only' },
-                    ] as const
-                  ).map(({ value, label }) => (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() => setSchoolTypeFilter(value)}
-                      className={cn(
-                        'rounded px-2.5 py-1 text-xs font-medium transition-colors',
-                        schoolTypeFilter === value
-                          ? 'bg-background text-foreground shadow-sm'
-                          : 'text-muted-foreground hover:text-foreground',
-                      )}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-                <div className="flex shrink-0 rounded-md border border-input bg-muted/40 p-0.5 gap-0.5">
-                  {(
-                    [
-                      { value: 'all', label: 'All school' },
-                      { value: 'mine', label: 'Mine' },
-                      { value: 'others', label: 'Others' },
-                    ] as const
-                  ).map(({ value, label }) => (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() => setSchoolOwnerFilter(value)}
-                      className={cn(
-                        'rounded px-2.5 py-1 text-xs font-medium transition-colors',
-                        schoolOwnerFilter === value
-                          ? 'bg-background text-foreground shadow-sm'
-                          : 'text-muted-foreground hover:text-foreground',
-                      )}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-                <AnnouncementFilterBar filters={filters} onChange={setFilters} />
-              </>
-            ) : (
-              <AnnouncementFilterBar filters={filters} onChange={setFilters} />
-            )}
+            <AnnouncementFilterBar filters={filters} onChange={setFilters} />
           </div>
         </div>
 
