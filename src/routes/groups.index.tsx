@@ -305,7 +305,7 @@ function ClassPills({
 
 // ─── Main component ────────────────────────────────────────────────────────────
 
-type GroupTab = 'my-groups' | 'assigned' | 'school-wide'
+type GroupTab = 'my-groups' | 'assigned'
 
 // Prototype: hardcoded as admin. In production this comes from the session.
 const IS_ADMIN = true
@@ -315,6 +315,7 @@ function GroupsIndex() {
   const navigate = useNavigate()
 
   const [tab, setTab] = useState<GroupTab>('my-groups')
+  const [isSchoolWide, setIsSchoolWide] = useState(false)
   const [groups, setGroups] = useState<Array<StudentGroup>>(MOCK_GROUPS)
   const [mySearch, setMySearch] = useState('')
   const [ownershipFilter, setOwnershipFilter] = useState<
@@ -329,8 +330,6 @@ function GroupsIndex() {
   const [typeFilter, setTypeFilter] = useState<
     Set<Exclude<GroupTypeFilterOption, 'regular'>>
   >(new Set())
-  const [schoolSearch, setSchoolSearch] = useState('')
-  const [schoolTeacherFilter, setSchoolTeacherFilter] = useState('all')
 
   const filteredCombinedGroups = useMemo(() => {
     const mine = groups
@@ -380,17 +379,11 @@ function GroupsIndex() {
     return all.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
   }, [groups])
 
-  const schoolTeachers = useMemo(
-    () => [...new Set(allSchoolGroups.map((g) => g.createdBy.name))].sort(),
-    [allSchoolGroups],
-  )
-
   const filteredSchoolGroups = useMemo(() => {
-    let result = allSchoolGroups
-    if (schoolTeacherFilter !== 'all') result = result.filter((g) => g.createdBy.name === schoolTeacherFilter)
-    if (schoolSearch) result = result.filter((g) => g.name.toLowerCase().includes(schoolSearch.toLowerCase()))
-    return result
-  }, [allSchoolGroups, schoolTeacherFilter, schoolSearch])
+    if (!mySearch) return allSchoolGroups
+    const q = mySearch.toLowerCase()
+    return allSchoolGroups.filter((g) => g.name.toLowerCase().includes(q))
+  }, [allSchoolGroups, mySearch])
 
   const filteredGroupIds = filteredCombinedGroups.map((g) => g.id)
   const allSelectedInView =
@@ -470,7 +463,7 @@ function GroupsIndex() {
               and reports.
             </p>
           </div>
-          {tab === 'my-groups' && (
+          {tab === 'my-groups' && !isSchoolWide && (
             <Button size="sm" render={<Link to="/groups/create" />}>
               <Plus className="mr-1.5 h-4 w-4" />
               New group
@@ -479,71 +472,68 @@ function GroupsIndex() {
         </div>
       </div>
 
-      {/* ── Toolbar: segmented tabs + search + filter (matches Posts) ─────── */}
+      {/* ── Toolbar: segmented tabs + school-wide toggle + search + filter ── */}
       <div className="mt-4 space-y-4">
         <div className="flex items-center justify-between gap-4 px-6 pb-0">
-          <div className="flex shrink-0 rounded-full bg-muted p-1 gap-1">
-            {(
-              [
-                { value: 'my-groups' as const, label: 'My Groups' },
-                { value: 'assigned' as const, label: 'Assigned Groups' },
-                ...(IS_ADMIN ? [{ value: 'school-wide' as const, label: 'School-wide' }] : []),
-              ] satisfies Array<{ value: GroupTab; label: string }>
-            ).flatMap((t) => {
-              const el = (
-                <SegmentedTab
-                  key={t.value}
-                  active={tab === t.value}
-                  onClick={() => setTab(t.value)}
-                >
-                  {t.label}
-                </SegmentedTab>
-              )
-              return t.value === 'school-wide'
-                ? [<div key="school-sep" className="my-1 w-px bg-border/60" />, el]
-                : [el]
-            })}
+          <div className="flex items-center gap-3">
+            <div className="flex shrink-0 rounded-full bg-muted p-1 gap-1">
+              <SegmentedTab active={tab === 'my-groups'} onClick={() => setTab('my-groups')}>
+                My Groups
+              </SegmentedTab>
+              <SegmentedTab active={tab === 'assigned'} onClick={() => setTab('assigned')}>
+                Assigned Groups
+              </SegmentedTab>
+            </div>
+
+            {IS_ADMIN && (
+              <button
+                type="button"
+                onClick={() => setIsSchoolWide((v) => !v)}
+                className={cn(
+                  'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-all',
+                  isSchoolWide
+                    ? 'border-foreground/20 bg-foreground text-background'
+                    : 'border-border text-muted-foreground hover:border-foreground/20 hover:text-foreground',
+                )}
+              >
+                School-wide
+              </button>
+            )}
           </div>
+
           <div className="flex items-center gap-2">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Search groups…"
-                value={tab === 'my-groups' ? mySearch : tab === 'assigned' ? assignedSearch : schoolSearch}
-                onChange={(e) => {
-                  if (tab === 'my-groups') setMySearch(e.target.value)
-                  else if (tab === 'assigned') setAssignedSearch(e.target.value)
-                  else setSchoolSearch(e.target.value)
-                }}
+                value={tab === 'my-groups' ? mySearch : assignedSearch}
+                onChange={(e) =>
+                  tab === 'my-groups'
+                    ? setMySearch(e.target.value)
+                    : setAssignedSearch(e.target.value)
+                }
                 className="w-[240px] pl-9"
               />
             </div>
-            {tab === 'my-groups' && (
-              <OwnershipFilterPopover
-                value={ownershipFilter}
-                onChange={setOwnershipFilter}
-              />
+            {tab === 'my-groups' && !isSchoolWide && (
+              <OwnershipFilterPopover value={ownershipFilter} onChange={setOwnershipFilter} />
             )}
             {tab === 'assigned' && (
               <TypeFilterPopover value={typeFilter} onChange={setTypeFilter} />
             )}
-            {tab === 'school-wide' && (
-              <select
-                value={schoolTeacherFilter}
-                onChange={(e) => setSchoolTeacherFilter(e.target.value)}
-                className="rounded-lg border border-input bg-background px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-ring"
-              >
-                <option value="all">All teachers</option>
-                {schoolTeachers.map((name) => (
-                  <option key={name} value={name}>{name}</option>
-                ))}
-              </select>
-            )}
           </div>
         </div>
 
+        {isSchoolWide && (
+          <div className="mx-6 flex items-center rounded-lg border border-border bg-muted/50 px-4 py-2.5">
+            <p className="text-sm text-muted-foreground">
+              Viewing all groups across the school. Groups cannot be created in this view.
+            </p>
+          </div>
+        )}
+
         {/* ── My Groups table ─────────────────────────────────────────────── */}
-        {tab === 'my-groups' && (
+        {tab === 'my-groups' && !isSchoolWide && (
           <div className="max-w-full overflow-x-auto bg-background">
             {filteredCombinedGroups.length === 0 ? (
               <div className="flex flex-col items-center py-16">
@@ -929,7 +919,7 @@ function GroupsIndex() {
         )}
 
         {/* ── School-wide Groups table (admin only) ───────────────────────── */}
-        {tab === 'school-wide' && (
+        {isSchoolWide && tab === 'my-groups' && (
           <div className="max-w-full overflow-x-auto bg-background">
             {filteredSchoolGroups.length === 0 ? (
               <div className="flex flex-col items-center py-16">
