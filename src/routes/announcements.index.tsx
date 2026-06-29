@@ -61,6 +61,7 @@ import { useFeatureFlag } from '@/hooks/use-feature-flag'
 export const Route = createFileRoute('/announcements/')({
   validateSearch: (search) => ({
     tab: (search.tab as PostTab) ?? 'with-responses',
+    scope: (search.scope as 'my' | 'school') ?? 'my',
   }),
   component: ParentsGatewayPage,
 })
@@ -138,14 +139,14 @@ function getFormStatusBadge(status: FormStatus) {
   return <Badge className={className}>{label}</Badge>
 }
 
-type PostTab = 'view-only' | 'with-responses' | 'custom-forms' | 'school-wide'
+type PostTab = 'view-only' | 'with-responses' | 'custom-forms'
 
 // Prototype: hardcoded as admin. In production this comes from the session.
 const IS_ADMIN = true
 
 function ParentsGatewayPage() {
-  const { tab } = Route.useSearch()
-  const isSchoolWide = IS_ADMIN && tab === 'school-wide'
+  const { tab, scope } = Route.useSearch()
+  const isSchoolWide = IS_ADMIN && scope === 'school'
   const [searchQuery, setSearchQuery] = useState('')
   const [filters, setFilters] = useState<AnnouncementFilters>(
     EMPTY_ANNOUNCEMENT_FILTERS,
@@ -286,6 +287,9 @@ function ParentsGatewayPage() {
 
   const schoolFiltered = useMemo(() => {
     return allSchoolPosts.filter((a) => {
+      const hasResponse = a.responseType === 'acknowledge' || a.responseType === 'yes-no'
+      if (tab === 'view-only' && hasResponse) return false
+      if (tab === 'with-responses' && !hasResponse) return false
       if (searchQuery) {
         const q = searchQuery.toLowerCase()
         return (
@@ -295,13 +299,12 @@ function ParentsGatewayPage() {
       }
       return true
     })
-  }, [allSchoolPosts, searchQuery])
+  }, [allSchoolPosts, tab, searchQuery])
 
   const tabs: Array<{ value: PostTab; label: string; hidden?: boolean }> = [
     { value: 'with-responses', label: 'With responses' },
     { value: 'view-only', label: 'Read only' },
     { value: 'custom-forms', label: 'Custom forms', hidden: !formsEnabled },
-    { value: 'school-wide', label: 'School-wide', hidden: !IS_ADMIN },
   ]
   const visibleTabs = tabs.filter((t) => !t.hidden)
 
@@ -370,28 +373,49 @@ function ParentsGatewayPage() {
       {/* Tabs + search/filter — single row */}
       <div className="mt-4 space-y-4">
         <div className="flex items-center justify-between gap-4 px-6 pb-0">
-          <div className="flex shrink-0 rounded-full bg-muted p-1 gap-1">
-            {visibleTabs.flatMap((t) => {
-              const el = (
+          <div className="flex items-center gap-3">
+            {/* Content type tabs */}
+            <div className="flex shrink-0 rounded-full bg-muted p-1 gap-1">
+              {visibleTabs.map((t) => (
                 <SegmentedTab
                   key={t.value}
                   active={tab === t.value}
                   onClick={() =>
                     navigate({
                       to: '/announcements',
-                      search: { tab: t.value },
+                      search: (prev) => ({ ...prev, tab: t.value }),
                       replace: true,
                     })
                   }
                 >
                   {t.label}
                 </SegmentedTab>
-              )
-              return t.value === 'school-wide'
-                ? [<div key="sep" className="my-1 w-px bg-border/60" />, el]
-                : [el]
-            })}
+              ))}
+            </div>
+
+            {/* School-wide mode toggle — separate from content filters */}
+            {IS_ADMIN && (
+              <button
+                type="button"
+                onClick={() =>
+                  navigate({
+                    to: '/announcements/',
+                    search: (prev) => ({ ...prev, scope: isSchoolWide ? 'my' : 'school' }),
+                    replace: true,
+                  })
+                }
+                className={cn(
+                  'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-all',
+                  isSchoolWide
+                    ? 'border-foreground/20 bg-foreground text-background'
+                    : 'border-border text-muted-foreground hover:border-foreground/20 hover:text-foreground',
+                )}
+              >
+                School-wide
+              </button>
+            )}
           </div>
+
           <div className="flex items-center gap-2">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -407,6 +431,15 @@ function ParentsGatewayPage() {
             <AnnouncementFilterBar filters={filters} onChange={setFilters} />
           </div>
         </div>
+
+        {/* School-wide mode indicator */}
+        {isSchoolWide && (
+          <div className="mx-6 flex items-center justify-between rounded-lg border border-border bg-muted/50 px-4 py-2.5">
+            <p className="text-sm text-muted-foreground">
+              Viewing all sent posts across the school. Posts cannot be created in this view.
+            </p>
+          </div>
+        )}
 
         {/* Table */}
         {isSchoolWide ? (
