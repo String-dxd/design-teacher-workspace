@@ -150,8 +150,8 @@ function ParentsGatewayPage() {
   const [filters, setFilters] = useState<AnnouncementFilters>(
     EMPTY_ANNOUNCEMENT_FILTERS,
   )
-  const [schoolTeacherFilter, setSchoolTeacherFilter] = useState<string>('all')
   const [schoolTypeFilter, setSchoolTypeFilter] = useState<'all' | 'with-responses' | 'view-only'>('all')
+  const [schoolOwnerFilter, setSchoolOwnerFilter] = useState<'all' | 'mine' | 'others'>('all')
   const formsEnabled = useFeatureFlag('forms')
 
   // Multi-select + delete state
@@ -286,22 +286,10 @@ function ParentsGatewayPage() {
     })
   }, [refreshKey])
 
-  const schoolTeachers = useMemo(() => {
-    const names = new Set<string>()
-    allSchoolPosts.forEach((a) => {
-      names.add(a.ownership === 'mine' ? 'Me (Daniel Tan)' : (a.postedBy ?? 'Unknown'))
-    })
-    return Array.from(names).sort()
-  }, [allSchoolPosts])
-
   const schoolFiltered = useMemo(() => {
     return allSchoolPosts.filter((a) => {
-      if (
-        schoolTeacherFilter !== 'all' &&
-        (a.ownership === 'mine' ? 'Me (Daniel Tan)' : (a.postedBy ?? 'Unknown')) !==
-          schoolTeacherFilter
-      )
-        return false
+      if (schoolOwnerFilter === 'mine' && a.ownership !== 'mine') return false
+      if (schoolOwnerFilter === 'others' && a.ownership === 'mine') return false
       if (schoolTypeFilter === 'with-responses') {
         if (a.responseType !== 'acknowledge' && a.responseType !== 'yes-no') return false
       } else if (schoolTypeFilter === 'view-only') {
@@ -316,7 +304,7 @@ function ParentsGatewayPage() {
       }
       return true
     })
-  }, [allSchoolPosts, schoolTeacherFilter, schoolTypeFilter, searchQuery])
+  }, [allSchoolPosts, schoolOwnerFilter, schoolTypeFilter, searchQuery])
 
   const tabs: Array<{ value: PostTab; label: string; hidden?: boolean }> = [
     { value: 'with-responses', label: 'With responses' },
@@ -428,19 +416,48 @@ function ParentsGatewayPage() {
             {isSchoolWide ? (
               <>
                 <div className="flex shrink-0 rounded-md border border-input bg-muted/40 p-0.5 gap-0.5">
-                  {(['all', 'with-responses', 'view-only'] as const).map((v) => (
+                  {(
+                    [
+                      { value: 'all', label: 'All types' },
+                      { value: 'with-responses', label: 'With responses' },
+                      { value: 'view-only', label: 'Read only' },
+                    ] as const
+                  ).map(({ value, label }) => (
                     <button
-                      key={v}
+                      key={value}
                       type="button"
-                      onClick={() => setSchoolTypeFilter(v)}
+                      onClick={() => setSchoolTypeFilter(value)}
                       className={cn(
                         'rounded px-2.5 py-1 text-xs font-medium transition-colors',
-                        schoolTypeFilter === v
+                        schoolTypeFilter === value
                           ? 'bg-background text-foreground shadow-sm'
                           : 'text-muted-foreground hover:text-foreground',
                       )}
                     >
-                      {v === 'all' ? 'All' : v === 'with-responses' ? 'With responses' : 'Read only'}
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex shrink-0 rounded-md border border-input bg-muted/40 p-0.5 gap-0.5">
+                  {(
+                    [
+                      { value: 'all', label: 'All school' },
+                      { value: 'mine', label: 'Mine' },
+                      { value: 'others', label: 'Others' },
+                    ] as const
+                  ).map(({ value, label }) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setSchoolOwnerFilter(value)}
+                      className={cn(
+                        'rounded px-2.5 py-1 text-xs font-medium transition-colors',
+                        schoolOwnerFilter === value
+                          ? 'bg-background text-foreground shadow-sm'
+                          : 'text-muted-foreground hover:text-foreground',
+                      )}
+                    >
+                      {label}
                     </button>
                   ))}
                 </div>
