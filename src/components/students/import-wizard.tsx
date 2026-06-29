@@ -260,7 +260,7 @@ function WizardStepper({ current }: { current: number }) {
             <div className="flex items-center gap-2">
               <div
                 className={cn(
-                  'flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-white transition-colors',
+                  'flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-primary-foreground transition-colors',
                   (isActive || isCompleted) && 'bg-twblue-9',
                   isDimmed && 'bg-muted',
                 )}

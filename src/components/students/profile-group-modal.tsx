@@ -372,7 +372,7 @@ function EditStep({
           Identify and prioritise students for support, opportunities, or
           programmes based on your criteria
         </p>
-        <div className="mt-5 rounded-2xl bg-[var(--slate-3,theme(colors.slate.100))] p-5">
+        <div className="mt-5 rounded-2xl bg-slate-3 p-5">
           <div className="space-y-3">
             {criteria.map((c, i) => (
               <ProfileGroupCriteriaRow

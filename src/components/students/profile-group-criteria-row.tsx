@@ -186,7 +186,7 @@ export function ProfileGroupCriteriaRow({
             <button
               type="button"
               className={cn(
-                'border-input flex h-9 w-[180px] shrink-0 items-center justify-between gap-1.5 rounded-[14px] border bg-white px-3 text-sm outline-none',
+                'border-input flex h-9 w-[180px] shrink-0 items-center justify-between gap-1.5 rounded-[14px] border bg-card px-3 text-sm outline-none',
                 !hasField && 'text-muted-foreground',
               )}
               aria-expanded={fieldOpen}
@@ -199,7 +199,7 @@ export function ProfileGroupCriteriaRow({
           <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
         </PopoverTrigger>
         <PopoverContent className="w-[420px] gap-0 p-3" align="start">
-          <div className="mb-1 flex items-center gap-2 rounded-lg border border-blue-400 px-3 py-2 focus-within:border-blue-500">
+          <div className="mb-1 flex items-center gap-2 rounded-lg border border-twblue-7 px-3 py-2 focus-within:border-twblue-8">
             <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
             <input
               ref={fieldSearchRef}
@@ -260,7 +260,7 @@ export function ProfileGroupCriteriaRow({
       >
         <SelectTrigger
           className={cn(
-            'h-9 w-[160px] shrink-0 rounded-[14px] bg-white',
+            'h-9 w-[160px] shrink-0 rounded-[14px] bg-card',
             !hasField && 'text-muted-foreground',
           )}
         >
@@ -286,7 +286,7 @@ export function ProfileGroupCriteriaRow({
           <Input
             disabled
             placeholder="Enter value"
-            className="h-9 rounded-[14px] bg-white"
+            className="h-9 rounded-[14px] bg-card"
           />
         ) : (
           needsValueInput &&
@@ -315,7 +315,7 @@ export function ProfileGroupCriteriaRow({
             >
               <SelectTrigger
                 className={cn(
-                  'h-9 w-full rounded-[14px] bg-white',
+                  'h-9 w-full rounded-[14px] bg-card',
                   !criterion.value && 'text-muted-foreground',
                 )}
               >
@@ -354,7 +354,7 @@ export function ProfileGroupCriteriaRow({
                 handleValueChange(Number.isNaN(num) ? raw : num)
               }}
               placeholder="Enter number"
-              className="h-9 rounded-[14px] bg-white"
+              className="h-9 rounded-[14px] bg-card"
             />
           ) : (
             <Input
@@ -367,7 +367,7 @@ export function ProfileGroupCriteriaRow({
               }
               onChange={(e) => handleValueChange(e.target.value)}
               placeholder="Enter value"
-              className="h-9 rounded-[14px] bg-white"
+              className="h-9 rounded-[14px] bg-card"
             />
           ))
         )}
@@ -439,7 +439,7 @@ function MultiselectValue({
           <button
             type="button"
             className={cn(
-              'border-input flex h-9 w-full items-center justify-between gap-1.5 rounded-[14px] border bg-white px-3 text-sm outline-none',
+              'border-input flex h-9 w-full items-center justify-between gap-1.5 rounded-[14px] border bg-card px-3 text-sm outline-none',
               selected.length === 0 && 'text-muted-foreground',
             )}
           />
@@ -455,7 +455,7 @@ function MultiselectValue({
         <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
       </PopoverTrigger>
       <PopoverContent className="w-[260px] gap-0 p-3" align="start">
-        <div className="mb-1 flex items-center gap-2 rounded-lg border border-blue-400 px-3 py-2 focus-within:border-blue-500">
+        <div className="mb-1 flex items-center gap-2 rounded-lg border border-twblue-7 px-3 py-2 focus-within:border-twblue-8">
           <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
           <input
             ref={searchRef}
