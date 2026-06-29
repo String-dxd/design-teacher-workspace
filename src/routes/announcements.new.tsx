@@ -2594,6 +2594,150 @@ function NewAnnouncementPage() {
               </div>
             </section>
 
+            {/* EVENT DETAILS — acknowledge + yes/no */}
+            {responseType !== 'view-only' && (
+              <section className="rounded-xl border bg-white p-6">
+                <h2 className="mb-5 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                  Event Details
+                </h2>
+                <div className="space-y-4">
+                  <div className="space-y-3">
+                    <div className="space-y-1.5">
+                      <Label>Event start (optional)</Label>
+                      <div className="flex gap-2">
+                        <input
+                          type="date"
+                          value={eventStart}
+                          onChange={(e) => {
+                            const newStart = e.target.value
+                            setEventStart(newStart)
+                            if (eventEnd && newStart > eventEnd) {
+                              setEventEnd('')
+                              setEventEndTime('')
+                              setEndTimeError(false)
+                            } else if (
+                              eventEnd &&
+                              newStart === eventEnd &&
+                              eventStartTime &&
+                              eventEndTime &&
+                              eventStartTime >= eventEndTime
+                            ) {
+                              setEventEndTime(nextSlot(eventStartTime))
+                              setEndTimeError(false)
+                            }
+                          }}
+                          className="flex-1 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
+                        />
+                        <Select
+                          value={eventStartTime}
+                          onValueChange={(newTime) => {
+                            setEventStartTime(newTime)
+                            if (
+                              eventEnd &&
+                              eventStart === eventEnd &&
+                              eventEndTime &&
+                              newTime >= eventEndTime
+                            ) {
+                              setEventEndTime(nextSlot(newTime))
+                              setEndTimeError(false)
+                            }
+                          }}
+                        >
+                          <SelectTrigger size="sm" className="w-36">
+                            <SelectValue placeholder="Time" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {SCHEDULE_SLOTS.map((slot) => (
+                              <SelectItem key={slot.value} value={slot.value}>
+                                {slot.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label>Event end (optional)</Label>
+                      <div className="flex gap-2">
+                        <input
+                          type="date"
+                          value={eventEnd}
+                          onChange={(e) => {
+                            setEventEnd(e.target.value)
+                            setEndTimeError(false)
+                          }}
+                          className="flex-1 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
+                        />
+                        <Select
+                          value={eventEndTime}
+                          onValueChange={(newTime) => {
+                            setEventEndTime(newTime)
+                            setEndTimeError(
+                              hasTimeConflict(
+                                eventStart,
+                                eventStartTime,
+                                eventEnd,
+                                newTime,
+                              ),
+                            )
+                          }}
+                        >
+                          <SelectTrigger
+                            size="sm"
+                            className={cn(
+                              'w-36',
+                              (endTimeError ||
+                                hasTimeConflict(
+                                  eventStart,
+                                  eventStartTime,
+                                  eventEnd,
+                                  eventEndTime,
+                                )) &&
+                                'border-destructive ring-[3px] ring-destructive/20',
+                            )}
+                          >
+                            <SelectValue placeholder="Time" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {SCHEDULE_SLOTS.map((slot) => (
+                              <SelectItem key={slot.value} value={slot.value}>
+                                {slot.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      {(endTimeError ||
+                        hasTimeConflict(
+                          eventStart,
+                          eventStartTime,
+                          eventEnd,
+                          eventEndTime,
+                        )) && (
+                        <p role="alert" className="text-xs text-destructive">
+                          End time must be after the start.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <div className="flex items-baseline justify-between">
+                      <Label>Venue (optional)</Label>
+                      <span className="text-xs tabular-nums text-muted-foreground">
+                        {venue.length}/100
+                      </span>
+                    </div>
+                    <Input
+                      placeholder="e.g. School hall, Pasir Ris Park"
+                      value={venue}
+                      onChange={(e) => setVenue(e.target.value)}
+                      maxLength={100}
+                    />
+                  </div>
+                </div>
+              </section>
+            )}
+
             {/* RESPONSE TYPE */}
             {showResponseSection && (
               <section className="rounded-xl border bg-white p-6">
@@ -2685,143 +2829,6 @@ function NewAnnouncementPage() {
                 responseType={responseType}
                 onEditQuestion={setEditingQuestionId}
               />
-            )}
-
-            {/* EVENT DETAILS — acknowledge + yes/no */}
-            {responseType !== 'view-only' && (
-              <section className="rounded-xl border bg-white p-6">
-                <h2 className="mb-5 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                  Event Details
-                </h2>
-                <div className="space-y-4">
-                  <div className="space-y-3">
-                    <div className="space-y-1.5">
-                      <Label>Event start (optional)</Label>
-                      <div className="flex gap-2">
-                        <input
-                          type="date"
-                          value={eventStart}
-                          onChange={(e) => {
-                            const newStart = e.target.value
-                            setEventStart(newStart)
-                            if (eventEnd && newStart > eventEnd) {
-                              setEventEnd('')
-                              setEventEndTime('')
-                              setEndTimeError(false)
-                            } else if (
-                              eventEnd &&
-                              newStart === eventEnd &&
-                              eventStartTime &&
-                              eventEndTime &&
-                              eventStartTime >= eventEndTime
-                            ) {
-                              setEventEndTime(nextSlot(eventStartTime))
-                              setEndTimeError(false)
-                            }
-                          }}
-                          className="flex-1 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
-                        />
-                        <input
-                          type="time"
-                          value={eventStartTime}
-                          onChange={(e) => {
-                            const newTime = e.target.value
-                            setEventStartTime(newTime)
-                            if (
-                              eventEnd &&
-                              eventStart === eventEnd &&
-                              eventEndTime &&
-                              newTime >= eventEndTime
-                            ) {
-                              setEventEndTime(nextSlot(newTime))
-                              setEndTimeError(false)
-                            }
-                          }}
-                          className="w-32 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label>Event end (optional)</Label>
-                      <div className="flex gap-2">
-                        <input
-                          type="date"
-                          value={eventEnd}
-                          onChange={(e) => {
-                            setEventEnd(e.target.value)
-                            setEndTimeError(false)
-                          }}
-                          className="flex-1 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
-                        />
-                        <input
-                          type="time"
-                          value={eventEndTime}
-                          aria-invalid={
-                            endTimeError ||
-                            hasTimeConflict(
-                              eventStart,
-                              eventStartTime,
-                              eventEnd,
-                              eventEndTime,
-                            )
-                              ? true
-                              : undefined
-                          }
-                          onChange={(e) => {
-                            const newTime = e.target.value
-                            setEventEndTime(newTime)
-                            setEndTimeError(
-                              hasTimeConflict(
-                                eventStart,
-                                eventStartTime,
-                                eventEnd,
-                                newTime,
-                              ),
-                            )
-                          }}
-                          className={cn(
-                            'w-32 rounded-md border bg-background px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring',
-                            endTimeError ||
-                              hasTimeConflict(
-                                eventStart,
-                                eventStartTime,
-                                eventEnd,
-                                eventEndTime,
-                              )
-                              ? 'border-destructive focus:ring-destructive'
-                              : 'border-input',
-                          )}
-                        />
-                      </div>
-                      {(endTimeError ||
-                        hasTimeConflict(
-                          eventStart,
-                          eventStartTime,
-                          eventEnd,
-                          eventEndTime,
-                        )) && (
-                        <p role="alert" className="text-xs text-destructive">
-                          End time must be after the start.
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="space-y-1.5">
-                    <div className="flex items-baseline justify-between">
-                      <Label>Venue (optional)</Label>
-                      <span className="text-xs tabular-nums text-muted-foreground">
-                        {venue.length}/100
-                      </span>
-                    </div>
-                    <Input
-                      placeholder="e.g. School hall, Pasir Ris Park"
-                      value={venue}
-                      onChange={(e) => setVenue(e.target.value)}
-                      maxLength={100}
-                    />
-                  </div>
-                </div>
-              </section>
             )}
 
             {/* SETTINGS (due date + reminders) — acknowledge + yes/no */}

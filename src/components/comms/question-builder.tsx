@@ -1,4 +1,4 @@
-import { GripVertical, Plus, Trash2, X } from 'lucide-react'
+import { GripVertical, HelpCircle, Plus, Trash2, X } from 'lucide-react'
 import type { FormQuestion, QuestionType, ResponseType } from '@/types/form'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -92,9 +92,17 @@ export function QuestionBuilder({
       </div>
 
       {questions.length === 0 && (
-        <p className="text-sm italic text-muted-foreground/60">
-          No questions added yet.
-        </p>
+        <button
+          type="button"
+          onClick={addQuestion}
+          className="flex w-full flex-col items-center gap-2 rounded-xl border border-dashed py-8 text-center text-muted-foreground transition-colors hover:border-primary/40 hover:bg-primary/5 hover:text-primary"
+        >
+          <HelpCircle className="h-6 w-6 opacity-40" />
+          <div>
+            <p className="text-sm font-medium">No questions added yet</p>
+            <p className="mt-0.5 text-xs opacity-70">Click to add your first question</p>
+          </div>
+        </button>
       )}
 
       <div className="space-y-3">
