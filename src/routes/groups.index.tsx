@@ -305,7 +305,10 @@ function ClassPills({
 
 // ─── Main component ────────────────────────────────────────────────────────────
 
-type GroupTab = 'my-groups' | 'assigned'
+type GroupTab = 'my-groups' | 'assigned' | 'school-wide'
+
+// Prototype: hardcoded as admin. In production this comes from the session.
+const IS_ADMIN = true
 
 function GroupsIndex() {
   useSetBreadcrumbs([{ label: 'Student Groups', href: '/groups' }])
@@ -326,6 +329,8 @@ function GroupsIndex() {
   const [typeFilter, setTypeFilter] = useState<
     Set<Exclude<GroupTypeFilterOption, 'regular'>>
   >(new Set())
+  const [schoolSearch, setSchoolSearch] = useState('')
+  const [schoolTeacherFilter, setSchoolTeacherFilter] = useState('all')
 
   const filteredCombinedGroups = useMemo(() => {
     const mine = groups
@@ -362,6 +367,30 @@ function GroupsIndex() {
       }),
     [assignedSearch, typeFilter],
   )
+
+  const allSchoolGroups = useMemo(() => {
+    const seen = new Set<string>()
+    const all: Array<StudentGroup & { _source: 'mine' | 'shared' }> = []
+    for (const g of groups) {
+      if (!seen.has(g.id)) { seen.add(g.id); all.push({ ...g, _source: 'mine' as const }) }
+    }
+    for (const g of MOCK_SHARED_GROUPS) {
+      if (!seen.has(g.id)) { seen.add(g.id); all.push({ ...g, _source: 'shared' as const }) }
+    }
+    return all.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+  }, [groups])
+
+  const schoolTeachers = useMemo(
+    () => [...new Set(allSchoolGroups.map((g) => g.createdBy.name))].sort(),
+    [allSchoolGroups],
+  )
+
+  const filteredSchoolGroups = useMemo(() => {
+    let result = allSchoolGroups
+    if (schoolTeacherFilter !== 'all') result = result.filter((g) => g.createdBy.name === schoolTeacherFilter)
+    if (schoolSearch) result = result.filter((g) => g.name.toLowerCase().includes(schoolSearch.toLowerCase()))
+    return result
+  }, [allSchoolGroups, schoolTeacherFilter, schoolSearch])
 
   const filteredGroupIds = filteredCombinedGroups.map((g) => g.id)
   const allSelectedInView =
@@ -454,30 +483,38 @@ function GroupsIndex() {
       <div className="mt-4 space-y-4">
         <div className="flex items-center justify-between gap-4 px-6 pb-0">
           <div className="flex shrink-0 rounded-full bg-muted p-1 gap-1">
-            <SegmentedTab
-              active={tab === 'my-groups'}
-              onClick={() => setTab('my-groups')}
-            >
-              My Groups
-            </SegmentedTab>
-            <SegmentedTab
-              active={tab === 'assigned'}
-              onClick={() => setTab('assigned')}
-            >
-              Assigned Groups
-            </SegmentedTab>
+            {(
+              [
+                { value: 'my-groups' as const, label: 'My Groups' },
+                { value: 'assigned' as const, label: 'Assigned Groups' },
+                ...(IS_ADMIN ? [{ value: 'school-wide' as const, label: 'School-wide' }] : []),
+              ] satisfies Array<{ value: GroupTab; label: string }>
+            ).flatMap((t) => {
+              const el = (
+                <SegmentedTab
+                  key={t.value}
+                  active={tab === t.value}
+                  onClick={() => setTab(t.value)}
+                >
+                  {t.label}
+                </SegmentedTab>
+              )
+              return t.value === 'school-wide'
+                ? [<div key="school-sep" className="my-1 w-px bg-border/60" />, el]
+                : [el]
+            })}
           </div>
           <div className="flex items-center gap-2">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Search groups…"
-                value={tab === 'my-groups' ? mySearch : assignedSearch}
-                onChange={(e) =>
-                  tab === 'my-groups'
-                    ? setMySearch(e.target.value)
-                    : setAssignedSearch(e.target.value)
-                }
+                value={tab === 'my-groups' ? mySearch : tab === 'assigned' ? assignedSearch : schoolSearch}
+                onChange={(e) => {
+                  if (tab === 'my-groups') setMySearch(e.target.value)
+                  else if (tab === 'assigned') setAssignedSearch(e.target.value)
+                  else setSchoolSearch(e.target.value)
+                }}
                 className="w-[240px] pl-9"
               />
             </div>
@@ -489,6 +526,18 @@ function GroupsIndex() {
             )}
             {tab === 'assigned' && (
               <TypeFilterPopover value={typeFilter} onChange={setTypeFilter} />
+            )}
+            {tab === 'school-wide' && (
+              <select
+                value={schoolTeacherFilter}
+                onChange={(e) => setSchoolTeacherFilter(e.target.value)}
+                className="rounded-lg border border-input bg-background px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-ring"
+              >
+                <option value="all">All teachers</option>
+                {schoolTeachers.map((name) => (
+                  <option key={name} value={name}>{name}</option>
+                ))}
+              </select>
             )}
           </div>
         </div>
@@ -877,6 +926,114 @@ function GroupsIndex() {
               )}
             </div>
           </>
+        )}
+
+        {/* ── School-wide Groups table (admin only) ───────────────────────── */}
+        {tab === 'school-wide' && (
+          <div className="max-w-full overflow-x-auto bg-background">
+            {filteredSchoolGroups.length === 0 ? (
+              <div className="flex flex-col items-center py-16">
+                <EmptyState
+                  title="No groups found"
+                  description="Try adjusting your search or filter."
+                />
+              </div>
+            ) : (
+              <Table tableClassName="table-fixed w-full">
+                <TableHeader className="border-b bg-background">
+                  <TableRow className="border-0 hover:bg-transparent">
+                    <TableHead className="pl-6">Name</TableHead>
+                    <TableHead className="w-24">Students</TableHead>
+                    <TableHead className="w-24">Type</TableHead>
+                    <TableHead className="w-32">Last updated</TableHead>
+                    <TableHead className="w-40">Created by</TableHead>
+                    <TableHead className="w-[48px] pr-2" />
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredSchoolGroups.map((group) => (
+                    <TableRow
+                      key={group.id}
+                      className="cursor-pointer"
+                      onClick={() =>
+                        navigate({
+                          to: '/groups/$groupId',
+                          params: { groupId: group.id },
+                        })
+                      }
+                    >
+                      <TableCell className="overflow-hidden whitespace-normal pl-6">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <span className="truncate font-medium">{group.name}</span>
+                            {group.visibility === 'school' && (
+                              <Badge variant="outline" className="shrink-0 py-0 text-xs">
+                                School-wide
+                              </Badge>
+                            )}
+                          </div>
+                          {group.listType === 'live' && group.criteria && (
+                            <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
+                              {group.criteria}
+                            </p>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                          <Users className="h-3.5 w-3.5 shrink-0" />
+                          {group.members.length}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="py-0 text-xs">
+                          {group.listType === 'live' ? 'Criteria' : 'Custom'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {group.listType === 'live' ? 'Auto' : formatRelativeDate(group.updatedAt)}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {group.createdBy.email === CURRENT_USER_EMAIL
+                          ? 'Me (Daniel Tan)'
+                          : stripSalutation(group.createdBy.name)}
+                      </TableCell>
+                      <TableCell
+                        className="w-[48px] pr-2 text-right"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                              aria-label="More actions"
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              render={
+                                <Link
+                                  to="/groups/$groupId"
+                                  params={{ groupId: group.id }}
+                                />
+                              }
+                            >
+                              <Edit2 className="mr-2 h-4 w-4" />
+                              Edit group
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </div>
         )}
       </div>
 
