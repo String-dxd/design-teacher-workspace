@@ -187,7 +187,7 @@ export function ProfileGroupControl({
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
                     {isApplied && (
-                      <span className="ml-1 text-xs text-blue-600">✓</span>
+                      <span className="ml-1 text-xs text-twblue-11">✓</span>
                     )}
                   </div>
                 )

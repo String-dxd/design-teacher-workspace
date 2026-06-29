@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
-  Check,
   ChevronDown,
   ChevronUp,
   Filter,
@@ -29,7 +28,13 @@ import {
 import { useFeatureFlags } from '@/lib/feature-flags'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from '@/components/ui/input-group'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   Popover,
@@ -390,7 +395,7 @@ export function MultiFilterPopover({
         render={
           <Button
             variant="outline"
-            className={cn('gap-2 aria-expanded:bg-white', className)}
+            className={cn('gap-2 aria-expanded:bg-card', className)}
             aria-label="Filter students"
             aria-expanded={open}
           />
@@ -479,7 +484,7 @@ export function MultiFilterPopover({
                           render={
                             <button
                               type="button"
-                              className="border-input flex h-9 w-[152px] shrink-0 items-center justify-between gap-1.5 rounded-[14px] border bg-white px-3 text-sm outline-none"
+                              className="border-input flex h-9 w-[152px] shrink-0 items-center justify-between gap-1.5 rounded-[14px] border bg-card px-3 text-sm outline-none"
                             />
                           }
                         >
@@ -492,18 +497,19 @@ export function MultiFilterPopover({
                           className="w-[480px] gap-0 p-3"
                           align="start"
                         >
-                          <div className="mb-1 flex items-center gap-2 rounded-lg border border-blue-400 px-3 py-2 focus-within:border-blue-500">
-                            <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
-                            <input
+                          <InputGroup className="mb-1">
+                            <InputGroupAddon align="inline-start">
+                              <Search className="h-4 w-4" />
+                            </InputGroupAddon>
+                            <InputGroupInput
                               ref={fieldSelectorSearchRef}
-                              className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
                               placeholder="Search options"
                               value={fieldSelectorQuery}
                               onChange={(e) =>
                                 setFieldSelectorQuery(e.target.value)
                               }
                             />
-                          </div>
+                          </InputGroup>
                           <ScrollArea className="h-[220px]">
                             <div className="py-1">
                               {rowGroupedFields.map(
@@ -557,7 +563,7 @@ export function MultiFilterPopover({
                       handleOperatorChange(index, value as FilterOperator)
                     }
                   >
-                    <SelectTrigger className="w-[104px] shrink-0 rounded-[14px] bg-white">
+                    <SelectTrigger className="w-[104px] shrink-0 rounded-[14px] bg-card">
                       <SelectValue>
                         {
                           fieldOption?.operators.find(
@@ -606,7 +612,7 @@ export function MultiFilterPopover({
                                   <button
                                     type="button"
                                     className={cn(
-                                      'border-input flex h-9 w-full items-center justify-between gap-1.5 rounded-[14px] border bg-white px-3 text-sm outline-none',
+                                      'border-input flex h-9 w-full items-center justify-between gap-1.5 rounded-[14px] border bg-card px-3 text-sm outline-none',
                                       selected.length === 0 &&
                                         'text-muted-foreground',
                                     )}
@@ -683,7 +689,7 @@ export function MultiFilterPopover({
                                     <button
                                       type="button"
                                       className={cn(
-                                        'border-input flex h-9 w-full items-center justify-between gap-1.5 rounded-[14px] border bg-white px-3 text-sm outline-none',
+                                        'border-input flex h-9 w-full items-center justify-between gap-1.5 rounded-[14px] border bg-card px-3 text-sm outline-none',
                                         selectedValues.length === 0 &&
                                           'text-muted-foreground',
                                       )}
@@ -704,18 +710,19 @@ export function MultiFilterPopover({
                                   align="start"
                                 >
                                   {/* Search */}
-                                  <div className="mb-1 flex items-center gap-2 rounded-lg border border-blue-400 px-3 py-2 focus-within:border-blue-500">
-                                    <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
-                                    <input
+                                  <InputGroup className="mb-1">
+                                    <InputGroupAddon align="inline-start">
+                                      <Search className="h-4 w-4" />
+                                    </InputGroupAddon>
+                                    <InputGroupInput
                                       ref={multiselectSearchRef}
-                                      className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
                                       placeholder="Search filters"
                                       value={multiselectQuery}
                                       onChange={(e) =>
                                         setMultiselectQuery(e.target.value)
                                       }
                                     />
-                                  </div>
+                                  </InputGroup>
                                   {/* Field label */}
                                   <div className="px-3 pt-2 pb-1 text-sm font-medium">
                                     {fieldOption.label}
@@ -728,18 +735,10 @@ export function MultiFilterPopover({
                                           onClick={toggleAll}
                                           className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm hover:bg-accent"
                                         >
-                                          <div
-                                            className={cn(
-                                              'flex h-4 w-4 shrink-0 items-center justify-center rounded border',
-                                              allSelected
-                                                ? 'border-primary bg-primary text-primary-foreground'
-                                                : 'border-input',
-                                            )}
-                                          >
-                                            {allSelected && (
-                                              <Check className="h-3 w-3" />
-                                            )}
-                                          </div>
+                                          <Checkbox
+                                            checked={allSelected}
+                                            className="pointer-events-none"
+                                          />
                                           Select all
                                         </button>
                                       )}
@@ -756,18 +755,10 @@ export function MultiFilterPopover({
                                               checked && 'bg-accent/50',
                                             )}
                                           >
-                                            <div
-                                              className={cn(
-                                                'flex h-4 w-4 shrink-0 items-center justify-center rounded border',
-                                                checked
-                                                  ? 'border-primary bg-primary text-primary-foreground'
-                                                  : 'border-input',
-                                              )}
-                                            >
-                                              {checked && (
-                                                <Check className="h-3 w-3" />
-                                              )}
-                                            </div>
+                                            <Checkbox
+                                              checked={checked}
+                                              className="pointer-events-none"
+                                            />
                                             {v}
                                           </button>
                                         )
@@ -888,7 +879,7 @@ export function MultiFilterPopover({
                               handleValueChange(index, value)
                             }
                           >
-                            <SelectTrigger className="w-full rounded-[14px] bg-white">
+                            <SelectTrigger className="w-full rounded-[14px] bg-card">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -961,16 +952,17 @@ export function MultiFilterPopover({
                   </PopoverTrigger>
                   <PopoverContent className="w-[582px] gap-0 p-3" align="start">
                     {/* Search */}
-                    <div className="mb-1 flex items-center gap-2 rounded-lg border border-blue-400 px-3 py-2 focus-within:border-blue-500">
-                      <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
-                      <input
+                    <InputGroup className="mb-1">
+                      <InputGroupAddon align="inline-start">
+                        <Search className="h-4 w-4" />
+                      </InputGroupAddon>
+                      <InputGroupInput
                         ref={searchRef}
-                        className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
                         placeholder="Search options"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                       />
-                    </div>
+                    </InputGroup>
 
                     {/* List */}
                     <ScrollArea className="h-[220px]">

@@ -90,7 +90,7 @@ export function ColumnHeaderMenu({
       <TableHead
         className={cn(
           className,
-          isSticky && 'sticky z-20 bg-white',
+          isSticky && 'sticky z-20 bg-card',
           stickyShadow,
         )}
         style={stickyLeft ? { left: stickyLeft } : undefined}
@@ -118,7 +118,7 @@ export function ColumnHeaderMenu({
               Keep column
             </Button>
             <Button
-              className="bg-[var(--color-twblue-9,#0064ff)] text-white hover:bg-[var(--color-twblue-10,#0057e0)]"
+              className="bg-twblue-9 text-primary-foreground hover:bg-twblue-10"
               onClick={() => {
                 setDeleteDialogOpen(false)
                 onDelete?.()
@@ -132,7 +132,7 @@ export function ColumnHeaderMenu({
       <TableHead
         className={cn(
           className,
-          isSticky && 'sticky z-20 bg-white',
+          isSticky && 'sticky z-20 bg-card',
           stickyShadow,
         )}
         style={stickyLeft ? { left: stickyLeft } : undefined}
