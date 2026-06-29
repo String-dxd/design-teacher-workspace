@@ -148,7 +148,7 @@ export function FeaturedAppCard({
   className,
 }: FeaturedAppCardProps) {
   const featuredClassName = cn(
-    'group flex h-[132px] items-center gap-4 rounded-[14px] border border-[#C8C8C8] bg-white p-4 transition-colors hover:bg-muted/50',
+    'group flex w-full flex-col gap-4 rounded-[14px] border border-[#C8C8C8] bg-white p-4 transition-colors hover:bg-muted/50 sm:h-[132px] sm:flex-row sm:items-center',
     className,
   )
 
