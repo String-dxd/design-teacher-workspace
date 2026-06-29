@@ -444,18 +444,7 @@ function ParentsGatewayPage() {
                     </button>
                   ))}
                 </div>
-                <select
-                  value={schoolTeacherFilter}
-                  onChange={(e) => setSchoolTeacherFilter(e.target.value)}
-                  className="rounded-lg border border-input bg-background px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-ring"
-                >
-                  <option value="all">All teachers</option>
-                  {schoolTeachers.map((name) => (
-                    <option key={name} value={name}>
-                      {name}
-                    </option>
-                  ))}
-                </select>
+                <AnnouncementFilterBar filters={filters} onChange={setFilters} />
               </>
             ) : (
               <AnnouncementFilterBar filters={filters} onChange={setFilters} />
