@@ -111,6 +111,13 @@ const manageItems: Array<MenuItem> = [
     conceptTag: true,
     featureFlag: 'student-groups',
   },
+  {
+    title: 'Reports',
+    url: '/reports',
+    icon: ScrollText,
+    stage: 'Concept',
+    featureFlag: 'reports',
+  },
 ]
 
 const parentsCommItems: Array<MenuItem> = [
@@ -122,8 +129,8 @@ const parentsCommItems: Array<MenuItem> = [
     featureFlag: 'posts',
   },
   {
-    title: 'Reports',
-    url: '/reports',
+    title: 'Holistic Reports',
+    url: '/holistic-reports',
     icon: FileText,
     stage: 'Experiment',
     featureFlag: 'holistic-reports',
@@ -171,7 +178,9 @@ function SidebarMenuItems({
                 className={
                   item.stage === 'Experiment'
                     ? 'border-purple-300 bg-purple-50 text-purple-700 dark:border-purple-700 dark:bg-purple-950 dark:text-purple-300 group-data-[collapsible=icon]:hidden'
-                    : 'group-data-[collapsible=icon]:hidden'
+                    : item.stage === 'Concept'
+                      ? 'border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-700 dark:bg-blue-950 dark:text-blue-300 group-data-[collapsible=icon]:hidden'
+                      : 'group-data-[collapsible=icon]:hidden'
                 }
               >
                 {item.stage}
@@ -202,6 +211,7 @@ export function AppSidebar() {
   const parentsGatewayEnabled = useFeatureFlag('parents-gateway')
   const studentAnalyticsEnabled = useFeatureFlag('student-analytics')
   const studentGroupsEnabled = useFeatureFlag('student-groups')
+  const reportsEnabled = useFeatureFlag('reports')
 
   React.useEffect(() => {
     if (localStorage.getItem(COACHMARK_KEY)) return
@@ -239,6 +249,7 @@ export function AppSidebar() {
       if (item.featureFlag === 'holistic-reports') return holisticReportsEnabled
       if (item.featureFlag === 'parents-gateway') return parentsGatewayEnabled
       if (item.featureFlag === 'student-groups') return studentGroupsEnabled
+      if (item.featureFlag === 'reports') return reportsEnabled
       return true
     })
 

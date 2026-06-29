@@ -7,6 +7,7 @@ export type FeatureFlagKey =
   | 'student-analytics'
   | 'lta-intervention'
   | 'student-groups'
+  | 'reports'
   | 'import-data'
 
 export type FeatureFlags = {

@@ -72,6 +72,13 @@ const featureFlagConfigs: Array<FeatureFlagConfig> = [
     stage: 'Experiment',
   },
   {
+    key: 'reports',
+    label: 'Reports',
+    description:
+      'Show the Reports page in the sidebar under Manage',
+    stage: 'Concept',
+  },
+  {
     key: 'import-data',
     label: 'Import Data',
     description:
