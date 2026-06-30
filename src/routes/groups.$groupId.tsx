@@ -19,19 +19,18 @@ import {
   Search,
   Share2,
   Trash2,
-  UserMinus,
+  X,
   UserPlus,
   Users,
-  X,
 } from 'lucide-react'
 
 import type { GroupSharedWith, StudentGroup } from '@/types/student-group'
+import type { SelectedEntity } from '@/components/comms/entity-selector'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
 import { MOCK_GROUPS, getGroupById } from '@/data/mock-groups'
 import { MOCK_STAFF, MOCK_STAFF_GROUPS } from '@/data/mock-staff'
 import { StaffSelector } from '@/components/comms/staff-selector'
-import type { SelectedEntity } from '@/components/comms/entity-selector'
-import { stripSalutation } from '@/lib/utils'
+import { cn, stripSalutation } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -70,7 +69,6 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { EmptyState } from '@/components/empty-state'
-import { cn } from '@/lib/utils'
 
 const CURRENT_USER_EMAIL = 'tanml@school.edu.sg'
 
@@ -105,11 +103,14 @@ function StaffAvatar({ name, size = 8 }: { name: string; size?: number }) {
 }
 
 function expandToStaffIds(entities: Array<SelectedEntity>): Array<string> {
-  const ids: string[] = []
+  const ids: Array<string> = []
   const seen = new Set<string>()
   for (const entity of entities) {
     if (entity.type === 'individual') {
-      if (!seen.has(entity.id)) { seen.add(entity.id); ids.push(entity.id) }
+      if (!seen.has(entity.id)) {
+        seen.add(entity.id)
+        ids.push(entity.id)
+      }
     } else {
       const grp = MOCK_STAFF_GROUPS.find((g) => g.id === entity.id)
       if (!grp) continue
@@ -117,7 +118,10 @@ function expandToStaffIds(entities: Array<SelectedEntity>): Array<string> {
       for (const memberId of grp.memberIds) {
         const member = MOCK_STAFF.find((s) => s.id === memberId)
         if (!member) continue
-        if (!excluded.has(stripSalutation(member.name)) && !seen.has(memberId)) {
+        if (
+          !excluded.has(stripSalutation(member.name)) &&
+          !seen.has(memberId)
+        ) {
           seen.add(memberId)
           ids.push(memberId)
         }
@@ -152,7 +156,10 @@ function SharingDialog({
     setPendingStaff([])
   }, [open, group])
 
-  const pendingIds = useMemo(() => expandToStaffIds(pendingStaff), [pendingStaff])
+  const pendingIds = useMemo(
+    () => expandToStaffIds(pendingStaff),
+    [pendingStaff],
+  )
 
   const hasChanges =
     pendingStaff.length > 0 || existingStaff.length !== group.sharedWith.length
@@ -163,7 +170,14 @@ function SharingDialog({
     const added: Array<GroupSharedWith> = pendingIds.flatMap((id) => {
       const s = MOCK_STAFF.find((m) => m.id === id)
       if (!s) return []
-      return [{ staffId: s.id, name: s.name, email: s.email, role: 'editor' as const }]
+      return [
+        {
+          staffId: s.id,
+          name: s.name,
+          email: s.email,
+          role: 'editor' as const,
+        },
+      ]
     })
     const existingIds = new Set(existingStaff.map((s) => s.staffId))
     const removed = group.sharedWith.filter((s) => !existingIds.has(s.staffId))
@@ -200,11 +214,21 @@ function SharingDialog({
 
   return (
     <>
-      <Dialog open={open} onOpenChange={(next) => { if (!next) handleRequestClose() }}>
-        <DialogContent showCloseButton={false} className="max-w-[460px] gap-0 p-0">
+      <Dialog
+        open={open}
+        onOpenChange={(next) => {
+          if (!next) handleRequestClose()
+        }}
+      >
+        <DialogContent
+          showCloseButton={false}
+          className="max-w-[460px] gap-0 p-0"
+        >
           {/* Header — inline title + close button */}
           <div className="flex items-center justify-between border-b px-5 py-4">
-            <DialogTitle className="text-base font-semibold">Share group</DialogTitle>
+            <DialogTitle className="text-base font-semibold">
+              Share group
+            </DialogTitle>
             <button
               type="button"
               onClick={handleRequestClose}
@@ -221,9 +245,11 @@ function SharingDialog({
               <Info className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
               <p className="text-xs text-muted-foreground leading-relaxed">
                 Added staff get{' '}
-                <span className="font-medium text-foreground">editor access</span> — they
-                can view and send to the group, edit its name, add or remove students, and
-                share it with others.
+                <span className="font-medium text-foreground">
+                  editor access
+                </span>{' '}
+                — they can view and send to the group, edit its name, add or
+                remove students, and share it with others.
               </p>
             </div>
 
@@ -242,7 +268,9 @@ function SharingDialog({
                 </p>
                 <div className="space-y-0.5">
                   {existingStaff.map((sw) => {
-                    const staffMeta = MOCK_STAFF.find((s) => s.id === sw.staffId)
+                    const staffMeta = MOCK_STAFF.find(
+                      (s) => s.id === sw.staffId,
+                    )
                     const sublabel = [
                       staffMeta?.formClass && `Form ${staffMeta.formClass}`,
                       sw.email,
@@ -256,8 +284,12 @@ function SharingDialog({
                       >
                         <StaffAvatar name={sw.name} size={8} />
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium">{sw.name}</p>
-                          <p className="truncate text-xs text-muted-foreground">{sublabel}</p>
+                          <p className="truncate text-sm font-medium">
+                            {sw.name}
+                          </p>
+                          <p className="truncate text-xs text-muted-foreground">
+                            {sublabel}
+                          </p>
                         </div>
                         <button
                           type="button"
@@ -295,7 +327,8 @@ function SharingDialog({
           <AlertDialogHeader>
             <AlertDialogTitle>Discard changes?</AlertDialogTitle>
             <AlertDialogDescription>
-              You've added people but haven't shared yet. If you leave now, your selections will be lost.
+              You've added people but haven't shared yet. If you leave now, your
+              selections will be lost.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -464,8 +497,12 @@ function GroupDetailPage() {
                 </Badge>
               )}
               {group.sharedWith.length > 0 && (
-                <Badge variant="outline" className="border-slate-200 bg-slate-50 text-slate-600">
-                  {group.sharedWith.length} collaborator{group.sharedWith.length !== 1 ? 's' : ''}
+                <Badge
+                  variant="outline"
+                  className="border-slate-200 bg-slate-50 text-slate-600"
+                >
+                  {group.sharedWith.length} collaborator
+                  {group.sharedWith.length !== 1 ? 's' : ''}
                 </Badge>
               )}
             </div>
@@ -639,7 +676,7 @@ function GroupDetailPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="size-7 opacity-0 group-hover/row:opacity-100 text-muted-foreground hover:text-destructive transition-opacity"
+                            className="size-7 text-muted-foreground hover:text-destructive"
                             onClick={() => {
                               if (currentRole === 'owner') {
                                 handleRemoveMember(member.id)
@@ -648,7 +685,7 @@ function GroupDetailPage() {
                               }
                             }}
                           >
-                            <UserMinus className="size-3.5" />
+                            <X className="size-3.5" />
                           </Button>
                         )}
                       </TableCell>
