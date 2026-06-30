@@ -15,13 +15,38 @@ import { AppHeader } from '@/components/app-header'
 import { AppSidebar } from '@/components/app-sidebar'
 import { WelcomeModal } from '@/components/welcome-modal'
 import { ErrorBoundary } from '@/components/ui/error-boundary'
-import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
+import { SidebarInset, SidebarProvider, useSidebar } from '@/components/ui/sidebar'
 import { Toaster } from '@/components/ui/sonner'
 import { FeatureFlagProvider } from '@/lib/feature-flags'
 import { AuthProvider } from '@/lib/auth'
 import { BreadcrumbProvider } from '@/hooks/use-breadcrumbs'
 import { HeyTaliaPanel } from '@/components/heytalia/heytalia-panel'
 import { HeyTaliaProvider } from '@/components/heytalia/heytalia-context'
+
+const AUTO_COLLAPSE_ROUTES = [
+  '/announcements',
+  '/meetings',
+  '/groups',
+  '/reports',
+  '/calendar',
+]
+
+function SidebarAutoCollapse() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname })
+  const { state, toggleSidebar } = useSidebar()
+
+  React.useEffect(() => {
+    if (
+      AUTO_COLLAPSE_ROUTES.some((r) => pathname.startsWith(r)) &&
+      state === 'expanded'
+    ) {
+      toggleSidebar()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname])
+
+  return null
+}
 
 export const Route = createRootRoute({
   head: () => ({
@@ -138,6 +163,7 @@ function RootComponent() {
             <BreadcrumbProvider>
               <HeyTaliaProvider>
                 <SidebarProvider>
+                  <SidebarAutoCollapse />
                   <AppSidebar />
                   <SidebarInset className="h-screen overflow-hidden">
                     <AppHeader />
