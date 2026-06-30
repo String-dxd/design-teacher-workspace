@@ -217,9 +217,6 @@ function SharingDialog({
                         <p className="truncate text-sm font-medium">{sw.name}</p>
                         <p className="truncate text-xs text-muted-foreground">{sublabel}</p>
                       </div>
-                      <span className="shrink-0 rounded bg-muted/60 px-2 py-0.5 text-xs text-muted-foreground">
-                        Editor
-                      </span>
                       <button
                         type="button"
                         onClick={() =>
