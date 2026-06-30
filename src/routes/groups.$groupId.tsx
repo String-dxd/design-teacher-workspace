@@ -209,9 +209,26 @@ function SharingDialog({
         </DialogHeader>
 
         <div className="flex flex-1 flex-col overflow-y-auto">
+          {/* Permissions — always visible, above the selector so the dropdown can't cover it */}
+          <div className="border-b px-5 py-4">
+            <p className="mb-2 text-sm text-muted-foreground">
+              Other staff you add will be able to
+            </p>
+            <ul className="space-y-1.5">
+              {SHARE_PERMISSIONS.map((perm) => (
+                <li key={perm} className="flex items-center gap-2 text-sm">
+                  <span className="text-muted-foreground">–</span>
+                  <span>{perm}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
           {/* Staff selector */}
-          <div className="px-5 pt-5">
-            <p className="mb-1.5 text-sm font-medium">Staff names</p>
+          <div className="px-5 pt-4">
+            <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+              Add people
+            </p>
             <StaffSelector
               key={String(open)}
               value={selectedStaff}
@@ -221,13 +238,13 @@ function SharingDialog({
             />
           </div>
 
-          {/* Selected staff list */}
+          {/* People with access — person cards matching the reference design */}
           {expandedStaffIds.length > 0 && (
-            <div className="mt-3 px-5">
-              <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+            <div className="mt-3 px-5 pb-4">
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                 People with access
               </p>
-              <div className="space-y-0.5">
+              <div className="space-y-2">
                 {derivedSharedWith.map((sw) => {
                   const staffMeta = MOCK_STAFF.find((s) => s.id === sw.staffId)
                   const sublabel = [
@@ -239,9 +256,9 @@ function SharingDialog({
                   return (
                     <div
                       key={sw.staffId}
-                      className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 hover:bg-muted/30"
+                      className="flex items-center gap-3 rounded-lg border bg-muted/20 px-3 py-2.5"
                     >
-                      <StaffAvatar name={sw.name} size={7} />
+                      <StaffAvatar name={sw.name} size={8} />
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium">{sw.name}</p>
                         <p className="truncate text-xs text-muted-foreground">{sublabel}</p>
@@ -259,21 +276,6 @@ function SharingDialog({
               </div>
             </div>
           )}
-
-          {/* What sharing grants */}
-          <div className="mt-4 border-t px-5 py-4">
-            <p className="mb-2 text-sm text-muted-foreground">
-              By sharing this group, other staff members will have access to
-            </p>
-            <ul className="space-y-1.5">
-              {SHARE_PERMISSIONS.map((perm) => (
-                <li key={perm} className="flex items-center gap-2 text-sm">
-                  <span className="text-muted-foreground">–</span>
-                  <span>{perm}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
         </div>
 
         <DialogFooter className="border-t px-5 py-4">
