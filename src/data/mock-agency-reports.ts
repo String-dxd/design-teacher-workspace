@@ -1013,7 +1013,7 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
     totalFields: 70,
     autoFilled: 60,
     pages: 8,
-    turnaroundDays: 10,
+    turnaroundDays: 5,
     pdfPreview: '/report-previews/children-home.pdf',
     templateFile: '/report-templates/children-home.pdf',
     sections: [

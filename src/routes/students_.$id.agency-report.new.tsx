@@ -1180,6 +1180,7 @@ function FieldRow({
   field,
   value,
   aiFlag,
+  isDrafted,
   prefilledFromLabel,
   selectedAiSourceIds,
   onAiSourcesChange,
@@ -1189,6 +1190,10 @@ function FieldRow({
   field: ReportField
   value: string
   aiFlag: boolean
+  // True when the field is showing AI-drafted content the user hasn't
+  // verified yet — apply a subtle purple tint to distinguish from
+  // user-entered values.
+  isDrafted: boolean
   prefilledFromLabel?: string
   selectedAiSourceIds?: Set<string>
   onAiSourcesChange?: (next: Set<string>) => void
@@ -1204,7 +1209,9 @@ function FieldRow({
   const isEmpty = field.type !== 'signature' && value.trim() === ''
   const emptyInputBorder = isEmpty
     ? 'border-amber-200 bg-amber-50/60'
-    : 'border-input bg-background'
+    : isDrafted
+      ? 'border-purple-200 bg-purple-50/40'
+      : 'border-input bg-background'
   // Source-link visibility: show only when the field has an upstream source
   // AND the current value still matches the originally pre-filled value
   // (i.e. the user hasn't edited it). Once edited, the field becomes a
@@ -1446,6 +1453,7 @@ function SectionPanel({
   section,
   fieldValues,
   aiFlags,
+  drafted,
   prefilledFrom,
   aiSourceSelections,
   onAiSourceChange,
@@ -1459,6 +1467,10 @@ function SectionPanel({
   section: ReportSection
   fieldValues: Record<string, string>
   aiFlags: Record<string, boolean>
+  // When false, the form is in its pristine pre-Draft state — auto-
+  // populated EduHub / School Cockpit values stay hidden and only the
+  // user's own edits show through.
+  drafted: boolean
   prefilledFrom: Record<string, string>
   aiSourceSelections: Record<string, Set<string>>
   onAiSourceChange: (fieldId: string, next: Set<string>) => void
@@ -1473,16 +1485,26 @@ function SectionPanel({
   const completed = assignedTo.completed === true
   const completedDate = assignedTo.completedDate
 
+  // Resolve a field's currently-displayed value. User edits always win;
+  // demo/AI defaults only surface after the YH has hit Draft.
+  const resolveValue = (f: ReportField): string => {
+    const userVal = (fieldValues as Record<string, string | undefined>)[f.id]
+    if (userVal !== undefined) return userVal
+    if (drafted) return f.value ?? ''
+    return ''
+  }
+  const isFieldDrafted = (f: ReportField): boolean =>
+    drafted &&
+    !!f.value &&
+    (fieldValues as Record<string, string | undefined>)[f.id] === undefined &&
+    !isReviewed
+
   // Live count of unfilled fields for the section header indicator.
   // Signature fields are stamped on export and not counted as user input.
   const emptyCount = isMine
     ? section.fields.filter((f) => {
         if (f.type === 'signature') return false
-        const v =
-          (fieldValues as Record<string, string | undefined>)[f.id] ??
-          f.value ??
-          ''
-        return v.trim() === ''
+        return resolveValue(f).trim() === ''
       }).length
     : 0
 
@@ -1552,12 +1574,9 @@ function SectionPanel({
             <FieldRow
               key={field.id}
               field={field}
-              value={
-                (fieldValues as Record<string, string | undefined>)[field.id] ??
-                field.value ??
-                ''
-              }
+              value={resolveValue(field)}
               aiFlag={!!aiFlags[field.id]}
+              isDrafted={isFieldDrafted(field)}
               prefilledFromLabel={prefilledFrom[field.id]}
               selectedAiSourceIds={aiSourceSelections[field.id]}
               onAiSourcesChange={(next) => onAiSourceChange(field.id, next)}
@@ -2024,9 +2043,11 @@ function AcademicPerfRow({
 function ChildrenHomeFilledRendering({
   template,
   studentName,
+  approved = false,
 }: {
   template: AgencyTemplate
   studentName: string
+  approved?: boolean
 }) {
   const purpose = fieldValue(template, 'ch-purpose-type', studentName)
   const conductRows: Array<{ n: number; label: string; value?: string }> = [
@@ -2528,15 +2549,47 @@ function ChildrenHomeFilledRendering({
       <SectionBar numeral="IX" title="PRINCIPAL / HEAD OF INSTITUTION" />
       <div className="ml-6 mt-2 grid grid-cols-[80px_1fr_120px_1fr] gap-x-2 gap-y-2 text-[12px]">
         <span>Name:</span>
-        <span className="border-b border-black" />
+        <span className="border-b border-black">
+          {approved ? ' Mrs Jenny Lim' : ''}
+        </span>
         <span>Tel/Fax Numbers:</span>
-        <span className="border-b border-black" />
+        <span className="border-b border-black">
+          {approved ? ' 6441 3143' : ''}
+        </span>
       </div>
       <p className="ml-6 mt-3 text-[12px]">Comments on Report, if any:</p>
       <div className="ml-6 mt-1 space-y-3 text-[12px]">
         <div className="border-b border-black pb-3">&nbsp;</div>
         <div className="border-b border-black pb-3">&nbsp;</div>
         <div className="border-b border-black pb-3">&nbsp;</div>
+      </div>
+
+      {/* Sign-off area — blank placeholder until approval, then a
+          script-font signature + date stamp. */}
+      <div className="ml-6 mt-6 flex items-end justify-between text-[12px]">
+        <div>
+          {approved ? (
+            <p
+              className="mb-1 text-[20px] leading-none text-blue-900"
+              style={{
+                fontFamily:
+                  '"Brush Script MT", "Lucida Handwriting", "Snell Roundhand", cursive',
+              }}
+            >
+              Jenny Lim
+            </p>
+          ) : (
+            <p className="mb-1 text-[10px] italic text-muted-foreground">
+              Pending sign-off
+            </p>
+          )}
+          <p className="border-t border-black pt-1">
+            Signature of Principal / Head
+          </p>
+        </div>
+        <div className="text-right">
+          <p>Date: {approved ? '8 May 2026' : ''}</p>
+        </div>
       </div>
     </div>
   )
@@ -2618,15 +2671,21 @@ function GenericFilledRendering({
 function FilledReportRendering({
   template,
   studentName,
+  approved = false,
 }: {
   template: AgencyTemplate
   studentName: string
+  // When true, the Principal's sign-off area is stamped with a
+  // script-font signature + date. Defaults to false so the in-progress
+  // Show Preview from the Fill page renders unsigned.
+  approved?: boolean
 }) {
   if (template.id === 'children-home') {
     return (
       <ChildrenHomeFilledRendering
         template={template}
         studentName={studentName}
+        approved={approved}
       />
     )
   }
@@ -2645,11 +2704,13 @@ function DocumentPreviewModal({
   studentName,
   open,
   onOpenChange,
+  approved = false,
 }: {
   template: AgencyTemplate
   studentName: string
   open: boolean
   onOpenChange: (open: boolean) => void
+  approved?: boolean
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -2666,6 +2727,7 @@ function DocumentPreviewModal({
           <FilledReportRendering
             template={template}
             studentName={studentName}
+            approved={approved}
           />
         </div>
       </DialogContent>
@@ -2706,6 +2768,12 @@ function ReportForm({
   // YH can either return to the profile or stay on this page to view what
   // they sent. Cleared if the YH starts a new report (component unmounts).
   const [submitted, setSubmitted] = useState(false)
+  // Drafted = whether the YH has pressed the AI Draft button in the
+  // toolbar. While false, the form renders as a pristine blank report
+  // (no auto-populated EduHub values, no AI prose); once true, every
+  // field with hardcoded demo content / an AI_DRAFTS entry becomes
+  // visible, tinted purple until the user edits or verifies.
+  const [drafted, setDrafted] = useState(false)
   const [addCollaboratorsOpen, setAddCollaboratorsOpen] = useState(false)
   // Start empty — the YH invites collaborators after creating the report.
   // MOCK_COLLABORATORS is exposed in the modal as quick-pick suggestions.
@@ -2827,32 +2895,6 @@ function ReportForm({
     setTimeout(() => setSavedStatus('saved'), 500)
   }
 
-  // Merged values: field defaults + counsellor mock + user edits (for completion %)
-  const mergedValues: Record<string, string> = {}
-  for (const section of template.sections) {
-    for (const f of section.fields) {
-      if (f.value) mergedValues[f.id] = f.value
-    }
-  }
-  for (const [k, val] of Object.entries(
-    (MOCK_COUNSELLOR.fields as Record<string, string>) ?? {},
-  )) {
-    mergedValues[k] = val
-  }
-  for (const [k, val] of Object.entries(fieldValues)) {
-    if (val !== undefined && val !== '') mergedValues[k] = val
-    else if (val === '') delete mergedValues[k]
-  }
-
-  // Completion %: fraction of non-principal fields with a non-empty value
-  const allFields = template.sections
-    .filter((s) => s.role !== 'principal')
-    .flatMap((s) => s.fields)
-  const filledCount = allFields.filter((f) => !!mergedValues[f.id]).length
-  const completionPct = allFields.length
-    ? Math.round((filledCount / allFields.length) * 100)
-    : 0
-
   // Verified counter only counts sections assigned to the current user.
   const reviewableSections = template.sections.filter((s) => {
     const a = assignments[s.id]
@@ -2861,6 +2903,39 @@ function ReportForm({
   const reviewedCount = reviewableSections.filter((s) =>
     completedSections.has(s.id),
   ).length
+
+  // Progress bar tracks VERIFIED sections, not population. 0% at fresh
+  // open → 100% once every YH-owned section is marked verified.
+  const progressPct = reviewableSections.length
+    ? Math.round((reviewedCount / reviewableSections.length) * 100)
+    : 0
+
+  // Apply the AI draft to every aiDraftable narrative field that the
+  // user hasn't yet touched. Flips `drafted` so structural template
+  // defaults (Name, NRIC, attendance counts, etc) start surfacing too.
+  const applyDraft = () => {
+    setDrafted(true)
+    setFieldValues((prev) => {
+      const next = { ...prev }
+      const aiAdds: Record<string, boolean> = {}
+      for (const s of template.sections) {
+        for (const f of s.fields) {
+          if (!f.aiDraftable) continue
+          if (next[f.id] !== undefined && next[f.id] !== '') continue
+          const draft = AI_DRAFTS[f.id]
+          if (!draft) continue
+          next[f.id] = personalizeText(draft, studentName)
+          aiAdds[f.id] = true
+        }
+      }
+      if (Object.keys(aiAdds).length > 0) {
+        setAiFlags((p) => ({ ...p, ...aiAdds }))
+      }
+      return next
+    })
+    setSavedStatus('saving')
+    setTimeout(() => setSavedStatus('saved'), 800)
+  }
 
   return (
     <div
@@ -2905,23 +2980,23 @@ function ReportForm({
           </p>
         </div>
 
-        {/* Completion % indicator */}
+        {/* Verification progress indicator */}
         <div className="flex items-center gap-2">
           <span
             className={cn(
               'font-mono text-xs font-semibold tabular-nums',
-              completionPct === 100 ? 'text-green-600' : 'text-foreground',
+              progressPct === 100 ? 'text-green-600' : 'text-foreground',
             )}
           >
-            {completionPct}%
+            {progressPct}%
           </span>
           <div className="h-1 w-16 overflow-hidden rounded-full bg-muted">
             <div
               className={cn(
                 'h-full transition-[width] duration-300',
-                completionPct === 100 ? 'bg-green-500' : 'bg-amber-500',
+                progressPct === 100 ? 'bg-green-500' : 'bg-amber-500',
               )}
-              style={{ width: `${completionPct}%` }}
+              style={{ width: `${progressPct}%` }}
             />
           </div>
         </div>
@@ -2940,6 +3015,16 @@ function ReportForm({
           )}
         </span>
         <div className="h-5 w-px bg-border" />
+        {!drafted && !submitted && (
+          <Button
+            size="sm"
+            onClick={applyDraft}
+            className="gap-1.5"
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            Draft
+          </Button>
+        )}
         <Button
           variant="ghost"
           size="sm"
@@ -3090,6 +3175,7 @@ function ReportForm({
                   section={s}
                   fieldValues={fieldValues}
                   aiFlags={aiFlags}
+                  drafted={drafted}
                   prefilledFrom={prefilledFrom}
                   aiSourceSelections={aiSourceSelections}
                   onAiSourceChange={(fieldId, next) =>
@@ -3214,9 +3300,16 @@ function ReportForm({
             <nav className="flex flex-col gap-1">
               {template.sections.map((s) => {
                 const done = completedSections.has(s.id)
+                // Principal's Comments are never written by the YH — they
+                // sign off after submission. Lock the nav entry to match
+                // the Counsellor pattern for clarity.
                 const restricted =
-                  s.role === 'counsellor' &&
-                  !isSameStaff(assignments[s.id] ?? CURRENT_USER, CURRENT_USER)
+                  s.role === 'principal' ||
+                  (s.role === 'counsellor' &&
+                    !isSameStaff(
+                      assignments[s.id] ?? CURRENT_USER,
+                      CURRENT_USER,
+                    ))
                 if (restricted) {
                   return (
                     <span
@@ -3352,10 +3445,12 @@ function ExportPassword({
           </TooltipProvider>
           {/* Filled-in rendering — same component the Show Preview modal
               uses on the Fill page, so the export view and the modal
-              show identical content. */}
+              show identical content. The Export step only renders after
+              Principal approval, so the rendering is signed. */}
           <FilledReportRendering
             template={template}
             studentName={studentName}
+            approved
           />
         </div>
       </div>
@@ -3365,6 +3460,7 @@ function ExportPassword({
         studentName={studentName}
         open={previewOpen}
         onOpenChange={setPreviewOpen}
+        approved
       />
 
       {/* Encryption toggle + (conditional) password */}
