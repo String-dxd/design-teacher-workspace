@@ -156,6 +156,8 @@ function SharingDialog({
   const hasChanges =
     pendingStaff.length > 0 || existingStaff.length !== group.sharedWith.length
 
+  const [discardOpen, setDiscardOpen] = useState(false)
+
   const handleSave = () => {
     const added: Array<GroupSharedWith> = pendingIds.flatMap((id) => {
       const s = MOCK_STAFF.find((m) => m.id === id)
@@ -166,90 +168,133 @@ function SharingDialog({
     onOpenChange(false)
   }
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[460px] gap-0 p-0">
-        <DialogHeader className="border-b px-5 py-4">
-          <DialogTitle>Share group</DialogTitle>
-        </DialogHeader>
+  // Intercept close: warn if the user has typed/selected people but hasn't shared yet
+  const handleRequestClose = () => {
+    if (pendingStaff.length > 0) {
+      setDiscardOpen(true)
+    } else {
+      onOpenChange(false)
+    }
+  }
 
-        <div className="px-5 py-4 space-y-4">
-          {/* Info note — always visible */}
-          <div className="flex items-start gap-2.5 rounded-lg bg-muted/50 px-3 py-2.5">
-            <Info className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Added staff get{' '}
-              <span className="font-medium text-foreground">editor access</span> — they
-              can view and send to the group, edit its name, add or remove students, and
-              share it with others.
-            </p>
+  return (
+    <>
+      <Dialog open={open} onOpenChange={(next) => { if (!next) handleRequestClose() }}>
+        <DialogContent showCloseButton={false} className="max-w-[460px] gap-0 p-0">
+          {/* Header — inline title + close button */}
+          <div className="flex items-center justify-between border-b px-5 py-4">
+            <DialogTitle className="text-base font-semibold">Share group</DialogTitle>
+            <button
+              type="button"
+              onClick={handleRequestClose}
+              className="rounded-full p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+              aria-label="Close"
+            >
+              <X className="size-4" />
+            </button>
           </div>
 
-          {/* Staff selector — chips appear inline inside the field */}
-          <StaffSelector
-            key={String(open)}
-            value={pendingStaff}
-            onChange={setPendingStaff}
-          />
-
-          {/* People with access (already saved) */}
-          {existingStaff.length > 0 && (
-            <div>
-              <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                People with access
+          <div className="px-5 py-4 space-y-4">
+            {/* Info note — always visible */}
+            <div className="flex items-start gap-2.5 rounded-lg bg-muted/50 px-3 py-2.5">
+              <Info className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Added staff get{' '}
+                <span className="font-medium text-foreground">editor access</span> — they
+                can view and send to the group, edit its name, add or remove students, and
+                share it with others.
               </p>
-              <div className="space-y-0.5">
-                {existingStaff.map((sw) => {
-                  const staffMeta = MOCK_STAFF.find((s) => s.id === sw.staffId)
-                  const sublabel = [
-                    staffMeta?.formClass && `Form ${staffMeta.formClass}`,
-                    sw.email,
-                  ]
-                    .filter(Boolean)
-                    .join(' · ')
-                  return (
-                    <div
-                      key={sw.staffId}
-                      className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-muted/40"
-                    >
-                      <StaffAvatar name={sw.name} size={8} />
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium">{sw.name}</p>
-                        <p className="truncate text-xs text-muted-foreground">{sublabel}</p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setExistingStaff((prev) =>
-                            prev.filter((s) => s.staffId !== sw.staffId),
-                          )
-                        }
-                        className="shrink-0 rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                      >
-                        <X className="size-3.5" />
-                      </button>
-                    </div>
-                  )
-                })}
-              </div>
             </div>
-          )}
-        </div>
 
-        <DialogFooter className="border-t px-5 py-3">
-          <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button
-            size="sm"
-            disabled={!hasChanges && existingStaff.length === 0}
-            onClick={handleSave}
-          >
-            {hasChanges ? 'Share group' : 'Done'}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+            {/* Staff selector — chips appear inline inside the field */}
+            <StaffSelector
+              key={String(open)}
+              value={pendingStaff}
+              onChange={setPendingStaff}
+            />
+
+            {/* People with access (already saved) */}
+            {existingStaff.length > 0 && (
+              <div>
+                <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  People with access
+                </p>
+                <div className="space-y-0.5">
+                  {existingStaff.map((sw) => {
+                    const staffMeta = MOCK_STAFF.find((s) => s.id === sw.staffId)
+                    const sublabel = [
+                      staffMeta?.formClass && `Form ${staffMeta.formClass}`,
+                      sw.email,
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')
+                    return (
+                      <div
+                        key={sw.staffId}
+                        className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-muted/40"
+                      >
+                        <StaffAvatar name={sw.name} size={8} />
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium">{sw.name}</p>
+                          <p className="truncate text-xs text-muted-foreground">{sublabel}</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setExistingStaff((prev) =>
+                              prev.filter((s) => s.staffId !== sw.staffId),
+                            )
+                          }
+                          className="shrink-0 rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                        >
+                          <X className="size-3.5" />
+                        </button>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="border-t px-5 py-3">
+            <Button variant="outline" size="sm" onClick={handleRequestClose}>
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              disabled={!hasChanges && existingStaff.length === 0}
+              onClick={handleSave}
+            >
+              {hasChanges ? 'Share group' : 'Done'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Discard warning — shown when closing with unsaved pending selections */}
+      <AlertDialog open={discardOpen} onOpenChange={setDiscardOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Discard changes?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You've added people but haven't shared yet. If you leave now, your selections will be lost.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep editing</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setDiscardOpen(false)
+                onOpenChange(false)
+              }}
+            >
+              Discard
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   )
 }
 
