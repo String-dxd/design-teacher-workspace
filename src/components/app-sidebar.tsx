@@ -110,7 +110,7 @@ const manageItems: Array<MenuItem> = [
     title: 'Groups',
     url: '/groups',
     icon: Layers,
-    conceptTag: true,
+    stage: 'Release 2',
     featureFlag: 'student-groups',
   },
   {

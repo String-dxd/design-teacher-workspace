@@ -415,7 +415,7 @@ function ParentsGatewayPage() {
                     )}
                   >
                     <Shuffle className="h-3.5 w-3.5" />
-                    Switch to Admin View
+                    {isSchoolWide ? 'Switch to Teacher View' : 'Switch to Admin View'}
                   </button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" className="max-w-56 text-center">

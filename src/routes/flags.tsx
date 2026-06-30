@@ -69,7 +69,7 @@ const featureFlagConfigs: Array<FeatureFlagConfig> = [
     label: 'Student Groups',
     description:
       'Show the Groups page in the sidebar for organising students into reusable groups',
-    stage: 'Experiment',
+    stage: 'Release 2',
   },
   {
     key: 'reports',
