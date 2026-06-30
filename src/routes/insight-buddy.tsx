@@ -569,12 +569,6 @@ function InsightBuddyPage() {
         <div className="flex h-14 items-center gap-2 border-b px-4">
           <Sparkles className="size-4 text-primary" />
           <span className="font-semibold">Insight Buddy</span>
-          <Badge
-            variant="outline"
-            className="border-purple-300 bg-purple-50 text-purple-700 dark:border-purple-700 dark:bg-purple-950 dark:text-purple-300"
-          >
-            Experiment
-          </Badge>
         </div>
 
         {/* Messages / Empty state */}

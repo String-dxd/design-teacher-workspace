@@ -127,13 +127,6 @@ const manageItems: Array<MenuItem> = [
     stage: 'Release 2',
     featureFlag: 'calendar',
   },
-  {
-    title: 'Meetings',
-    url: '/meetings',
-    icon: CalendarClock,
-    stage: 'Release 2',
-    featureFlag: 'meetings',
-  },
 ]
 
 const parentsCommItems: Array<MenuItem> = [
@@ -143,6 +136,13 @@ const parentsCommItems: Array<MenuItem> = [
     icon: Mail,
     stage: 'Release 2',
     featureFlag: 'posts',
+  },
+  {
+    title: 'Meetings',
+    url: '/meetings',
+    icon: CalendarClock,
+    stage: 'Release 2',
+    featureFlag: 'meetings',
   },
   {
     title: 'Holistic Reports',

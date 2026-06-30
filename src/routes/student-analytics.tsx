@@ -60,12 +60,6 @@ function StudentAnalyticsPage() {
         {/* Page header */}
         <div className="flex items-center gap-2">
           <h1 className="text-2xl font-semibold">Analytics</h1>
-          <Badge
-            variant="outline"
-            className="border-purple-300 bg-purple-50 text-purple-700 dark:border-purple-700 dark:bg-purple-950 dark:text-purple-300"
-          >
-            Experiment
-          </Badge>
         </div>
         <p className="mt-1 text-sm text-muted-foreground">
           Monitor trends and explore student data

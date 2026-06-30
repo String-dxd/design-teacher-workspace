@@ -4,11 +4,9 @@ import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 import {
   Copy,
   Edit2,
-  Filter,
   Info,
   MoreHorizontal,
   Plus,
-  RotateCcw,
   Search,
   Share2,
   Trash2,
@@ -17,7 +15,7 @@ import {
 
 import type { StructuredGroup, StudentGroup } from '@/types/student-group'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
-import { MOCK_GROUPS, MOCK_SHARED_GROUPS } from '@/data/mock-groups'
+import { MOCK_GROUPS } from '@/data/mock-groups'
 import { TEACHER_STRUCTURED_GROUPS } from '@/data/mock-structured-groups'
 import { cn, stripSalutation } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -32,17 +30,12 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
-import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from '@/components/ui/dialog'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
@@ -109,85 +102,6 @@ function SegmentedTab({
   )
 }
 
-// ─── Ownership filter popover (My Groups tab) ──────────────────────────────────
-
-const OWNERSHIP_OPTIONS = [
-  { value: 'mine' as const, label: 'Created by me' },
-  { value: 'shared' as const, label: 'Shared with me' },
-]
-
-function OwnershipFilterPopover({
-  value,
-  onChange,
-}: {
-  value: Set<'mine' | 'shared'>
-  onChange: (v: Set<'mine' | 'shared'>) => void
-}) {
-  function toggle(opt: 'mine' | 'shared') {
-    const next = new Set(value)
-    if (next.has(opt)) next.delete(opt)
-    else next.add(opt)
-    onChange(next)
-  }
-
-  return (
-    <Popover>
-      <PopoverTrigger
-        render={
-          <Button variant="outline" size="sm" className="gap-2">
-            <Filter className="h-4 w-4" />
-            Filter
-            {value.size > 0 && (
-              <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
-                {value.size}
-              </span>
-            )}
-          </Button>
-        }
-      />
-      <PopoverContent align="start" className="w-[320px] p-0">
-        <div className="px-5 pb-3 pt-4">
-          <h3 className="text-sm font-semibold">Show records</h3>
-        </div>
-        <div className="px-5 pb-4">
-          <div className="flex items-center gap-3">
-            <span className="w-16 shrink-0 text-sm font-medium">Owner</span>
-            <div className="flex flex-1 flex-wrap gap-1.5">
-              {OWNERSHIP_OPTIONS.map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => toggle(opt.value)}
-                  className={cn(
-                    'rounded-md border px-2.5 py-1 text-xs font-medium transition-colors',
-                    value.has(opt.value)
-                      ? 'border-primary bg-primary/10 text-primary'
-                      : 'border-border bg-card text-foreground hover:border-primary hover:text-primary',
-                  )}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center justify-end border-t px-5 py-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onChange(new Set())}
-            disabled={value.size === 0}
-            className="gap-2 text-sm font-medium"
-          >
-            <RotateCcw className="h-4 w-4" />
-            Reset
-          </Button>
-        </div>
-      </PopoverContent>
-    </Popover>
-  )
-}
-
 // ─── Classes pill list ─────────────────────────────────────────────────────────
 
 function ClassPills({
@@ -219,20 +133,13 @@ function ClassPills({
 
 type GroupTab = 'my-groups' | 'assigned'
 
-// Prototype: hardcoded as admin. In production this comes from the session.
-const IS_ADMIN = true
-
 function GroupsIndex() {
   useSetBreadcrumbs([{ label: 'Student Groups', href: '/groups' }])
   const navigate = useNavigate()
 
   const [tab, setTab] = useState<GroupTab>('my-groups')
-  const [isSchoolWide, setIsSchoolWide] = useState(false)
   const [groups, setGroups] = useState<Array<StudentGroup>>(MOCK_GROUPS)
   const [mySearch, setMySearch] = useState('')
-  const [ownershipFilter, setOwnershipFilter] = useState<
-    Set<'mine' | 'shared'>
-  >(new Set())
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [deleteMode, setDeleteMode] = useState<
@@ -243,24 +150,14 @@ function GroupsIndex() {
     const mine = groups
       .filter((g) => g.createdBy.email === CURRENT_USER_EMAIL)
       .map((g) => ({ ...g, _source: 'mine' as const }))
-    const shared = MOCK_SHARED_GROUPS.map((g) => ({
-      ...g,
-      _source: 'shared' as const,
-    }))
-    const combined =
-      ownershipFilter.size === 1 && ownershipFilter.has('mine')
-        ? mine
-        : ownershipFilter.size === 1 && ownershipFilter.has('shared')
-          ? shared
-          : [...mine, ...shared]
-    const sorted = [...combined].sort(
+    const sorted = [...mine].sort(
       (a, b) =>
         new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
     )
     if (!mySearch) return sorted
     const q = mySearch.toLowerCase()
     return sorted.filter((g) => g.name.toLowerCase().includes(q))
-  }, [groups, mySearch, ownershipFilter])
+  }, [groups, mySearch])
 
   const filteredAssignedGroups = useMemo(
     () =>
@@ -272,24 +169,6 @@ function GroupsIndex() {
     [assignedSearch],
   )
 
-  const allSchoolGroups = useMemo(() => {
-    const seen = new Set<string>()
-    const all: Array<StudentGroup & { _source: 'mine' | 'shared' }> = []
-    for (const g of groups) {
-      if (!seen.has(g.id)) { seen.add(g.id); all.push({ ...g, _source: 'mine' as const }) }
-    }
-    for (const g of MOCK_SHARED_GROUPS) {
-      if (!seen.has(g.id)) { seen.add(g.id); all.push({ ...g, _source: 'shared' as const }) }
-    }
-    return all.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-  }, [groups])
-
-  const filteredSchoolGroups = useMemo(() => {
-    if (!mySearch) return allSchoolGroups
-    const q = mySearch.toLowerCase()
-    return allSchoolGroups.filter((g) => g.name.toLowerCase().includes(q))
-  }, [allSchoolGroups, mySearch])
-
   const filteredGroupIds = filteredCombinedGroups.map((g) => g.id)
   const allSelectedInView =
     filteredGroupIds.length > 0 &&
@@ -300,14 +179,7 @@ function GroupsIndex() {
     selectedIds.has(g.id),
   )
   // Two-option dialog when user is owner or editor of any selected group
-  const hasElevatedAccess = selectedGroups.some(
-    (g) =>
-      g._source === 'mine' ||
-      (
-        g as typeof g & { sharedWith?: Array<{ email: string; role: string }> }
-      ).sharedWith?.find((s) => s.email === CURRENT_USER_EMAIL)?.role ===
-        'editor',
-  )
+  const hasElevatedAccess = selectedGroups.length > 0
 
   function toggleSelect(id: string) {
     setSelectedIds((prev) => {
@@ -359,16 +231,13 @@ function GroupsIndex() {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-2xl font-semibold">Groups</h1>
-              <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-900">
-                Concept
-              </span>
             </div>
             <p className="mt-1 text-sm text-muted-foreground">
               Organise students into reusable groups for announcements, forms,
               and reports.
             </p>
           </div>
-          {tab === 'my-groups' && !isSchoolWide && (
+          {tab === 'my-groups' && (
             <Button size="sm" render={<Link to="/groups/create" />}>
               <Plus className="mr-1.5 h-4 w-4" />
               New group
@@ -382,28 +251,19 @@ function GroupsIndex() {
         <div className="flex items-center justify-between gap-4 px-6 pb-0">
           <div className="flex items-center gap-3">
             <div className="flex shrink-0 rounded-full bg-muted p-1 gap-1">
-              <SegmentedTab active={tab === 'my-groups'} onClick={() => setTab('my-groups')}>
-                My Groups
+              <SegmentedTab
+                active={tab === 'my-groups'}
+                onClick={() => setTab('my-groups')}
+              >
+                Created by me
               </SegmentedTab>
-              <SegmentedTab active={tab === 'assigned'} onClick={() => setTab('assigned')}>
-                Assigned Groups
+              <SegmentedTab
+                active={tab === 'assigned'}
+                onClick={() => setTab('assigned')}
+              >
+                Shared with me
               </SegmentedTab>
             </div>
-
-            {IS_ADMIN && (
-              <button
-                type="button"
-                onClick={() => setIsSchoolWide((v) => !v)}
-                className={cn(
-                  'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-all',
-                  isSchoolWide
-                    ? 'border-foreground/20 bg-foreground text-background'
-                    : 'border-border text-muted-foreground hover:border-foreground/20 hover:text-foreground',
-                )}
-              >
-                School-wide
-              </button>
-            )}
           </div>
 
           <div className="flex items-center gap-2">
@@ -420,38 +280,23 @@ function GroupsIndex() {
                 className="w-[240px] pl-9"
               />
             </div>
-            {tab === 'my-groups' && !isSchoolWide && (
-              <OwnershipFilterPopover value={ownershipFilter} onChange={setOwnershipFilter} />
-            )}
           </div>
         </div>
 
-        {isSchoolWide && (
-          <div className="mx-6 flex items-center rounded-lg border border-border bg-muted/50 px-4 py-2.5">
-            <p className="text-sm text-muted-foreground">
-              Viewing all groups across the school. Groups cannot be created in this view.
-            </p>
-          </div>
-        )}
-
         {/* ── My Groups table ─────────────────────────────────────────────── */}
-        {tab === 'my-groups' && !isSchoolWide && (
+        {tab === 'my-groups' && (
           <div className="max-w-full overflow-x-auto bg-background">
             {filteredCombinedGroups.length === 0 ? (
               <div className="flex flex-col items-center py-16">
                 <EmptyState
-                  title={
-                    mySearch || ownershipFilter.size > 0
-                      ? 'No groups found'
-                      : 'No groups yet'
-                  }
+                  title={mySearch ? 'No groups found' : 'No groups yet'}
                   description={
-                    mySearch || ownershipFilter.size > 0
-                      ? 'Try adjusting your search or filter.'
+                    mySearch
+                      ? 'Try adjusting your search.'
                       : 'Create a group to reuse student lists across announcements, forms, and reports.'
                   }
                 />
-                {!mySearch && ownershipFilter.size === 0 && (
+                {!mySearch && (
                   <Button
                     size="sm"
                     className="mt-4"
@@ -488,7 +333,6 @@ function GroupsIndex() {
                 </TableHeader>
                 <TableBody>
                   {filteredCombinedGroups.map((group) => {
-                    const isShared = group._source === 'shared'
                     const isSelected = selectedIds.has(group.id)
                     return (
                       <TableRow
@@ -521,7 +365,7 @@ function GroupsIndex() {
                               <span className="truncate font-medium">
                                 {group.name}
                               </span>
-                              {!isShared && group.visibility === 'school' && (
+                              {group.visibility === 'school' && (
                                 <Badge
                                   variant="outline"
                                   className="shrink-0 py-0 text-xs"
@@ -550,8 +394,7 @@ function GroupsIndex() {
                           className="w-[48px] pr-2 text-right"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          {!isShared ? (
-                            // Owner: full dropdown
+                          {
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button
@@ -619,58 +462,7 @@ function GroupsIndex() {
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
-                          ) : isShared ? (
-                            // Shared: Edit + Make a copy
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                                  aria-label="More actions"
-                                >
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem
-                                  render={
-                                    <Link
-                                      to="/groups/$groupId"
-                                      params={{ groupId: group.id }}
-                                    />
-                                  }
-                                >
-                                  <Edit2 className="mr-2 h-4 w-4" />
-                                  Edit group
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => {
-                                    const { _source: _, ...groupData } = group
-                                    const copy = {
-                                      ...groupData,
-                                      id: `cg-${Date.now()}`,
-                                      name: `${group.name} (copy)`,
-                                      createdBy: {
-                                        name: 'Mrs Tan Mei Lin',
-                                        email: CURRENT_USER_EMAIL,
-                                      },
-                                      sharedWith: [],
-                                      createdAt: new Date().toISOString(),
-                                      updatedAt: new Date().toISOString(),
-                                      lastUsedAt: undefined,
-                                    }
-                                    MOCK_GROUPS.push(copy)
-                                    setGroups([...MOCK_GROUPS])
-                                    toast.success('Copy created')
-                                  }}
-                                >
-                                  <Copy className="mr-2 h-4 w-4" />
-                                  Make a copy
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          ) : null}
+                          }
                         </TableCell>
                       </TableRow>
                     )
@@ -729,7 +521,9 @@ function GroupsIndex() {
               {filteredAssignedGroups.length === 0 ? (
                 <div className="flex flex-col items-center py-16">
                   <EmptyState
-                    title={assignedSearch ? 'No groups found' : 'No groups assigned'}
+                    title={
+                      assignedSearch ? 'No groups found' : 'No groups assigned'
+                    }
                     description={
                       assignedSearch
                         ? 'Try adjusting your search.'
@@ -780,103 +574,6 @@ function GroupsIndex() {
               )}
             </div>
           </>
-        )}
-
-        {/* ── School-wide Groups table (admin only) ───────────────────────── */}
-        {isSchoolWide && tab === 'my-groups' && (
-          <div className="max-w-full overflow-x-auto bg-background">
-            {filteredSchoolGroups.length === 0 ? (
-              <div className="flex flex-col items-center py-16">
-                <EmptyState
-                  title="No groups found"
-                  description="Try adjusting your search or filter."
-                />
-              </div>
-            ) : (
-              <Table tableClassName="table-fixed w-full">
-                <TableHeader className="border-b bg-background">
-                  <TableRow className="border-0 hover:bg-transparent">
-                    <TableHead className="pl-6">Name</TableHead>
-                    <TableHead className="w-24">Students</TableHead>
-                    <TableHead className="w-32">Last updated</TableHead>
-                    <TableHead className="w-40">Created by</TableHead>
-                    <TableHead className="w-[48px] pr-2" />
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredSchoolGroups.map((group) => (
-                    <TableRow
-                      key={group.id}
-                      className="cursor-pointer"
-                      onClick={() =>
-                        navigate({
-                          to: '/groups/$groupId',
-                          params: { groupId: group.id },
-                        })
-                      }
-                    >
-                      <TableCell className="overflow-hidden whitespace-normal pl-6">
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <span className="truncate font-medium">{group.name}</span>
-                            {group.visibility === 'school' && (
-                              <Badge variant="outline" className="shrink-0 py-0 text-xs">
-                                School-wide
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                          <Users className="h-3.5 w-3.5 shrink-0" />
-                          {group.members.length}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {formatRelativeDate(group.updatedAt)}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {group.createdBy.email === CURRENT_USER_EMAIL
-                          ? 'Me (Daniel Tan)'
-                          : stripSalutation(group.createdBy.name)}
-                      </TableCell>
-                      <TableCell
-                        className="w-[48px] pr-2 text-right"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                              aria-label="More actions"
-                            >
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              render={
-                                <Link
-                                  to="/groups/$groupId"
-                                  params={{ groupId: group.id }}
-                                />
-                              }
-                            >
-                              <Edit2 className="mr-2 h-4 w-4" />
-                              Edit group
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </div>
         )}
       </div>
 
