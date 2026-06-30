@@ -35,6 +35,7 @@ import type {
 } from '@/types/pg-announcement'
 import type { FormQuestion, ReminderType, ResponseType } from '@/types/form'
 import type { SelectedEntity } from '@/components/comms/entity-selector'
+import type { FileMeta } from '@/lib/draft-storage'
 import { QuestionBuilder } from '@/components/comms/question-builder'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
 import { StudentRecipientSelector } from '@/components/comms/student-recipient-selector'
@@ -74,7 +75,6 @@ import {
   loadDraft,
   saveDraft,
 } from '@/lib/draft-storage'
-import type { FileMeta } from '@/lib/draft-storage'
 
 export const Route = createFileRoute('/announcements/new')({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -132,8 +132,8 @@ function hasTimeConflict(
 // Schedule-picker helpers
 // ---------------------------------------------------------------------------
 
-function buildScheduleSlots(): { value: string; label: string }[] {
-  const slots: { value: string; label: string }[] = []
+function buildScheduleSlots(): Array<{ value: string; label: string }> {
+  const slots: Array<{ value: string; label: string }> = []
   let min = 7 * 60
   const endMin = 21 * 60 + 45
   while (min <= endMin) {
@@ -1534,8 +1534,7 @@ function NewAnnouncementPage() {
   useEffect(() => {
     if (!selectedScheduleDate) return
     const today = new Date()
-    const isToday =
-      selectedScheduleDate.toDateString() === today.toDateString()
+    const isToday = selectedScheduleDate.toDateString() === today.toDateString()
     if (!isToday) return
     const nowMin = today.getHours() * 60 + today.getMinutes()
     const valid = SCHEDULE_SLOTS.find(({ value }) => {
@@ -1848,7 +1847,11 @@ function NewAnnouncementPage() {
                   open={showValidationPopover}
                   onOpenChange={setShowValidationPopover}
                 >
-                  <Button size="sm" onClick={handlePostClick}>
+                  <Button
+                    size="sm"
+                    onClick={handlePostClick}
+                    className={cn(!canPost && 'opacity-50')}
+                  >
                     <Send className="mr-2 h-3.5 w-3.5" />
                     Post now
                   </Button>
@@ -1879,11 +1882,22 @@ function NewAnnouncementPage() {
                 {/* Schedule button with calendar popover */}
                 <Popover
                   open={showSchedulePopover}
-                  onOpenChange={setShowSchedulePopover}
+                  onOpenChange={(open) => {
+                    if (open && !canPost) {
+                      setShowErrors(true)
+                      setShowValidationPopover(true)
+                      return
+                    }
+                    setShowSchedulePopover(open)
+                  }}
                 >
                   <PopoverTrigger
                     render={
-                      <Button size="sm" variant="outline">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className={cn(!canPost && 'opacity-50')}
+                      >
                         <CalendarClock className="mr-2 h-3.5 w-3.5" />
                         Schedule
                       </Button>
