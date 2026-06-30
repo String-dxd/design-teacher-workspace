@@ -461,17 +461,16 @@ function GroupsUpload() {
   return (
     <div className="flex h-[calc(100vh-57px)] flex-col">
       {/* Top bar */}
-      <div className="flex shrink-0 items-center justify-between border-b bg-white px-8 py-3">
-        <span className="text-sm font-medium text-slate-700">New group</span>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="text-muted-foreground"
+      <div className="flex shrink-0 items-center justify-between border-b bg-white px-6 py-4">
+        <span className="text-base font-semibold">New group</span>
+        <button
+          type="button"
           onClick={() => navigate({ to: '/groups' })}
+          className="rounded p-1 text-muted-foreground hover:text-foreground"
+          aria-label="Close"
         >
-          <X className="mr-1.5 h-4 w-4" />
-          Exit
-        </Button>
+          <X className="h-5 w-5" />
+        </button>
       </div>
 
       {step === 1 ? (
