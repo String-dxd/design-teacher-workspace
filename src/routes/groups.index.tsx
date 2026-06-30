@@ -425,7 +425,7 @@ function GroupsIndex() {
               <Table tableClassName="table-fixed w-full">
                 <TableHeader className="border-b bg-background">
                   <TableRow className="border-0 hover:bg-transparent">
-                    <TableHead className="pl-5 w-[44px]">
+                    <TableHead className="pl-5 w-[44px] sticky left-0 z-10 bg-background">
                       <Checkbox
                         checked={
                           allSelectedInView
@@ -438,7 +438,7 @@ function GroupsIndex() {
                         aria-label="Select all"
                       />
                     </TableHead>
-                    <TableHead className="pl-2">
+                    <TableHead className="pl-2 sticky left-[44px] z-10 bg-background">
                       <SortableHeader
                         label="Name"
                         column="name"
@@ -502,7 +502,7 @@ function GroupsIndex() {
                         }
                       >
                         <TableCell
-                          className="pl-5 w-[44px]"
+                          className="pl-5 w-[44px] sticky left-0 z-10 bg-background"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <Checkbox
@@ -511,7 +511,7 @@ function GroupsIndex() {
                             aria-label={`Select ${group.name}`}
                           />
                         </TableCell>
-                        <TableCell className="overflow-hidden whitespace-normal pl-2">
+                        <TableCell className="overflow-hidden whitespace-normal pl-2 sticky left-[44px] z-10 bg-background">
                           <div className="min-w-0">
                             <div className="flex items-center gap-1.5">
                               <span className="truncate font-medium">

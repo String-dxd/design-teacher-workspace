@@ -560,7 +560,7 @@ function ParentsGatewayPage() {
               <Table tableClassName="table-fixed w-full">
                 <TableHeader className="border-b bg-background">
                   <TableRow className="border-0 hover:bg-transparent">
-                    <TableHead className="w-[420px] pl-6">Title</TableHead>
+                    <TableHead className="w-[420px] pl-6 sticky left-0 z-10 bg-background">Title</TableHead>
                     <TableHead className="w-[110px]">Date sent</TableHead>
                     <TableHead className="w-[160px]">Teacher</TableHead>
                     <TableHead className="w-[150px]">Read</TableHead>
@@ -597,7 +597,7 @@ function ParentsGatewayPage() {
                           })
                         }
                       >
-                        <TableCell className="overflow-hidden whitespace-normal pl-6">
+                        <TableCell className="overflow-hidden whitespace-normal pl-6 sticky left-0 z-10 bg-background">
                           <div className="min-w-0">
                             <div className="flex items-center gap-1.5">
                               <span className="truncate font-medium">
@@ -707,7 +707,7 @@ function ParentsGatewayPage() {
               <Table tableClassName="table-fixed w-full">
                 <TableHeader className="border-b bg-background">
                   <TableRow className="border-0 hover:bg-transparent">
-                    <TableHead className="w-[460px] pl-6">Title</TableHead>
+                    <TableHead className="w-[460px] pl-6 sticky left-0 z-10 bg-background">Title</TableHead>
                     <TableHead className="w-[110px]">Date</TableHead>
                     <TableHead className="w-[100px]">Status</TableHead>
                     <TableHead className="w-[130px]">Created by</TableHead>
@@ -731,7 +731,7 @@ function ParentsGatewayPage() {
                           })
                         }
                       >
-                        <TableCell className="overflow-hidden whitespace-normal pl-6">
+                        <TableCell className="overflow-hidden whitespace-normal pl-6 sticky left-0 z-10 bg-background">
                           <div className="min-w-0">
                             <span className="truncate font-medium">
                               {form.title}
@@ -826,7 +826,7 @@ function ParentsGatewayPage() {
               <Table tableClassName="table-fixed w-full">
                 <TableHeader className="border-b bg-background">
                   <TableRow className="border-0 hover:bg-transparent">
-                    <TableHead className="w-[44px] pl-5">
+                    <TableHead className="w-[44px] pl-5 sticky left-0 z-10 bg-background">
                       <Checkbox
                         checked={allSelectedInView}
                         indeterminate={someSelectedInView}
@@ -834,7 +834,7 @@ function ParentsGatewayPage() {
                         aria-label="Select all"
                       />
                     </TableHead>
-                    <TableHead className="w-[416px] pl-2">
+                    <TableHead className="w-[416px] pl-2 sticky left-[44px] z-10 bg-background">
                       <SortableHeader
                         label="Title"
                         column="title"
@@ -942,7 +942,7 @@ function ParentsGatewayPage() {
                         }
                       >
                         <TableCell
-                          className="pl-5 w-[44px]"
+                          className="pl-5 w-[44px] sticky left-0 z-10 bg-background"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <Checkbox
@@ -953,7 +953,7 @@ function ParentsGatewayPage() {
                             aria-label={`Select ${announcement.title}`}
                           />
                         </TableCell>
-                        <TableCell className="overflow-hidden whitespace-normal pl-2">
+                        <TableCell className="overflow-hidden whitespace-normal pl-2 sticky left-[44px] z-10 bg-background">
                           <div className="flex items-start gap-2">
                             <div className="min-w-0">
                               <div className="flex items-center gap-1.5">
