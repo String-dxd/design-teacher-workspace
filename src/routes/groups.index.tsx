@@ -15,12 +15,7 @@ import {
   Users,
 } from 'lucide-react'
 
-import type {
-  GroupTypeFilterOption,
-  StructuredGroup,
-  StudentGroup,
-} from '@/types/student-group'
-import { getStructuredTypeLabel } from '@/types/student-group'
+import type { StructuredGroup, StudentGroup } from '@/types/student-group'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
 import { MOCK_GROUPS, MOCK_SHARED_GROUPS } from '@/data/mock-groups'
 import { TEACHER_STRUCTURED_GROUPS } from '@/data/mock-structured-groups'
@@ -111,89 +106,6 @@ function SegmentedTab({
     >
       {children}
     </button>
-  )
-}
-
-// ─── Type filter popover (Assigned Groups tab) ─────────────────────────────────
-
-const STRUCTURED_FILTER_OPTIONS: Array<{
-  value: Exclude<GroupTypeFilterOption, 'regular'>
-  label: string
-}> = [
-  { value: 'class', label: 'Class' },
-  { value: 'level', label: 'Level' },
-  { value: 'cca', label: 'CCA' },
-  { value: 'teaching', label: 'Teaching Group' },
-]
-
-interface TypeFilterPopoverProps {
-  value: Set<Exclude<GroupTypeFilterOption, 'regular'>>
-  onChange: (v: Set<Exclude<GroupTypeFilterOption, 'regular'>>) => void
-}
-
-function TypeFilterPopover({ value, onChange }: TypeFilterPopoverProps) {
-  function toggle(opt: Exclude<GroupTypeFilterOption, 'regular'>) {
-    const next = new Set(value)
-    if (next.has(opt)) next.delete(opt)
-    else next.add(opt)
-    onChange(next)
-  }
-
-  return (
-    <Popover>
-      <PopoverTrigger
-        render={
-          <Button variant="outline" size="sm" className="gap-2">
-            <Filter className="h-4 w-4" />
-            Filter
-            {value.size > 0 && (
-              <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
-                {value.size}
-              </span>
-            )}
-          </Button>
-        }
-      />
-      <PopoverContent align="start" className="w-[360px] p-0">
-        <div className="px-5 pb-3 pt-4">
-          <h3 className="text-sm font-semibold">Show records</h3>
-        </div>
-        <div className="px-5 pb-4">
-          <div className="flex items-center gap-3">
-            <span className="w-16 shrink-0 text-sm font-medium">Type</span>
-            <div className="flex flex-1 flex-wrap gap-1.5">
-              {STRUCTURED_FILTER_OPTIONS.map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => toggle(opt.value)}
-                  className={cn(
-                    'rounded-md border px-2.5 py-1 text-xs font-medium transition-colors',
-                    value.has(opt.value)
-                      ? 'border-primary bg-primary/10 text-primary'
-                      : 'border-border bg-card text-foreground hover:border-primary hover:text-primary',
-                  )}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center justify-end border-t px-5 py-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onChange(new Set())}
-            disabled={value.size === 0}
-            className="gap-2 text-sm font-medium"
-          >
-            <RotateCcw className="h-4 w-4" />
-            Reset
-          </Button>
-        </div>
-      </PopoverContent>
-    </Popover>
   )
 }
 
@@ -327,10 +239,6 @@ function GroupsIndex() {
     'delete-for-self' | 'delete-for-everyone'
   >('delete-for-self')
   const [assignedSearch, setAssignedSearch] = useState('')
-  const [typeFilter, setTypeFilter] = useState<
-    Set<Exclude<GroupTypeFilterOption, 'regular'>>
-  >(new Set())
-
   const filteredCombinedGroups = useMemo(() => {
     const mine = groups
       .filter((g) => g.createdBy.email === CURRENT_USER_EMAIL)
@@ -356,15 +264,12 @@ function GroupsIndex() {
 
   const filteredAssignedGroups = useMemo(
     () =>
-      TEACHER_STRUCTURED_GROUPS.filter((g) => {
-        const matchesSearch =
+      TEACHER_STRUCTURED_GROUPS.filter(
+        (g) =>
           !assignedSearch ||
-          g.name.toLowerCase().includes(assignedSearch.toLowerCase())
-        const matchesType =
-          typeFilter.size === 0 || typeFilter.has(g.structuredType)
-        return matchesSearch && matchesType
-      }),
-    [assignedSearch, typeFilter],
+          g.name.toLowerCase().includes(assignedSearch.toLowerCase()),
+      ),
+    [assignedSearch],
   )
 
   const allSchoolGroups = useMemo(() => {
@@ -518,9 +423,6 @@ function GroupsIndex() {
             {tab === 'my-groups' && !isSchoolWide && (
               <OwnershipFilterPopover value={ownershipFilter} onChange={setOwnershipFilter} />
             )}
-            {tab === 'assigned' && (
-              <TypeFilterPopover value={typeFilter} onChange={setTypeFilter} />
-            )}
           </div>
         </div>
 
@@ -579,7 +481,6 @@ function GroupsIndex() {
                     </TableHead>
                     <TableHead className="pl-2">Name</TableHead>
                     <TableHead className="w-24">Students</TableHead>
-                    <TableHead className="w-24">Type</TableHead>
                     <TableHead className="w-32">Last updated</TableHead>
                     <TableHead className="w-36">Created by</TableHead>
                     <TableHead className="w-[48px] pr-2" />
@@ -588,11 +489,6 @@ function GroupsIndex() {
                 <TableBody>
                   {filteredCombinedGroups.map((group) => {
                     const isShared = group._source === 'shared'
-                    const sharedRole = isShared
-                      ? group.sharedWith.find(
-                          (s) => s.email === CURRENT_USER_EMAIL,
-                        )?.role
-                      : undefined
                     const isSelected = selectedIds.has(group.id)
                     return (
                       <TableRow
@@ -625,16 +521,6 @@ function GroupsIndex() {
                               <span className="truncate font-medium">
                                 {group.name}
                               </span>
-                              {isShared && (
-                                <Badge
-                                  variant="outline"
-                                  className="shrink-0 py-0 text-xs text-muted-foreground"
-                                >
-                                  {sharedRole === 'editor'
-                                    ? 'Editor'
-                                    : 'Viewer'}
-                                </Badge>
-                              )}
                               {!isShared && group.visibility === 'school' && (
                                 <Badge
                                   variant="outline"
@@ -644,11 +530,6 @@ function GroupsIndex() {
                                 </Badge>
                               )}
                             </div>
-                            {group.listType === 'live' && group.criteria && (
-                              <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
-                                {group.criteria}
-                              </p>
-                            )}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -657,15 +538,8 @@ function GroupsIndex() {
                             {group.members.length}
                           </div>
                         </TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="py-0 text-xs">
-                            {group.listType === 'live' ? 'Criteria' : 'Custom'}
-                          </Badge>
-                        </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
-                          {group.listType === 'live'
-                            ? 'Auto'
-                            : formatRelativeDate(group.updatedAt)}
+                          {formatRelativeDate(group.updatedAt)}
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
                           {group.createdBy.email === CURRENT_USER_EMAIL
@@ -745,8 +619,8 @@ function GroupsIndex() {
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
-                          ) : sharedRole === 'editor' ? (
-                            // Shared editor: Edit + Make a copy
+                          ) : isShared ? (
+                            // Shared: Edit + Make a copy
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button
@@ -855,14 +729,10 @@ function GroupsIndex() {
               {filteredAssignedGroups.length === 0 ? (
                 <div className="flex flex-col items-center py-16">
                   <EmptyState
-                    title={
-                      assignedSearch || typeFilter.size > 0
-                        ? 'No groups found'
-                        : 'No groups assigned'
-                    }
+                    title={assignedSearch ? 'No groups found' : 'No groups assigned'}
                     description={
-                      assignedSearch || typeFilter.size > 0
-                        ? 'Try adjusting your search or filters.'
+                      assignedSearch
+                        ? 'Try adjusting your search.'
                         : 'Your school administrator assigns groups in School Cockpit.'
                     }
                   />
@@ -873,7 +743,6 @@ function GroupsIndex() {
                     <TableRow className="border-0 hover:bg-transparent">
                       <TableHead className="pl-6">Name</TableHead>
                       <TableHead className="w-24">Students</TableHead>
-                      <TableHead className="w-28">Type</TableHead>
                       <TableHead className="w-[48px] pr-2" />
                     </TableRow>
                   </TableHeader>
@@ -899,11 +768,6 @@ function GroupsIndex() {
                             <Users className="h-3.5 w-3.5 shrink-0" />
                             {group.members.length}
                           </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="py-0 text-xs">
-                            {getStructuredTypeLabel(group.structuredType)}
-                          </Badge>
                         </TableCell>
                         <TableCell
                           className="w-[48px] pr-2"
@@ -934,7 +798,6 @@ function GroupsIndex() {
                   <TableRow className="border-0 hover:bg-transparent">
                     <TableHead className="pl-6">Name</TableHead>
                     <TableHead className="w-24">Students</TableHead>
-                    <TableHead className="w-24">Type</TableHead>
                     <TableHead className="w-32">Last updated</TableHead>
                     <TableHead className="w-40">Created by</TableHead>
                     <TableHead className="w-[48px] pr-2" />
@@ -962,11 +825,6 @@ function GroupsIndex() {
                               </Badge>
                             )}
                           </div>
-                          {group.listType === 'live' && group.criteria && (
-                            <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
-                              {group.criteria}
-                            </p>
-                          )}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -975,13 +833,8 @@ function GroupsIndex() {
                           {group.members.length}
                         </div>
                       </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="py-0 text-xs">
-                          {group.listType === 'live' ? 'Criteria' : 'Custom'}
-                        </Badge>
-                      </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
-                        {group.listType === 'live' ? 'Auto' : formatRelativeDate(group.updatedAt)}
+                        {formatRelativeDate(group.updatedAt)}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {group.createdBy.email === CURRENT_USER_EMAIL

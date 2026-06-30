@@ -55,7 +55,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
+import { cn, stripSalutation } from '@/lib/utils'
 import { useFeatureFlag } from '@/hooks/use-feature-flag'
 
 export const Route = createFileRoute('/announcements/')({
@@ -606,10 +606,10 @@ function ParentsGatewayPage() {
               <Table tableClassName="table-fixed w-full">
                 <TableHeader className="border-b bg-background">
                   <TableRow className="border-0 hover:bg-transparent">
-                    <TableHead className="w-[500px] pl-6">Title</TableHead>
+                    <TableHead className="w-[460px] pl-6">Title</TableHead>
                     <TableHead className="w-[110px]">Date</TableHead>
                     <TableHead className="w-[100px]">Status</TableHead>
-                    <TableHead className="w-[90px]">Created by</TableHead>
+                    <TableHead className="w-[130px]">Created by</TableHead>
                     <TableHead className="w-[150px]">Read / Response</TableHead>
                     <TableHead className="w-[80px] pr-4 text-right">
                       Actions
@@ -656,7 +656,7 @@ function ParentsGatewayPage() {
                             {isShared ? (
                               <>
                                 <Users className="h-3.5 w-3.5 shrink-0" />
-                                <span>Shared</span>
+                                <span>{stripSalutation(form.postedBy ?? '')}</span>
                               </>
                             ) : (
                               <span>Me</span>
@@ -731,10 +731,10 @@ function ParentsGatewayPage() {
                         aria-label="Select all"
                       />
                     </TableHead>
-                    <TableHead className="w-[456px] pl-2">Title</TableHead>
+                    <TableHead className="w-[416px] pl-2">Title</TableHead>
                     <TableHead className="w-[110px]">Date</TableHead>
                     <TableHead className="w-[100px]">Status</TableHead>
-                    <TableHead className="w-[90px]">Created by</TableHead>
+                    <TableHead className="w-[130px]">Created by</TableHead>
                     <TableHead className="w-[150px]">
                       {tab === 'with-responses' ? 'Response' : 'Read'}
                     </TableHead>
@@ -870,10 +870,7 @@ function ParentsGatewayPage() {
                             {isShared ? (
                               <>
                                 <Users className="h-3.5 w-3.5 shrink-0" />
-                                <span>Shared</span>
-                                {isViewer && (
-                                  <Lock className="h-3 w-3 shrink-0 text-slate-400" />
-                                )}
+                                <span>{stripSalutation(announcement.postedBy ?? '')}</span>
                               </>
                             ) : (
                               <span>Me</span>

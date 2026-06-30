@@ -169,6 +169,7 @@ export const mockPGAnnouncements: Array<PGAnnouncement> = [
     status: 'posted',
     ownership: 'shared',
     role: 'editor',
+    postedBy: 'Mrs Tan Mei Lin',
     staffInCharge: [
       { id: 'tan-ml', name: 'Tan Mei Lin', role: 'editor' },
       { id: 'priya-n', name: 'Priya Nair', role: 'editor' },
@@ -408,6 +409,150 @@ export const mockPGAnnouncements: Array<PGAnnouncement> = [
   },
 ]
 
+export const mockSchoolWidePosts: Array<PGAnnouncement> = [
+  {
+    id: 'sw-1',
+    title: 'NAPFA Test Scheduling — Sec 2 Classes',
+    description:
+      '<p>Dear Parent/Guardian,</p><p>Please be informed that the NAPFA test for all Sec 2 students will be held on <strong>10 Jul 2026</strong>. Students should wear their PE attire and bring a water bottle.</p>',
+    shortcuts: [],
+    websiteLinks: [],
+    status: 'posted',
+    ownership: 'other',
+    role: 'editor',
+    staffInCharge: [],
+    enquiryEmail: 'limsh@bandungsec.edu.sg',
+    postedBy: 'Ms Lim Su Hui',
+    createdAt: daysAgo(5),
+    postedAt: daysAgo(5),
+    recipients: Array.from({ length: 89 }, (_, i) => ({
+      studentId: `sw1-${i}`,
+      studentName: `Student ${i + 1}`,
+      classLabel: ['2A', '2B', '2C', '2D'][i % 4],
+      parentName: `Parent ${i + 1}`,
+      pgStatus: 'onboarded' as const,
+      readStatus: (i % 3 === 0 ? 'unread' : 'read') as 'read' | 'unread',
+      readAt: i % 3 !== 0 ? daysAgo(4) : undefined,
+    })),
+    responseType: 'view-only',
+  },
+  {
+    id: 'sw-2',
+    title: 'Inter-Class Debate Competition — Sign Up Now',
+    description:
+      "<p>Dear Parent/Guardian,</p><p>We are pleased to invite students to sign up for the annual Inter-Class Debate Competition. Please indicate your child's interest by 5 Jul 2026.</p>",
+    shortcuts: [],
+    websiteLinks: [],
+    status: 'posted',
+    ownership: 'other',
+    role: 'editor',
+    staffInCharge: [],
+    enquiryEmail: 'tanck@bandungsec.edu.sg',
+    postedBy: 'Mr Tan Chee Keong',
+    createdAt: daysAgo(8),
+    postedAt: daysAgo(7),
+    recipients: Array.from({ length: 42 }, (_, i) => ({
+      studentId: `sw2-${i}`,
+      studentName: `Student ${i + 1}`,
+      classLabel: ['3A', '3B'][i % 2],
+      parentName: `Parent ${i + 1}`,
+      pgStatus: 'onboarded' as const,
+      readStatus: (i < 30 ? 'read' : 'unread') as 'read' | 'unread',
+      readAt: i < 30 ? daysAgo(6) : undefined,
+      formResponse: (i < 20 ? 'yes' : i < 30 ? 'no' : undefined) as
+        | 'yes'
+        | 'no'
+        | undefined,
+      respondedAt: i < 30 ? daysAgo(6) : undefined,
+    })),
+    responseType: 'acknowledge',
+    dueDate: daysFromNow(3),
+  },
+  {
+    id: 'sw-3',
+    title: 'Library Book Return Reminder',
+    description:
+      '<p>Dear Parent/Guardian,</p><p>Please remind your child to return all library books by <strong>30 Jun 2026</strong>. Outstanding loans may affect end-of-year results collection.</p>',
+    shortcuts: [],
+    websiteLinks: [],
+    status: 'posted',
+    ownership: 'other',
+    role: 'editor',
+    staffInCharge: [],
+    enquiryEmail: 'rahmana@bandungsec.edu.sg',
+    postedBy: 'Ms Rahimah Noor',
+    createdAt: daysAgo(3),
+    postedAt: daysAgo(3),
+    recipients: Array.from({ length: 120 }, (_, i) => ({
+      studentId: `sw3-${i}`,
+      studentName: `Student ${i + 1}`,
+      classLabel: ['1A', '1B', '1C', '2A', '2B'][i % 5],
+      parentName: `Parent ${i + 1}`,
+      pgStatus: 'onboarded' as const,
+      readStatus: (i < 75 ? 'read' : 'unread') as 'read' | 'unread',
+      readAt: i < 75 ? daysAgo(2) : undefined,
+    })),
+    responseType: 'view-only',
+  },
+  {
+    id: 'sw-4',
+    title: 'Sec 4 Oral Examination Schedule',
+    description:
+      '<p>Dear Parent/Guardian,</p><p>The Mother Tongue Oral Examination schedule for Sec 4 students has been released. Please refer to the attached timetable and ensure your child is present on the designated date.</p>',
+    shortcuts: [],
+    websiteLinks: [],
+    attachments: [{ name: 'MT Oral Timetable 2026.pdf', size: '88 KB' }],
+    status: 'posted',
+    ownership: 'other',
+    role: 'editor',
+    staffInCharge: [],
+    enquiryEmail: 'wongpx@bandungsec.edu.sg',
+    postedBy: 'Mr Wong Poh Xiang',
+    createdAt: daysAgo(12),
+    postedAt: daysAgo(12),
+    recipients: Array.from({ length: 56 }, (_, i) => ({
+      studentId: `sw4-${i}`,
+      studentName: `Student ${i + 1}`,
+      classLabel: ['4A', '4B'][i % 2],
+      parentName: `Parent ${i + 1}`,
+      pgStatus: 'onboarded' as const,
+      readStatus: 'read' as const,
+      readAt: daysAgo(11),
+    })),
+    responseType: 'view-only',
+  },
+  {
+    id: 'sw-5',
+    title: 'Parent-Teacher Meeting — Booking Confirmation',
+    description:
+      '<p>Dear Parent/Guardian,</p><p>Thank you for booking your slot for the upcoming Parent-Teacher Meeting on <strong>18 Jul 2026</strong>. Your appointment has been confirmed.</p>',
+    shortcuts: [],
+    websiteLinks: [],
+    status: 'posted',
+    ownership: 'other',
+    role: 'editor',
+    staffInCharge: [],
+    enquiryEmail: 'kohbh@bandungsec.edu.sg',
+    postedBy: 'Ms Koh Bee Hwa',
+    createdAt: daysAgo(2),
+    postedAt: daysAgo(1),
+    recipients: Array.from({ length: 34 }, (_, i) => ({
+      studentId: `sw5-${i}`,
+      studentName: `Student ${i + 1}`,
+      classLabel: '3C',
+      parentName: `Parent ${i + 1}`,
+      pgStatus: 'onboarded' as const,
+      readStatus: (i < 20 ? 'read' : 'unread') as 'read' | 'unread',
+      readAt: i < 20 ? daysAgo(1) : undefined,
+    })),
+    responseType: 'acknowledge',
+    dueDate: daysFromNow(7),
+  },
+]
+
 export function getPGAnnouncementById(id: string): PGAnnouncement | undefined {
-  return mockPGAnnouncements.find((a) => a.id === id)
+  return (
+    mockPGAnnouncements.find((a) => a.id === id) ??
+    mockSchoolWidePosts.find((a) => a.id === id)
+  )
 }

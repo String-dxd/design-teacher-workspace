@@ -50,61 +50,7 @@ const endeavourStudents = mockStudents
   .sort((a, b) => a.indexNumber - b.indexNumber)
   .slice(0, 4)
 
-// Low attendance students — representative sample across classes (mock)
-const lowAttendanceStudents = mockStudents
-  .filter((s) => s.schoolName === 'Bandung Secondary School')
-  .filter((_, i) => i % 7 === 3) // deterministic sample, ~1 in 7 students
-  .slice(0, 11)
-
 export const MOCK_GROUPS: Array<StudentGroup> = [
-  {
-    id: 'cg-learning-support',
-    kind: 'regular',
-    listType: 'live',
-    criteria: 'Learning support enrolment (LSP / LSM)',
-    criteriaSourceHref: '/students',
-    source: 'created',
-    name: 'Learning Support Students',
-    description:
-      'Students enrolled in the Learning Support Programme (LSP) or Learning Support for Mathematics (LSM) across all classes.',
-    members: lsStudents.map((s, i, arr) => ({
-      id: s.id,
-      name: s.name,
-      class: s.class,
-      nric: s.nric,
-      indexNumber: s.indexNumber,
-      // Last 3 students are recently added by the criteria engine
-      isNew: i >= arr.length - 3,
-    })),
-    staffInCharge: [
-      { id: 'tan-ml', name: 'Mrs Tan Mei Lin', type: 'individual' },
-    ],
-    visibility: 'private',
-    sharedWith: [
-      {
-        staffId: 'tan-ml',
-        name: 'Mrs Tan Mei Lin',
-        email: 'tanml@school.edu.sg',
-        role: 'viewer',
-      },
-      {
-        staffId: 'lim-bh',
-        name: 'Mr Lim Beng Huat',
-        email: 'limbh@school.edu.sg',
-        role: 'editor',
-      },
-      {
-        staffId: 'priya-n',
-        name: 'Ms Priya Nair',
-        email: 'priyan@school.edu.sg',
-        role: 'viewer',
-      },
-    ],
-    createdBy: { name: 'Mrs Tan Mei Lin', email: 'tanml@school.edu.sg' },
-    createdAt: '2025-01-15T08:30:00.000Z',
-    updatedAt: '2026-04-02T08:15:00.000Z', // Today
-    lastUsedAt: '2026-04-02T08:15:00.000Z',
-  },
   {
     id: 'cg-drama-festival',
     kind: 'regular',
@@ -142,35 +88,6 @@ export const MOCK_GROUPS: Array<StudentGroup> = [
     createdAt: '2025-03-05T10:00:00.000Z',
     updatedAt: '2026-03-28T09:45:00.000Z', // 5 days ago
     lastUsedAt: '2026-03-28T09:45:00.000Z',
-  },
-  {
-    id: 'cg-low-attendance',
-    kind: 'regular',
-    listType: 'live',
-    criteria: 'Attendance below 80%',
-    criteriaSourceHref: '/student-analytics',
-    source: 'created',
-    name: 'Low Attendance Watchlist',
-    description:
-      'Students whose attendance has fallen below 80% this semester. Auto-updates as attendance data changes.',
-    members: lowAttendanceStudents.map((s, i, arr) => ({
-      id: s.id,
-      name: s.name,
-      class: s.class,
-      nric: s.nric,
-      indexNumber: s.indexNumber,
-      // Last 2 students are recently added by the criteria engine
-      isNew: i >= arr.length - 2,
-    })),
-    staffInCharge: [
-      { id: 'tan-ml', name: 'Mrs Tan Mei Lin', type: 'individual' },
-    ],
-    visibility: 'private',
-    sharedWith: [],
-    createdBy: { name: 'Mrs Tan Mei Lin', email: 'tanml@school.edu.sg' },
-    createdAt: '2025-08-01T09:00:00.000Z',
-    updatedAt: '2026-04-01T08:00:00.000Z', // Yesterday
-    lastUsedAt: '2026-04-01T08:00:00.000Z',
   },
   {
     id: 'cg-science-olympiad',
