@@ -478,7 +478,7 @@ function GroupsIndex() {
                         }
                       />
                     </TableHead>
-                    <TableHead className="w-[48px] pr-2 text-xs font-medium text-muted-foreground">
+                    <TableHead className="w-[48px] pr-2">
                       Actions
                     </TableHead>
                   </TableRow>
