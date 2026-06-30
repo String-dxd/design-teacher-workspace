@@ -639,8 +639,8 @@ function GroupDetailPage() {
           <>
             <div className="rounded-lg border overflow-hidden">
               <Table tableClassName="table-fixed w-full">
-                <TableHeader>
-                  <TableRow className="hover:bg-transparent">
+                <TableHeader className="border-b bg-background">
+                  <TableRow className="border-0 hover:bg-transparent">
                     <TableHead className="w-12">#</TableHead>
                     <TableHead>Name</TableHead>
                     <TableHead className="w-24">Class</TableHead>
@@ -671,7 +671,7 @@ function GroupDetailPage() {
                       <TableCell className="text-muted-foreground text-xs font-mono">
                         {member.nric ?? '—'}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="w-12 pr-2 text-right">
                         {canEdit && group.listType !== 'live' && (
                           <Button
                             variant="ghost"
