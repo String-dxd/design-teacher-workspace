@@ -543,10 +543,10 @@ function GroupsIndex() {
                             : stripSalutation(group.createdBy.name)}
                         </TableCell>
                         <TableCell
-                          className="w-[48px] pr-2 text-right"
+                          className="w-[48px] pr-2"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          {
+                          <div className="flex justify-end">
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button
@@ -614,7 +614,7 @@ function GroupsIndex() {
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
-                          }
+                          </div>
                         </TableCell>
                       </TableRow>
                     )

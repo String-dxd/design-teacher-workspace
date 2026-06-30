@@ -643,9 +643,10 @@ function ParentsGatewayPage() {
                           />
                         </TableCell>
                         <TableCell
-                          className="w-[80px] pr-4 text-right"
+                          className="w-[80px] pr-4"
                           onClick={(e) => e.stopPropagation()}
                         >
+                          <div className="flex justify-end">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button
@@ -686,6 +687,7 @@ function ParentsGatewayPage() {
                               )}
                             </DropdownMenuContent>
                           </DropdownMenu>
+                          </div>
                         </TableCell>
                       </TableRow>
                     )
@@ -779,9 +781,10 @@ function ParentsGatewayPage() {
                           )}
                         </TableCell>
                         <TableCell
-                          className="w-[80px] pr-4 text-right"
+                          className="w-[80px] pr-4"
                           onClick={(e) => e.stopPropagation()}
                         >
+                          <div className="flex justify-end">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button
@@ -805,6 +808,7 @@ function ParentsGatewayPage() {
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
+                          </div>
                         </TableCell>
                       </TableRow>
                     )
@@ -1023,9 +1027,10 @@ function ParentsGatewayPage() {
                           )}
                         </TableCell>
                         <TableCell
-                          className="w-[80px] pr-4 text-right"
+                          className="w-[80px] pr-4"
                           onClick={(e) => e.stopPropagation()}
                         >
+                          <div className="flex justify-end">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button
@@ -1054,6 +1059,7 @@ function ParentsGatewayPage() {
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
+                          </div>
                         </TableCell>
                       </TableRow>
                     )
