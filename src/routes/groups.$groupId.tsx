@@ -455,16 +455,19 @@ function GroupDetailPage() {
 
             <div className="mt-2 flex items-center gap-2 flex-wrap">
               <Badge variant="outline">{group.members.length} students</Badge>
-              <Badge
-                variant="outline"
-                className={cn(
-                  group.visibility === 'school'
-                    ? 'border-green-200 bg-green-50 text-green-700'
-                    : 'border-slate-200 bg-slate-50 text-slate-600',
-                )}
-              >
-                {group.visibility === 'school' ? 'School-wide' : 'Private'}
-              </Badge>
+              {group.visibility === 'school' && (
+                <Badge
+                  variant="outline"
+                  className="border-green-200 bg-green-50 text-green-700"
+                >
+                  School-wide
+                </Badge>
+              )}
+              {group.sharedWith.length > 0 && (
+                <Badge variant="outline" className="border-slate-200 bg-slate-50 text-slate-600">
+                  {group.sharedWith.length} collaborator{group.sharedWith.length !== 1 ? 's' : ''}
+                </Badge>
+              )}
             </div>
           </div>
 
