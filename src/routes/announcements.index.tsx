@@ -6,6 +6,7 @@ import {
   Lock,
   MoreHorizontal,
   Search,
+  Shuffle,
   Trash2,
   Users,
 } from 'lucide-react'
@@ -54,7 +55,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
-import { Switch } from '@/components/ui/switch'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn, stripSalutation } from '@/lib/utils'
 import { useFeatureFlag } from '@/hooks/use-feature-flag'
@@ -398,21 +398,25 @@ function ParentsGatewayPage() {
             {IS_ADMIN && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <label className="flex cursor-pointer select-none items-center gap-2">
-                    <Switch
-                      checked={isSchoolWide}
-                      onCheckedChange={(checked) =>
-                        navigate({
-                          to: '/announcements/',
-                          search: (prev) => ({ ...prev, scope: checked ? 'school' : 'my' }),
-                          replace: true,
-                        })
-                      }
-                    />
-                    <span className="whitespace-nowrap text-sm font-medium">
-                      {isSchoolWide ? 'School Posts' : 'My Posts'}
-                    </span>
-                  </label>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      navigate({
+                        to: '/announcements/',
+                        search: (prev) => ({ ...prev, scope: isSchoolWide ? 'my' : 'school' }),
+                        replace: true,
+                      })
+                    }
+                    className={cn(
+                      'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-all',
+                      isSchoolWide
+                        ? 'border-foreground/20 bg-foreground text-background'
+                        : 'border-border text-muted-foreground hover:border-foreground/20 hover:text-foreground',
+                    )}
+                  >
+                    <Shuffle className="h-3.5 w-3.5" />
+                    Switch to Admin View
+                  </button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" className="max-w-56 text-center">
                   Shows posts from all staff across the school. Visible to you as an admin.
