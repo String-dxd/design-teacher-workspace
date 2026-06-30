@@ -34,9 +34,17 @@ const AUTO_COLLAPSE_ROUTES = [
 function SidebarAutoCollapse() {
   const pathname = useRouterState({ select: (s) => s.location.pathname })
   const { collapseSidebar } = useSidebar()
+  const prevPathnameRef = React.useRef<string | null>(null)
 
   React.useEffect(() => {
-    if (AUTO_COLLAPSE_ROUTES.some((r) => pathname.startsWith(r))) {
+    const prev = prevPathnameRef.current
+    prevPathnameRef.current = pathname
+
+    const inSection = AUTO_COLLAPSE_ROUTES.some((r) => pathname.startsWith(r))
+    const wasInSection = prev !== null && AUTO_COLLAPSE_ROUTES.some((r) => prev.startsWith(r))
+
+    // Only collapse when crossing into a section from outside
+    if (inSection && !wasInSection) {
       collapseSidebar()
     }
   }, [pathname, collapseSidebar])
