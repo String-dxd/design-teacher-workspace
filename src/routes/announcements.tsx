@@ -1,14 +1,36 @@
+import { useState } from 'react'
 import {
   Link,
   Outlet,
   createFileRoute,
   useLocation,
+  useNavigate,
   useSearch,
 } from '@tanstack/react-router'
-import { Plus } from 'lucide-react'
+import { Check, ChevronDown, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import { cn } from '@/lib/utils'
 
 const IS_ADMIN = true
+
+const SCOPE_OPTIONS = [
+  {
+    value: 'my',
+    label: 'My Posts',
+    description: 'Posts you have created',
+  },
+  {
+    value: 'school',
+    label: 'School Posts',
+    description: 'All posts across the school',
+    adminOnly: true,
+  },
+] as const
 
 export const Route = createFileRoute('/announcements')({
   component: AnnouncementsLayout,
@@ -16,8 +38,11 @@ export const Route = createFileRoute('/announcements')({
 
 function AnnouncementsLayout() {
   const location = useLocation()
+  const navigate = useNavigate()
   const search = useSearch({ strict: false }) as { scope?: string }
-  const isSchoolWide = IS_ADMIN && search.scope === 'school'
+  const scope = search.scope ?? 'my'
+  const isSchoolWide = IS_ADMIN && scope === 'school'
+  const [open, setOpen] = useState(false)
 
   const isSubPage =
     location.pathname.startsWith('/announcements/new') ||
@@ -29,11 +54,59 @@ function AnnouncementsLayout() {
     return <Outlet />
   }
 
+  const currentLabel = isSchoolWide ? 'School Posts' : 'My Posts'
+  const visibleOptions = SCOPE_OPTIONS.filter((o) => !o.adminOnly || IS_ADMIN)
+
   return (
     <div className="flex flex-col">
       <div className="border-b px-4 py-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-lg font-semibold md:text-2xl">Posts</h1>
+          {IS_ADMIN ? (
+            <Popover open={open} onOpenChange={setOpen}>
+              <PopoverTrigger className="inline-flex cursor-pointer items-center gap-1.5 bg-transparent p-0 text-lg font-semibold outline-none md:text-2xl">
+                {currentLabel}
+                <ChevronDown className="h-5 w-5 text-muted-foreground" />
+              </PopoverTrigger>
+              <PopoverContent
+                className="w-56 gap-0 overflow-hidden rounded-2xl p-1"
+                align="start"
+              >
+                {visibleOptions.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => {
+                      navigate({
+                        to: '/announcements',
+                        search: (prev) => ({
+                          ...prev,
+                          scope: opt.value,
+                        }),
+                        replace: true,
+                      })
+                      setOpen(false)
+                    }}
+                    className={cn(
+                      'flex w-full flex-col rounded-xl px-3 py-2 text-left transition-colors hover:bg-accent',
+                      scope === opt.value && 'bg-accent',
+                    )}
+                  >
+                    <span className="flex items-center justify-between">
+                      <span className="text-sm font-medium">{opt.label}</span>
+                      {scope === opt.value && (
+                        <Check className="h-4 w-4 text-primary" />
+                      )}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {opt.description}
+                    </span>
+                  </button>
+                ))}
+              </PopoverContent>
+            </Popover>
+          ) : (
+            <h1 className="text-lg font-semibold md:text-2xl">My Posts</h1>
+          )}
           {!isSchoolWide && (
             <Button size="sm" render={<Link to="/create" />}>
               <Plus className="mr-1.5 h-4 w-4" />

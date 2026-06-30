@@ -6,7 +6,6 @@ import {
   Lock,
   MoreHorizontal,
   Search,
-  Shuffle,
   Trash2,
   Users,
 } from 'lucide-react'
@@ -55,7 +54,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+
 import { cn, stripSalutation } from '@/lib/utils'
 import { useFeatureFlag } from '@/hooks/use-feature-flag'
 
@@ -394,35 +393,6 @@ function ParentsGatewayPage() {
               ))}
             </div>
 
-            {/* School-wide mode toggle — separate from content filters */}
-            {IS_ADMIN && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      navigate({
-                        to: '/announcements/',
-                        search: (prev) => ({ ...prev, scope: isSchoolWide ? 'my' : 'school' }),
-                        replace: true,
-                      })
-                    }
-                    className={cn(
-                      'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-all',
-                      isSchoolWide
-                        ? 'border-foreground/20 bg-foreground text-background'
-                        : 'border-border text-muted-foreground hover:border-foreground/20 hover:text-foreground',
-                    )}
-                  >
-                    <Shuffle className="h-3.5 w-3.5" />
-                    {isSchoolWide ? 'Switch to Teacher View' : 'Switch to Admin View'}
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="max-w-56 text-center">
-                  Shows posts from all staff across the school. Visible to you as an admin.
-                </TooltipContent>
-              </Tooltip>
-            )}
           </div>
 
           <div className="flex items-center gap-2">
