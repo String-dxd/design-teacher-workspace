@@ -1672,19 +1672,85 @@ function stripSuperscripts(s: string): string {
   return s.replace(/[°-¹⁰-₟]+/g, '').trim()
 }
 
+// Demo prose is authored against the original placeholder student
+// (full name + given name pair). Swap both in for the active student so
+// the form / preview reads correctly when the YH lands here from a
+// different student's profile.
+const DEMO_FULL_NAME = 'Chen Jun Kai'
+const DEMO_GIVEN_NAME = 'Jun Kai'
+
+function givenNameOf(fullName: string): string {
+  // Singapore convention varies: "Chen Jun Kai" (surname first → given is
+  // everything after the first token) versus "Mei Lin Huang" (surname
+  // last → given is everything before the last token). We can't tell
+  // them apart without a registry, so take a pragmatic middle path:
+  // strip the last token only when there are 3+ whitespace tokens and
+  // every token capitalises like a word. For 2-token names, return the
+  // first token. Otherwise return the whole name.
+  const tokens = fullName.trim().split(/\s+/).filter(Boolean)
+  if (tokens.length >= 3) return tokens.slice(0, -1).join(' ')
+  if (tokens.length === 2) return tokens[0]
+  return fullName
+}
+
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+function personalizeText(text: string, studentName: string): string {
+  if (!text || !studentName) return text
+  const fullName = studentName
+  const givenName = givenNameOf(studentName)
+  // Longest match first so 'Chen Jun Kai' substitutes before 'Jun Kai'.
+  return text
+    .replace(new RegExp(escapeRegExp(DEMO_FULL_NAME), 'g'), fullName)
+    .replace(new RegExp(escapeRegExp(DEMO_GIVEN_NAME), 'g'), givenName)
+}
+
+// Override field.value where prefillKey matches a known Student
+// attribute, so a template authored against the demo placeholder shows
+// the active student's particulars on the Fill Report page + preview.
+function personalizeTemplate(
+  template: AgencyTemplate,
+  student: { name: string; class: string; nric: string; schoolName?: string },
+): AgencyTemplate {
+  const lookup: Record<string, string | undefined> = {
+    studentName: student.name,
+    nric: student.nric,
+    class: student.class,
+    school: student.schoolName,
+  }
+  return {
+    ...template,
+    sections: template.sections.map((s) => ({
+      ...s,
+      fields: s.fields.map((f) => {
+        if (!f.prefillKey) return f
+        const v = lookup[f.prefillKey]
+        if (v === undefined || v === '') return f
+        return { ...f, value: v }
+      }),
+    })),
+  }
+}
+
 function fieldValue(
   template: AgencyTemplate,
   fieldId: string,
+  studentName?: string,
 ): string | undefined {
   for (const section of template.sections) {
     const f = section.fields.find((x) => x.id === fieldId)
     if (f) {
       if (f.value && f.value.trim().length > 0) return f.value
       const ai = AI_DRAFTS[f.id]
-      if (ai) return stripSuperscripts(ai)
+      if (ai) {
+        const stripped = stripSuperscripts(ai)
+        return studentName ? personalizeText(stripped, studentName) : stripped
+      }
       if (section.role === 'counsellor') {
         const v = (MOCK_COUNSELLOR.fields as Record<string, string>)[f.id]
-        if (v) return v
+        if (v) return studentName ? personalizeText(v, studentName) : v
       }
       return undefined
     }
@@ -1796,6 +1862,7 @@ function YesNoNaRow({
 
 function AttendanceBlock({
   template,
+  studentName,
   yearLabel,
   ratingId,
   presentId,
@@ -1803,13 +1870,14 @@ function AttendanceBlock({
   absentId,
 }: {
   template: AgencyTemplate
+  studentName: string
   yearLabel: string
   ratingId: string
   presentId: string
   lateId: string
   absentId: string
 }) {
-  const rating = fieldValue(template, ratingId)
+  const rating = fieldValue(template, ratingId, studentName)
   return (
     <div className="mb-3 space-y-1.5">
       <p className="text-[12px] font-bold underline">{yearLabel}</p>
@@ -1829,11 +1897,11 @@ function AttendanceBlock({
       </div>
       <div className="ml-6 grid grid-cols-[1fr_auto] gap-x-3 gap-y-0.5 text-[12px]">
         <span>No. of days present during the year (e.g. 90/100)</span>
-        <span>: {fieldValue(template, presentId) ?? ''}</span>
+        <span>: {fieldValue(template, presentId, studentName) ?? ''}</span>
         <span>No. of days late for school</span>
-        <span>: {fieldValue(template, lateId) ?? ''}</span>
+        <span>: {fieldValue(template, lateId, studentName) ?? ''}</span>
         <span>No. of days absent without valid reasons</span>
-        <span>: {fieldValue(template, absentId) ?? ''}</span>
+        <span>: {fieldValue(template, absentId, studentName) ?? ''}</span>
       </div>
     </div>
   )
@@ -1897,14 +1965,16 @@ function ConductRow({
 
 function OverallConductRow({
   template,
+  studentName,
   yearLabel,
   fieldId,
 }: {
   template: AgencyTemplate
+  studentName: string
   yearLabel: string
   fieldId: string
 }) {
-  const v = fieldValue(template, fieldId)
+  const v = fieldValue(template, fieldId, studentName)
   return (
     <div className="mb-2">
       <p className="text-[12px] font-bold underline">{yearLabel}</p>
@@ -1922,14 +1992,16 @@ function OverallConductRow({
 
 function AcademicPerfRow({
   template,
+  studentName,
   yearLabel,
   fieldId,
 }: {
   template: AgencyTemplate
+  studentName: string
   yearLabel: string
   fieldId: string
 }) {
-  const v = fieldValue(template, fieldId)
+  const v = fieldValue(template, fieldId, studentName)
   return (
     <div className="mb-2">
       <p className="text-[12px] font-bold underline">{yearLabel}</p>
@@ -1956,79 +2028,79 @@ function ChildrenHomeFilledRendering({
   template: AgencyTemplate
   studentName: string
 }) {
-  const purpose = fieldValue(template, 'ch-purpose-type')
+  const purpose = fieldValue(template, 'ch-purpose-type', studentName)
   const conductRows: Array<{ n: number; label: string; value?: string }> = [
     {
       n: 1,
       label: 'Responsive',
-      value: fieldValue(template, 'ch-cond-responsive'),
+      value: fieldValue(template, 'ch-cond-responsive', studentName),
     },
     {
       n: 2,
       label: 'Responsible',
-      value: fieldValue(template, 'ch-cond-responsible'),
+      value: fieldValue(template, 'ch-cond-responsible', studentName),
     },
-    { n: 3, label: 'Polite', value: fieldValue(template, 'ch-cond-polite') },
-    { n: 4, label: 'Honest', value: fieldValue(template, 'ch-cond-honest') },
-    { n: 5, label: 'Helpful', value: fieldValue(template, 'ch-cond-helpful') },
+    { n: 3, label: 'Polite', value: fieldValue(template, 'ch-cond-polite', studentName) },
+    { n: 4, label: 'Honest', value: fieldValue(template, 'ch-cond-honest', studentName) },
+    { n: 5, label: 'Helpful', value: fieldValue(template, 'ch-cond-helpful', studentName) },
     {
       n: 6,
       label: 'Attentive',
-      value: fieldValue(template, 'ch-cond-attentive'),
+      value: fieldValue(template, 'ch-cond-attentive', studentName),
     },
     {
       n: 7,
       label: 'Hardworking',
-      value: fieldValue(template, 'ch-cond-hardworking'),
+      value: fieldValue(template, 'ch-cond-hardworking', studentName),
     },
     {
       n: 8,
       label: 'Respectful',
-      value: fieldValue(template, 'ch-cond-respectful'),
+      value: fieldValue(template, 'ch-cond-respectful', studentName),
     },
     {
       n: 9,
       label: 'Problems with peers',
-      value: fieldValue(template, 'ch-cond-peers'),
+      value: fieldValue(template, 'ch-cond-peers', studentName),
     },
     {
       n: 10,
       label: 'Problems with teachers',
-      value: fieldValue(template, 'ch-cond-teachers'),
+      value: fieldValue(template, 'ch-cond-teachers', studentName),
     },
     {
       n: 11,
       label: 'Associates with Gangs',
-      value: fieldValue(template, 'ch-cond-gangs'),
+      value: fieldValue(template, 'ch-cond-gangs', studentName),
     },
-    { n: 12, label: 'Truancy', value: fieldValue(template, 'ch-cond-truancy') },
+    { n: 12, label: 'Truancy', value: fieldValue(template, 'ch-cond-truancy', studentName) },
     {
       n: 13,
       label: 'Engages in Fights',
-      value: fieldValue(template, 'ch-cond-fights'),
+      value: fieldValue(template, 'ch-cond-fights', studentName),
     },
     {
       n: 14,
       label: 'Pilfers/Steals',
-      value: fieldValue(template, 'ch-cond-pilfers'),
+      value: fieldValue(template, 'ch-cond-pilfers', studentName),
     },
-    { n: 15, label: 'Smokes', value: fieldValue(template, 'ch-cond-smokes') },
+    { n: 15, label: 'Smokes', value: fieldValue(template, 'ch-cond-smokes', studentName) },
     {
       n: 16,
       label: 'Abuses other Substances',
-      value: fieldValue(template, 'ch-cond-substances'),
+      value: fieldValue(template, 'ch-cond-substances', studentName),
     },
     {
       n: 17,
       label: 'Defies Authority',
-      value: fieldValue(template, 'ch-cond-defies'),
+      value: fieldValue(template, 'ch-cond-defies', studentName),
     },
     {
       n: 18,
       label: 'Resists School counselling',
-      value: fieldValue(template, 'ch-cond-resists-counselling'),
+      value: fieldValue(template, 'ch-cond-resists-counselling', studentName),
     },
-    { n: 19, label: 'Bullies', value: fieldValue(template, 'ch-cond-bullies') },
+    { n: 19, label: 'Bullies', value: fieldValue(template, 'ch-cond-bullies', studentName) },
   ]
 
   return (
@@ -2079,7 +2151,7 @@ function ChildrenHomeFilledRendering({
           <span className="w-[260px] font-bold">
             Others:{' '}
             <span className="font-normal underline">
-              {fieldValue(template, 'ch-purpose-other') ??
+              {fieldValue(template, 'ch-purpose-other', studentName) ??
                 '                      '}
             </span>
           </span>
@@ -2091,14 +2163,14 @@ function ChildrenHomeFilledRendering({
       <SectionBar numeral="II" title="STUDENT'S PERSONAL PARTICULARS" />
       <FieldBox
         label="Name:"
-        value={fieldValue(template, 'ch-name') ?? studentName}
+        value={fieldValue(template, 'ch-name', studentName) ?? studentName}
       />
-      <FieldBox label="NRIC/BC No.:" value={fieldValue(template, 'ch-nric')} />
-      <FieldBox label="Class:" value={fieldValue(template, 'ch-class')} />
-      <FieldBox label="School:" value={fieldValue(template, 'ch-school')} />
+      <FieldBox label="NRIC/BC No.:" value={fieldValue(template, 'ch-nric', studentName)} />
+      <FieldBox label="Class:" value={fieldValue(template, 'ch-class', studentName)} />
+      <FieldBox label="School:" value={fieldValue(template, 'ch-school', studentName)} />
       <FieldBox
         label="School's Address:"
-        value={fieldValue(template, 'ch-school-address')}
+        value={fieldValue(template, 'ch-school-address', studentName)}
       />
 
       {/* III. Academic Performance & Conduct */}
@@ -2111,6 +2183,7 @@ function ChildrenHomeFilledRendering({
         years in school)
       </p>
       <AttendanceBlock
+        studentName={studentName}
         template={template}
         yearLabel="Secondary 1"
         ratingId="ch-att-rating-sec1"
@@ -2119,6 +2192,7 @@ function ChildrenHomeFilledRendering({
         absentId="ch-att-absent-sec1"
       />
       <AttendanceBlock
+        studentName={studentName}
         template={template}
         yearLabel="Secondary 2"
         ratingId="ch-att-rating-sec2"
@@ -2127,6 +2201,7 @@ function ChildrenHomeFilledRendering({
         absentId="ch-att-absent-sec2"
       />
       <AttendanceBlock
+        studentName={studentName}
         template={template}
         yearLabel="Secondary 3"
         ratingId="ch-att-rating-sec3"
@@ -2136,11 +2211,11 @@ function ChildrenHomeFilledRendering({
       />
       <div className="ml-6 mt-1 grid grid-cols-[1fr_auto] gap-x-3 gap-y-0.5 text-[12px]">
         <span>Date left School (for ex-students)</span>
-        <span>: {fieldValue(template, 'ch-att-date-left') ?? ''}</span>
+        <span>: {fieldValue(template, 'ch-att-date-left', studentName) ?? ''}</span>
         <span>Reason for leaving School</span>
-        <span>: {fieldValue(template, 'ch-att-reason-leaving') ?? ''}</span>
+        <span>: {fieldValue(template, 'ch-att-reason-leaving', studentName) ?? ''}</span>
         <span>Withdrawn by (if applicable)</span>
-        <span>: {fieldValue(template, 'ch-att-withdrawn-by') ?? ''}</span>
+        <span>: {fieldValue(template, 'ch-att-withdrawn-by', studentName) ?? ''}</span>
       </div>
 
       <p className="mt-5 text-[12px] font-bold">
@@ -2161,23 +2236,26 @@ function ChildrenHomeFilledRendering({
         )
       </p>
       <OverallConductRow
+        studentName={studentName}
         template={template}
         yearLabel="Secondary 1"
         fieldId="ch-cond-overall-sec1"
       />
       <OverallConductRow
+        studentName={studentName}
         template={template}
         yearLabel="Secondary 2"
         fieldId="ch-cond-overall-sec2"
       />
       <OverallConductRow
+        studentName={studentName}
         template={template}
         yearLabel="Secondary 3"
         fieldId="ch-cond-overall-sec3"
       />
       <p className="mt-2 text-[12px]">Comments, if any:</p>
       <p className="mb-4 mt-1 whitespace-pre-line text-[12px] leading-relaxed">
-        {fieldValue(template, 'ch-cond-comments') ?? ''}
+        {fieldValue(template, 'ch-cond-comments', studentName) ?? ''}
       </p>
 
       <p className="mt-4 text-[12px] font-bold">
@@ -2188,16 +2266,19 @@ function ChildrenHomeFilledRendering({
       </p>
       <div className="mt-2">
         <AcademicPerfRow
+        studentName={studentName}
           template={template}
           yearLabel="Secondary 1"
           fieldId="ch-acad-sec1"
         />
         <AcademicPerfRow
+        studentName={studentName}
           template={template}
           yearLabel="Secondary 2"
           fieldId="ch-acad-sec2"
         />
         <AcademicPerfRow
+        studentName={studentName}
           template={template}
           yearLabel="Secondary 3"
           fieldId="ch-acad-sec3"
@@ -2207,7 +2288,7 @@ function ChildrenHomeFilledRendering({
         Other Remarks Pertaining to Academic Performance
       </p>
       <p className="mb-4 mt-1 whitespace-pre-line text-[12px] leading-relaxed">
-        {fieldValue(template, 'ch-acad-remarks') ?? ''}
+        {fieldValue(template, 'ch-acad-remarks', studentName) ?? ''}
       </p>
 
       <p className="mt-4 text-[12px] font-bold">
@@ -2218,14 +2299,14 @@ function ChildrenHomeFilledRendering({
       </p>
       <div className="ml-6 mt-2 grid grid-cols-[140px_1fr] gap-y-1 text-[12px]">
         <span>CCA/Activities</span>
-        <span>: {fieldValue(template, 'ch-cca-activities') ?? ''}</span>
+        <span>: {fieldValue(template, 'ch-cca-activities', studentName) ?? ''}</span>
         <span>Position/s Held</span>
-        <span>: {fieldValue(template, 'ch-cca-positions') ?? ''}</span>
+        <span>: {fieldValue(template, 'ch-cca-positions', studentName) ?? ''}</span>
         <span>Attendance</span>
-        <span>: {fieldValue(template, 'ch-cca-attendance') ?? ''}</span>
+        <span>: {fieldValue(template, 'ch-cca-attendance', studentName) ?? ''}</span>
         <span>Behaviour at CCA</span>
         <span className="whitespace-pre-line">
-          : {fieldValue(template, 'ch-cca-behaviour') ?? ''}
+          : {fieldValue(template, 'ch-cca-behaviour', studentName) ?? ''}
         </span>
       </div>
 
@@ -2248,26 +2329,26 @@ function ChildrenHomeFilledRendering({
         <YesNoNaRow
           showHeader
           label="a)  The parents/guardians are co-operative"
-          value={fieldValue(template, 'ch-par-cooperative')}
+          value={fieldValue(template, 'ch-par-cooperative', studentName)}
         />
         <YesNoNaRow
           label="b)  The parents/guardians are able to exert control"
-          value={fieldValue(template, 'ch-par-control')}
+          value={fieldValue(template, 'ch-par-control', studentName)}
         />
         <YesNoNaRow
           label={`c)  The parents/guardians acknowledge the offender's wrongdoing`}
-          value={fieldValue(template, 'ch-par-acknowledge')}
+          value={fieldValue(template, 'ch-par-acknowledge', studentName)}
         />
         <YesNoNaRow
           label="d)  The parents/guardians are inconsistent in their approach to discipline"
-          value={fieldValue(template, 'ch-par-inconsistent')}
+          value={fieldValue(template, 'ch-par-inconsistent', studentName)}
         />
       </div>
       <p className="ml-12 mt-2 text-[12px]">
         e) Others <span className="italic">(Please provide details)</span>
       </p>
       <p className="ml-12 mt-1 whitespace-pre-line text-[12px] leading-relaxed">
-        {fieldValue(template, 'ch-par-other') ?? ''}
+        {fieldValue(template, 'ch-par-other', studentName) ?? ''}
       </p>
 
       <p className="ml-6 mt-4 text-[12px] font-bold">
@@ -2285,26 +2366,26 @@ function ChildrenHomeFilledRendering({
         <YesNoNaRow
           showHeader
           label="a)  An immediate family member/members has a criminal record"
-          value={fieldValue(template, 'ch-fam-criminal')}
+          value={fieldValue(template, 'ch-fam-criminal', studentName)}
         />
         <YesNoNaRow
           label="b)  There is information of drug abuse in the family"
-          value={fieldValue(template, 'ch-fam-drug')}
+          value={fieldValue(template, 'ch-fam-drug', studentName)}
         />
         <YesNoNaRow
           label="c)  There is information of sexual abuse in the family"
-          value={fieldValue(template, 'ch-fam-sexual')}
+          value={fieldValue(template, 'ch-fam-sexual', studentName)}
         />
         <YesNoNaRow
           label="d)  There is information of physical abuse in the family"
-          value={fieldValue(template, 'ch-fam-physical')}
+          value={fieldValue(template, 'ch-fam-physical', studentName)}
         />
       </div>
       <p className="ml-12 mt-2 text-[12px]">
         e) Others <span className="italic">(please provide details)</span>
       </p>
       <p className="ml-12 mt-1 whitespace-pre-line text-[12px] leading-relaxed">
-        {fieldValue(template, 'ch-fam-other') ?? ''}
+        {fieldValue(template, 'ch-fam-other', studentName) ?? ''}
       </p>
       <p className="ml-6 mt-3 text-[11px] italic">
         NA* — Information is not available to the school.
@@ -2318,7 +2399,7 @@ function ChildrenHomeFilledRendering({
         bond)
       </p>
       <p className="ml-6 mt-2 whitespace-pre-line text-[12px] leading-relaxed">
-        {fieldValue(template, 'ch-care-arrangements') ?? ''}
+        {fieldValue(template, 'ch-care-arrangements', studentName) ?? ''}
       </p>
 
       {/* V. Student's Health */}
@@ -2331,7 +2412,7 @@ function ChildrenHomeFilledRendering({
         <span className="italic">(please provide details)</span>
       </p>
       <p className="ml-12 mt-1 whitespace-pre-line text-[12px] leading-relaxed">
-        {fieldValue(template, 'ch-health-medical') ?? ''}
+        {fieldValue(template, 'ch-health-medical', studentName) ?? ''}
       </p>
       <p className="ml-6 mt-3 text-[12px]">
         b) Student displays extreme symptoms of psychiatric disorder, (eg. any
@@ -2342,30 +2423,30 @@ function ChildrenHomeFilledRendering({
         <YesNoNaRow
           showHeader
           label="a)  Extremely bizarre behaviour (hallucinations, delusions, etc)"
-          value={fieldValue(template, 'ch-health-bizarre')}
+          value={fieldValue(template, 'ch-health-bizarre', studentName)}
         />
         <YesNoNaRow
           label="b)  Extremely violent behaviour"
-          value={fieldValue(template, 'ch-health-violent')}
+          value={fieldValue(template, 'ch-health-violent', studentName)}
         />
         <YesNoNaRow
           label="c)  Suicidal inclinations/attempt or clear plan to commit suicide"
-          value={fieldValue(template, 'ch-health-suicidal')}
+          value={fieldValue(template, 'ch-health-suicidal', studentName)}
         />
         <YesNoNaRow
           label="d)  Obvious addiction to substances"
-          value={fieldValue(template, 'ch-health-substance')}
+          value={fieldValue(template, 'ch-health-substance', studentName)}
         />
         <YesNoNaRow
           label="e)  Depression"
-          value={fieldValue(template, 'ch-health-depression')}
+          value={fieldValue(template, 'ch-health-depression', studentName)}
         />
       </div>
       <p className="ml-12 mt-2 text-[12px]">
         f) Others <span className="italic">(please provide details)</span>
       </p>
       <p className="ml-12 mt-1 whitespace-pre-line text-[12px] leading-relaxed">
-        {fieldValue(template, 'ch-health-other') ?? ''}
+        {fieldValue(template, 'ch-health-other', studentName) ?? ''}
       </p>
 
       {/* VI. Counselling */}
@@ -2380,23 +2461,23 @@ function ChildrenHomeFilledRendering({
       </p>
       <div className="ml-6 mt-3 grid grid-cols-[260px_1fr] gap-y-1 text-[12px]">
         <span>Name/type of programme</span>
-        <span>: {fieldValue(template, 'ch-couns-programme') ?? ''}</span>
+        <span>: {fieldValue(template, 'ch-couns-programme', studentName) ?? ''}</span>
         <span>Duration/frequency (start/end date)</span>
-        <span>: {fieldValue(template, 'ch-couns-duration') ?? ''}</span>
+        <span>: {fieldValue(template, 'ch-couns-duration', studentName) ?? ''}</span>
         <span>Persons involved (e.g. parent, friend, etc.)</span>
-        <span>: {fieldValue(template, 'ch-couns-persons') ?? ''}</span>
+        <span>: {fieldValue(template, 'ch-couns-persons', studentName) ?? ''}</span>
         <span>Name of counsellor</span>
-        <span>: {fieldValue(template, 'ch-couns-name') ?? ''}</span>
+        <span>: {fieldValue(template, 'ch-couns-name', studentName) ?? ''}</span>
         <span>Qualifications of counsellor</span>
-        <span>: {fieldValue(template, 'ch-couns-quals') ?? ''}</span>
+        <span>: {fieldValue(template, 'ch-couns-quals', studentName) ?? ''}</span>
         <span>Counsellor's contact details</span>
-        <span>: {fieldValue(template, 'ch-couns-contact') ?? ''}</span>
+        <span>: {fieldValue(template, 'ch-couns-contact', studentName) ?? ''}</span>
       </div>
       <p className="ml-6 mt-3 text-[12px]">
         Any other details which will be of assistance
       </p>
       <p className="ml-6 mt-1 whitespace-pre-line text-[12px] leading-relaxed">
-        {fieldValue(template, 'ch-couns-other') ?? ''}
+        {fieldValue(template, 'ch-couns-other', studentName) ?? ''}
       </p>
 
       {/* VII. Other Information */}
@@ -2411,7 +2492,7 @@ function ChildrenHomeFilledRendering({
         </span>
       </p>
       <p className="ml-6 mt-2 whitespace-pre-line text-[12px] leading-relaxed">
-        {fieldValue(template, 'ch-other-info') ?? ''}
+        {fieldValue(template, 'ch-other-info', studentName) ?? ''}
       </p>
 
       {/* VIII. Teacher / Person Preparing the Report */}
@@ -2421,14 +2502,14 @@ function ChildrenHomeFilledRendering({
       />
       <div className="ml-6 mt-2 grid grid-cols-[160px_1fr] gap-y-2 text-[12px]">
         <span>Name:</span>
-        <span>{fieldValue(template, 'ch-teacher-name') ?? ''}</span>
+        <span>{fieldValue(template, 'ch-teacher-name', studentName) ?? ''}</span>
         <span>Appointment:</span>
         <span>
-          {fieldValue(template, 'ch-teacher-appointment') ?? ''}
+          {fieldValue(template, 'ch-teacher-appointment', studentName) ?? ''}
           {'    '}
           <span className="ml-6">
             No. of Years student known:{' '}
-            {fieldValue(template, 'ch-teacher-years') ?? ''}
+            {fieldValue(template, 'ch-teacher-years', studentName) ?? ''}
           </span>
         </span>
       </div>
@@ -2439,7 +2520,7 @@ function ChildrenHomeFilledRendering({
           </p>
         </div>
         <div className="text-right">
-          <p>Date: {fieldValue(template, 'ch-teacher-date') ?? ''}</p>
+          <p>Date: {fieldValue(template, 'ch-teacher-date', studentName) ?? ''}</p>
         </div>
       </div>
 
@@ -2508,7 +2589,7 @@ function GenericFilledRendering({
             />
             <div className="ml-6 mt-2 space-y-2 text-[12px]">
               {section.fields.map((f) => {
-                const v = fieldValue(template, f.id)
+                const v = fieldValue(template, f.id, studentName)
                 if (f.type === 'narrative') {
                   return (
                     <div key={f.id}>
@@ -2727,7 +2808,7 @@ function ReportForm({
       console.warn(`[agency-report] No AI_DRAFTS entry for field "${id}"`)
       return
     }
-    updateField(id, draft)
+    updateField(id, personalizeText(draft, studentName))
     setAiFlags((p) => ({ ...p, [id]: true }))
   }
   const toggleReviewed = (sectionId: string) => {
@@ -3512,9 +3593,11 @@ function AgencyReportWizardPage() {
       p.includes(id) ? p.filter((x) => x !== id) : [...p, id],
     )
 
-  const activeTemplate =
+  const activeTemplate = personalizeTemplate(
     AGENCY_TEMPLATES.find((t) => t.id === selectedTemplates[0]) ??
-    AGENCY_TEMPLATES[0]
+      AGENCY_TEMPLATES[0],
+    student,
+  )
 
   const showStepBar = step !== 'done'
 
