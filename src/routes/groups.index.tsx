@@ -2,6 +2,9 @@ import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 import {
+  ArrowDown,
+  ArrowUp,
+  ChevronDown,
   Copy,
   Edit2,
   Info,
@@ -19,6 +22,11 @@ import { MOCK_GROUPS } from '@/data/mock-groups'
 import { TEACHER_STRUCTURED_GROUPS } from '@/data/mock-structured-groups'
 import { cn, stripSalutation } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -74,6 +82,68 @@ function formatRelativeDate(dateStr: string): string {
   if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`
   if (diffDays < 365) return `${Math.floor(diffDays / 30)}mo ago`
   return `${Math.floor(diffDays / 365)}y ago`
+}
+
+// ─── Sortable column header ───────────────────────────────────────────────────
+
+type SortState = { column: string; direction: 'asc' | 'desc' } | null
+
+function SortableHeader({
+  label,
+  column,
+  sort,
+  onSort,
+  className,
+}: {
+  label: string
+  column: string
+  sort: SortState
+  onSort: (col: string, dir: 'asc' | 'desc') => void
+  className?: string
+}) {
+  const [open, setOpen] = useState(false)
+  const isActive = sort?.column === column
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger
+        className={cn(
+          'flex cursor-pointer items-center gap-1 bg-transparent p-0 text-xs font-medium text-muted-foreground outline-none hover:text-foreground',
+          isActive && 'text-foreground',
+          className,
+        )}
+      >
+        {label}
+        <ChevronDown className="h-3 w-3 shrink-0" />
+      </PopoverTrigger>
+      <PopoverContent
+        className="w-44 gap-0 overflow-hidden rounded-xl p-1"
+        align="start"
+      >
+        <button
+          type="button"
+          onClick={() => {
+            onSort(column, 'asc')
+            setOpen(false)
+          }}
+          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-accent"
+        >
+          <ArrowUp className="h-4 w-4" />
+          Sort ascending
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            onSort(column, 'desc')
+            setOpen(false)
+          }}
+          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-accent"
+        >
+          <ArrowDown className="h-4 w-4" />
+          Sort descending
+        </button>
+      </PopoverContent>
+    </Popover>
+  )
 }
 
 // ─── SegmentedTab (matches Posts page) ────────────────────────────────────────
@@ -138,6 +208,7 @@ function GroupsIndex() {
   const navigate = useNavigate()
 
   const [tab, setTab] = useState<GroupTab>('my-groups')
+  const [sort, setSort] = useState<SortState>(null)
   const [groups, setGroups] = useState<Array<StudentGroup>>(MOCK_GROUPS)
   const [mySearch, setMySearch] = useState('')
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
@@ -169,15 +240,36 @@ function GroupsIndex() {
     [assignedSearch],
   )
 
-  const filteredGroupIds = filteredCombinedGroups.map((g) => g.id)
+  const sortedGroups = useMemo(() => {
+    if (!sort) return filteredCombinedGroups
+    const dir = sort.direction === 'asc' ? 1 : -1
+    return [...filteredCombinedGroups].sort((a, b) => {
+      switch (sort.column) {
+        case 'name':
+          return a.name.localeCompare(b.name) * dir
+        case 'students':
+          return (a.members.length - b.members.length) * dir
+        case 'last-updated':
+          return (
+            (new Date(a.updatedAt).getTime() -
+              new Date(b.updatedAt).getTime()) *
+            dir
+          )
+        case 'created-by':
+          return a.createdBy.name.localeCompare(b.createdBy.name) * dir
+        default:
+          return 0
+      }
+    })
+  }, [filteredCombinedGroups, sort])
+
+  const filteredGroupIds = sortedGroups.map((g) => g.id)
   const allSelectedInView =
     filteredGroupIds.length > 0 &&
     filteredGroupIds.every((id) => selectedIds.has(id))
   const someSelectedInView =
     filteredGroupIds.some((id) => selectedIds.has(id)) && !allSelectedInView
-  const selectedGroups = filteredCombinedGroups.filter((g) =>
-    selectedIds.has(g.id),
-  )
+  const selectedGroups = sortedGroups.filter((g) => selectedIds.has(g.id))
   // Two-option dialog when user is owner or editor of any selected group
   const hasElevatedAccess = selectedGroups.length > 0
 
@@ -261,7 +353,7 @@ function GroupsIndex() {
                 active={tab === 'assigned'}
                 onClick={() => setTab('assigned')}
               >
-                Shared with me
+                Assigned to me
               </SegmentedTab>
             </div>
           </div>
@@ -286,7 +378,7 @@ function GroupsIndex() {
         {/* ── My Groups table ─────────────────────────────────────────────── */}
         {tab === 'my-groups' && (
           <div className="max-w-full overflow-x-auto bg-background">
-            {filteredCombinedGroups.length === 0 ? (
+            {sortedGroups.length === 0 ? (
               <div className="flex flex-col items-center py-16">
                 <EmptyState
                   title={mySearch ? 'No groups found' : 'No groups yet'}
@@ -324,15 +416,53 @@ function GroupsIndex() {
                         aria-label="Select all"
                       />
                     </TableHead>
-                    <TableHead className="pl-2">Name</TableHead>
-                    <TableHead className="w-24">Students</TableHead>
-                    <TableHead className="w-32">Last updated</TableHead>
-                    <TableHead className="w-36">Created by</TableHead>
-                    <TableHead className="w-[48px] pr-2" />
+                    <TableHead className="pl-2">
+                      <SortableHeader
+                        label="Name"
+                        column="name"
+                        sort={sort}
+                        onSort={(col, dir) =>
+                          setSort({ column: col, direction: dir })
+                        }
+                      />
+                    </TableHead>
+                    <TableHead className="w-24">
+                      <SortableHeader
+                        label="Students"
+                        column="students"
+                        sort={sort}
+                        onSort={(col, dir) =>
+                          setSort({ column: col, direction: dir })
+                        }
+                      />
+                    </TableHead>
+                    <TableHead className="w-32">
+                      <SortableHeader
+                        label="Last updated"
+                        column="last-updated"
+                        sort={sort}
+                        onSort={(col, dir) =>
+                          setSort({ column: col, direction: dir })
+                        }
+                      />
+                    </TableHead>
+                    <TableHead className="w-36">
+                      <SortableHeader
+                        label="Created by"
+                        column="created-by"
+                        sort={sort}
+                        onSort={(col, dir) =>
+                          setSort({ column: col, direction: dir })
+                        }
+                      />
+                    </TableHead>
+                    <TableHead className="w-[48px] pr-2 text-xs font-medium text-muted-foreground">
+                      Actions
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredCombinedGroups.map((group) => {
+                  {sortedGroups.map((group) => {
                     const isSelected = selectedIds.has(group.id)
                     return (
                       <TableRow

@@ -2,6 +2,9 @@ import { useMemo, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import {
   AlertTriangle,
+  ArrowDown,
+  ArrowUp,
+  ChevronDown,
   Copy,
   Lock,
   MoreHorizontal,
@@ -11,9 +14,9 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { PGAnnouncement, PGStatus } from '@/types/pg-announcement'
-import { clearDraft, loadDraft } from '@/lib/draft-storage'
 import type { FormStatus } from '@/types/form'
 import type { AnnouncementFilters } from '@/components/comms/announcement-filter-bar'
+import { clearDraft, loadDraft } from '@/lib/draft-storage'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
 import {
   mockPGAnnouncements,
@@ -54,6 +57,11 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 
 import { cn, stripSalutation } from '@/lib/utils'
 import { useFeatureFlag } from '@/hooks/use-feature-flag'
@@ -94,6 +102,66 @@ function getRelevantDate(
   if (status === 'posted') return postedAt
   if (status === 'scheduled') return scheduledAt
   return createdAt
+}
+
+type SortState = { column: string; direction: 'asc' | 'desc' } | null
+
+function SortableHeader({
+  label,
+  column,
+  sort,
+  onSort,
+  className,
+}: {
+  label: string
+  column: string
+  sort: SortState
+  onSort: (col: string, dir: 'asc' | 'desc') => void
+  className?: string
+}) {
+  const [open, setOpen] = useState(false)
+  const isActive = sort?.column === column
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger
+        className={cn(
+          'flex cursor-pointer items-center gap-1 bg-transparent p-0 text-xs font-medium text-muted-foreground outline-none hover:text-foreground',
+          isActive && 'text-foreground',
+          className,
+        )}
+      >
+        {label}
+        <ChevronDown className="h-3 w-3 shrink-0" />
+      </PopoverTrigger>
+      <PopoverContent
+        className="w-44 gap-0 overflow-hidden rounded-xl p-1"
+        align="start"
+      >
+        <button
+          type="button"
+          onClick={() => {
+            onSort(column, 'asc')
+            setOpen(false)
+          }}
+          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-accent"
+        >
+          <ArrowUp className="h-4 w-4" />
+          Sort ascending
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            onSort(column, 'desc')
+            setOpen(false)
+          }}
+          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-accent"
+        >
+          <ArrowDown className="h-4 w-4" />
+          Sort descending
+        </button>
+      </PopoverContent>
+    </Popover>
+  )
 }
 
 function SegmentedTab({
@@ -148,6 +216,7 @@ function ParentsGatewayPage() {
   const { tab, scope } = Route.useSearch()
   const isSchoolWide = IS_ADMIN && scope === 'school'
   const [searchQuery, setSearchQuery] = useState('')
+  const [sort, setSort] = useState<SortState>(null)
   const [filters, setFilters] = useState<AnnouncementFilters>(
     EMPTY_ANNOUNCEMENT_FILTERS,
   )
@@ -256,6 +325,35 @@ function ParentsGatewayPage() {
       })
   }, [searchQuery, filters, tab, allAnnouncements])
 
+  const sortedAnnouncements = useMemo(() => {
+    if (!sort) return filtered
+    const dir = sort.direction === 'asc' ? 1 : -1
+    return [...filtered].sort((a, b) => {
+      switch (sort.column) {
+        case 'title':
+          return a.title.localeCompare(b.title) * dir
+        case 'date': {
+          const da =
+            getRelevantDate(a.status, a.postedAt, a.scheduledAt, a.createdAt) ??
+            ''
+          const db =
+            getRelevantDate(b.status, b.postedAt, b.scheduledAt, b.createdAt) ??
+            ''
+          return (new Date(da).getTime() - new Date(db).getTime()) * dir
+        }
+        case 'status':
+          return a.status.localeCompare(b.status) * dir
+        case 'created-by': {
+          const na = a.staffInCharge?.[0]?.name ?? ''
+          const nb = b.staffInCharge?.[0]?.name ?? ''
+          return na.localeCompare(nb) * dir
+        }
+        default:
+          return 0
+      }
+    })
+  }, [filtered, sort])
+
   const filteredForms = useMemo(() => {
     return mockForms
       .filter((form) => {
@@ -287,7 +385,8 @@ function ParentsGatewayPage() {
 
   const schoolFiltered = useMemo(() => {
     return allSchoolPosts.filter((a) => {
-      const hasResponse = a.responseType === 'acknowledge' || a.responseType === 'yes-no'
+      const hasResponse =
+        a.responseType === 'acknowledge' || a.responseType === 'yes-no'
       if (tab === 'view-only' && hasResponse) return false
       if (tab === 'with-responses' && !hasResponse) return false
       if (searchQuery) {
@@ -309,7 +408,7 @@ function ParentsGatewayPage() {
   const visibleTabs = tabs.filter((t) => !t.hidden)
 
   // Selection helpers
-  const filteredIds = filtered.map((a) => a.id)
+  const filteredIds = sortedAnnouncements.map((a) => a.id)
   const selectedInView = filteredIds.filter((id) => selectedIds.has(id))
   const allSelectedInView =
     filteredIds.length > 0 && selectedInView.length === filteredIds.length
@@ -392,7 +491,6 @@ function ParentsGatewayPage() {
                 </SegmentedTab>
               ))}
             </div>
-
           </div>
 
           <div className="flex items-center gap-2">
@@ -400,11 +498,15 @@ function ParentsGatewayPage() {
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 type="text"
-                placeholder={tab === 'custom-forms' ? 'Search forms...' : 'Search posts...'}
+                placeholder={
+                  tab === 'custom-forms' ? 'Search forms...' : 'Search posts...'
+                }
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-[240px] pl-9"
-                aria-label={tab === 'custom-forms' ? 'Search forms' : 'Search posts'}
+                aria-label={
+                  tab === 'custom-forms' ? 'Search forms' : 'Search posts'
+                }
               />
             </div>
             <AnnouncementFilterBar filters={filters} onChange={setFilters} />
@@ -415,7 +517,8 @@ function ParentsGatewayPage() {
         {isSchoolWide && (
           <div className="mx-6 flex items-center justify-between rounded-lg border border-border bg-muted/50 px-4 py-2.5">
             <p className="text-sm text-muted-foreground">
-              Viewing all sent posts across the school. Posts cannot be created in this view.
+              Viewing all sent posts across the school. Posts cannot be created
+              in this view.
             </p>
           </div>
         )}
@@ -632,7 +735,9 @@ function ParentsGatewayPage() {
                             {isShared ? (
                               <>
                                 <Users className="h-3.5 w-3.5 shrink-0" />
-                                <span>{stripSalutation(form.postedBy ?? '')}</span>
+                                <span>
+                                  {stripSalutation(form.postedBy ?? '')}
+                                </span>
                               </>
                             ) : (
                               <span>Me</span>
@@ -688,7 +793,7 @@ function ParentsGatewayPage() {
           </div>
         ) : (
           <div className="max-w-full overflow-x-auto bg-background">
-            {filtered.length === 0 ? (
+            {sortedAnnouncements.length === 0 ? (
               <div className="flex flex-col items-center py-16">
                 <EmptyState
                   title="No posts found"
@@ -707,10 +812,46 @@ function ParentsGatewayPage() {
                         aria-label="Select all"
                       />
                     </TableHead>
-                    <TableHead className="w-[416px] pl-2">Title</TableHead>
-                    <TableHead className="w-[110px]">Date</TableHead>
-                    <TableHead className="w-[100px]">Status</TableHead>
-                    <TableHead className="w-[130px]">Created by</TableHead>
+                    <TableHead className="w-[416px] pl-2">
+                      <SortableHeader
+                        label="Title"
+                        column="title"
+                        sort={sort}
+                        onSort={(col, dir) =>
+                          setSort({ column: col, direction: dir })
+                        }
+                      />
+                    </TableHead>
+                    <TableHead className="w-[110px]">
+                      <SortableHeader
+                        label="Date"
+                        column="date"
+                        sort={sort}
+                        onSort={(col, dir) =>
+                          setSort({ column: col, direction: dir })
+                        }
+                      />
+                    </TableHead>
+                    <TableHead className="w-[100px]">
+                      <SortableHeader
+                        label="Status"
+                        column="status"
+                        sort={sort}
+                        onSort={(col, dir) =>
+                          setSort({ column: col, direction: dir })
+                        }
+                      />
+                    </TableHead>
+                    <TableHead className="w-[130px]">
+                      <SortableHeader
+                        label="Created by"
+                        column="created-by"
+                        sort={sort}
+                        onSort={(col, dir) =>
+                          setSort({ column: col, direction: dir })
+                        }
+                      />
+                    </TableHead>
                     <TableHead className="w-[150px]">
                       {tab === 'with-responses' ? 'Response' : 'Read'}
                     </TableHead>
@@ -720,7 +861,7 @@ function ParentsGatewayPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filtered.map((announcement) => {
+                  {sortedAnnouncements.map((announcement) => {
                     const totalCount = announcement.recipients.length
                     const readCount = announcement.recipients.filter(
                       (r) => r.readStatus === 'read',
@@ -822,7 +963,8 @@ function ParentsGatewayPage() {
                           </div>
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
-                          {announcement.status !== 'draft' && formatDate(relevantDate)}
+                          {announcement.status !== 'draft' &&
+                            formatDate(relevantDate)}
                         </TableCell>
                         <TableCell>
                           <StatusBadge status={announcement.status} />
@@ -832,7 +974,9 @@ function ParentsGatewayPage() {
                             {isShared ? (
                               <>
                                 <Users className="h-3.5 w-3.5 shrink-0" />
-                                <span>{stripSalutation(announcement.postedBy ?? '')}</span>
+                                <span>
+                                  {stripSalutation(announcement.postedBy ?? '')}
+                                </span>
                               </>
                             ) : (
                               <span>Me</span>
