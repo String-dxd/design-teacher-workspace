@@ -68,13 +68,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { EmptyState } from '@/components/empty-state'
 import { cn } from '@/lib/utils'
 
@@ -110,6 +103,13 @@ function StaffAvatar({ name, size = 8 }: { name: string; size?: number }) {
   )
 }
 
+const SHARE_PERMISSIONS = [
+  'View and send to the group',
+  'Edit the group name',
+  'Add or remove students',
+  'Share the group with other staff',
+]
+
 function SharingDialog({
   group,
   open,
@@ -124,7 +124,6 @@ function SharingDialog({
     sharedWith: Array<GroupSharedWith>,
   ) => void
 }) {
-  // Seed StaffSelector value from existing sharedWith entries
   const [selectedStaff, setSelectedStaff] = useState<Array<SelectedEntity>>(
     () =>
       group.sharedWith.map((sw) => ({
@@ -135,14 +134,7 @@ function SharingDialog({
       })),
   )
 
-  // Role overrides per staffId — defaults to 'viewer' for newly added people
-  const [staffRoles, setStaffRoles] = useState<
-    Record<string, 'viewer' | 'editor'>
-  >(() =>
-    Object.fromEntries(group.sharedWith.map((sw) => [sw.staffId, sw.role])),
-  )
-
-  // Expand the selectedStaff entities (groups → individual staff IDs)
+  // Expand group entities → individual staff IDs
   const expandedStaffIds = useMemo<Array<string>>(() => {
     const ids: string[] = []
     const seen = new Set<string>()
@@ -153,15 +145,13 @@ function SharingDialog({
           ids.push(entity.id)
         }
       } else {
-        // Group — find and expand, respecting exclusions
         const grp = MOCK_STAFF_GROUPS.find((g) => g.id === entity.id)
         if (!grp) continue
         const excluded = new Set(entity.excludedMemberNames ?? [])
         for (const memberId of grp.memberIds) {
           const member = MOCK_STAFF.find((s) => s.id === memberId)
           if (!member) continue
-          const memberName = stripSalutation(member.name)
-          if (!excluded.has(memberName) && !seen.has(memberId)) {
+          if (!excluded.has(stripSalutation(member.name)) && !seen.has(memberId)) {
             seen.add(memberId)
             ids.push(memberId)
           }
@@ -171,24 +161,16 @@ function SharingDialog({
     return ids
   }, [selectedStaff])
 
-  function updateRole(staffId: string, role: 'viewer' | 'editor') {
-    setStaffRoles((prev) => ({ ...prev, [staffId]: role }))
-  }
-
-  /** Remove an individual from the selection, even if they came from a group entity. */
   function removeStaff(staffId: string) {
     const member = MOCK_STAFF.find((s) => s.id === staffId)
     if (!member) return
     const memberName = stripSalutation(member.name)
     setSelectedStaff((prev) =>
       prev.flatMap((entity) => {
-        if (entity.type === 'individual' && entity.id === staffId) {
-          return [] // drop this individual
-        }
+        if (entity.type === 'individual' && entity.id === staffId) return []
         if (entity.type === 'group') {
           const grp = MOCK_STAFF_GROUPS.find((g) => g.id === entity.id)
           if (grp?.memberIds.includes(staffId)) {
-            // Exclude this member from the group entity
             return [
               {
                 ...entity,
@@ -205,39 +187,31 @@ function SharingDialog({
     )
   }
 
-  // Derive final sharedWith for saving
   const derivedSharedWith: Array<GroupSharedWith> = expandedStaffIds.flatMap(
     (staffId) => {
       const s = MOCK_STAFF.find((m) => m.id === staffId)
       if (!s) return []
-      return [
-        {
-          staffId: s.id,
-          name: s.name,
-          email: s.email,
-          role: staffRoles[s.id] ?? 'viewer',
-        },
-      ]
+      return [{ staffId: s.id, name: s.name, email: s.email, role: 'editor' }]
     },
   )
 
-  // Detect whether any changes have been made vs the saved state
   const hasChanges = useMemo(() => {
     if (derivedSharedWith.length !== group.sharedWith.length) return true
-    const origMap = new Map(group.sharedWith.map((sw) => [sw.staffId, sw.role]))
-    return derivedSharedWith.some((sw) => origMap.get(sw.staffId) !== sw.role)
+    const origIds = new Set(group.sharedWith.map((sw) => sw.staffId))
+    return derivedSharedWith.some((sw) => !origIds.has(sw.staffId))
   }, [derivedSharedWith, group.sharedWith])
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[85vh] max-w-md flex-col gap-0 p-0">
         <DialogHeader className="border-b px-5 py-4">
-          <DialogTitle>Share this group</DialogTitle>
+          <DialogTitle>Share group</DialogTitle>
         </DialogHeader>
 
-        <div className="flex flex-1 flex-col">
-          {/* Staff selector — only auto-opens dropdown when list is empty */}
-          <div className="px-5 pt-4">
+        <div className="flex flex-1 flex-col overflow-y-auto">
+          {/* Staff selector */}
+          <div className="px-5 pt-5">
+            <p className="mb-1.5 text-sm font-medium">Staff names</p>
             <StaffSelector
               key={String(open)}
               value={selectedStaff}
@@ -247,95 +221,73 @@ function SharingDialog({
             />
           </div>
 
-          {/* People with access — role management for each expanded individual */}
-          <div className="max-h-72 overflow-y-auto px-5 pb-4 pt-4">
-            {expandedStaffIds.length === 0 ? (
-              <div className="flex flex-col items-center gap-2 py-10 text-center">
-                <div className="flex size-12 items-center justify-center rounded-full bg-muted">
-                  <Users className="size-5 text-muted-foreground" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-foreground">
-                    No one added yet
-                  </p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    Search above to add staff
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <>
-                <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                  People with access
-                </p>
-                <div className="space-y-0.5">
-                  {derivedSharedWith.map((sw) => {
-                    const staffMeta = MOCK_STAFF.find(
-                      (s) => s.id === sw.staffId,
-                    )
-                    const sublabel = [
-                      staffMeta?.formClass && `Form ${staffMeta.formClass}`,
-                      sw.email,
-                    ]
-                      .filter(Boolean)
-                      .join(' · ')
-                    return (
-                      <div
-                        key={sw.staffId}
-                        className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 hover:bg-muted/30"
-                      >
-                        <StaffAvatar name={sw.name} size={7} />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">
-                            {sw.name}
-                          </p>
-                          <p className="text-xs text-muted-foreground truncate">
-                            {sublabel}
-                          </p>
-                        </div>
-                        <Select
-                          value={sw.role}
-                          onValueChange={(val) =>
-                            updateRole(sw.staffId, val as 'viewer' | 'editor')
-                          }
-                        >
-                          <SelectTrigger className="w-24 h-7 text-xs">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="viewer">Viewer</SelectItem>
-                            <SelectItem value="editor">Editor</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <button
-                          type="button"
-                          onClick={() => removeStaff(sw.staffId)}
-                          className="shrink-0 rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                        >
-                          <X className="size-3.5" />
-                        </button>
+          {/* Selected staff list */}
+          {expandedStaffIds.length > 0 && (
+            <div className="mt-3 px-5">
+              <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                People with access
+              </p>
+              <div className="space-y-0.5">
+                {derivedSharedWith.map((sw) => {
+                  const staffMeta = MOCK_STAFF.find((s) => s.id === sw.staffId)
+                  const sublabel = [
+                    staffMeta?.formClass && `Form ${staffMeta.formClass}`,
+                    sw.email,
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')
+                  return (
+                    <div
+                      key={sw.staffId}
+                      className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 hover:bg-muted/30"
+                    >
+                      <StaffAvatar name={sw.name} size={7} />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium">{sw.name}</p>
+                        <p className="truncate text-xs text-muted-foreground">{sublabel}</p>
                       </div>
-                    )
-                  })}
-                </div>
-              </>
-            )}
+                      <button
+                        type="button"
+                        onClick={() => removeStaff(sw.staffId)}
+                        className="shrink-0 rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                      >
+                        <X className="size-3.5" />
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* What sharing grants */}
+          <div className="mt-4 border-t px-5 py-4">
+            <p className="mb-2 text-sm text-muted-foreground">
+              By sharing this group, other staff members will have access to
+            </p>
+            <ul className="space-y-1.5">
+              {SHARE_PERMISSIONS.map((perm) => (
+                <li key={perm} className="flex items-center gap-2 text-sm">
+                  <span className="text-muted-foreground">–</span>
+                  <span>{perm}</span>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
 
         <DialogFooter className="border-t px-5 py-4">
-          {hasChanges && (
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-          )}
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
           <Button
+            disabled={expandedStaffIds.length === 0 && !hasChanges}
             onClick={() => {
-              if (hasChanges) onSave(group.visibility, derivedSharedWith)
+              onSave(group.visibility, derivedSharedWith)
               onOpenChange(false)
             }}
           >
-            {hasChanges ? 'Save' : 'Done'}
+            {group.sharedWith.length > 0 && !hasChanges ? 'Done' : 'Share group'}
           </Button>
         </DialogFooter>
       </DialogContent>
