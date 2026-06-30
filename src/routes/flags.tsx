@@ -75,19 +75,19 @@ const featureFlagConfigs: Array<FeatureFlagConfig> = [
     key: 'reports',
     label: 'Reports',
     description: 'Show the Reports page in the sidebar under Manage',
-    stage: 'Concept',
+    stage: 'Release 2',
   },
   {
     key: 'calendar',
     label: 'Calendar',
     description: 'Show the Calendar page in the sidebar under Manage',
-    stage: 'Concept',
+    stage: 'Release 2',
   },
   {
     key: 'meetings',
     label: 'Meetings',
     description: 'Show the Meetings page in the sidebar under Manage',
-    stage: 'Concept',
+    stage: 'Release 2',
   },
   {
     key: 'import-data',

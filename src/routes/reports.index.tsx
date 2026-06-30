@@ -28,7 +28,7 @@ export const Route = createFileRoute('/reports/')({
 })
 
 const SCOPE_OPTIONS = [
-  { value: 'my', label: MY_CLASS, description: 'Reports for your class' },
+  { value: 'my', label: 'My Class', description: `Reports for your class (${MY_CLASS})` },
   { value: 'school', label: 'School', description: 'All classes in the school' },
 ] as const
 
@@ -81,7 +81,7 @@ function ReportsPage() {
         <div className="border-b px-4 py-4">
           <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger className="inline-flex cursor-pointer items-center gap-1.5 bg-transparent p-0 text-lg font-semibold outline-none md:text-2xl">
-              {isSchoolWide ? 'School' : MY_CLASS}
+              {isSchoolWide ? 'School' : 'My Class'}
               <ChevronDown className="h-5 w-5 text-muted-foreground" />
             </PopoverTrigger>
             <PopoverContent
@@ -125,7 +125,7 @@ function ReportsPage() {
 
         {/* ── Filter row: report tabs ──────────────────────────────────────────── */}
         <div className="px-6">
-          <div className="flex shrink-0 rounded-full bg-muted p-1 gap-1">
+          <div className="flex w-fit shrink-0 rounded-full bg-muted p-1 gap-1">
             <button
               type="button"
               onClick={() => switchTab('onboarding')}
