@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { toast } from 'sonner'
 import {
   Link,
   createFileRoute,
@@ -164,8 +165,20 @@ function SharingDialog({
       if (!s) return []
       return [{ staffId: s.id, name: s.name, email: s.email, role: 'editor' as const }]
     })
-    onSave(group.visibility, [...existingStaff, ...added])
+    const newSharedWith = [...existingStaff, ...added]
+    onSave(group.visibility, newSharedWith)
+    setPendingStaff([])
     onOpenChange(false)
+    if (added.length > 0) {
+      const names = added.map((s) => stripSalutation(s.name))
+      const label =
+        names.length === 1
+          ? names[0]
+          : names.length === 2
+            ? `${names[0]} and ${names[1]}`
+            : `${names[0]} and ${names.length - 1} others`
+      toast.success(`"${group.name}" shared with ${label}`)
+    }
   }
 
   // Intercept close: warn if the user has typed/selected people but hasn't shared yet
