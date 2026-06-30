@@ -671,7 +671,7 @@ function GroupDetailPage() {
                       <TableCell className="text-muted-foreground text-xs font-mono">
                         {member.nric ?? '—'}
                       </TableCell>
-                      <TableCell className="w-12 pr-2 text-right">
+                      <TableCell className="w-12 pr-4 text-right">
                         {canEdit && group.listType !== 'live' && (
                           <Button
                             variant="ghost"
