@@ -165,19 +165,27 @@ function SharingDialog({
       if (!s) return []
       return [{ staffId: s.id, name: s.name, email: s.email, role: 'editor' as const }]
     })
-    const newSharedWith = [...existingStaff, ...added]
-    onSave(group.visibility, newSharedWith)
+    const existingIds = new Set(existingStaff.map((s) => s.staffId))
+    const removed = group.sharedWith.filter((s) => !existingIds.has(s.staffId))
+
+    onSave(group.visibility, [...existingStaff, ...added])
     setPendingStaff([])
     onOpenChange(false)
+
+    const nameList = (people: Array<{ name: string }>) => {
+      const names = people.map((s) => stripSalutation(s.name))
+      return names.length === 1
+        ? names[0]
+        : names.length === 2
+          ? `${names[0]} and ${names[1]}`
+          : `${names[0]} and ${names.length - 1} others`
+    }
+
     if (added.length > 0) {
-      const names = added.map((s) => stripSalutation(s.name))
-      const label =
-        names.length === 1
-          ? names[0]
-          : names.length === 2
-            ? `${names[0]} and ${names[1]}`
-            : `${names[0]} and ${names.length - 1} others`
-      toast.success(`"${group.name}" shared with ${label}`)
+      toast.success(`"${group.name}" shared with ${nameList(added)}`)
+    }
+    if (removed.length > 0) {
+      toast.success(`Removed ${nameList(removed)} from "${group.name}"`)
     }
   }
 
