@@ -1,11 +1,16 @@
 import { useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { FileDown } from 'lucide-react'
+import { Check, ChevronDown, FileDown } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
 
 type ReportTab = 'onboarding' | 'travel-declaration'
@@ -22,11 +27,17 @@ export const Route = createFileRoute('/reports/')({
   component: ReportsPage,
 })
 
+const SCOPE_OPTIONS = [
+  { value: 'my', label: MY_CLASS, description: 'Reports for your class' },
+  { value: 'school', label: 'School', description: 'All classes in the school' },
+] as const
+
 function ReportsPage() {
   const { tab, scope } = Route.useSearch()
   const navigate = useNavigate()
   const isSchoolWide = scope === 'school'
 
+  const [open, setOpen] = useState(false)
   const [declarationStatus, setDeclarationStatus] =
     useState<DeclarationStatus | null>(null)
   const [startDate, setStartDate] = useState('')
@@ -41,14 +52,6 @@ function ReportsPage() {
     navigate({
       to: '/reports/',
       search: (prev) => ({ ...prev, tab: newTab }),
-      replace: true,
-    })
-  }
-
-  function toggleSchoolWide() {
-    navigate({
-      to: '/reports/',
-      search: (prev) => ({ ...prev, scope: isSchoolWide ? 'my' : 'school' }),
       replace: true,
     })
   }
@@ -73,72 +76,82 @@ function ReportsPage() {
 
   return (
     <div className="flex flex-col">
-      <div className="shrink-0 space-y-5 pt-6">
-        {/* ── Title ───────────────────────────────────────────────────────────── */}
-        <div className="border-b px-6 pb-6">
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-semibold">Reports</h1>
-            <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-900">
-              Concept
-            </span>
-          </div>
-          <p className="mt-1 text-sm text-muted-foreground">
+      <div className="shrink-0 space-y-5">
+        {/* ── Title with scope selector ────────────────────────────────────────── */}
+        <div className="border-b px-4 py-4">
+          <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger className="inline-flex cursor-pointer items-center gap-1.5 bg-transparent p-0 text-lg font-semibold outline-none md:text-2xl">
+              {isSchoolWide ? 'School' : MY_CLASS}
+              <ChevronDown className="h-5 w-5 text-muted-foreground" />
+            </PopoverTrigger>
+            <PopoverContent
+              className="w-56 gap-0 overflow-hidden rounded-2xl p-1"
+              align="start"
+            >
+              {SCOPE_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => {
+                    navigate({
+                      to: '/reports/',
+                      search: (prev) => ({ ...prev, scope: opt.value }),
+                      replace: true,
+                    })
+                    setOpen(false)
+                  }}
+                  className={cn(
+                    'flex w-full flex-col rounded-xl px-3 py-2 text-left transition-colors hover:bg-accent',
+                    scope === opt.value && 'bg-accent',
+                  )}
+                >
+                  <span className="flex items-center justify-between">
+                    <span className="text-sm font-medium">{opt.label}</span>
+                    {scope === opt.value && (
+                      <Check className="h-4 w-4 text-primary" />
+                    )}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {opt.description}
+                  </span>
+                </button>
+              ))}
+            </PopoverContent>
+          </Popover>
+          <p className="mt-1 hidden text-sm text-muted-foreground md:block">
             Export reports for your {isSchoolWide ? 'school' : 'class'}.
           </p>
         </div>
 
-        {/* ── Filter row: report tabs + school-wide — mirrors Posts pattern ──────── */}
+        {/* ── Filter row: report tabs ──────────────────────────────────────────── */}
         <div className="px-6">
-          <div className="flex items-center gap-2">
-            <div className="flex shrink-0 rounded-full bg-muted p-1 gap-1">
-              <button
-                type="button"
-                onClick={() => switchTab('onboarding')}
-                className={cn(
-                  'whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition-all',
-                  tab === 'onboarding'
-                    ? 'bg-background text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground',
-                )}
-              >
-                Onboarding
-              </button>
-              <button
-                type="button"
-                onClick={() => switchTab('travel-declaration')}
-                className={cn(
-                  'whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition-all',
-                  tab === 'travel-declaration'
-                    ? 'bg-background text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground',
-                )}
-              >
-                Travel Declaration
-              </button>
-            </div>
+          <div className="flex shrink-0 rounded-full bg-muted p-1 gap-1">
             <button
               type="button"
-              onClick={toggleSchoolWide}
+              onClick={() => switchTab('onboarding')}
               className={cn(
-                'flex items-center rounded-full border px-3 py-1.5 text-sm font-medium transition-all',
-                isSchoolWide
-                  ? 'border-foreground/20 bg-foreground text-background'
-                  : 'border-border text-muted-foreground hover:border-foreground/20 hover:text-foreground',
+                'whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition-all',
+                tab === 'onboarding'
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground',
               )}
             >
-              School-wide
+              Onboarding
+            </button>
+            <button
+              type="button"
+              onClick={() => switchTab('travel-declaration')}
+              className={cn(
+                'whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition-all',
+                tab === 'travel-declaration'
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground',
+              )}
+            >
+              Travel Declaration
             </button>
           </div>
         </div>
-
-        {/* ── School-wide banner ──────────────────────────────────────────────── */}
-        {isSchoolWide && (
-          <div className="mx-6 flex items-center rounded-lg border border-border bg-muted/50 px-4 py-2.5">
-            <p className="text-sm text-muted-foreground">
-              Viewing school-wide. The export will cover all classes.
-            </p>
-          </div>
-        )}
 
         {/* ── Content section ─────────────────────────────────────────────────── */}
         <div className="px-6 pb-8">

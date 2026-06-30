@@ -822,17 +822,7 @@ function ParentsGatewayPage() {
                           </div>
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
-                          {announcement.status !== 'draft' && (
-                            <span
-                              className={
-                                announcement.status === 'scheduled'
-                                  ? 'text-amber-600'
-                                  : undefined
-                              }
-                            >
-                              {formatDate(relevantDate)}
-                            </span>
-                          )}
+                          {announcement.status !== 'draft' && formatDate(relevantDate)}
                         </TableCell>
                         <TableCell>
                           <StatusBadge status={announcement.status} />
