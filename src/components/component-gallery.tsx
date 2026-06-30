@@ -149,18 +149,6 @@ import { StatusBadge } from '@/components/comms/status-badge'
 import { DataCard } from '@/components/data-card'
 import { EmptyState } from '@/components/empty-state'
 import { FeedbackDialog } from '@/components/feedback-dialog'
-// Feature components
-import {
-  EMPTY_FORMS_FILTERS,
-  FormsFilterBar,
-  type FormsFilters,
-} from '@/components/forms/forms-filter-bar'
-import { AttendanceConductCard } from '@/components/reports/attendance-conduct-card'
-import { AttendanceRing } from '@/components/reports/attendance-ring'
-import { LearningOutcomeRow } from '@/components/reports/learning-outcome-row'
-import { PhysicalFitnessSection } from '@/components/reports/physical-fitness-section'
-import { RadarChart } from '@/components/reports/radar-chart'
-import { StudentInfoCard } from '@/components/reports/student-info-card'
 import type { FormQuestion } from '@/types/form'
 
 // Stateful demos ----------------------------------------------------------
@@ -180,11 +168,6 @@ function AnnouncementFilterBarDemo() {
     EMPTY_ANNOUNCEMENT_FILTERS,
   )
   return <AnnouncementFilterBar filters={filters} onChange={setFilters} />
-}
-
-function FormsFilterBarDemo() {
-  const [filters, setFilters] = useState<FormsFilters>(EMPTY_FORMS_FILTERS)
-  return <FormsFilterBar filters={filters} onChange={setFilters} />
 }
 
 function QuestionBuilderDemo() {
@@ -714,88 +697,6 @@ const SHARED: Array<GalleryItem> = [
   { title: 'Question Builder', node: <QuestionBuilderDemo /> },
 ]
 
-const FEATURE: Array<GalleryItem> = [
-  {
-    title: 'Attendance Ring',
-    node: (
-      <div className="flex items-center gap-6">
-        <AttendanceRing percentage={94} size={100} />
-        <AttendanceRing percentage={78} size={100} />
-        <AttendanceRing percentage={62} size={100} />
-      </div>
-    ),
-  },
-  {
-    title: 'Radar Chart',
-    node: (
-      <RadarChart
-        colorScheme="pink"
-        size={240}
-        values={[
-          { name: 'Respect', description: '', shortDescription: '', level: 'Demonstrates Strongly', score: 4, supportedBy: [] },
-          { name: 'Responsibility', description: '', shortDescription: '', level: 'Demonstrates', score: 3, supportedBy: [] },
-          { name: 'Resilience', description: '', shortDescription: '', level: 'Demonstrates Very Strongly', score: 5, supportedBy: [] },
-          { name: 'Integrity', description: '', shortDescription: '', level: 'Regularly Shows', score: 2, supportedBy: [] },
-          { name: 'Care', description: '', shortDescription: '', level: 'Demonstrates', score: 4, supportedBy: [] },
-          { name: 'Harmony', description: '', shortDescription: '', level: 'Demonstrates Strongly', score: 4, supportedBy: [] },
-        ]}
-      />
-    ),
-  },
-  {
-    title: 'Student Info Card',
-    node: (
-      <StudentInfoCard
-        name="Aishah Binte Rahman"
-        studentClass="P6-B"
-        nric="T1234567A"
-        indexNumber={12}
-        formTeacher="Ms. Tan Li Ying"
-        coFormTeacher="Mr. Kumar"
-        promotionStatus="Promoted"
-        schoolName="Riverside Primary School"
-      />
-    ),
-  },
-  {
-    title: 'Attendance & Conduct',
-    node: (
-      <AttendanceConductCard
-        attendance={{ daysPresent: 96, totalSchoolDays: 100, daysLate: 3 }}
-        conduct="Very Good"
-      />
-    ),
-  },
-  {
-    title: 'Physical Fitness',
-    node: (
-      <PhysicalFitnessSection
-        fitness={{
-          bmiCategory: 'Healthy',
-          percentile: 72,
-          description: 'Within the healthy range for age and height.',
-          napfaAward: 'Gold',
-          napfaDescription: 'Achieved Gold in the annual NAPFA assessment.',
-        }}
-      />
-    ),
-  },
-  {
-    title: 'Learning Outcome Row',
-    node: (
-      <div className="w-full max-w-md divide-y divide-border">
-        <LearningOutcomeRow
-          outcome={{ name: 'Number Sense', description: 'Applies place value confidently.', status: 'Accomplished' }}
-        />
-        <LearningOutcomeRow
-          outcome={{ name: 'Fractions', description: 'Compares fractions with guidance.', status: 'Developing' }}
-        />
-      </div>
-    ),
-  },
-  { title: 'Forms Filter Bar', node: <FormsFilterBarDemo /> },
-]
-
 function Item({
   title,
   group,
@@ -849,8 +750,8 @@ export function ComponentGallery() {
       <header className="mb-8">
         <h1 className="text-xl font-semibold text-foreground">Components</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Live, real components from the app — primitives, shared communication
-          components, and feature components.
+          Live, real components from the app — primitives and shared
+          communication components.
         </p>
       </header>
       <Section
@@ -862,11 +763,6 @@ export function ComponentGallery() {
         group="Shared Components"
         description="Reusable app components — src/components & src/components/comms."
         items={SHARED}
-      />
-      <Section
-        group="Feature Components"
-        description="Standalone feature building blocks — src/components/reports & forms."
-        items={FEATURE}
       />
     </div>
   )
