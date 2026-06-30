@@ -33,17 +33,13 @@ const AUTO_COLLAPSE_ROUTES = [
 
 function SidebarAutoCollapse() {
   const pathname = useRouterState({ select: (s) => s.location.pathname })
-  const { state, toggleSidebar } = useSidebar()
+  const { collapseSidebar } = useSidebar()
 
   React.useEffect(() => {
-    if (
-      AUTO_COLLAPSE_ROUTES.some((r) => pathname.startsWith(r)) &&
-      state === 'expanded'
-    ) {
-      toggleSidebar()
+    if (AUTO_COLLAPSE_ROUTES.some((r) => pathname.startsWith(r))) {
+      collapseSidebar()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname])
+  }, [pathname, collapseSidebar])
 
   return null
 }

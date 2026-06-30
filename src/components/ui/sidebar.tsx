@@ -38,6 +38,7 @@ type SidebarContextProps = {
   setOpenMobile: (open: boolean) => void
   isMobile: boolean
   toggleSidebar: () => void
+  collapseSidebar: () => void
 }
 
 const SidebarContext = React.createContext<SidebarContextProps | null>(null)
@@ -102,6 +103,13 @@ function SidebarProvider({
     return setOpen((prev) => !prev)
   }, [isMobile, isTablet, setOpen, setOpenMobile])
 
+  // Collapse without toggling — safe to call even when already collapsed.
+  const collapseSidebar = React.useCallback(() => {
+    if (isMobile) return
+    if (isTablet) setTabletExpanded(false)
+    else setOpen(false)
+  }, [isMobile, isTablet, setOpen])
+
   // Sync sidebar state from localStorage after hydration (SSR returns defaultOpen,
   // and React hydration skips re-running useState initializers).
   // useLayoutEffect runs synchronously before paint, avoiding a visible flash.
@@ -145,6 +153,7 @@ function SidebarProvider({
       openMobile,
       setOpenMobile,
       toggleSidebar,
+      collapseSidebar,
     }),
     [
       state,
@@ -154,6 +163,7 @@ function SidebarProvider({
       openMobile,
       setOpenMobile,
       toggleSidebar,
+      collapseSidebar,
     ],
   )
 
