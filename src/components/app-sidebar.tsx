@@ -179,7 +179,6 @@ function SidebarMenuItems({
               (item.alsoActiveFor?.some((p) => currentPath.startsWith(p)) ??
                 false)
             }
-            tooltip={item.title}
             className={
               highlightTitle === item.title
                 ? 'bg-sidebar-accent text-sidebar-accent-foreground'
@@ -382,7 +381,6 @@ export function AppSidebar() {
             <SidebarMenuButton
               render={<Link to="/settings" />}
               isActive={location.pathname === '/settings'}
-              tooltip="Settings"
             >
               <Settings className="size-4" />
               <span>Settings</span>
@@ -392,7 +390,7 @@ export function AppSidebar() {
             <DropdownMenu>
               <DropdownMenuTrigger
                 render={
-                  <SidebarMenuButton tooltip="Help">
+                  <SidebarMenuButton>
                     <CircleHelp className="size-4" />
                     <span>Help</span>
                   </SidebarMenuButton>
