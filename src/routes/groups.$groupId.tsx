@@ -209,24 +209,19 @@ function SharingDialog({
         </DialogHeader>
 
         <div className="flex flex-1 flex-col overflow-y-auto">
-          {/* Permissions — always visible, above the selector so the dropdown can't cover it */}
-          <div className="border-b px-5 py-4">
-            <p className="mb-2 text-sm text-muted-foreground">
-              Other staff you add will be able to
-            </p>
-            <ul className="space-y-1.5">
-              {SHARE_PERMISSIONS.map((perm) => (
-                <li key={perm} className="flex items-center gap-2 text-sm">
-                  <span className="text-muted-foreground">–</span>
-                  <span>{perm}</span>
-                </li>
-              ))}
-            </ul>
+          {/* Compact permissions callout — above selector so dropdown can't cover it */}
+          <div className="px-5 pt-4 pb-3">
+            <div className="flex items-start gap-2.5 rounded-lg bg-muted/50 px-3 py-2.5">
+              <Info className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Added staff get <span className="font-medium text-foreground">editor access</span> — they can view and send to the group, edit its name, add or remove students, and share it with others.
+              </p>
+            </div>
           </div>
 
           {/* Staff selector */}
-          <div className="px-5 pt-4">
-            <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+          <div className="px-5 pt-2">
+            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Add people
             </p>
             <StaffSelector
@@ -238,10 +233,10 @@ function SharingDialog({
             />
           </div>
 
-          {/* People with access — person cards matching the reference design */}
+          {/* People with access */}
           {expandedStaffIds.length > 0 && (
             <div className="mt-3 px-5 pb-4">
-              <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 People with access
               </p>
               <div className="space-y-2">
