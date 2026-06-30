@@ -1776,7 +1776,7 @@ function NewAnnouncementPage() {
       {/* Sticky header */}
       <div className="sticky top-0 z-10 bg-white">
         {/* Top bar */}
-        <div className="flex items-center gap-3 border-b px-6 py-3">
+        <div className="flex items-center justify-between border-b px-6 py-4">
           <Button
             variant="ghost"
             size="icon"
