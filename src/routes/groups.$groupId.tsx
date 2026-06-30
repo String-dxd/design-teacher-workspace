@@ -282,12 +282,8 @@ function SharingDialog({
             <Button variant="outline" size="sm" onClick={handleRequestClose}>
               Cancel
             </Button>
-            <Button
-              size="sm"
-              disabled={!hasChanges && existingStaff.length === 0}
-              onClick={handleSave}
-            >
-              {hasChanges ? 'Share group' : 'Done'}
+            <Button size="sm" disabled={!hasChanges} onClick={handleSave}>
+              Save
             </Button>
           </DialogFooter>
         </DialogContent>
