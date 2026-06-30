@@ -4,6 +4,7 @@ import {
   AlertTriangle,
   ArrowDown,
   ArrowUp,
+  Check,
   ChevronDown,
   Copy,
   Lock,
@@ -111,42 +112,57 @@ function SortableHeader({
   column,
   sort,
   onSort,
-  className,
 }: {
   label: string
   column: string
   sort: SortState
   onSort: (col: string, dir: 'asc' | 'desc') => void
-  className?: string
 }) {
   const [open, setOpen] = useState(false)
-  const isActive = sort?.column === column
+  const isSortedBy = sort?.column === column
+  const sortDir = isSortedBy ? sort.direction : null
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger
-        className={cn(
-          'flex cursor-pointer items-center gap-1 bg-transparent p-0 text-xs font-medium text-muted-foreground outline-none hover:text-foreground',
-          isActive && 'text-foreground',
-          className,
-        )}
-      >
-        {label}
-        <ChevronDown className="h-3 w-3 shrink-0" />
-      </PopoverTrigger>
-      <PopoverContent
-        className="w-44 gap-0 overflow-hidden rounded-xl p-1"
-        align="start"
-      >
+        render={
+          <button
+            type="button"
+            className={cn(
+              '-ml-2 flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 transition-colors whitespace-nowrap',
+              'hover:bg-accent hover:text-accent-foreground',
+              isSortedBy && 'text-primary',
+            )}
+          >
+            <span>{label}</span>
+            <span className="shrink-0">
+              {sortDir === 'asc' ? (
+                <ArrowUp className="h-3 w-3" />
+              ) : sortDir === 'desc' ? (
+                <ArrowDown className="h-3 w-3" />
+              ) : (
+                <ChevronDown className="h-3 w-3" />
+              )}
+            </span>
+          </button>
+        }
+      />
+      <PopoverContent align="start" className="w-52 gap-1 p-3">
         <button
           type="button"
           onClick={() => {
             onSort(column, 'asc')
             setOpen(false)
           }}
-          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-accent"
+          className={cn(
+            'flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-[var(--slate-5)]',
+            isSortedBy && sortDir === 'asc' && 'bg-[var(--slate-5)]',
+          )}
         >
-          <ArrowUp className="h-4 w-4" />
+          <ArrowUp className="h-4 w-4 text-[var(--slate-11)]" />
           Sort ascending
+          {isSortedBy && sortDir === 'asc' && (
+            <Check className="ml-auto h-4 w-4 text-[var(--slate-11)]" />
+          )}
         </button>
         <button
           type="button"
@@ -154,10 +170,16 @@ function SortableHeader({
             onSort(column, 'desc')
             setOpen(false)
           }}
-          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-accent"
+          className={cn(
+            'flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-[var(--slate-5)]',
+            isSortedBy && sortDir === 'desc' && 'bg-[var(--slate-5)]',
+          )}
         >
-          <ArrowDown className="h-4 w-4" />
+          <ArrowDown className="h-4 w-4 text-[var(--slate-11)]" />
           Sort descending
+          {isSortedBy && sortDir === 'desc' && (
+            <Check className="ml-auto h-4 w-4 text-[var(--slate-11)]" />
+          )}
         </button>
       </PopoverContent>
     </Popover>
