@@ -203,81 +203,97 @@ function SharingDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[85vh] max-w-md flex-col gap-0 p-0">
-        <DialogHeader className="border-b px-5 py-4">
-          <DialogTitle>Share group</DialogTitle>
-        </DialogHeader>
+      <DialogContent
+        showCloseButton={false}
+        className="sm:max-w-none top-0 left-0 translate-x-0 translate-y-0 grid h-screen w-screen max-w-[100vw] grid-rows-[auto_1fr_auto] gap-0 rounded-none bg-background p-0"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between border-b px-6 py-4">
+          <DialogTitle className="text-base font-semibold">Share group</DialogTitle>
+          <button
+            type="button"
+            onClick={() => onOpenChange(false)}
+            className="rounded p-1 text-muted-foreground hover:text-foreground"
+            aria-label="Close"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
 
-        <div className="flex flex-1 flex-col overflow-y-auto">
-          {/* Compact permissions callout — above selector so dropdown can't cover it */}
-          <div className="px-5 pt-4 pb-3">
-            <div className="flex items-start gap-2.5 rounded-lg bg-muted/50 px-3 py-2.5">
+        {/* Body */}
+        <div className="overflow-y-auto">
+          <div className="mx-auto max-w-lg px-6 py-8 space-y-6">
+
+            {/* Permissions callout */}
+            <div className="flex items-start gap-2.5 rounded-lg bg-muted/50 px-4 py-3">
               <Info className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
               <p className="text-xs text-muted-foreground leading-relaxed">
                 Added staff get <span className="font-medium text-foreground">editor access</span> — they can view and send to the group, edit its name, add or remove students, and share it with others.
               </p>
             </div>
-          </div>
 
-          {/* Staff selector */}
-          <div className="px-5 pt-2">
-            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Add people
-            </p>
-            <StaffSelector
-              key={String(open)}
-              value={selectedStaff}
-              onChange={setSelectedStaff}
-              hideChips
-              autoOpen={expandedStaffIds.length === 0}
-            />
-          </div>
-
-          {/* People with access */}
-          {expandedStaffIds.length > 0 && (
-            <div className="mt-3 px-5 pb-4">
+            {/* Staff selector */}
+            <div>
               <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                People with access
+                Add people
               </p>
-              <div className="space-y-2">
-                {derivedSharedWith.map((sw) => {
-                  const staffMeta = MOCK_STAFF.find((s) => s.id === sw.staffId)
-                  const sublabel = [
-                    staffMeta?.formClass && `Form ${staffMeta.formClass}`,
-                    sw.email,
-                  ]
-                    .filter(Boolean)
-                    .join(' · ')
-                  return (
-                    <div
-                      key={sw.staffId}
-                      className="flex items-center gap-3 rounded-lg border bg-muted/20 px-3 py-2.5"
-                    >
-                      <StaffAvatar name={sw.name} size={8} />
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium">{sw.name}</p>
-                        <p className="truncate text-xs text-muted-foreground">{sublabel}</p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => removeStaff(sw.staffId)}
-                        className="shrink-0 rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                      >
-                        <X className="size-3.5" />
-                      </button>
-                    </div>
-                  )
-                })}
-              </div>
+              <StaffSelector
+                key={String(open)}
+                value={selectedStaff}
+                onChange={setSelectedStaff}
+                hideChips
+                autoOpen={expandedStaffIds.length === 0}
+              />
             </div>
-          )}
+
+            {/* People with access */}
+            {expandedStaffIds.length > 0 && (
+              <div>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  People with access
+                </p>
+                <div className="space-y-2">
+                  {derivedSharedWith.map((sw) => {
+                    const staffMeta = MOCK_STAFF.find((s) => s.id === sw.staffId)
+                    const sublabel = [
+                      staffMeta?.formClass && `Form ${staffMeta.formClass}`,
+                      sw.email,
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')
+                    return (
+                      <div
+                        key={sw.staffId}
+                        className="flex items-center gap-3 rounded-lg border bg-muted/20 px-4 py-3"
+                      >
+                        <StaffAvatar name={sw.name} size={9} />
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium">{sw.name}</p>
+                          <p className="truncate text-xs text-muted-foreground">{sublabel}</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeStaff(sw.staffId)}
+                          className="shrink-0 rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                        >
+                          <X className="size-4" />
+                        </button>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
-        <DialogFooter className="border-t px-5 py-4">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+        {/* Footer */}
+        <div className="flex items-center justify-end gap-2 border-t bg-background px-6 py-3">
+          <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
           <Button
+            size="sm"
             disabled={expandedStaffIds.length === 0 && !hasChanges}
             onClick={() => {
               onSave(group.visibility, derivedSharedWith)
@@ -286,7 +302,7 @@ function SharingDialog({
           >
             {group.sharedWith.length > 0 && !hasChanges ? 'Done' : 'Share group'}
           </Button>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   )
