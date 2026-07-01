@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import {
   Link,
   createFileRoute,
@@ -22,7 +22,6 @@ import type { SelectedEntity } from '@/components/comms/entity-selector'
 import type { PGRole } from '@/types/pg-announcement'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
 import { getPGAnnouncementById } from '@/data/mock-pg-announcements'
-import { CLASS_GROUPS } from '@/data/mock-student-groups'
 import { PG_SHORTCUT_PRESETS } from '@/data/pg-shortcuts'
 import { StatusBadge } from '@/components/comms/status-badge'
 import { ReadRate } from '@/components/comms/read-rate'
@@ -141,17 +140,6 @@ function AnnouncementDetailPage() {
   const noCount = savedData.recipients.filter(
     (r) => r.formResponse === 'no',
   ).length
-  useMemo(
-    () => [...new Set(savedData.recipients.map((r) => r.classLabel))].sort(),
-    [savedData.recipients],
-  )
-
-  // Class labels available to add (not already in current edit selection)
-  useMemo(
-    () =>
-      CLASS_GROUPS.map((g) => g.label).filter((l) => !editClasses.includes(l)),
-    [editClasses],
-  )
 
   const postedDate = announcement.postedAt
     ? formatDateTime(announcement.postedAt)

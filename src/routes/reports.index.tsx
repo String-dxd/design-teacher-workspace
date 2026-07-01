@@ -186,17 +186,6 @@ function ReportsPage() {
     return { totalReports, uniqueStudents, pendingReview, notSentCount }
   }, [filteredReports])
 
-  useMemo(() => {
-    if (schoolLevel === 'secondary') {
-      return reports.filter(
-        (r) => selectedIds.has(r.id) && r.studentStatus === 'not_sent',
-      ).length
-    }
-    return reports.filter(
-      (r) => selectedIds.has(r.id) && r.parentStatus === 'not_sent',
-    ).length
-  }, [reports, selectedIds, schoolLevel])
-
   const reviewableCount = useMemo(() => {
     return reports.filter(
       (r) => selectedIds.has(r.id) && r.reviewStatus === 'pending',
