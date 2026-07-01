@@ -26,7 +26,7 @@ interface AppIconProps {
   className?: string
 }
 
-export function AppIcon({ icon, color, className }: AppIconProps) {
+function AppIcon({ icon, color, className }: AppIconProps) {
   if (typeof icon === 'string') {
     return (
       <div

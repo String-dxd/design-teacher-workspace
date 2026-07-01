@@ -35,9 +35,6 @@ export interface ColumnConfig {
 }
 
 export const CURRENT_TERM_KEY = 'T1 2026'
-export const CURRENT_TERM_LABEL = 'Current term'
-export const PREV_TERM_KEY = 'T4 2025'
-export const PREV_TERM_LABEL = 'Previous term (Term 4, 2025)'
 
 export const defaultColumns: Array<ColumnConfig> = [
   {

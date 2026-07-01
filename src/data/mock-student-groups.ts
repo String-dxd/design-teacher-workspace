@@ -301,7 +301,7 @@ export const LEVEL_GROUPS: Array<EntityItem> = [
   },
 ]
 
-export const SCHOOL_GROUP: EntityItem = {
+const SCHOOL_GROUP: EntityItem = {
   id: 'school:bandung',
   label: 'Bandung Secondary School',
   type: 'group',
@@ -442,7 +442,7 @@ function groupToEntityItem(g: (typeof MOCK_GROUPS)[number]): EntityItem {
 }
 
 /** @deprecated Use getStudentScopes() for live MOCK_GROUPS data */
-export const CUSTOM_GROUPS: Array<EntityItem> =
+const CUSTOM_GROUPS: Array<EntityItem> =
   MOCK_GROUPS.map(groupToEntityItem)
 
 // ─── Flat array ───────────────────────────────────────────────────────────────
@@ -536,8 +536,6 @@ export function getStudentScopes(): Array<EntityScope> {
   ]
 }
 
-/** @deprecated Use getStudentScopes() */
-export const STUDENT_SCOPES: Array<EntityScope> = getStudentScopes()
 
 // ─── Overlap map ──────────────────────────────────────────────────────────────
 

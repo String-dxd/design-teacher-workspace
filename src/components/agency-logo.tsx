@@ -33,7 +33,7 @@ function agencyTint(name: string): string {
   return hues[Math.abs(hash) % hues.length]
 }
 
-export type AgencyLogoSize = 'sm' | 'md' | 'lg'
+type AgencyLogoSize = 'sm' | 'md' | 'lg'
 
 const SIZE_CLASSES: Record<
   AgencyLogoSize,

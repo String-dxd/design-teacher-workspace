@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dialog'
 import { Checkbox } from '@/components/ui/checkbox'
 
-export const SUBJECT_GROUPS = [
+const SUBJECT_GROUPS = [
   {
     group: 'Languages',
     subjects: [

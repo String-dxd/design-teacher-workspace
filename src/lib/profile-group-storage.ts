@@ -48,11 +48,8 @@ function writeApplied(id: string | null) {
   }
 }
 
-export function loadProfileGroups(): Array<ProfileGroup> {
-  return readGroups()
-}
 
-export function saveProfileGroup(group: ProfileGroup) {
+function saveProfileGroup(group: ProfileGroup) {
   const groups = readGroups()
   const idx = groups.findIndex((g) => g.id === group.id)
   if (idx === -1) groups.push(group)
@@ -60,17 +57,14 @@ export function saveProfileGroup(group: ProfileGroup) {
   writeGroups(groups)
 }
 
-export function deleteProfileGroup(id: string) {
+function deleteProfileGroup(id: string) {
   const groups = readGroups().filter((g) => g.id !== id)
   writeGroups(groups)
   if (readApplied() === id) writeApplied(null)
 }
 
-export function getAppliedProfileGroupId(): string | null {
-  return readApplied()
-}
 
-export function setAppliedProfileGroupId(id: string | null) {
+function setAppliedProfileGroupId(id: string | null) {
   writeApplied(id)
 }
 

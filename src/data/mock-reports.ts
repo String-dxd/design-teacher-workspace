@@ -897,7 +897,7 @@ export function getAdjacentReportIds(id: string): {
   }
 }
 
-export interface ReportFilters {
+interface ReportFilters {
   studentId?: string
   term?: Term
   academicYear?: number
@@ -916,23 +916,6 @@ export function filterReports(filters: ReportFilters): Array<HolisticReport> {
     }
     return true
   })
-}
-
-export function getUniqueStudents(): Array<{ id: string; name: string }> {
-  const seen = new Set<string>()
-  const students: Array<{ id: string; name: string }> = []
-
-  for (const report of mockReports) {
-    if (!seen.has(report.studentId)) {
-      seen.add(report.studentId)
-      students.push({
-        id: report.studentId,
-        name: report.studentName,
-      })
-    }
-  }
-
-  return students.sort((a, b) => a.name.localeCompare(b.name))
 }
 
 export { TERMS, CURRENT_ACADEMIC_YEAR }

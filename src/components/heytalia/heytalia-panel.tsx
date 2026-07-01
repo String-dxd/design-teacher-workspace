@@ -150,7 +150,7 @@ const SEED: Record<
 // ---------------------------------------------------------------------------
 // Agent definitions
 // ---------------------------------------------------------------------------
-export interface AgentDef {
+interface AgentDef {
   id: string
   name: string
   description: string
@@ -159,7 +159,7 @@ export interface AgentDef {
   tag?: string
 }
 
-export const AGENTS: Array<AgentDef> = [
+const AGENTS: Array<AgentDef> = [
   {
     id: 'heytalia',
     name: 'HeyTalia',

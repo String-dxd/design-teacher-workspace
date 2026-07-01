@@ -3,7 +3,7 @@ import type { ProfileGroup, ProfileGroupBucket } from '@/types/profile-group'
 import { isFilterComplete } from '@/data/filter-config'
 import { evaluateCriterion } from '@/lib/filter-evaluation'
 
-export function studentMatchesCriterion(
+function studentMatchesCriterion(
   student: Student,
   criterion: FilterCriterion,
 ): boolean {
