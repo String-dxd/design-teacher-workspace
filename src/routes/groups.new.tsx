@@ -118,7 +118,7 @@ function GroupsNew() {
 
   useSetBreadcrumbs([
     { label: 'Student Groups', href: '/groups' },
-    { label: isEditing ? editGroup!.name : 'New Group', href: '/groups/new' },
+    { label: isEditing ? editGroup.name : 'New Group', href: '/groups/new' },
   ])
 
   const navigate = useNavigate()
@@ -364,7 +364,7 @@ function GroupsNew() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <h1 className="flex-1 text-base font-semibold">
-            {isEditing ? editGroup!.name : 'New Group'}
+            {isEditing ? editGroup.name : 'New Group'}
           </h1>
           <Button
             variant="ghost"
@@ -373,7 +373,7 @@ function GroupsNew() {
               isEditing ? (
                 <Link
                   to="/groups/$groupId"
-                  params={{ groupId: editGroup!.id }}
+                  params={{ groupId: editGroup.id }}
                 />
               ) : (
                 <Link to="/groups" />

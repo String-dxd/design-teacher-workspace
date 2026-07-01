@@ -1,6 +1,5 @@
 import { useCallback, useMemo, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
-import { useFeatureFlag } from '@/hooks/use-feature-flag'
 
 import type {
   FilterCriterion,
@@ -10,6 +9,7 @@ import type {
   Student,
 } from '@/types/student'
 import type { ColumnConfig } from '@/components/students/column-visibility-popover'
+import { useFeatureFlag } from '@/hooks/use-feature-flag'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
 import { filterFieldConfigs, isFilterComplete } from '@/data/filter-config'
 import { DataCard } from '@/components/data-card'
