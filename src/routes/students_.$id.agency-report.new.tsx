@@ -1453,7 +1453,7 @@ function SectionPanel({
   section,
   fieldValues,
   aiFlags,
-  drafted,
+  autoFilled,
   prefilledFrom,
   aiSourceSelections,
   onAiSourceChange,
@@ -1467,10 +1467,10 @@ function SectionPanel({
   section: ReportSection
   fieldValues: Record<string, string>
   aiFlags: Record<string, boolean>
-  // When false, the form is in its pristine pre-Draft state — auto-
-  // populated EduHub / School Cockpit values stay hidden and only the
-  // user's own edits show through.
-  drafted: boolean
+  // When false the form is in its pristine pre-Auto-fill state — no
+  // source-system values (EduHub particulars, School Cockpit
+  // attendance, radio/checkbox defaults) are shown yet.
+  autoFilled: boolean
   prefilledFrom: Record<string, string>
   aiSourceSelections: Record<string, Set<string>>
   onAiSourceChange: (fieldId: string, next: Set<string>) => void
@@ -1486,18 +1486,21 @@ function SectionPanel({
   const completedDate = assignedTo.completedDate
 
   // Resolve a field's currently-displayed value. User edits always win;
-  // demo/AI defaults only surface after the YH has hit Draft.
+  // structural template defaults only surface after Auto-fill. Narrative
+  // fields never draw from f.value — their content comes from the
+  // per-field AI Draft flow, written into fieldValues.
   const resolveValue = (f: ReportField): string => {
     const userVal = (fieldValues as Record<string, string | undefined>)[f.id]
     if (userVal !== undefined) return userVal
-    if (drafted) return f.value ?? ''
+    if (autoFilled && f.type !== 'narrative') return f.value ?? ''
     return ''
   }
+  // Purple tint only for narrative fields that the YH has AI-drafted
+  // and not yet edited past / marked verified. Structural auto-filled
+  // fields keep their neutral appearance — they're system-of-record
+  // data, not AI content.
   const isFieldDrafted = (f: ReportField): boolean =>
-    drafted &&
-    !!f.value &&
-    (fieldValues as Record<string, string | undefined>)[f.id] === undefined &&
-    !isReviewed
+    f.type === 'narrative' && !!aiFlags[f.id] && !isReviewed
 
   // Live count of unfilled fields for the section header indicator.
   // Signature fields are stamped on export and not counted as user input.
@@ -2768,12 +2771,14 @@ function ReportForm({
   // YH can either return to the profile or stay on this page to view what
   // they sent. Cleared if the YH starts a new report (component unmounts).
   const [submitted, setSubmitted] = useState(false)
-  // Drafted = whether the YH has pressed the AI Draft button in the
-  // toolbar. While false, the form renders as a pristine blank report
-  // (no auto-populated EduHub values, no AI prose); once true, every
-  // field with hardcoded demo content / an AI_DRAFTS entry becomes
-  // visible, tinted purple until the user edits or verifies.
-  const [drafted, setDrafted] = useState(false)
+  // Auto-fill: whether the YH has pressed the top-toolbar Auto-fill
+  // button. While false, the form renders as a pristine blank report
+  // — no source-system values are pre-filled. Once true, EduHub /
+  // School Cockpit / TCI-sourced particulars, attendance counts,
+  // radio/checkbox defaults etc surface. Narrative (qualitative)
+  // fields still stay empty until the YH triggers per-field AI Draft
+  // and picks sources — the top-bar button never writes prose.
+  const [autoFilled, setAutoFilled] = useState(false)
   const [addCollaboratorsOpen, setAddCollaboratorsOpen] = useState(false)
   // Start empty — the YH invites collaborators after creating the report.
   // MOCK_COLLABORATORS is exposed in the modal as quick-pick suggestions.
@@ -2910,29 +2915,13 @@ function ReportForm({
     ? Math.round((reviewedCount / reviewableSections.length) * 100)
     : 0
 
-  // Apply the AI draft to every aiDraftable narrative field that the
-  // user hasn't yet touched. Flips `drafted` so structural template
-  // defaults (Name, NRIC, attendance counts, etc) start surfacing too.
-  const applyDraft = () => {
-    setDrafted(true)
-    setFieldValues((prev) => {
-      const next = { ...prev }
-      const aiAdds: Record<string, boolean> = {}
-      for (const s of template.sections) {
-        for (const f of s.fields) {
-          if (!f.aiDraftable) continue
-          if (next[f.id] !== undefined && next[f.id] !== '') continue
-          const draft = AI_DRAFTS[f.id]
-          if (!draft) continue
-          next[f.id] = personalizeText(draft, studentName)
-          aiAdds[f.id] = true
-        }
-      }
-      if (Object.keys(aiAdds).length > 0) {
-        setAiFlags((p) => ({ ...p, ...aiAdds }))
-      }
-      return next
-    })
+  // Auto-fill only reveals the structural / auto-populated defaults
+  // (particulars, attendance counts, radio/checkbox picks). Narrative
+  // fields deliberately stay empty — those live behind the per-field
+  // AI Draft button + source picker so the YH stays in control of the
+  // qualitative content.
+  const autoFill = () => {
+    setAutoFilled(true)
     setSavedStatus('saving')
     setTimeout(() => setSavedStatus('saved'), 800)
   }
@@ -3015,14 +3004,9 @@ function ReportForm({
           )}
         </span>
         <div className="h-5 w-px bg-border" />
-        {!drafted && !submitted && (
-          <Button
-            size="sm"
-            onClick={applyDraft}
-            className="gap-1.5"
-          >
-            <Sparkles className="h-3.5 w-3.5" />
-            Draft
+        {!autoFilled && !submitted && (
+          <Button size="sm" onClick={autoFill}>
+            Auto-fill
           </Button>
         )}
         <Button
@@ -3175,7 +3159,7 @@ function ReportForm({
                   section={s}
                   fieldValues={fieldValues}
                   aiFlags={aiFlags}
-                  drafted={drafted}
+                  autoFilled={autoFilled}
                   prefilledFrom={prefilledFrom}
                   aiSourceSelections={aiSourceSelections}
                   onAiSourceChange={(fieldId, next) =>
