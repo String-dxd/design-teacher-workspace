@@ -39,7 +39,7 @@ export const Route = createFileRoute('/announcements')({
 function AnnouncementsLayout() {
   const location = useLocation()
   const navigate = useNavigate()
-  const search = useSearch({ strict: false }) as { scope?: string }
+  const search = useSearch({ strict: false })
   const scope = search.scope ?? 'my'
   const isSchoolWide = IS_ADMIN && scope === 'school'
   const [open, setOpen] = useState(false)
@@ -115,7 +115,7 @@ function AnnouncementsLayout() {
           )}
         </div>
         <p className="mt-1 hidden text-sm text-muted-foreground md:block">
-          Send a view-only post or collect responses from parents via Parents
+          Send a read only post or collect responses from parents via Parents
           Gateway.
         </p>
       </div>

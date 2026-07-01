@@ -347,8 +347,8 @@ function GroupsIndex() {
               <h1 className="text-2xl font-semibold">Groups</h1>
             </div>
             <p className="mt-1 text-sm text-muted-foreground">
-              Organise students into reusable groups for announcements, forms,
-              and reports.
+              Organise students into reusable groups for posts, forms, and
+              reports.
             </p>
           </div>
           {tab === 'my-groups' && (
