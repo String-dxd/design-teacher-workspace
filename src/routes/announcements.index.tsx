@@ -529,12 +529,6 @@ function ParentsGatewayPage() {
                     const responseCount = announcement.recipients.filter(
                       (r) => r.respondedAt != null,
                     ).length
-                    const yesCount = announcement.recipients.filter(
-                      (r) => r.formResponse === 'yes',
-                    ).length
-                    const noCount = announcement.recipients.filter(
-                      (r) => r.formResponse === 'no',
-                    ).length
                     const hasResponseType =
                       announcement.responseType === 'acknowledge' ||
                       announcement.responseType === 'yes-no'

@@ -1,14 +1,10 @@
 import { useMemo, useState } from 'react'
 import {
-  CheckCircle2,
-  Clock,
   Columns2,
   Download,
   RotateCcw,
   Search,
   SlidersHorizontal,
-  ThumbsDown,
-  ThumbsUp,
   X,
 } from 'lucide-react'
 import type { PGQuestion, PGRecipient } from '@/types/pg-announcement'

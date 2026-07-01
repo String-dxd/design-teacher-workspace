@@ -186,7 +186,7 @@ function ReportsPage() {
     return { totalReports, uniqueStudents, pendingReview, notSentCount }
   }, [filteredReports])
 
-  const sendableCount = useMemo(() => {
+  useMemo(() => {
     if (schoolLevel === 'secondary') {
       return reports.filter(
         (r) => selectedIds.has(r.id) && r.studentStatus === 'not_sent',

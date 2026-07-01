@@ -3,7 +3,6 @@ import { Link } from '@tanstack/react-router'
 import {
   BookOpen,
   Calendar,
-  Check,
   ChevronRight,
   Clock,
   Eye,

@@ -29,29 +29,6 @@ import type { Student } from '@/types/student'
 const TERMS: Array<Term> = ['Term 1', 'Term 2', 'Term 3', 'Term 4']
 const CURRENT_ACADEMIC_YEAR = 2025
 
-const REVIEW_STATUSES: Array<ReviewStatus> = [
-  'pending',
-  'in_review',
-  'approved',
-]
-const PARENT_STATUSES: Array<ParentStatus> = [
-  'not_sent',
-  'sent',
-  'viewed',
-  'acknowledged',
-]
-const STUDENT_STATUSES: Array<StudentStatus> = [
-  'not_sent',
-  'sent',
-  'viewed',
-  'acknowledged',
-  'sent_to_parents',
-]
-
-function getRandomStatus<T>(statuses: Array<T>, seed: number): T {
-  return statuses[seed % statuses.length]
-}
-
 /**
  * Generates logically consistent review/student/parent statuses.
  *
@@ -767,7 +744,7 @@ const CCA_POOL: Array<{
   },
 ]
 
-function generateCCA(student: Student, seed: number): Array<CCAInfo> {
+function generateCCA(_student: Student, seed: number): Array<CCAInfo> {
   const ccaDef = CCA_POOL[seed % CCA_POOL.length]
   const roleIdx = seed % ccaDef.roles.length
   const years = 1 + (seed % 3)
