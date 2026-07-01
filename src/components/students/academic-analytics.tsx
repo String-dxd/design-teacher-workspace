@@ -23,7 +23,19 @@ import {
   X,
 } from 'lucide-react'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { CATEGORICAL_6 } from '@/lib/chart-colors'
+import {
+  ATTENDANCE_SEVERITY,
+  CHART_GRID,
+  CHART_LABEL,
+  CHART_TICK,
+  CHART_TOOLTIP_BORDER,
+  CHART_SURFACE,
+  GRADE_FILL,
+  PRESENT_RING,
+  SERIES_BLUE,
+  SERIES_BLUE_COBALT,
+  SERIES_BLUE_LIGHT,
+} from '@/lib/chart-colors'
 
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -122,11 +134,11 @@ const G3_COUNT = 4
 const TOTAL_SUBJECTS = G2_COUNT + G3_COUNT
 
 const BAR_COLORS = {
-  term1WA: '#4d79e0', // cobalt blue — matches attendance chart
-  term2WA: '#228be6', // blue
-  term3WA: '#74c0fc', // light blue
-  endOfYear: '#fac53e', // yellow
-  overall: '#fd7e14', // orange
+  term1WA: SERIES_BLUE_COBALT, // cobalt blue — matches attendance chart
+  term2WA: SERIES_BLUE, // blue
+  term3WA: SERIES_BLUE_LIGHT, // light blue
+  endOfYear: ATTENDANCE_SEVERITY.late, // yellow
+  overall: ATTENDANCE_SEVERITY.nonVRAbsence, // orange
 }
 
 const LEGEND_ITEMS = [
@@ -240,29 +252,42 @@ const GRADE_DATA = [
   { grade: 'VR', count: 3 },
 ]
 
-const GRADE_FILL: Record<string, string> = {
-  A1: '#228be6',
-  A2: '#74c0fc',
-  B3: '#12b886',
-  B4: '#63e6be',
-  C5: '#fd7e14',
-  C6: '#ffa94d',
-  D7: '#fa5252',
-  VR: '#adb5bd',
-}
-
 const GRADE_BADGE_STYLE: Record<
   string,
   { backgroundColor: string; color: string }
 > = {
-  A1: { backgroundColor: 'rgba(34,139,230,0.15)', color: '#1864ab' },
-  A2: { backgroundColor: 'rgba(116,192,252,0.25)', color: '#1971c2' },
-  B3: { backgroundColor: 'rgba(18,184,134,0.15)', color: '#0ca678' },
-  B4: { backgroundColor: 'rgba(99,230,190,0.25)', color: '#0ca678' },
-  C5: { backgroundColor: 'rgba(253,126,20,0.15)', color: '#e8590c' },
-  C6: { backgroundColor: 'rgba(255,169,77,0.25)', color: '#e8590c' },
-  D7: { backgroundColor: 'rgba(250,82,82,0.15)', color: '#c92a2a' },
-  VR: { backgroundColor: 'rgba(173,181,189,0.3)', color: '#495057' },
+  A1: {
+    backgroundColor: `color-mix(in srgb, ${SERIES_BLUE} 15%, transparent)`,
+    color: 'var(--color-twblue-12)',
+  },
+  A2: {
+    backgroundColor: `color-mix(in srgb, ${SERIES_BLUE_LIGHT} 25%, transparent)`,
+    color: 'var(--color-twblue-11)',
+  },
+  B3: {
+    backgroundColor: `color-mix(in srgb, ${PRESENT_RING} 15%, transparent)`,
+    color: PRESENT_RING,
+  },
+  B4: {
+    backgroundColor: `color-mix(in srgb, ${GRADE_FILL.B4} 25%, transparent)`,
+    color: PRESENT_RING,
+  },
+  C5: {
+    backgroundColor: `color-mix(in srgb, ${ATTENDANCE_SEVERITY.nonVRAbsence} 15%, transparent)`,
+    color: ATTENDANCE_SEVERITY.nonVRAbsenceStrong,
+  },
+  C6: {
+    backgroundColor: `color-mix(in srgb, ${ATTENDANCE_SEVERITY.absentExcl} 25%, transparent)`,
+    color: ATTENDANCE_SEVERITY.nonVRAbsenceStrong,
+  },
+  D7: {
+    backgroundColor: `color-mix(in srgb, ${ATTENDANCE_SEVERITY.pendingReason} 15%, transparent)`,
+    color: ATTENDANCE_SEVERITY.pendingReasonStrong,
+  },
+  VR: {
+    backgroundColor: `color-mix(in srgb, ${GRADE_FILL.VR} 30%, transparent)`,
+    color: CHART_LABEL,
+  },
 }
 
 const BOX_PLOT_DATA = [
@@ -634,17 +659,21 @@ function PerformanceBarChart({ barSize }: { barSize?: number }) {
       barGap={0}
       barSize={barSize}
     >
-      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e9ecef" />
+      <CartesianGrid
+        strokeDasharray="3 3"
+        vertical={false}
+        stroke={CHART_GRID}
+      />
       <XAxis
         dataKey="subject"
-        tick={{ fontSize: 12, fill: '#868e96' }}
+        tick={{ fontSize: 12, fill: CHART_TICK }}
         axisLine={false}
         tickLine={false}
       />
       <YAxis
         domain={[0, 100]}
         ticks={[0, 25, 50, 75, 100]}
-        tick={{ fontSize: 12, fill: '#868e96' }}
+        tick={{ fontSize: 12, fill: CHART_TICK }}
         axisLine={false}
         tickLine={false}
       />
@@ -653,27 +682,27 @@ function PerformanceBarChart({ barSize }: { barSize?: number }) {
         contentStyle={{
           fontSize: 12,
           borderRadius: 6,
-          border: '1px solid #dee2e6',
+          border: `1px solid ${CHART_TOOLTIP_BORDER}`,
         }}
       />
       <Bar dataKey="term1WA" fill={BAR_COLORS.term1WA} radius={[2, 2, 0, 0]}>
-        <LabelList position="top" style={{ fontSize: 10, fill: '#495057' }} />
+        <LabelList position="top" style={{ fontSize: 10, fill: CHART_LABEL }} />
       </Bar>
       <Bar dataKey="term2WA" fill={BAR_COLORS.term2WA} radius={[2, 2, 0, 0]}>
-        <LabelList position="top" style={{ fontSize: 10, fill: '#495057' }} />
+        <LabelList position="top" style={{ fontSize: 10, fill: CHART_LABEL }} />
       </Bar>
       <Bar dataKey="term3WA" fill={BAR_COLORS.term3WA} radius={[2, 2, 0, 0]}>
-        <LabelList position="top" style={{ fontSize: 10, fill: '#495057' }} />
+        <LabelList position="top" style={{ fontSize: 10, fill: CHART_LABEL }} />
       </Bar>
       <Bar
         dataKey="endOfYear"
         fill={BAR_COLORS.endOfYear}
         radius={[2, 2, 0, 0]}
       >
-        <LabelList position="top" style={{ fontSize: 10, fill: '#495057' }} />
+        <LabelList position="top" style={{ fontSize: 10, fill: CHART_LABEL }} />
       </Bar>
       <Bar dataKey="overall" fill={BAR_COLORS.overall} radius={[2, 2, 0, 0]}>
-        <LabelList position="top" style={{ fontSize: 10, fill: '#495057' }} />
+        <LabelList position="top" style={{ fontSize: 10, fill: CHART_LABEL }} />
       </Bar>
     </BarChart>
   )
@@ -914,8 +943,8 @@ function GradeDistTooltip({
       style={{
         fontSize: 12,
         borderRadius: 6,
-        border: '1px solid #dee2e6',
-        background: '#fff',
+        border: `1px solid ${CHART_TOOLTIP_BORDER}`,
+        background: CHART_SURFACE,
         padding: '6px 10px',
         boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
       }}
@@ -947,15 +976,19 @@ function GradeDistChart({
       onMouseLeave={() => setHoveredGrade(null)}
       onMouseDown={(e: React.MouseEvent) => e.preventDefault()}
     >
-      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e9ecef" />
+      <CartesianGrid
+        strokeDasharray="3 3"
+        vertical={false}
+        stroke={CHART_GRID}
+      />
       <XAxis
         dataKey="grade"
-        tick={{ fontSize: 12, fill: '#868e96' }}
+        tick={{ fontSize: 12, fill: CHART_TICK }}
         axisLine={false}
         tickLine={false}
       />
       <YAxis
-        tick={{ fontSize: 11, fill: '#868e96' }}
+        tick={{ fontSize: 11, fill: CHART_TICK }}
         axisLine={false}
         tickLine={false}
       />
@@ -976,7 +1009,7 @@ function GradeDistChart({
         {data.map((entry) => (
           <Cell
             key={entry.grade}
-            fill="#228be6"
+            fill={SERIES_BLUE}
             opacity={1}
             style={{ cursor: 'pointer', outline: 'none' }}
             tabIndex={-1}
@@ -986,7 +1019,7 @@ function GradeDistChart({
         <LabelList
           dataKey="count"
           position="top"
-          style={{ fontSize: 11, fill: '#495057', fontWeight: 500 }}
+          style={{ fontSize: 11, fill: CHART_LABEL, fontWeight: 500 }}
         />
         <LabelList
           dataKey="count"
@@ -1021,7 +1054,7 @@ function GradeDistChart({
                   textAnchor="middle"
                   dominantBaseline="middle"
                   fontSize={9}
-                  fill="#ffffff"
+                  fill={CHART_LABEL}
                   fontWeight={500}
                 >
                   View
@@ -1032,7 +1065,7 @@ function GradeDistChart({
                   textAnchor="middle"
                   dominantBaseline="middle"
                   fontSize={9}
-                  fill="#ffffff"
+                  fill={CHART_LABEL}
                   fontWeight={500}
                 >
                   students
@@ -1079,7 +1112,7 @@ function BoxPlotSVGInner({
           y1={mt}
           x2={toX(t)}
           y2={height - mb}
-          stroke="#e9ecef"
+          stroke={CHART_GRID}
           strokeDasharray="3 3"
         />
       ))}
@@ -1091,7 +1124,7 @@ function BoxPlotSVGInner({
           y={height - mb + 16}
           textAnchor="middle"
           fontSize={11}
-          fill="#868e96"
+          fill={CHART_TICK}
         >
           {t}
         </text>
@@ -1113,7 +1146,7 @@ function BoxPlotSVGInner({
               y1={cy}
               x2={xQ1}
               y2={cy}
-              stroke="#868e96"
+              stroke={CHART_TICK}
               strokeWidth={1.5}
             />
             <line
@@ -1121,7 +1154,7 @@ function BoxPlotSVGInner({
               y1={cy - capH}
               x2={xMin}
               y2={cy + capH}
-              stroke="#868e96"
+              stroke={CHART_TICK}
               strokeWidth={1.5}
             />
             {/* IQR box */}
@@ -1130,8 +1163,8 @@ function BoxPlotSVGInner({
               y={cy - bh / 2}
               width={xQ3 - xQ1}
               height={bh}
-              fill="rgba(34,139,230,0.1)"
-              stroke="#228be6"
+              fill={`color-mix(in srgb, ${SERIES_BLUE} 10%, transparent)`}
+              stroke={SERIES_BLUE}
               strokeWidth={1.5}
               rx={2}
             />
@@ -1141,7 +1174,7 @@ function BoxPlotSVGInner({
               y1={cy - bh / 2}
               x2={xMed}
               y2={cy + bh / 2}
-              stroke="#228be6"
+              stroke={SERIES_BLUE}
               strokeWidth={2.5}
             />
             {/* Right whisker */}
@@ -1150,7 +1183,7 @@ function BoxPlotSVGInner({
               y1={cy}
               x2={xMax}
               y2={cy}
-              stroke="#868e96"
+              stroke={CHART_TICK}
               strokeWidth={1.5}
             />
             <line
@@ -1158,7 +1191,7 @@ function BoxPlotSVGInner({
               y1={cy - capH}
               x2={xMax}
               y2={cy + capH}
-              stroke="#868e96"
+              stroke={CHART_TICK}
               strokeWidth={1.5}
             />
             {/* Class label */}
@@ -1167,7 +1200,7 @@ function BoxPlotSVGInner({
               y={cy + 4}
               textAnchor="end"
               fontSize={12}
-              fill="#868e96"
+              fill={CHART_TICK}
             >
               {d.class}
             </text>
@@ -1593,8 +1626,8 @@ export function MonitoringAcademicAnalytics() {
                   className="rounded-full px-2 py-0.5 text-xs font-medium"
                   style={
                     GRADE_BADGE_STYLE[selectedGrade] ?? {
-                      backgroundColor: 'rgba(173,181,189,0.3)',
-                      color: '#495057',
+                      backgroundColor: `color-mix(in srgb, ${GRADE_FILL.VR} 30%, transparent)`,
+                      color: CHART_LABEL,
                     }
                   }
                 >
@@ -1747,7 +1780,7 @@ export function MonitoringAcademicAnalytics() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-7 w-full gap-1.5 text-xs font-medium text-[var(--slate-12)]"
+                      className="h-7 w-full gap-1.5 text-xs font-medium text-slate-12"
                       onClick={() => {
                         clearTableFilters()
                         setFilterOpen(false)
@@ -1972,18 +2005,18 @@ export function MonitoringAcademicAnalytics() {
               <CartesianGrid
                 strokeDasharray="3 3"
                 vertical={false}
-                stroke="#e9ecef"
+                stroke={CHART_GRID}
               />
               <XAxis
                 dataKey="assessment"
-                tick={{ fontSize: 12, fill: '#868e96' }}
+                tick={{ fontSize: 12, fill: CHART_TICK }}
                 axisLine={false}
                 tickLine={false}
               />
               <YAxis
                 domain={[0, 100]}
                 ticks={[0, 25, 50, 75, 100]}
-                tick={{ fontSize: 12, fill: '#868e96' }}
+                tick={{ fontSize: 12, fill: CHART_TICK }}
                 axisLine={false}
                 tickLine={false}
                 tickFormatter={(v: number) => `${v}%`}
@@ -1996,21 +2029,25 @@ export function MonitoringAcademicAnalytics() {
                 contentStyle={{
                   fontSize: 12,
                   borderRadius: 6,
-                  border: '1px solid #dee2e6',
+                  border: `1px solid ${CHART_TOOLTIP_BORDER}`,
                 }}
               />
-              <Bar dataKey="distinction" fill="#228be6" radius={[2, 2, 0, 0]}>
+              <Bar
+                dataKey="distinction"
+                fill={SERIES_BLUE}
+                radius={[2, 2, 0, 0]}
+              >
                 <LabelList
                   position="top"
                   formatter={(v: number) => `${v}%`}
-                  style={{ fontSize: 10, fill: '#495057' }}
+                  style={{ fontSize: 10, fill: CHART_LABEL }}
                 />
               </Bar>
-              <Bar dataKey="pass" fill="#12b886" radius={[2, 2, 0, 0]}>
+              <Bar dataKey="pass" fill={PRESENT_RING} radius={[2, 2, 0, 0]}>
                 <LabelList
                   position="top"
                   formatter={(v: number) => `${v}%`}
-                  style={{ fontSize: 10, fill: '#495057' }}
+                  style={{ fontSize: 10, fill: CHART_LABEL }}
                 />
               </Bar>
             </BarChart>
@@ -2019,14 +2056,14 @@ export function MonitoringAcademicAnalytics() {
             <div className="flex items-center gap-1.5">
               <span
                 className="h-3 w-3 shrink-0 rounded-sm"
-                style={{ backgroundColor: '#228be6' }}
+                style={{ backgroundColor: SERIES_BLUE }}
               />
               <span className="text-muted-foreground">% with distinction</span>
             </div>
             <div className="flex items-center gap-1.5">
               <span
                 className="h-3 w-3 shrink-0 rounded-sm"
-                style={{ backgroundColor: '#12b886' }}
+                style={{ backgroundColor: PRESENT_RING }}
               />
               <span className="text-muted-foreground">% with pass</span>
             </div>

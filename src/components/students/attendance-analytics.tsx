@@ -29,6 +29,17 @@ import {
 
 import type { Student } from '@/types/student'
 import { cn } from '@/lib/utils'
+import {
+  ATTENDANCE_SEVERITY,
+  CHART_GRID,
+  CHART_LABEL,
+  CHART_TICK,
+  CHART_TOOLTIP_BORDER,
+  PRESENT_RING,
+  SERIES_BLUE,
+  SERIES_BLUE_COBALT,
+  SERIES_BLUE_LIGHT,
+} from '@/lib/chart-colors'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -168,14 +179,14 @@ const ABSENCE_DETAILS = [
   {
     date: '20 Oct 2026',
     type: 'Pending reason',
-    typeColor: '#e03131',
+    typeColor: ATTENDANCE_SEVERITY.pendingReasonStrong,
     subReason: '—',
     remarks: 'Parent informed',
   },
   {
     date: '19 Oct 2026',
     type: 'Absent without valid reason',
-    typeColor: '#f76707',
+    typeColor: ATTENDANCE_SEVERITY.nonVRAbsenceStrong,
     subReason: '—',
     remarks: 'Skipped school',
   },
@@ -189,7 +200,7 @@ const ABSENCE_DETAILS = [
   {
     date: '15 Oct 2026',
     type: 'Absent without valid reason',
-    typeColor: '#f76707',
+    typeColor: ATTENDANCE_SEVERITY.nonVRAbsenceStrong,
     subReason: '—',
     remarks: 'Skipped school',
   },
@@ -210,14 +221,14 @@ const ABSENCE_DETAILS = [
   {
     date: '08 Oct 2026',
     type: 'Absent without valid reason',
-    typeColor: '#f76707',
+    typeColor: ATTENDANCE_SEVERITY.nonVRAbsenceStrong,
     subReason: '—',
     remarks: 'Skipped school',
   },
   {
     date: '07 Oct 2026',
     type: 'Pending reason',
-    typeColor: '#e03131',
+    typeColor: ATTENDANCE_SEVERITY.pendingReasonStrong,
     subReason: '—',
     remarks: '—',
   },
@@ -239,14 +250,14 @@ const ABSENCE_DETAILS = [
   {
     date: '30 Sep 2026',
     type: 'Pending reason',
-    typeColor: '#e03131',
+    typeColor: ATTENDANCE_SEVERITY.pendingReasonStrong,
     subReason: '—',
     remarks: 'Parent not reachable',
   },
   {
     date: '25 Sep 2026',
     type: 'Absent without valid reason',
-    typeColor: '#f76707',
+    typeColor: ATTENDANCE_SEVERITY.nonVRAbsenceStrong,
     subReason: '—',
     remarks: 'Skipped school',
   },
@@ -282,14 +293,14 @@ const ABSENCE_DETAILS = [
   {
     date: '28 Aug 2026',
     type: 'Absent without valid reason',
-    typeColor: '#f76707',
+    typeColor: ATTENDANCE_SEVERITY.nonVRAbsenceStrong,
     subReason: '—',
     remarks: 'Skipped school',
   },
   {
     date: '26 Aug 2026',
     type: 'Pending reason',
-    typeColor: '#e03131',
+    typeColor: ATTENDANCE_SEVERITY.pendingReasonStrong,
     subReason: '—',
     remarks: '—',
   },
@@ -325,7 +336,7 @@ const ABSENCE_DETAILS = [
   {
     date: '23 Jul 2026',
     type: 'Absent without valid reason',
-    typeColor: '#f76707',
+    typeColor: ATTENDANCE_SEVERITY.nonVRAbsenceStrong,
     subReason: '—',
     remarks: 'Skipped school',
   },
@@ -340,14 +351,14 @@ const ABSENCE_DETAILS = [
   {
     date: '25 Jun 2026',
     type: 'Pending reason',
-    typeColor: '#e03131',
+    typeColor: ATTENDANCE_SEVERITY.pendingReasonStrong,
     subReason: '—',
     remarks: 'Parent informed',
   },
   {
     date: '23 Jun 2026',
     type: 'Absent without valid reason',
-    typeColor: '#f76707',
+    typeColor: ATTENDANCE_SEVERITY.nonVRAbsenceStrong,
     subReason: '—',
     remarks: 'Skipped school',
   },
@@ -376,7 +387,7 @@ const ABSENCE_DETAILS = [
   {
     date: '27 May 2026',
     type: 'Absent without valid reason',
-    typeColor: '#f76707',
+    typeColor: ATTENDANCE_SEVERITY.nonVRAbsenceStrong,
     subReason: '—',
     remarks: 'Skipped school',
   },
@@ -397,7 +408,7 @@ const ABSENCE_DETAILS = [
   {
     date: '06 May 2026',
     type: 'Pending reason',
-    typeColor: '#e03131',
+    typeColor: ATTENDANCE_SEVERITY.pendingReasonStrong,
     subReason: '—',
     remarks: '—',
   },
@@ -412,7 +423,7 @@ const ABSENCE_DETAILS = [
   {
     date: '23 Apr 2026',
     type: 'Absent without valid reason',
-    typeColor: '#f76707',
+    typeColor: ATTENDANCE_SEVERITY.nonVRAbsenceStrong,
     subReason: '—',
     remarks: 'Skipped school',
   },
@@ -433,7 +444,7 @@ const ABSENCE_DETAILS = [
   {
     date: '08 Apr 2026',
     type: 'Pending reason',
-    typeColor: '#e03131',
+    typeColor: ATTENDANCE_SEVERITY.pendingReasonStrong,
     subReason: '—',
     remarks: 'Parent informed',
   },
@@ -441,7 +452,7 @@ const ABSENCE_DETAILS = [
   {
     date: '25 Mar 2026',
     type: 'Absent without valid reason',
-    typeColor: '#f76707',
+    typeColor: ATTENDANCE_SEVERITY.nonVRAbsenceStrong,
     subReason: '—',
     remarks: 'Skipped school',
   },
@@ -456,14 +467,14 @@ const ABSENCE_DETAILS = [
   {
     date: '25 Feb 2026',
     type: 'Pending reason',
-    typeColor: '#e03131',
+    typeColor: ATTENDANCE_SEVERITY.pendingReasonStrong,
     subReason: '—',
     remarks: '—',
   },
   {
     date: '18 Feb 2026',
     type: 'Absent without valid reason',
-    typeColor: '#f76707',
+    typeColor: ATTENDANCE_SEVERITY.nonVRAbsenceStrong,
     subReason: '—',
     remarks: 'Skipped school',
   },
@@ -492,7 +503,7 @@ const ABSENCE_DETAILS = [
   {
     date: '21 Jan 2026',
     type: 'Absent without valid reason',
-    typeColor: '#f76707',
+    typeColor: ATTENDANCE_SEVERITY.nonVRAbsenceStrong,
     subReason: '—',
     remarks: 'Skipped school',
   },
@@ -515,19 +526,27 @@ const ABSENCE_DETAILS = [
 const DETAILS_PAGE_SIZE = 5
 
 const BAR_CATEGORIES = [
-  { key: 'pendingReason', label: 'Pending reason', color: '#fa5252' }, // red — top
-  { key: 'absentNoValid', label: 'Non-VR absences', color: '#fd7e14' }, // orange
-  { key: 'latecoming', label: 'Late', color: '#fac53e' }, // yellow — matches reports
-  { key: 'absentMC', label: 'MC', color: '#74c0fc' }, // blue-3 (lightest)
+  {
+    key: 'pendingReason',
+    label: 'Pending reason',
+    color: ATTENDANCE_SEVERITY.pendingReason,
+  }, // red — top
+  {
+    key: 'absentNoValid',
+    label: 'Non-VR absences',
+    color: ATTENDANCE_SEVERITY.nonVRAbsence,
+  }, // orange
+  { key: 'latecoming', label: 'Late', color: ATTENDANCE_SEVERITY.late }, // yellow — matches reports
+  { key: 'absentMC', label: 'MC', color: SERIES_BLUE_LIGHT }, // blue-3 (lightest)
   {
     key: 'absentValidPrivate',
     label: 'Valid reason (private)',
-    color: '#228be6',
+    color: SERIES_BLUE,
   }, // blue — matches reports
   {
     key: 'absentValidOfficial',
     label: 'Valid reason (official)',
-    color: '#4d79e0',
+    color: SERIES_BLUE_COBALT,
   }, // cobalt blue H=222° — shifted from sky-blue to contrast against slate-12
 ]
 
@@ -561,15 +580,19 @@ function AbsenceBarChart({
 
   return (
     <BarChart {...CHART_COMMON_PROPS} data={data} barSize={barSize}>
-      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e9ecef" />
+      <CartesianGrid
+        strokeDasharray="3 3"
+        vertical={false}
+        stroke={CHART_GRID}
+      />
       <XAxis
         dataKey="month"
-        tick={{ fontSize: 12, fill: '#868e96' }}
+        tick={{ fontSize: 12, fill: CHART_TICK }}
         axisLine={false}
         tickLine={false}
       />
       <YAxis
-        tick={{ fontSize: 12, fill: '#868e96' }}
+        tick={{ fontSize: 12, fill: CHART_TICK }}
         axisLine={false}
         tickLine={false}
         allowDecimals={false}
@@ -630,7 +653,7 @@ function AbsenceBarChart({
                   dominantBaseline="middle"
                   fontSize={10}
                   fontWeight={500}
-                  fill="var(--slate-12)"
+                  fill={CHART_LABEL}
                 >
                   {numVal}
                 </text>
@@ -666,7 +689,7 @@ function AbsenceBarChart({
                     textAnchor="middle"
                     fontSize={10}
                     fontWeight={600}
-                    fill="#495057"
+                    fill={CHART_LABEL}
                   >
                     {total}
                   </text>
@@ -811,9 +834,13 @@ const LEVEL_MONTHLY: Record<string, typeof MONTHLY_DATA> = {
 function buildLevelRingSegments(att: LevelAttendance) {
   const absent = att.total - att.present - att.lta
   const segments = [
-    { name: 'Present', value: att.present, color: '#12b886' },
-    { name: 'LTA', value: att.lta, color: '#fd7e14' },
-    { name: 'Absent', value: Math.max(absent, 0), color: '#fa5252' },
+    { name: 'Present', value: att.present, color: PRESENT_RING },
+    { name: 'LTA', value: att.lta, color: ATTENDANCE_SEVERITY.nonVRAbsence },
+    {
+      name: 'Absent',
+      value: Math.max(absent, 0),
+      color: ATTENDANCE_SEVERITY.pendingReason,
+    },
   ]
   let acc = 0
   return segments.map((seg) => {
@@ -1281,7 +1308,7 @@ function AttendanceStudentsTable({
 
   const segmentCat = segment
     ? segment.categoryKey === 'lta'
-      ? { key: 'lta', label: 'LTA', color: '#fd7e14' }
+      ? { key: 'lta', label: 'LTA', color: ATTENDANCE_SEVERITY.nonVRAbsence }
       : BAR_CATEGORIES.find((c) => c.key === segment.categoryKey)
     : null
 
@@ -1775,7 +1802,7 @@ export function AttendanceLevelAnalytics() {
               <AttendanceRing
                 percentage={presentPct}
                 size={100}
-                color="#228be6"
+                color={SERIES_BLUE}
               />
               <div className="flex items-center gap-5">
                 <div>
@@ -1950,13 +1977,17 @@ export function AttendanceAnalytics({ student }: AttendanceAnalyticsProps) {
     const absentExcl = Math.max(0, remaining - late - absentPending)
     let acc = 0
     return [
-      { name: 'Present', value: present, color: '#12b886' },
-      { name: 'Late', value: late, color: '#fd7e14' },
-      { name: 'Absent pending reason', value: absentPending, color: '#fa5252' },
+      { name: 'Present', value: present, color: PRESENT_RING },
+      { name: 'Late', value: late, color: ATTENDANCE_SEVERITY.nonVRAbsence },
+      {
+        name: 'Absent pending reason',
+        value: absentPending,
+        color: ATTENDANCE_SEVERITY.pendingReason,
+      },
       {
         name: 'Absent (excl pending reason)',
         value: absentExcl,
-        color: '#ffa94d',
+        color: ATTENDANCE_SEVERITY.absentExcl,
       },
     ].map((seg) => {
       const len = total > 0 ? (seg.value / total) * RING_C : 0
@@ -2005,7 +2036,7 @@ export function AttendanceAnalytics({ student }: AttendanceAnalyticsProps) {
               (currentAttendance.present / currentAttendance.total) * 100
             }
             size={100}
-            color="#228be6"
+            color={SERIES_BLUE}
           />
           <div className="flex items-center gap-5">
             <div>
@@ -2044,18 +2075,18 @@ export function AttendanceAnalytics({ student }: AttendanceAnalyticsProps) {
             <CartesianGrid
               strokeDasharray="3 3"
               vertical={false}
-              stroke="#e9ecef"
+              stroke={CHART_GRID}
             />
             <XAxis
               dataKey="week"
-              tick={{ fontSize: 12, fill: '#868e96' }}
+              tick={{ fontSize: 12, fill: CHART_TICK }}
               axisLine={false}
               tickLine={false}
             />
             <YAxis
               domain={[0, 100]}
               ticks={[0, 25, 50, 75, 100]}
-              tick={{ fontSize: 12, fill: '#868e96' }}
+              tick={{ fontSize: 12, fill: CHART_TICK }}
               axisLine={false}
               tickLine={false}
             />
@@ -2064,19 +2095,19 @@ export function AttendanceAnalytics({ student }: AttendanceAnalyticsProps) {
               contentStyle={{
                 fontSize: 12,
                 borderRadius: 6,
-                border: '1px solid #dee2e6',
+                border: `1px solid ${CHART_TOOLTIP_BORDER}`,
               }}
             />
             <Line
               type="monotone"
               dataKey="rate"
-              stroke="#228be6"
+              stroke={SERIES_BLUE}
               strokeWidth={2}
-              dot={{ fill: '#228be6', r: 4, strokeWidth: 0 }}
+              dot={{ fill: SERIES_BLUE, r: 4, strokeWidth: 0 }}
               label={{
                 position: 'top',
                 fontSize: 11,
-                fill: '#495057',
+                fill: CHART_LABEL,
                 formatter: (v: number) => (v < 100 ? `${v}%` : ''),
               }}
             />

@@ -1,31 +1,34 @@
 import { createFileRoute } from '@tanstack/react-router'
 
+import { CHART_LABEL, CHART_SURFACE } from '@/lib/chart-colors'
+
 export const Route = createFileRoute('/_guest/preview-menu')({
   component: PreviewMenu,
 })
 
 const TWBLUE = {
-  3: '#eaf3ff',
-  4: '#daebff',
-  5: '#c7e1ff',
-  9: '#0064ff',
-  11: '#015ceb',
+  3: 'var(--color-twblue-3)',
+  4: 'var(--color-twblue-4)',
+  5: 'var(--color-twblue-5)',
+  9: 'var(--color-twblue-9)',
+  11: 'var(--color-twblue-11)',
 }
 
 const SLATE = {
-  1: '#fbfcfd',
-  2: '#f8f9fa',
-  3: '#f1f3f5',
-  5: '#e6e8eb',
-  6: '#dde1e7',
-  7: '#d0d5dd',
-  8: '#b9c0cc',
-  9: '#899099',
-  10: '#7e868f',
-  11: '#60666d',
-  12: '#1c2024',
+  1: 'var(--color-slate-1)',
+  2: 'var(--color-slate-2)',
+  3: 'var(--color-slate-3)',
+  5: 'var(--color-slate-5)',
+  6: 'var(--color-slate-6)',
+  7: 'var(--color-slate-7)',
+  8: 'var(--color-slate-8)',
+  9: 'var(--color-slate-9)',
+  10: 'var(--color-slate-10)',
+  11: 'var(--color-slate-11)',
+  12: 'var(--color-slate-12)',
 }
 
+// HeyTalia mascot artwork hue — reserved, do not migrate to a palette var.
 const AGENT_PURPLE = '#9575CD'
 
 function PreviewMenu() {
@@ -72,7 +75,7 @@ function PreviewMenu() {
           <div
             style={{
               width: 310,
-              background: 'white',
+              background: CHART_SURFACE,
               border: `1px solid ${SLATE[6]}`,
               borderRadius: 16,
               boxShadow: '0 12px 40px rgba(0,0,0,.09)',
@@ -146,7 +149,7 @@ function PreviewMenu() {
                   top: 'calc(100% + 6px)',
                   left: 8,
                   right: 8,
-                  background: 'white',
+                  background: CHART_SURFACE,
                   border: `1px solid ${SLATE[6]}`,
                   borderRadius: 12,
                   boxShadow: '0 8px 24px rgba(0,0,0,.1)',
@@ -170,7 +173,7 @@ function PreviewMenu() {
                       width: 34,
                       height: 34,
                       borderRadius: 10,
-                      background: `${AGENT_PURPLE}18`,
+                      background: `color-mix(in srgb, ${AGENT_PURPLE} 9%, transparent)`,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -273,7 +276,7 @@ function PreviewMenu() {
           <div
             style={{
               width: 310,
-              background: 'white',
+              background: CHART_SURFACE,
               border: `1px solid ${SLATE[6]}`,
               borderRadius: 16,
               boxShadow: '0 12px 40px rgba(0,0,0,.09)',
@@ -313,8 +316,8 @@ function PreviewMenu() {
                       gap: 7,
                       padding: '4px 10px 4px 5px',
                       borderRadius: 99,
-                      background: `${AGENT_PURPLE}0f`,
-                      border: `1.5px solid ${AGENT_PURPLE}4d`,
+                      background: `color-mix(in srgb, ${AGENT_PURPLE} 6%, transparent)`,
+                      border: `1.5px solid color-mix(in srgb, ${AGENT_PURPLE} 30%, transparent)`,
                     }}
                   >
                     <div
@@ -322,7 +325,7 @@ function PreviewMenu() {
                         width: 24,
                         height: 24,
                         borderRadius: 99,
-                        background: `${AGENT_PURPLE}22`,
+                        background: `color-mix(in srgb, ${AGENT_PURPLE} 13%, transparent)`,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -476,7 +479,7 @@ function PreviewMenu() {
           <div
             style={{
               width: 310,
-              background: 'white',
+              background: CHART_SURFACE,
               border: `1px solid ${SLATE[6]}`,
               borderRadius: 16,
               boxShadow: '0 12px 40px rgba(0,0,0,.09)',
@@ -537,7 +540,7 @@ function PreviewMenu() {
                   fontWeight: 500,
                   color: SLATE[12],
                   position: 'relative',
-                  background: 'white',
+                  background: CHART_SURFACE,
                   borderRadius: '8px 8px 0 0',
                   boxShadow: `0 -1px 0 0 ${SLATE[5]} inset, 1px 0 0 0 ${SLATE[5]} inset, -1px 0 0 0 ${SLATE[5]} inset`,
                 }}
@@ -556,7 +559,7 @@ function PreviewMenu() {
                     left: 0,
                     right: 0,
                     height: 1,
-                    background: 'white',
+                    background: CHART_SURFACE,
                   }}
                 />
               </div>
@@ -694,7 +697,7 @@ function AgentIcon() {
         height: 30,
         borderRadius: 9,
         border: `1px solid ${SLATE[5]}`,
-        background: `${AGENT_PURPLE}18`,
+        background: `color-mix(in srgb, ${AGENT_PURPLE} 9%, transparent)`,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -771,7 +774,7 @@ function ChatBubble() {
         <div>
           <div
             style={{
-              background: 'white',
+              background: CHART_SURFACE,
               border: `1px solid ${SLATE[5]}`,
               borderRadius: '12px 12px 12px 3px',
               padding: '9px 12px',
@@ -824,7 +827,7 @@ function PanelInput() {
       style={{
         borderTop: `1px solid ${SLATE[5]}`,
         padding: '10px 12px 11px',
-        background: 'white',
+        background: CHART_SURFACE,
       }}
     >
       <div
@@ -836,7 +839,7 @@ function PanelInput() {
           border: `1px solid ${SLATE[6]}`,
           borderRadius: 99,
           padding: '0 5px 0 12px',
-          background: 'white',
+          background: CHART_SURFACE,
         }}
       >
         <span style={{ flex: 1, fontSize: 12.5, color: SLATE[8] }}>
@@ -970,7 +973,7 @@ function UpArrowIcon() {
       height="11"
       viewBox="0 0 24 24"
       fill="none"
-      stroke="white"
+      stroke={CHART_LABEL}
       strokeWidth="2.5"
       strokeLinecap="round"
       strokeLinejoin="round"
