@@ -529,33 +529,8 @@ function AgencyReportRow({ report }: { report: AgencyReport }) {
   })
 
   // Due date: clock icon + bare "N days" (no "Due in" prefix)
-  let dueLabel: string | null = null
-  let dueClass = ''
-  if (report.startedAt && (status === 'draft' || status === 'pending_review')) {
-    const tpl = AGENCY_TEMPLATES.find((t) => t.id === report.templateId)
-    if (tpl) {
-      // Two windows here:
-      // - Drafts: count down to the agency's turnaround (e.g. 7 days for MSF).
-      // - Pending review: the principal has a fixed 2-business-day review
-      //   window. Hardcoded so demos always show "2 days" right after
-      //   submission regardless of the calendar date.
-      const PRINCIPAL_REVIEW_DAYS = 2
-      const windowDays =
-        status === 'pending_review' ? PRINCIPAL_REVIEW_DAYS : tpl.turnaroundDays
-      const due = addBusinessDaysSimple(report.startedAt, windowDays)
-      const today = new Date()
-      const diffMs = due.getTime() - today.getTime()
-      const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24))
-      if (diffDays < 0) {
-        const abs = Math.abs(diffDays)
-        dueLabel = `${abs} day${abs !== 1 ? 's' : ''} overdue`
-        dueClass = 'text-red-600'
-      } else {
-        dueLabel = `${diffDays} day${diffDays !== 1 ? 's' : ''}`
-        dueClass = diffDays <= 2 ? 'text-amber-600' : 'text-muted-foreground'
-      }
-    }
-  }
+  // Deadlines removed from the agency-report flow entirely.
+
 
   // Click target: drafts/edits resume the form; approved jumps to Export.
   // pending_review rows are not click-through — but the badge itself is a
@@ -633,17 +608,6 @@ function AgencyReportRow({ report }: { report: AgencyReport }) {
           </Link>
         ) : (
           <div className="flex-1 min-w-0">{titleContent}</div>
-        )}
-        {dueLabel && (
-          <span
-            className={cn(
-              'flex items-center gap-1 text-xs font-medium tabular-nums',
-              dueClass,
-            )}
-          >
-            <Clock className="h-3 w-3" />
-            {dueLabel}
-          </span>
         )}
         {status === 'pending_review' ? (
           <button
