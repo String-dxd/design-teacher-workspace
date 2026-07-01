@@ -37,7 +37,7 @@ export function ReportOverviewTab({
       <TeacherCommentsCard comments={report.teacherComments} />
 
       <div className="flex flex-col items-center gap-4 rounded-lg border p-6">
-        <span className="inline-block rounded-full bg-[#fff0ec] px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-[#f26c47]">
+        <span className="inline-block rounded-full bg-orange-3 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-orange-11">
           Core Values Journey
         </span>
         <h3 className="text-xl font-bold">Character Development</h3>
@@ -50,7 +50,7 @@ export function ReportOverviewTab({
           <button
             type="button"
             onClick={onViewHolistic}
-            className="flex items-center gap-1 rounded-lg border px-4 py-2 text-sm font-medium text-[#f26c47] transition-colors hover:bg-[#fff0ec]"
+            className="flex items-center gap-1 rounded-lg border px-4 py-2 text-sm font-medium text-orange-11 transition-colors hover:bg-orange-3"
           >
             View Detailed Character Development
             <ChevronRight className="size-4" />

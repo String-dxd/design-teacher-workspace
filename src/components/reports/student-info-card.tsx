@@ -49,13 +49,13 @@ export function StudentInfoCard({
             <span className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">
               Form Teacher
             </span>
-            <span className="font-medium text-[#f26c47]">{formTeacher}</span>
+            <span className="font-medium text-orange-9">{formTeacher}</span>
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">
               Co-Form Teacher
             </span>
-            <span className="font-medium text-[#12b886]">
+            <span className="font-medium text-lime-11">
               {coFormTeacher || '-'}
             </span>
           </div>

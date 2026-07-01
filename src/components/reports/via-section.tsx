@@ -9,8 +9,8 @@ export function VIASection({ activities }: VIASectionProps) {
   return (
     <section className="border-border rounded-lg border p-5">
       <div className="flex items-center gap-3">
-        <div className="flex size-9 items-center justify-center rounded-full bg-[#e8feea]">
-          <Heart className="text-[#12b886]" size={18} />
+        <div className="flex size-9 items-center justify-center rounded-full bg-lime-3">
+          <Heart className="text-lime-11" size={18} />
         </div>
         <h2 className="text-base font-semibold">Values in Action (VIA)</h2>
       </div>
@@ -19,7 +19,7 @@ export function VIASection({ activities }: VIASectionProps) {
         {activities.map((activity) => (
           <div key={activity.activityName} className="flex flex-col gap-2">
             <div className="flex items-center gap-3">
-              <span className="rounded-full bg-[#e8feea] px-3 py-1 text-xs font-semibold uppercase text-[#12b886]">
+              <span className="rounded-full bg-lime-3 px-3 py-1 text-xs font-semibold uppercase text-lime-11">
                 {activity.category}
               </span>
               <span className="text-muted-foreground text-sm">

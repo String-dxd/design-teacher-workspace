@@ -64,7 +64,7 @@ function GuestReportViewPage() {
           Student Profile
         </div>
         <div className="mb-6 flex flex-col items-center gap-3">
-          <Avatar size="lg" className="ring-2 ring-[#f26c47] ring-offset-2">
+          <Avatar size="lg" className="ring-2 ring-orange-9 ring-offset-2">
             <AvatarFallback>{getInitials(report.studentName)}</AvatarFallback>
           </Avatar>
           <div className="text-center">
@@ -97,19 +97,19 @@ function GuestReportViewPage() {
           <TabsList variant="line">
             <TabsTrigger
               value="overview"
-              className="text-xs data-active:text-[#f26c47] data-active:after:bg-[#f26c47]"
+              className="text-xs data-active:text-orange-9 data-active:after:bg-orange-9"
             >
               Overview
             </TabsTrigger>
             <TabsTrigger
               value="academic"
-              className="text-xs data-active:text-[#f26c47] data-active:after:bg-[#f26c47]"
+              className="text-xs data-active:text-orange-9 data-active:after:bg-orange-9"
             >
               Academic
             </TabsTrigger>
             <TabsTrigger
               value="holistic"
-              className="text-xs data-active:text-[#f26c47] data-active:after:bg-[#f26c47]"
+              className="text-xs data-active:text-orange-9 data-active:after:bg-orange-9"
             >
               Holistic
             </TabsTrigger>
@@ -130,10 +130,10 @@ function GuestReportViewPage() {
       </div>
 
       {/* Sticky footer */}
-      <div className="fixed bottom-0 left-0 right-0 mx-auto max-w-md border-t bg-white px-4 py-4">
+      <div className="fixed bottom-0 left-0 right-0 mx-auto max-w-md border-t bg-card px-4 py-4">
         {!acknowledged ? (
           <Button
-            className="w-full bg-[#f26c47] text-white hover:bg-[#e05a37]"
+            className="w-full bg-orange-9 text-white hover:bg-orange-10"
             onClick={handleAcknowledge}
           >
             <CheckCircle className="mr-2 size-4" />
@@ -141,11 +141,11 @@ function GuestReportViewPage() {
           </Button>
         ) : !sentToParents ? (
           <div className="flex flex-col gap-2">
-            <div className="text-center text-xs text-green-600">
+            <div className="text-center text-xs text-lime-11">
               Report acknowledged
             </div>
             <Button
-              className="w-full bg-[#f26c47] text-white hover:bg-[#e05a37]"
+              className="w-full bg-orange-9 text-white hover:bg-orange-10"
               onClick={handleSendToParents}
             >
               <Send className="mr-2 size-4" />
@@ -153,7 +153,7 @@ function GuestReportViewPage() {
             </Button>
           </div>
         ) : (
-          <div className="text-center text-sm text-green-600">
+          <div className="text-center text-sm text-lime-11">
             Report acknowledged and sent to parents
           </div>
         )}

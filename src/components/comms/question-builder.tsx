@@ -81,7 +81,7 @@ export function QuestionBuilder({
   const atMax = questions.length >= MAX_QUESTIONS
 
   return (
-    <section className="rounded-xl border bg-white p-6">
+    <section className="rounded-xl border bg-card p-6">
       <div className="mb-4 flex items-start justify-between">
         <div>
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
@@ -115,11 +115,11 @@ export function QuestionBuilder({
         {questions.map((q, i) => (
           <div
             key={q.id}
-            className="rounded-lg border border-slate-200 bg-slate-50 p-3"
+            className="rounded-lg border border-border bg-slate-2 p-3"
           >
             {/* Question header row */}
             <div className="flex items-start gap-2">
-              <GripVertical className="mt-2 h-4 w-4 shrink-0 text-slate-300" />
+              <GripVertical className="mt-2 h-4 w-4 shrink-0 text-slate-8" />
               <span className="mt-2 w-4 shrink-0 text-xs font-medium text-muted-foreground">
                 {i + 1}.
               </span>
@@ -136,7 +136,7 @@ export function QuestionBuilder({
                   type="button"
                   onClick={() => moveUp(i)}
                   disabled={i === 0}
-                  className="rounded p-1 text-slate-400 hover:bg-slate-200 hover:text-slate-600 disabled:opacity-30"
+                  className="rounded p-1 text-slate-9 hover:bg-slate-4 hover:text-slate-12 disabled:opacity-30"
                   aria-label="Move up"
                 >
                   <ArrowUp className="h-3 w-3" />
@@ -145,7 +145,7 @@ export function QuestionBuilder({
                   type="button"
                   onClick={() => moveDown(i)}
                   disabled={i === questions.length - 1}
-                  className="rounded p-1 text-slate-400 hover:bg-slate-200 hover:text-slate-600 disabled:opacity-30"
+                  className="rounded p-1 text-slate-9 hover:bg-slate-4 hover:text-slate-12 disabled:opacity-30"
                   aria-label="Move down"
                 >
                   <ArrowDown className="h-3 w-3" />
@@ -153,7 +153,7 @@ export function QuestionBuilder({
                 <button
                   type="button"
                   onClick={() => deleteQuestion(q.id)}
-                  className="rounded p-1 text-slate-400 hover:bg-red-50 hover:text-red-500"
+                  className="rounded p-1 text-slate-9 hover:bg-destructive/10 hover:text-destructive"
                   aria-label="Delete question"
                 >
                   <Trash2 className="h-3 w-3" />
@@ -180,20 +180,20 @@ export function QuestionBuilder({
                   className={cn(
                     'flex items-center gap-1.5 text-xs',
                     q.type === t || (!q.type && t === 'free-text')
-                      ? 'font-semibold text-slate-800'
-                      : 'text-slate-400 hover:text-slate-600',
+                      ? 'font-semibold text-foreground'
+                      : 'text-slate-9 hover:text-slate-12',
                   )}
                 >
                   <div
                     className={cn(
                       'h-3.5 w-3.5 rounded-full border-2',
                       q.type === t || (!q.type && t === 'free-text')
-                        ? 'border-slate-700 bg-slate-700'
-                        : 'border-slate-300',
+                        ? 'border-slate-12 bg-slate-12'
+                        : 'border-slate-6',
                     )}
                   >
                     {(q.type === t || (!q.type && t === 'free-text')) && (
-                      <div className="h-full w-full rounded-full bg-white scale-[0.4]" />
+                      <div className="h-full w-full rounded-full bg-background scale-[0.4]" />
                     )}
                   </div>
                   {t === 'free-text' ? 'Open-ended' : 'MCQ'}
@@ -206,7 +206,7 @@ export function QuestionBuilder({
               <div className="mt-2.5 ml-10 space-y-1.5">
                 {(q.options ?? ['', '']).map((opt, oi) => (
                   <div key={oi} className="flex items-center gap-1.5">
-                    <div className="h-3 w-3 shrink-0 rounded-full border-2 border-slate-300" />
+                    <div className="h-3 w-3 shrink-0 rounded-full border-2 border-slate-6" />
                     <Input
                       value={opt}
                       onChange={(e) => updateOption(q.id, oi, e.target.value)}
@@ -217,7 +217,7 @@ export function QuestionBuilder({
                       <button
                         type="button"
                         onClick={() => removeOption(q.id, oi)}
-                        className="shrink-0 rounded p-0.5 text-slate-400 hover:text-red-500"
+                        className="shrink-0 rounded p-0.5 text-slate-9 hover:text-destructive"
                         aria-label="Remove option"
                       >
                         <X className="h-3 w-3" />
@@ -253,11 +253,11 @@ export function QuestionBuilder({
                       'rounded-md px-2 py-0.5 text-xs font-medium transition-colors',
                       (q.showAfter ?? 'both') === choice
                         ? choice === 'yes'
-                          ? 'bg-emerald-100 text-emerald-700'
+                          ? 'bg-lime-3 text-lime-11'
                           : choice === 'no'
-                            ? 'bg-red-100 text-red-600'
-                            : 'bg-slate-200 text-slate-700'
-                        : 'text-slate-400 hover:bg-slate-100 hover:text-slate-600',
+                            ? 'bg-crimson-3 text-crimson-11'
+                            : 'bg-slate-4 text-slate-12'
+                        : 'text-slate-9 hover:bg-slate-4 hover:text-slate-12',
                     )}
                   >
                     {choice === 'yes' ? 'Yes' : choice === 'no' ? 'No' : 'Both'}

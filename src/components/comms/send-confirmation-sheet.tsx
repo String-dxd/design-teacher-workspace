@@ -63,8 +63,8 @@ export function SendConfirmationSheet({
 
         <div className="space-y-4">
           {/* Post title */}
-          <div className="rounded-lg border bg-slate-50 px-4 py-3">
-            <p className="text-sm font-medium text-slate-800">
+          <div className="rounded-lg border bg-muted px-4 py-3">
+            <p className="text-sm font-medium text-foreground">
               {title || 'Untitled post'}
             </p>
           </div>

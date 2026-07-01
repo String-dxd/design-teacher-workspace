@@ -23,15 +23,15 @@ function getStatusBadge(status: string) {
   const config: Record<string, { label: string; className: string }> = {
     active: {
       label: 'Active',
-      className: 'bg-green-100 text-green-700 hover:bg-green-100',
+      className: 'bg-lime-3 text-lime-11 hover:bg-lime-3',
     },
     draft: {
       label: 'Draft',
-      className: 'bg-slate-100 text-slate-700 hover:bg-slate-100',
+      className: 'bg-muted text-muted-foreground hover:bg-muted',
     },
     closed: {
       label: 'Closed',
-      className: 'bg-amber-100 text-amber-700 hover:bg-amber-100',
+      className: 'bg-amber-3 text-amber-11 hover:bg-amber-3',
     },
   }
   const { label, className } = config[status] ?? config.draft
@@ -105,7 +105,7 @@ function FormDetailPage() {
         <div className="space-y-6 lg:col-span-2">
           {/* Response stats card */}
           {form.status === 'active' && (
-            <div className="rounded-xl border bg-white p-6">
+            <div className="rounded-xl border bg-card p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">
@@ -119,11 +119,11 @@ function FormDetailPage() {
                     </span>
                   </p>
                   {pendingCount > 0 ? (
-                    <p className="mt-1 text-sm text-amber-600">
+                    <p className="mt-1 text-sm text-amber-11">
                       {pendingCount} pending
                     </p>
                   ) : totalCount > 0 ? (
-                    <p className="mt-1 text-sm text-green-700">All responded</p>
+                    <p className="mt-1 text-sm text-lime-11">All responded</p>
                   ) : null}
                 </div>
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-twblue-2">
@@ -144,7 +144,7 @@ function FormDetailPage() {
 
           {/* Response table */}
           {totalCount > 0 ? (
-            <div className="rounded-xl border bg-white p-6">
+            <div className="rounded-xl border bg-card p-6">
               <h2 className="mb-4 text-base font-semibold">
                 Recipient responses
               </h2>
@@ -156,7 +156,7 @@ function FormDetailPage() {
               />
             </div>
           ) : (
-            <div className="flex h-40 items-center justify-center rounded-xl border bg-white">
+            <div className="flex h-40 items-center justify-center rounded-xl border bg-card">
               <p className="text-sm text-muted-foreground">
                 No recipients added yet. Activate the form to start tracking
                 responses.
@@ -167,7 +167,7 @@ function FormDetailPage() {
 
         {/* ── Right: form details (1/3) ── */}
         <div className="space-y-4">
-          <div className="rounded-xl border bg-white p-5">
+          <div className="rounded-xl border bg-card p-5">
             <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
               Form Details
             </h2>
@@ -212,7 +212,7 @@ function FormDetailPage() {
                     {form.targetClasses.map((cls) => (
                       <span
                         key={cls}
-                        className="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700"
+                        className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground"
                       >
                         {cls}
                       </span>

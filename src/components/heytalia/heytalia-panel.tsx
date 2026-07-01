@@ -639,7 +639,9 @@ function AgentPickerDropdown({
         >
           <div
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
-            style={{ background: `${agent.color}18` }}
+            style={{
+              background: `color-mix(in srgb, ${agent.color} 9%, transparent)`,
+            }}
           >
             <img src={agent.icon} alt={agent.name} className="h-5 w-5" />
           </div>

@@ -10,8 +10,8 @@ export function CCASection({ ccaList }: CCASectionProps) {
   return (
     <section className="border-border rounded-lg border p-5">
       <div className="flex items-center gap-3">
-        <div className="flex size-9 items-center justify-center rounded-full bg-[#eef0ff]">
-          <Star className="text-[#6366f1]" size={18} />
+        <div className="flex size-9 items-center justify-center rounded-full bg-twblue-3">
+          <Star className="text-twblue-11" size={18} />
         </div>
         <h2 className="text-base font-semibold">
           Co-Curricular Activity (CCA)
@@ -28,15 +28,15 @@ export function CCASection({ ccaList }: CCASectionProps) {
           return (
             <div key={cca.name} className="flex flex-col gap-3">
               <div className="flex items-center gap-3">
-                <Award className="text-[#6366f1]" size={14} />
-                <span className="text-xs font-semibold uppercase tracking-wider text-[#6366f1]">
+                <Award className="text-twblue-11" size={14} />
+                <span className="text-xs font-semibold uppercase tracking-wider text-twblue-11">
                   CCA: {cca.category}
                 </span>
               </div>
 
               <div>
                 <p className="text-base font-semibold">{cca.name}</p>
-                <p className="text-sm font-medium text-[#12b886]">
+                <p className="text-sm font-medium text-lime-11">
                   {cca.role} &middot; {cca.years}{' '}
                   {cca.years === 1 ? 'year' : 'years'}
                 </p>

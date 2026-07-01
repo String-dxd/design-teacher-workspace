@@ -51,7 +51,7 @@ export function PgPreviewDialog({
         </div>
 
         {/* Preview banner */}
-        <div className="flex items-center gap-2 bg-blue-50 px-5 py-2.5 text-xs text-blue-700">
+        <div className="flex items-center gap-2 bg-twblue-3 px-5 py-2.5 text-xs text-twblue-11">
           <Info className="size-3.5 shrink-0" />
           This is a preview of how the parent will see the notification
         </div>
@@ -72,19 +72,19 @@ export function PgPreviewDialog({
               <TabsList variant="line">
                 <TabsTrigger
                   value="overview"
-                  className="text-xs data-active:text-[#f26c47] data-active:after:bg-[#f26c47]"
+                  className="text-xs data-active:text-orange-9 data-active:after:bg-orange-9"
                 >
                   Overview
                 </TabsTrigger>
                 <TabsTrigger
                   value="academic"
-                  className="text-xs data-active:text-[#f26c47] data-active:after:bg-[#f26c47]"
+                  className="text-xs data-active:text-orange-9 data-active:after:bg-orange-9"
                 >
                   Academic
                 </TabsTrigger>
                 <TabsTrigger
                   value="holistic"
-                  className="text-xs data-active:text-[#f26c47] data-active:after:bg-[#f26c47]"
+                  className="text-xs data-active:text-orange-9 data-active:after:bg-orange-9"
                 >
                   Holistic
                 </TabsTrigger>
@@ -111,7 +111,7 @@ export function PgPreviewDialog({
 
         <div className="flex flex-col gap-2 border-t px-4 py-3">
           <Button
-            className="w-full bg-[#f26c47] text-white hover:bg-[#e05a37]"
+            className="w-full bg-orange-9 text-white hover:bg-orange-10"
             size="sm"
             onClick={onSend}
           >

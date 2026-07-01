@@ -66,7 +66,7 @@ export function EmailPreviewDialog({
         </div>
 
         {/* Email header fields */}
-        <div className="space-y-0 border-b bg-gray-50 px-5 py-3 text-sm">
+        <div className="space-y-0 border-b bg-muted px-5 py-3 text-sm">
           <div className="flex gap-2 py-0.5">
             <span className="w-14 shrink-0 font-medium text-muted-foreground">
               From
@@ -97,7 +97,7 @@ export function EmailPreviewDialog({
               {report.academicYear} is now available for your review.
             </p>
 
-            <div className="rounded-lg border bg-gray-50 p-3 text-sm">
+            <div className="rounded-lg border bg-muted p-3 text-sm">
               <div className="flex justify-between py-0.5">
                 <span className="text-muted-foreground">Student</span>
                 <span className="font-medium">{report.studentName}</span>
@@ -121,7 +121,7 @@ export function EmailPreviewDialog({
                 href={reportUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mx-auto inline-block rounded-lg bg-[#f26c47] px-8 py-3 text-sm font-medium text-white transition-colors hover:bg-[#e05a37]"
+                className="mx-auto inline-block rounded-lg bg-orange-9 px-8 py-3 text-sm font-medium text-white transition-colors hover:bg-orange-10"
               >
                 View Report
               </a>
@@ -148,7 +148,7 @@ export function EmailPreviewDialog({
             Cancel
           </Button>
           <Button
-            className="bg-[#f26c47] text-white hover:bg-[#e05a37]"
+            className="bg-orange-9 text-white hover:bg-orange-10"
             onClick={onSend}
           >
             <Send className="mr-2 size-4" />

@@ -14,7 +14,7 @@ export function ExamOverallSection({ overall }: ExamOverallSectionProps) {
             <p className="text-muted-foreground text-xs font-semibold uppercase">
               Exam Performance
             </p>
-            <p className="mt-1 text-2xl font-bold text-[#f26c47]">
+            <p className="mt-1 text-2xl font-bold text-orange-9">
               {overall.examPerformance}
             </p>
             <p className="text-muted-foreground text-sm">

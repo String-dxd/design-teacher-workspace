@@ -65,8 +65,8 @@ function ToolbarButton({
       className={cn(
         'flex h-7 w-7 shrink-0 items-center justify-center rounded transition-colors',
         isActive
-          ? 'bg-slate-100 text-foreground ring-1 ring-slate-200'
-          : 'text-muted-foreground hover:bg-slate-100 hover:text-foreground',
+          ? 'bg-slate-4 text-foreground ring-1 ring-slate-6'
+          : 'text-muted-foreground hover:bg-slate-4 hover:text-foreground',
       )}
     >
       {children}
@@ -122,9 +122,9 @@ export const RichTextEditor = memo(function RichTextEditor({
           '[&_a]:text-primary [&_a]:underline',
           '[&_ul]:ml-4 [&_ul]:list-disc [&_ul]:space-y-0.5',
           '[&_ol]:ml-4 [&_ol]:list-decimal [&_ol]:space-y-0.5',
-          '[&_blockquote]:border-l-2 [&_blockquote]:border-slate-300 [&_blockquote]:pl-3 [&_blockquote]:text-muted-foreground [&_blockquote]:italic',
-          '[&_code]:rounded [&_code]:bg-slate-100 [&_code]:px-1 [&_code]:font-mono [&_code]:text-[0.85em]',
-          '[&_mark]:rounded [&_mark]:bg-yellow-100 [&_mark]:px-0.5',
+          '[&_blockquote]:border-l-2 [&_blockquote]:border-slate-6 [&_blockquote]:pl-3 [&_blockquote]:text-muted-foreground [&_blockquote]:italic',
+          '[&_code]:rounded [&_code]:bg-slate-4 [&_code]:px-1 [&_code]:font-mono [&_code]:text-[0.85em]',
+          '[&_mark]:rounded [&_mark]:bg-amber-3 [&_mark]:px-0.5',
         ].join(' '),
       },
     },
@@ -234,7 +234,7 @@ export const RichTextEditor = memo(function RichTextEditor({
                   setListOpen(false)
                 }}
                 title="Text alignment"
-                className="flex h-7 items-center gap-0.5 rounded px-1 text-muted-foreground transition-colors hover:bg-slate-100 hover:text-foreground"
+                className="flex h-7 items-center gap-0.5 rounded px-1 text-muted-foreground transition-colors hover:bg-slate-4 hover:text-foreground"
               >
                 {active.alignCenter ? (
                   <AlignCenter className="h-3.5 w-3.5" />
@@ -254,7 +254,7 @@ export const RichTextEditor = memo(function RichTextEditor({
                       cmd.setTextAlign('left').run()
                       setAlignOpen(false)
                     }}
-                    className="flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-slate-100"
+                    className="flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-slate-4"
                   >
                     <AlignLeft className="h-3.5 w-3.5" /> Left
                   </button>
@@ -265,7 +265,7 @@ export const RichTextEditor = memo(function RichTextEditor({
                       cmd.setTextAlign('center').run()
                       setAlignOpen(false)
                     }}
-                    className="flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-slate-100"
+                    className="flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-slate-4"
                   >
                     <AlignCenter className="h-3.5 w-3.5" /> Centre
                   </button>
@@ -276,7 +276,7 @@ export const RichTextEditor = memo(function RichTextEditor({
                       cmd.setTextAlign('right').run()
                       setAlignOpen(false)
                     }}
-                    className="flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-slate-100"
+                    className="flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-slate-4"
                   >
                     <AlignRight className="h-3.5 w-3.5" /> Right
                   </button>
@@ -294,7 +294,7 @@ export const RichTextEditor = memo(function RichTextEditor({
                   setAlignOpen(false)
                 }}
                 title="Lists"
-                className="flex h-7 items-center gap-0.5 rounded px-1 text-muted-foreground transition-colors hover:bg-slate-100 hover:text-foreground"
+                className="flex h-7 items-center gap-0.5 rounded px-1 text-muted-foreground transition-colors hover:bg-slate-4 hover:text-foreground"
               >
                 {active.orderedList ? (
                   <ListOrdered className="h-3.5 w-3.5" />
@@ -314,7 +314,7 @@ export const RichTextEditor = memo(function RichTextEditor({
                       cmd.toggleBulletList().run()
                       setListOpen(false)
                     }}
-                    className="flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-slate-100"
+                    className="flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-slate-4"
                   >
                     <List className="h-3.5 w-3.5" /> Bullet list
                   </button>
@@ -325,7 +325,7 @@ export const RichTextEditor = memo(function RichTextEditor({
                       cmd.toggleOrderedList().run()
                       setListOpen(false)
                     }}
-                    className="flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-slate-100"
+                    className="flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-slate-4"
                   >
                     <ListOrdered className="h-3.5 w-3.5" /> Numbered list
                   </button>
@@ -336,7 +336,7 @@ export const RichTextEditor = memo(function RichTextEditor({
                       cmd.toggleTaskList().run()
                       setListOpen(false)
                     }}
-                    className="flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-slate-100"
+                    className="flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-slate-4"
                   >
                     <ListChecks className="h-3.5 w-3.5" /> Checklist
                   </button>

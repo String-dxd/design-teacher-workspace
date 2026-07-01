@@ -26,17 +26,17 @@ export function ProfileCriteriaDetailsCard({
   const bucket = assignBucket(matched.length, appliedGroup.buckets)
 
   return (
-    <section className="scroll-mt-24 rounded-lg border border-blue-200 bg-blue-50/60 p-6">
+    <section className="scroll-mt-24 rounded-lg border border-twblue-6 bg-twblue-3/60 p-6">
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
           <h2 className="text-lg font-semibold">Criteria details</h2>
-          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
+          <span className="inline-flex items-center gap-1 rounded-full bg-lime-3 px-2.5 py-0.5 text-xs font-medium text-lime-11">
             <CheckCircle2 className="h-3.5 w-3.5" />
             Criteria met ({matched.length})
           </span>
         </div>
         {bucket && (
-          <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-foreground shadow-sm">
+          <span className="rounded-full bg-card px-3 py-1 text-xs font-medium text-foreground shadow-sm">
             {bucket.name || 'Bucket'}
           </span>
         )}

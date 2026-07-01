@@ -67,7 +67,7 @@ export function AttendanceConductCard({
                   className={cn(
                     'rounded-full px-3 py-1 text-xs font-medium',
                     isActive
-                      ? 'bg-[#12b886] text-white'
+                      ? 'bg-lime-9 text-white'
                       : 'bg-muted text-muted-foreground',
                   )}
                 >

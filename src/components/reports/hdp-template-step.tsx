@@ -26,7 +26,7 @@ export const TEMPLATES: Array<HdpTemplate> = [
     name: 'Quarterly Academic Report',
     description:
       'Focus on academic performance with grades, attendance, and overall progress',
-    icon: <BarChart3 className="size-5 text-blue-600" />,
+    icon: <BarChart3 className="size-5 text-twblue-11" />,
     tags: ['Academic Performance', 'Attendance', 'Behavior & Discipline'],
     sections: {
       studentInfo: true,
@@ -44,7 +44,7 @@ export const TEMPLATES: Array<HdpTemplate> = [
     name: 'Comprehensive Student Report',
     description:
       'Full overview including academics, behavior, wellbeing, and family information',
-    icon: <ClipboardList className="size-5 text-emerald-600" />,
+    icon: <ClipboardList className="size-5 text-lime-11" />,
     tags: [
       'Academic Performance',
       'Attendance',
@@ -67,7 +67,7 @@ export const TEMPLATES: Array<HdpTemplate> = [
     id: 'custom',
     name: 'Custom Report',
     description: 'Select your own sections to create a personalized report',
-    icon: <Pencil className="size-5 text-amber-600" />,
+    icon: <Pencil className="size-5 text-amber-11" />,
     tags: ['Customisable'],
     sections: {
       studentInfo: true,

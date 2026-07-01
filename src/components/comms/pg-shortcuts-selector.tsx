@@ -35,8 +35,8 @@ export function PGShortcutsSelector({
             className={cn(
               'flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left transition-colors',
               isSelected
-                ? 'border-blue-200 bg-blue-50'
-                : 'border-slate-200 bg-white hover:border-slate-300',
+                ? 'border-twblue-6 bg-twblue-3'
+                : 'border-border bg-card hover:border-slate-7',
             )}
           >
             {/* Checkbox indicator */}
@@ -44,8 +44,8 @@ export function PGShortcutsSelector({
               className={cn(
                 'flex h-4 w-4 shrink-0 items-center justify-center rounded border',
                 isSelected
-                  ? 'border-blue-600 bg-blue-600 text-white'
-                  : 'border-slate-300 bg-white',
+                  ? 'border-primary bg-primary text-primary-foreground'
+                  : 'border-slate-6 bg-background',
               )}
             >
               {isSelected && (
@@ -67,7 +67,7 @@ export function PGShortcutsSelector({
             <p
               className={cn(
                 'text-sm font-medium',
-                isSelected ? 'text-blue-900' : 'text-slate-800',
+                isSelected ? 'text-twblue-12' : 'text-foreground',
               )}
             >
               {preset.composerLabel}
