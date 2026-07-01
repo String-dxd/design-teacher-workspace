@@ -20,16 +20,12 @@ import {
   LayoutIcon,
   LogOutIcon,
   MailIcon,
-  MonitorIcon,
-  MoonIcon,
   MoreHorizontalIcon,
   MoreVerticalIcon,
-  PaletteIcon,
   PlusIcon,
   SaveIcon,
   SettingsIcon,
   ShieldIcon,
-  SunIcon,
   UserIcon,
 } from 'lucide-react'
 import { Example, ExampleWrapper } from '@/components/example'
@@ -72,8 +68,6 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuPortal,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuShortcut,
   DropdownMenuSub,
@@ -174,7 +168,6 @@ function FormExample() {
     sms: false,
     push: true,
   })
-  const [theme, setTheme] = React.useState('light')
 
   return (
     <Example title="Form">
@@ -288,36 +281,6 @@ function FormExample() {
                     <LayoutIcon />
                     Show Status Bar
                   </DropdownMenuCheckboxItem>
-                  <DropdownMenuSub>
-                    <DropdownMenuSubTrigger>
-                      <PaletteIcon />
-                      Theme
-                    </DropdownMenuSubTrigger>
-                    <DropdownMenuPortal>
-                      <DropdownMenuSubContent>
-                        <DropdownMenuGroup>
-                          <DropdownMenuLabel>Appearance</DropdownMenuLabel>
-                          <DropdownMenuRadioGroup
-                            value={theme}
-                            onValueChange={setTheme}
-                          >
-                            <DropdownMenuRadioItem value="light">
-                              <SunIcon />
-                              Light
-                            </DropdownMenuRadioItem>
-                            <DropdownMenuRadioItem value="dark">
-                              <MoonIcon />
-                              Dark
-                            </DropdownMenuRadioItem>
-                            <DropdownMenuRadioItem value="system">
-                              <MonitorIcon />
-                              System
-                            </DropdownMenuRadioItem>
-                          </DropdownMenuRadioGroup>
-                        </DropdownMenuGroup>
-                      </DropdownMenuSubContent>
-                    </DropdownMenuPortal>
-                  </DropdownMenuSub>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>

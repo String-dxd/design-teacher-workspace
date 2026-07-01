@@ -16,10 +16,10 @@ export function NotFoundPage() {
     <div className="flex min-h-screen flex-col bg-background">
       <div className="flex flex-1 items-center justify-center gap-16 px-8 py-12">
         <div className="w-full max-w-sm">
-          <h1 className="text-2xl font-semibold text-slate-900">
+          <h1 className="text-2xl font-semibold text-foreground">
             Sorry, we couldn&apos;t find that page
           </h1>
-          <p className="mt-3 text-sm text-slate-500">
+          <p className="mt-3 text-sm text-muted-foreground">
             The page you were looking for doesn&apos;t exist, or it may have
             moved. Check the URL, or head back to a familiar place.
           </p>
@@ -29,13 +29,13 @@ export function NotFoundPage() {
           </Button>
 
           <div className="mt-10">
-            <p className="text-sm text-slate-500">Or try:</p>
+            <p className="text-sm text-muted-foreground">Or try:</p>
             <ul className="mt-3 flex flex-col gap-1.5">
               {suggestedDestinations.map((dest) => (
                 <li key={dest.to}>
                   <Link
                     to={dest.to}
-                    className="text-sm font-medium text-blue-600 hover:underline"
+                    className="text-sm font-medium text-twblue-11 hover:underline"
                   >
                     {dest.label}
                   </Link>

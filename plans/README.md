@@ -18,9 +18,66 @@ your row when done.
 | 007 | Fix broken color-token registration: register `slate-3..12` in `@theme inline` (fixes app-wide disabled-button bug + Import-feature styling), define `--destructive-foreground`, align `--accent`/`--input` to reference | P1 | S | — | DONE — advisor/color-system-007-009, build+browser validated 2026-06-26 |
 | 008 | Remove HeyTalia's purple: neutralize `heytalia-panel.tsx` to slate/`--primary`, retire the unused `twpurple` alias, register Radix `violet` utilities, move two stray Tailwind-violet badges onto Radix violet | P2 | M | 007 (shared `styles.css`) | DONE — advisor/color-system-007-009, browser-validated (HeyTalia neutral, no purple) 2026-06-26 |
 | 009 | Add a `/ds` route rendering the existing (unrouted) Shadcn component gallery `component-example.tsx` | P3 | S | — | DONE — advisor/color-system-007-009, /ds renders 2026-06-26 |
+| 010 | Feature-wide color-token sweep — OVERVIEW & canonical mapping (shared reference for 011–013: token vocabulary, resolved decisions, verification gates, phase map) | P2 | L | 007–009 | REFERENCE (not executed on its own) — written 2026-06-30 |
+| 011 | Color sweep: mechanical batches (Phases 1–6, ~51 small/medium files; grep-anchored palette/hazard swaps) | P2 | L | 010 | DONE — branch `advisor/color-sweep`, 51 files, gates green (build 0 / tsc 113 / vitest 37-16), palette residual 0 in-scope, 2026-07-01 |
+| 012 | Color sweep: giant files (Phases 7–10; 5 files >1.5k lines, palette+dark-hazard ONLY; charts deferred; PDF-facsimile + phone-preview fenced) | P2 | L | 010, 011 | DONE — branch `advisor/color-sweep`, +corrective slate/amber pass (see note), gates green (build 0 / tsc 113 / vitest 37-16), fences intact, 2026-07-01 |
+| 013 | Color sweep: charts & SVG (Phase 11; centralize ~90 chart literals into `src/lib/chart-colors.ts`; visual-review gated) | P3 | M | 010, 011, 012 | DONE — branch `advisor/color-sweep`, chart hex centralized (chrome→slate vars, series→named consts), gates green (build 0 / tsc 111 / vitest 37-16), 2026-07-01. Light-mode verified; **dark-mode + Radix-ifying reserved series hues pending the dark-mode toggle (deferred)** |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) |
 REJECTED (with one-line rationale).
+
+## Round 3 — feature-wide color-token sweep (2026-06-30)
+
+Audit at commit `6e3d7e5` (baseline: `tsc` 113 errors, `bunx vitest run` 37 passed /
+16 failed — unchanged from Round 2 — `bun run build` exit 0). A 60-file fan-out audit
+catalogued **~580–800 off-token color usages** in feature code (the `src/components/ui/`
+primitives are already 100% token-driven on `@base-ui/react` — confirmed clean, left
+alone). This is the follow-up the Round-2 "discovered regression" deferred ("~30
+Tailwind-default `purple-*` usages remain… a follow-up plan if wanted"), widened to the
+full palette.
+
+- **Suggested order: 011 → 012 → 013.** 011 proves the canonical mapping on ~51
+  low/medium-risk files; 012 isolates the 5 giant untested files one-per-branch
+  (palette + dark-hazard only, document/preview regions hard-fenced); 013 consolidates
+  all chart/SVG color into `src/lib/chart-colors.ts` last, gated on a light+dark visual
+  review. **010 is the shared reference — read it before any of 011–013.**
+- `academic-analytics.tsx` and `attendance-analytics.tsx` are touched in BOTH 012
+  (palette) and 013 (charts) — run 012 first; re-run their gates after 013.
+- The token *foundation* is already done (plans 007/008 registered slate-3..12, violet,
+  `--destructive-foreground`), so every proposed utility resolves — this is purely
+  consumer-side class/prop swaps, no `styles.css` work.
+
+### Correction during execution (2026-07-01) — missed `slate`-numeric scale
+
+The original audit/gate grep **excluded `slate`** (since Radix `slate-1..12` is on-token),
+which had two consequences, both fixed:
+- **Tailwind-numeric `slate-50..900` (and dual-name `orange/amber/lime/violet-50..900`)
+  were missed** — verified in the built CSS to resolve to Tailwind's *static default*
+  palette, which is off-brand AND does not dark-flip. Plan 010's mapping row + PALETTE
+  gate pattern were corrected to catch any Tailwind-numeric step (50–950).
+- **5 files were never audited** (`_guest.create`, `groups.create`,
+  `enquiry-email-selector`, `send-confirmation-sheet`, `lta-dialog`, plus leftovers in
+  `student-recipient-selector`/`hdp-template-step`) because slate-only files didn't match
+  the discovery grep. A corrective pass migrated all of them.
+
+Final residual after 011+012+corrective: the only Tailwind-numeric palette left is the
+**~84 inside `announcements.new`'s fenced PG phone-preview** (intentional permanent
+light-mode mimicry of the Parents-Gateway app). Box-shadow `rgba()`, DS-gallery token
+displays, and chart literals (→ 013) are documented acceptable residuals.
+
+### Resolved design decisions (confirmed with the maintainer 2026-06-30)
+
+Baked into the canonical mapping in plan 010. Summary:
+- **Pink** → all `pink-*` map to **crimson** (uniform). The radar-chart `colorScheme='pink'`
+  literal `#f26c47` is *coral* and rides the Brand→orange decision instead.
+- **Cyan** → in-app `cyan-*` → **twblue**; `agency-logo.tsx`'s 6 per-agency swatch hexes
+  stay as brand `var()` literals (flag: cyan + blue swatches may now share a hue).
+- **Success states** → collapse synonyms to `lime`, but **split `report-table.tsx`'s
+  Viewed/Acknowledged/Sent-to-Parents triplet** into `lime`/`twblue`/`violet` (design to
+  confirm) and normalize the `report-table.tsx:102` green/emerald inconsistency.
+- **Brand hexes** → `#0064ff`/`#228be6` → `twblue-9` now; `#f26c47`/`#e05a37`/`#c47565`
+  → orange scale **default, flagged for design sign-off**; HeyTalia `#9575CD` left as
+  artwork (plan 008).
 
 ## Round 2 — design-system color mapping (2026-06-26)
 
@@ -130,6 +187,17 @@ reviewed (done criteria re-run, scope checked, diffs read, tests audited).
 - **Direction decisions** (not defects): finish-or-delete the flag-gated
   `student-analytics` feature; consolidate the three creation flows;
   architecture docs in `docs/`.
+- **Primitive-reuse opportunities (~80, Round-3 audit)** — hand-built badges/pills
+  and 5 files with raw `<button>`/`<input>`/`<select>`/`<textarea>` that duplicate
+  `src/components/ui/` primitives (`Badge`, `Button`, `Input`, `Select`). Deliberately
+  kept OUT of the color sweep (plans 011–013) — folding component refactors into a
+  className swap makes diffs unreviewable. Worth a dedicated plan after the color sweep
+  lands; cross-reference `AGENTS.md` Component Reuse Policy.
+- **Dark-mode toggle not wired** — `styles.css` defines a full `.dark` token set, but no
+  theme provider / `.dark` class setter exists, so dark mode can't be enabled today. The
+  color sweep (010–013) removes the ~175 theme-blind `bg-white`/`text-white`/`bg-black`
+  literals that would break it; wiring an actual toggle (e.g. `next-themes`-style on
+  `<html>`) is a small follow-up best done AFTER 011–013 so the first dark render is clean.
 
 ## Findings considered and rejected
 

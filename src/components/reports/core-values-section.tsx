@@ -4,11 +4,11 @@ import type { CoreValue, CoreValueLevel } from '@/types/report'
 import { cn } from '@/lib/utils'
 
 const levelColors: Record<CoreValueLevel, string> = {
-  'Demonstrates Very Strongly': 'bg-[#e8feea] text-[#12b886]',
-  'Demonstrates Strongly': 'bg-[#e8feea] text-[#12b886]',
-  Demonstrates: 'bg-[rgba(34,139,230,0.1)] text-[#228be6]',
-  'Regularly Shows': 'bg-[#fef9ee] text-[#fac53e]',
-  Beginning: 'bg-[#f6f7f8] text-[#a7aab5]',
+  'Demonstrates Very Strongly': 'bg-lime-3 text-lime-11',
+  'Demonstrates Strongly': 'bg-lime-3 text-lime-11',
+  Demonstrates: 'bg-twblue-3 text-twblue-11',
+  'Regularly Shows': 'bg-amber-3 text-amber-11',
+  Beginning: 'bg-slate-3 text-slate-11',
 }
 
 interface CoreValuesSectionProps {
@@ -23,7 +23,7 @@ export function CoreValuesSection({
   return (
     <section className="flex flex-col gap-6">
       <div className="flex flex-col items-center text-center">
-        <span className="inline-block rounded-full bg-[#fff0ec] px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-[#f26c47]">
+        <span className="inline-block rounded-full bg-orange-3 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-orange-11">
           Core Values Journey
         </span>
         <h2 className="mt-3 text-xl font-bold">
@@ -66,7 +66,7 @@ export function CoreValuesSection({
                 {value.supportedBy.map((s) => (
                   <div
                     key={s}
-                    className="flex items-center gap-2 rounded-md bg-gray-50 px-3 py-1.5 text-sm"
+                    className="flex items-center gap-2 rounded-md bg-muted px-3 py-1.5 text-sm"
                   >
                     <Award className="text-muted-foreground size-3.5 shrink-0" />
                     <span>

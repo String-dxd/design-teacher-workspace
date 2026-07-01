@@ -377,7 +377,7 @@ function GroupsNew() {
           {/* ── Left: form sections ────────────────────────────────────────── */}
           <div className="space-y-6">
             {/* Group details */}
-            <section className="rounded-xl border bg-white p-6">
+            <section className="rounded-xl border bg-card p-6">
               <h2 className="mb-5 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                 Group details
               </h2>
@@ -427,7 +427,7 @@ function GroupsNew() {
             </section>
 
             {/* Select members */}
-            <section className="rounded-xl border bg-white overflow-hidden">
+            <section className="rounded-xl border bg-card overflow-hidden">
               <div className="px-6 py-4 border-b">
                 <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                   Select students
@@ -490,7 +490,7 @@ function GroupsNew() {
                           className={cn(
                             'flex items-center gap-3 px-4 py-2.5 transition-colors',
                             state !== 'none'
-                              ? 'bg-blue-50/50'
+                              ? 'bg-twblue-3/50'
                               : 'hover:bg-muted/30',
                           )}
                         >
@@ -510,7 +510,7 @@ function GroupsNew() {
                             <span className="text-xs text-muted-foreground shrink-0">
                               {state === 'some' ? (
                                 <>
-                                  <span className="text-blue-600 font-medium">
+                                  <span className="text-twblue-11 font-medium">
                                     {selectedInGroup}
                                   </span>
                                   /{group.students.length} students
@@ -534,7 +534,7 @@ function GroupsNew() {
 
                         {/* Student rows */}
                         {isExpanded && (
-                          <div className="border-b border-slate-100 bg-slate-50/60 px-4 pb-3 pt-2.5">
+                          <div className="border-b border-border bg-muted/40 px-4 pb-3 pt-2.5">
                             {/* Sub-header — mirrors entity-selector "N students" label */}
                             <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                               {group.students.length}{' '}
@@ -551,8 +551,8 @@ function GroupsNew() {
                                       className={cn(
                                         'flex w-full cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-xs transition-colors',
                                         isSelected
-                                          ? 'text-slate-700 hover:bg-blue-50'
-                                          : 'text-slate-700 hover:bg-slate-100',
+                                          ? 'text-foreground hover:bg-twblue-4'
+                                          : 'text-foreground hover:bg-muted',
                                       )}
                                     >
                                       <Checkbox
@@ -562,7 +562,7 @@ function GroupsNew() {
                                         }
                                       />
                                       {/* Index — running number within group */}
-                                      <span className="w-6 shrink-0 text-right text-[10px] tabular-nums text-slate-400">
+                                      <span className="w-6 shrink-0 text-right text-[10px] tabular-nums text-muted-foreground">
                                         #{student.indexNumber}
                                       </span>
                                       {/* Name + class pill for non-class tabs */}
@@ -571,13 +571,13 @@ function GroupsNew() {
                                           {student.name}
                                         </span>
                                         {showClass && (
-                                          <span className="shrink-0 rounded bg-slate-200 px-1 py-px text-[9px] font-medium text-slate-500">
+                                          <span className="shrink-0 rounded bg-muted px-1 py-px text-[9px] font-medium text-muted-foreground">
                                             {student.class}
                                           </span>
                                         )}
                                       </span>
                                       {/* NRIC — font-mono matching entity selector */}
-                                      <span className="shrink-0 font-mono text-[10px] text-slate-400">
+                                      <span className="shrink-0 font-mono text-[10px] text-muted-foreground">
                                         {student.nric}
                                       </span>
                                     </label>
@@ -596,7 +596,7 @@ function GroupsNew() {
           </div>
 
           {/* ── Right: selected students review panel ──────────────────────── */}
-          <div className="sticky top-[57px] rounded-xl border bg-white overflow-hidden">
+          <div className="sticky top-[57px] rounded-xl border bg-card overflow-hidden">
             {/* Panel header */}
             <div className="px-4 py-3 border-b flex items-center justify-between">
               <div>
@@ -629,8 +629,8 @@ function GroupsNew() {
 
             {/* Undo banner */}
             {showUndo && (
-              <div className="px-4 py-2.5 bg-amber-50 border-b flex items-center justify-between gap-2">
-                <span className="text-xs text-amber-800">
+              <div className="px-4 py-2.5 bg-amber-3 border-b flex items-center justify-between gap-2">
+                <span className="text-xs text-amber-11">
                   {undoIds.length === 1
                     ? '1 student removed'
                     : `${undoIds.length} students removed`}
@@ -638,7 +638,7 @@ function GroupsNew() {
                 <button
                   type="button"
                   onClick={handleUndo}
-                  className="text-xs font-semibold text-amber-900 hover:underline"
+                  className="text-xs font-semibold text-amber-12 hover:underline"
                 >
                   Undo
                 </button>

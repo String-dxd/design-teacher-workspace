@@ -45,15 +45,15 @@ function getReviewStatusBadge(status: ReviewStatus) {
   const config = {
     pending: {
       label: 'Pending',
-      className: 'bg-slate-100 text-slate-700 hover:bg-slate-100',
+      className: 'bg-muted text-muted-foreground hover:bg-muted',
     },
     in_review: {
       label: 'In Review',
-      className: 'bg-amber-100 text-amber-700 hover:bg-amber-100',
+      className: 'bg-amber-3 text-amber-11 hover:bg-amber-3',
     },
     approved: {
       label: 'Approved',
-      className: 'bg-green-100 text-green-700 hover:bg-green-100',
+      className: 'bg-lime-3 text-lime-11 hover:bg-lime-3',
     },
   }
   const { label, className } = config[status]
@@ -64,19 +64,19 @@ function getParentStatusBadge(status: ParentStatus) {
   const config = {
     not_sent: {
       label: 'Not Sent',
-      className: 'bg-slate-100 text-slate-700 hover:bg-slate-100',
+      className: 'bg-muted text-muted-foreground hover:bg-muted',
     },
     sent: {
       label: 'Sent',
-      className: 'bg-blue-100 text-blue-700 hover:bg-blue-100',
+      className: 'bg-twblue-3 text-twblue-11 hover:bg-twblue-3',
     },
     viewed: {
       label: 'Viewed',
-      className: 'bg-green-100 text-green-700 hover:bg-green-100',
+      className: 'bg-lime-3 text-lime-11 hover:bg-lime-3',
     },
     acknowledged: {
       label: 'Acknowledged',
-      className: 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100',
+      className: 'bg-twblue-3 text-twblue-11 hover:bg-twblue-3',
     },
   }
   const { label, className } = config[status]
@@ -87,23 +87,23 @@ function getStudentStatusBadge(status: StudentStatus) {
   const config = {
     not_sent: {
       label: 'Not Sent',
-      className: 'bg-slate-100 text-slate-700 hover:bg-slate-100',
+      className: 'bg-muted text-muted-foreground hover:bg-muted',
     },
     sent: {
       label: 'Sent',
-      className: 'bg-blue-100 text-blue-700 hover:bg-blue-100',
+      className: 'bg-twblue-3 text-twblue-11 hover:bg-twblue-3',
     },
     viewed: {
       label: 'Viewed',
-      className: 'bg-purple-100 text-purple-700 hover:bg-purple-100',
+      className: 'bg-lime-3 text-lime-11 hover:bg-lime-3',
     },
     acknowledged: {
       label: 'Acknowledged',
-      className: 'bg-green-100 text-green-700 hover:bg-green-100',
+      className: 'bg-twblue-3 text-twblue-11 hover:bg-twblue-3',
     },
     sent_to_parents: {
       label: 'Sent to Parents',
-      className: 'bg-teal-100 text-teal-700 hover:bg-teal-100',
+      className: 'bg-violet-3 text-violet-11 hover:bg-violet-3',
     },
   }
   const { label, className } = config[status]
@@ -134,7 +134,7 @@ function ReportRow({
       data-selected={isSelected || undefined}
     >
       <TableCell
-        className="sticky left-0 z-10 bg-white pl-6 group-hover:bg-muted/50 group-data-[selected]:bg-muted"
+        className="sticky left-0 z-10 bg-card pl-6 group-hover:bg-muted/50 group-data-[selected]:bg-muted"
         onClick={(e) => onSelect(report.id, e)}
       >
         <Checkbox
@@ -142,7 +142,7 @@ function ReportRow({
           aria-label={`Select report for ${report.studentName}`}
         />
       </TableCell>
-      <TableCell className="sticky left-12 z-10 bg-white font-medium shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] group-hover:bg-muted/50 group-data-[selected]:bg-muted">
+      <TableCell className="sticky left-12 z-10 bg-card font-medium shadow-[2px_0_5px_-2px_color-mix(in_srgb,var(--color-slate-12)_10%,transparent)] group-hover:bg-muted/50 group-data-[selected]:bg-muted">
         {report.studentName}
       </TableCell>
       <TableCell>{report.studentClass}</TableCell>
@@ -405,11 +405,11 @@ export function ReportTable({
     : flatPagination.goToNextPage
 
   return (
-    <div className={cn('max-w-full overflow-x-auto bg-white', className)}>
+    <div className={cn('max-w-full overflow-x-auto bg-card', className)}>
       <Table>
-        <TableHeader className="border-b bg-white">
+        <TableHeader className="border-b bg-card">
           <TableRow className="border-0 hover:bg-transparent">
-            <TableHead className="sticky left-0 z-10 w-12 min-w-12 bg-white pl-6">
+            <TableHead className="sticky left-0 z-10 w-12 min-w-12 bg-card pl-6">
               <Checkbox
                 checked={allPageSelected}
                 indeterminate={somePageSelected}
@@ -417,7 +417,7 @@ export function ReportTable({
                 aria-label="Select all reports on this page"
               />
             </TableHead>
-            <TableHead className="sticky left-12 z-10 min-w-[150px] bg-white shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
+            <TableHead className="sticky left-12 z-10 min-w-[150px] bg-card shadow-[2px_0_5px_-2px_color-mix(in_srgb,var(--color-slate-12)_10%,transparent)]">
               Name
             </TableHead>
             <TableHead className="min-w-[90px]">Class</TableHead>

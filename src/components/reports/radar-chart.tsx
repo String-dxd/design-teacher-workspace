@@ -1,3 +1,4 @@
+import { CHART_GRID, RADAR_FILL, RADAR_STROKE } from '@/lib/chart-colors'
 import type { CoreValue } from '@/types/report'
 
 interface RadarChartProps {
@@ -8,12 +9,12 @@ interface RadarChartProps {
 
 const COLORS = {
   green: {
-    fill: 'rgba(18, 184, 134, 0.15)',
-    stroke: '#12b886',
+    fill: RADAR_FILL.green,
+    stroke: RADAR_STROKE.green,
   },
   pink: {
-    fill: 'rgba(242, 108, 71, 0.15)',
-    stroke: '#f26c47',
+    fill: RADAR_FILL.pink,
+    stroke: RADAR_STROKE.pink,
   },
 }
 
@@ -56,7 +57,7 @@ export function RadarChart({
           key={i}
           points={getPolygonPoints((i + 1) / levels)}
           fill="none"
-          stroke="#e5e7eb"
+          stroke={CHART_GRID}
           strokeWidth={1}
         />
       ))}
@@ -70,7 +71,7 @@ export function RadarChart({
             y1={center}
             x2={p.x}
             y2={p.y}
-            stroke="#e5e7eb"
+            stroke={CHART_GRID}
             strokeWidth={1}
           />
         )

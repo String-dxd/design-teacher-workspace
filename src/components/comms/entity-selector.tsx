@@ -251,7 +251,7 @@ function ResultRow({
       <div
         className={cn(
           'flex w-full transition-colors',
-          isSelected ? 'bg-twblue-1' : 'hover:bg-slate-100',
+          isSelected ? 'bg-twblue-1' : 'hover:bg-slate-4',
         )}
       >
         {/* Selection toggle — takes all available space */}
@@ -267,8 +267,8 @@ function ResultRow({
             className={cn(
               'flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded border-2 transition-colors',
               isSelected
-                ? 'border-primary bg-primary text-white'
-                : 'border-slate-300 bg-white',
+                ? 'border-primary bg-primary text-primary-foreground'
+                : 'border-slate-6 bg-background',
             )}
           >
             {isSelected && excludedMemberNames.size === 0 && (
@@ -297,7 +297,7 @@ function ResultRow({
             <span className="shrink-0 text-xs text-muted-foreground">
               {isSelected && excludedMemberNames.size > 0 ? (
                 <>
-                  <span className="font-medium text-blue-600">
+                  <span className="font-medium text-twblue-11">
                     {item.count - excludedMemberNames.size}
                   </span>
                   /{item.count}
@@ -327,7 +327,7 @@ function ResultRow({
             onClick={() => onToggleExpand?.()}
             className={cn(
               'flex shrink-0 items-center px-2 transition-colors',
-              isSelected ? 'hover:bg-twblue-3' : 'hover:bg-slate-100',
+              isSelected ? 'hover:bg-twblue-3' : 'hover:bg-slate-4',
             )}
           >
             <ChevronDown
@@ -342,7 +342,7 @@ function ResultRow({
 
       {/* Expanded member list */}
       {isExpanded && hasMembers && (
-        <div className="border-b border-slate-100 bg-slate-50/60 px-4 pb-3 pt-2.5">
+        <div className="border-b border-slate-4 bg-slate-2/60 px-4 pb-3 pt-2.5">
           {/* Header: member count + criteria note */}
           {(() => {
             const total = item.memberDetails?.length ?? item.memberNames!.length
@@ -352,7 +352,7 @@ function ResultRow({
               <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                 {`${total} ${getCountUnit(item.groupType, total)}`}
                 {newCount > 0 && (
-                  <span className="ml-1.5 normal-case font-normal text-emerald-600">
+                  <span className="ml-1.5 normal-case font-normal text-lime-11">
                     · {newCount} new
                   </span>
                 )}
@@ -377,43 +377,43 @@ function ResultRow({
                   type="button"
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => onMemberToggle?.(detail.name)}
-                  className="flex w-full cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-xs hover:bg-blue-50"
+                  className="flex w-full cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-xs hover:bg-twblue-3"
                 >
                   <span
                     className={cn(
                       'flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded border-2 transition-colors',
                       isMemberIncluded
-                        ? 'border-primary bg-primary text-white'
-                        : 'border-slate-300 bg-white',
+                        ? 'border-primary bg-primary text-primary-foreground'
+                        : 'border-slate-6 bg-background',
                     )}
                   >
                     {isMemberIncluded && <Check className="h-3 w-3" />}
                   </span>
-                  <span className="w-5 shrink-0 text-right text-[10px] tabular-nums text-slate-400">
+                  <span className="w-5 shrink-0 text-right text-[10px] tabular-nums text-slate-9">
                     #{index + 1}
                   </span>
                   <span className="min-w-0 flex-1 text-left">
                     <span
                       className={cn(
                         'font-medium',
-                        isMemberIncluded ? 'text-slate-700' : 'text-slate-400',
+                        isMemberIncluded ? 'text-slate-12' : 'text-slate-9',
                       )}
                     >
                       {detail.name}
                     </span>
                     {detail.sublabel && detail.sublabel !== item.label && (
-                      <span className="ml-1 shrink-0 rounded bg-slate-200 px-1 py-px text-[9px] font-medium text-slate-500">
+                      <span className="ml-1 shrink-0 rounded bg-slate-4 px-1 py-px text-[9px] font-medium text-slate-11">
                         {detail.sublabel}
                       </span>
                     )}
                     {detail.isNew && (
-                      <span className="ml-1 shrink-0 rounded bg-emerald-100 px-1 py-px text-[9px] font-semibold text-emerald-700">
+                      <span className="ml-1 shrink-0 rounded bg-lime-3 px-1 py-px text-[9px] font-semibold text-lime-11">
                         New
                       </span>
                     )}
                   </span>
                   {detail.badge && (
-                    <span className="shrink-0 font-mono text-[10px] text-slate-400">
+                    <span className="shrink-0 font-mono text-[10px] text-slate-9">
                       {detail.badge}
                     </span>
                   )}
@@ -482,33 +482,33 @@ function EntityChip({
       className={cn(
         'inline-flex shrink-0 items-center rounded-md font-medium',
         large
-          ? 'gap-2 border border-input bg-background px-3 py-1.5 text-sm text-slate-700'
+          ? 'gap-2 border border-input bg-background px-3 py-1.5 text-sm text-slate-12'
           : cn(
               'gap-1 bg-twblue-2 px-2 py-0.5 text-xs text-twblue-9',
               extra ? 'max-w-[260px]' : 'max-w-[180px]',
             ),
-        onChipClick && 'cursor-pointer hover:bg-slate-50',
+        onChipClick && 'cursor-pointer hover:bg-slate-3',
       )}
     >
       {entity.type === 'group' ? (
         <Users
           className={cn(
             'shrink-0',
-            large ? 'h-3.5 w-3.5 text-slate-400' : 'h-3 w-3',
+            large ? 'h-3.5 w-3.5 text-slate-9' : 'h-3 w-3',
           )}
         />
       ) : (
         <User
           className={cn(
             'shrink-0',
-            large ? 'h-3.5 w-3.5 text-slate-400' : 'h-3 w-3',
+            large ? 'h-3.5 w-3.5 text-slate-9' : 'h-3 w-3',
           )}
         />
       )}
       <span className="truncate">{entity.label}</span>
       {entity.type === 'group' && (
         <span
-          className={cn('shrink-0', large ? 'text-slate-400' : 'opacity-60')}
+          className={cn('shrink-0', large ? 'text-slate-9' : 'opacity-60')}
         >
           · {entity.count}
         </span>
@@ -528,7 +528,7 @@ function EntityChip({
         className={cn(
           'shrink-0 rounded-full',
           large
-            ? 'ml-1 p-0.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600'
+            ? 'ml-1 p-0.5 text-slate-9 hover:bg-slate-4 hover:text-slate-12'
             : 'ml-0.5 p-0.5 hover:bg-twblue-4 hover:text-twblue-9',
         )}
       >
@@ -774,7 +774,7 @@ export function EntitySelector({
     const createLink = scope.createHref && (
       <Link
         to={scope.createHref}
-        className="flex items-center gap-2 px-3 py-2 text-sm text-primary hover:bg-slate-50"
+        className="flex items-center gap-2 px-3 py-2 text-sm text-primary hover:bg-slate-3"
       >
         <Plus className="h-4 w-4" />
         {scope.createLabel ?? 'Create'}
@@ -879,7 +879,7 @@ export function EntitySelector({
             'whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
             activeScope === scope.id
               ? 'bg-twblue-2 text-twblue-9'
-              : 'text-muted-foreground hover:bg-slate-100 hover:text-foreground',
+              : 'text-muted-foreground hover:bg-slate-4 hover:text-foreground',
           )}
         >
           {scope.label}
@@ -954,7 +954,7 @@ export function EntitySelector({
               e.stopPropagation()
               setChipsExpanded(true)
             }}
-            className="inline-flex shrink-0 cursor-pointer items-center rounded-md border border-dashed border-slate-300 px-2 py-0.5 text-xs text-slate-500 hover:bg-slate-50"
+            className="inline-flex shrink-0 cursor-pointer items-center rounded-md border border-dashed border-slate-6 px-2 py-0.5 text-xs text-slate-11 hover:bg-slate-3"
           >
             +{value.length - maxVisibleTokens} more
           </button>
@@ -1001,7 +1001,7 @@ export function EntitySelector({
           type="button"
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => onChange([])}
-          className="ml-auto shrink-0 text-xs text-muted-foreground transition-colors hover:text-rose-500"
+          className="ml-auto shrink-0 text-xs text-muted-foreground transition-colors hover:text-destructive"
         >
           Clear all
         </button>
@@ -1033,7 +1033,7 @@ export function EntitySelector({
 
         {/* Desktop: inline dropdown panel */}
         {!isMobile && isOpen && (
-          <div className="absolute z-20 mt-1 w-full overflow-hidden rounded-lg border bg-white shadow-md">
+          <div className="absolute z-20 mt-1 w-full overflow-hidden rounded-lg border bg-popover shadow-md">
             {panelBody}
           </div>
         )}
@@ -1055,7 +1055,7 @@ export function EntitySelector({
               {/* Drag handle + title bar */}
               <div className="flex items-center justify-between border-b px-4 py-3">
                 <div className="flex flex-col gap-1">
-                  <div className="mx-auto h-1 w-12 rounded-full bg-slate-200" />
+                  <div className="mx-auto h-1 w-12 rounded-full bg-border" />
                 </div>
                 <span className="text-sm font-medium text-muted-foreground">
                   {placeholder}
@@ -1063,7 +1063,7 @@ export function EntitySelector({
                 <button
                   type="button"
                   onClick={closePanel}
-                  className="rounded-md p-1 hover:bg-slate-100"
+                  className="rounded-md p-1 hover:bg-slate-4"
                 >
                   <X className="h-4 w-4 text-muted-foreground" />
                 </button>
@@ -1091,7 +1091,7 @@ export function EntitySelector({
                     type="button"
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => setQuery('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-0.5 hover:bg-slate-100"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-0.5 hover:bg-slate-4"
                   >
                     <X className="h-3.5 w-3.5 text-muted-foreground" />
                   </button>
@@ -1129,7 +1129,7 @@ export function EntitySelector({
             type="button"
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => onChange([])}
-            className="ml-auto shrink-0 text-xs text-muted-foreground transition-colors hover:text-rose-500"
+            className="ml-auto shrink-0 text-xs text-muted-foreground transition-colors hover:text-destructive"
           >
             Clear all
           </button>

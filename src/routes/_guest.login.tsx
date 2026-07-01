@@ -115,9 +115,9 @@ function LoginPage() {
     otpState === 'invalid-email' || otpState === 'network-error'
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50">
+    <div className="flex min-h-screen flex-col bg-background">
       <div className="flex items-center justify-between px-6 py-4">
-        <span className="text-sm font-medium text-slate-700">Sign in</span>
+        <span className="text-sm font-medium text-foreground">Sign in</span>
         <Button
           variant="outline"
           size="icon"
@@ -130,7 +130,7 @@ function LoginPage() {
 
       <div className="flex flex-1 items-center justify-center gap-16 px-8">
         <div className="w-full max-w-sm">
-          <div className="rounded-3xl border bg-white p-8 shadow-none">
+          <div className="rounded-3xl border bg-card p-8 shadow-none">
             <div className="transition-opacity duration-200">
               {isOtpScreen ? (
                 <OtpVerifyCard
@@ -148,10 +148,10 @@ function LoginPage() {
                 />
               ) : (
                 <>
-                  <h1 className="text-xl font-semibold text-slate-900">
+                  <h1 className="text-xl font-semibold text-foreground">
                     Sign in to Teacher Workspace
                   </h1>
-                  <p className="mt-2 text-sm text-slate-500">
+                  <p className="mt-2 text-sm text-muted-foreground">
                     {showEmailError
                       ? 'Enter your @schools.gov.sg email to receive a one-time password.'
                       : 'Sign in with your Edupass account or school email.'}
@@ -172,16 +172,16 @@ function LoginPage() {
                     )}
                   </Button>
                   {eduPassState === 'error' && (
-                    <p className="mt-2 text-sm text-red-600">
+                    <p className="mt-2 text-sm text-destructive">
                       Edupass is unavailable. Please try again or Sign in with
                       OTP.
                     </p>
                   )}
 
                   <div className="my-4 flex items-center gap-3">
-                    <div className="h-px flex-1 bg-slate-200" />
-                    <span className="text-sm text-slate-400">or</span>
-                    <div className="h-px flex-1 bg-slate-200" />
+                    <div className="h-px flex-1 bg-border" />
+                    <span className="text-sm text-muted-foreground">or</span>
+                    <div className="h-px flex-1 bg-border" />
                   </div>
 
                   <form onSubmit={handleSubmit} className="flex flex-col gap-3">
@@ -193,16 +193,16 @@ function LoginPage() {
                       required
                       aria-invalid={showEmailError}
                       className={
-                        showEmailError ? 'border-red-400 ring-red-100' : ''
+                        showEmailError ? 'border-destructive ring-destructive/20' : ''
                       }
                     />
                     {otpState === 'invalid-email' && (
-                      <p className="-mt-1 text-sm text-red-600">
+                      <p className="-mt-1 text-sm text-destructive">
                         Use your @schools.gov.sg email
                       </p>
                     )}
                     {otpState === 'network-error' && (
-                      <p className="-mt-1 text-sm text-red-600">
+                      <p className="-mt-1 text-sm text-destructive">
                         Sign in failed due to network issues, try again.
                       </p>
                     )}
@@ -233,8 +233,8 @@ function LoginPage() {
       <Popover>
         <PopoverTrigger
           render={
-            <button className="fixed bottom-4 right-4 flex h-10 w-10 items-center justify-center rounded-full border bg-white shadow-lg transition-shadow hover:shadow-xl">
-              <Settings2 className="h-4 w-4 text-slate-500" />
+            <button className="fixed bottom-4 right-4 flex h-10 w-10 items-center justify-center rounded-full border bg-card shadow-lg transition-shadow hover:shadow-xl">
+              <Settings2 className="h-4 w-4 text-muted-foreground" />
             </button>
           }
         />
@@ -244,7 +244,7 @@ function LoginPage() {
           </PopoverHeader>
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
-              <label className="text-xs font-medium text-slate-500">
+              <label className="text-xs font-medium text-muted-foreground">
                 Edupass State
               </label>
               <Select
@@ -264,7 +264,7 @@ function LoginPage() {
               </Select>
             </div>
             <div className="flex flex-col gap-2">
-              <label className="text-xs font-medium text-slate-500">
+              <label className="text-xs font-medium text-muted-foreground">
                 OTP State
               </label>
               <Select
@@ -320,19 +320,19 @@ function OtpVerifyCard({
         Back
       </Button>
 
-      <h1 className="text-xl font-semibold text-slate-900">
+      <h1 className="text-xl font-semibold text-foreground">
         Enter your one-time password
         {otpState === 'otp-verify' ? ' (OTP)' : ''}
       </h1>
-      <p className="mt-2 text-sm text-slate-500">
+      <p className="mt-2 text-sm text-muted-foreground">
         We sent a one-time password to{' '}
-        <span className="font-semibold text-slate-900">{email}</span>. Enter the
+        <span className="font-semibold text-foreground">{email}</span>. Enter the
         characters that follow the prefix shown.
       </p>
 
       <form onSubmit={onSignIn} className="mt-6">
         <div className="flex items-center gap-3">
-          <span className="shrink-0 text-base font-medium text-slate-700">
+          <span className="shrink-0 text-base font-medium text-foreground">
             {otpPrefix}
           </span>
           <Input
@@ -343,32 +343,32 @@ function OtpVerifyCard({
             value={otpCode}
             onChange={(e) => onOtpChange(e.target.value)}
             aria-invalid={showInvalidOtp}
-            className={showInvalidOtp ? 'border-red-400 ring-red-100' : ''}
+            className={showInvalidOtp ? 'border-destructive ring-destructive/20' : ''}
           />
           <Button type="submit" className="shrink-0">
             Sign in
           </Button>
         </div>
         {showInvalidOtp && (
-          <p className="mt-2 text-sm text-red-600">
+          <p className="mt-2 text-sm text-destructive">
             Invalid OTP. Try again or resend.
           </p>
         )}
       </form>
 
       <div className="mt-6 space-y-1">
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-muted-foreground">
           It may take a moment to arrive.
         </p>
         {showCountdown ? (
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-muted-foreground">
             Didn&apos;t receive? Resend OTP ({countdown})
           </p>
         ) : (
           <button
             type="button"
             onClick={onResend}
-            className="text-sm font-medium text-blue-600 hover:underline"
+            className="text-sm font-medium text-twblue-11 hover:underline"
           >
             Didn&apos;t receive? Resend OTP
           </button>

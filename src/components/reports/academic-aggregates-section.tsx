@@ -5,15 +5,15 @@ interface AcademicAggregatesSectionProps {
 }
 
 const AGGREGATE_COLORS = [
-  { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200' },
-  { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200' },
-  { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
+  { bg: 'bg-crimson-3', text: 'text-crimson-11', border: 'border-crimson-6' },
+  { bg: 'bg-orange-3', text: 'text-orange-11', border: 'border-orange-6' },
+  { bg: 'bg-twblue-3', text: 'text-twblue-11', border: 'border-twblue-6' },
   {
-    bg: 'bg-emerald-50',
-    text: 'text-emerald-700',
-    border: 'border-emerald-200',
+    bg: 'bg-lime-3',
+    text: 'text-lime-11',
+    border: 'border-lime-6',
   },
-  { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
+  { bg: 'bg-violet-3', text: 'text-violet-11', border: 'border-violet-6' },
 ]
 
 export function AcademicAggregatesSection({

@@ -45,7 +45,7 @@ export function AnnouncementCard({ announcement }: AnnouncementCardProps) {
       className="flex gap-4 rounded-3xl border bg-background p-4 transition-colors hover:bg-muted/50"
     >
       {!announcement.isRead && (
-        <span className="mt-1.5 size-2 shrink-0 rounded-full bg-pink-500" />
+        <span className="mt-1.5 size-2 shrink-0 rounded-full bg-crimson-9" />
       )}
       <div className="flex min-w-0 flex-1 flex-col gap-2">
         <h3

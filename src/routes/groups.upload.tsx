@@ -117,30 +117,30 @@ function DropZone({
         'flex h-full min-h-[320px] w-full cursor-pointer flex-col items-center justify-center gap-4 rounded-xl border-2 border-dashed transition-colors',
         isDragging
           ? 'border-primary bg-primary/5'
-          : 'border-slate-300 bg-slate-50/50 hover:border-slate-400 hover:bg-slate-50',
+          : 'border-input bg-muted/50 hover:border-muted-foreground/40 hover:bg-muted',
       )}
     >
       <div
         className={cn(
           'flex h-14 w-14 items-center justify-center rounded-full transition-colors',
-          isDragging ? 'bg-primary/10' : 'bg-slate-100',
+          isDragging ? 'bg-primary/10' : 'bg-muted',
         )}
       >
         <Upload
           className={cn(
             'h-6 w-6 transition-colors',
-            isDragging ? 'text-primary' : 'text-slate-400',
+            isDragging ? 'text-primary' : 'text-muted-foreground',
           )}
         />
       </div>
       <div className="text-center">
-        <p className="text-sm font-medium text-slate-700">
+        <p className="text-sm font-medium text-foreground">
           Drop your file here or{' '}
           <span className="text-primary underline underline-offset-2">
             browse
           </span>
         </p>
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-muted-foreground">
           Supported file types: .csv, .xls, .xlsx
         </p>
       </div>
@@ -162,10 +162,10 @@ function Step1({ onFileAccepted }: { onFileAccepted: (file: File) => void }) {
     <div className="flex flex-1 flex-col overflow-hidden">
       <div className="px-8 pb-6 pt-8">
         <StepIndicator current={1} total={2} />
-        <h1 className="mt-1 text-2xl font-bold text-slate-900">
+        <h1 className="mt-1 text-2xl font-bold text-foreground">
           Upload a student list
         </h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-muted-foreground">
           Import students from a spreadsheet to create your group.
         </p>
       </div>
@@ -174,8 +174,8 @@ function Step1({ onFileAccepted }: { onFileAccepted: (file: File) => void }) {
         {/* Left panel */}
         <div className="flex w-[380px] shrink-0 flex-col gap-4">
           {/* Prepare card */}
-          <div className="rounded-xl border bg-white p-5">
-            <p className="mb-3 font-semibold text-slate-900">
+          <div className="rounded-xl border bg-card p-5">
+            <p className="mb-3 font-semibold text-foreground">
               Prepare your file
             </p>
             <ul className="space-y-2.5">
@@ -194,15 +194,15 @@ function Step1({ onFileAccepted }: { onFileAccepted: (file: File) => void }) {
                   <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10">
                     <ArrowRight className="h-3 w-3 text-primary" />
                   </div>
-                  <span className="text-slate-600">{text}</span>
+                  <span className="text-muted-foreground">{text}</span>
                 </li>
               ))}
             </ul>
           </div>
 
           {/* Format guide */}
-          <div className="rounded-xl border bg-white p-5">
-            <p className="mb-3 font-semibold text-slate-900">
+          <div className="rounded-xl border bg-card p-5">
+            <p className="mb-3 font-semibold text-foreground">
               Required columns
             </p>
             <ul className="space-y-3">
@@ -214,12 +214,12 @@ function Step1({ onFileAccepted }: { onFileAccepted: (file: File) => void }) {
                 { col: 'Class', desc: 'e.g. 3 Aspiration, 2 Courage' },
               ].map(({ col, desc }) => (
                 <li key={col} className="flex items-start gap-2.5">
-                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-slate-100">
-                    <FileSpreadsheet className="h-3 w-3 text-slate-500" />
+                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-muted">
+                    <FileSpreadsheet className="h-3 w-3 text-muted-foreground" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-slate-700">{col}</p>
-                    <p className="text-xs text-slate-500">{desc}</p>
+                    <p className="text-sm font-medium text-foreground">{col}</p>
+                    <p className="text-xs text-muted-foreground">{desc}</p>
                   </div>
                 </li>
               ))}
@@ -259,22 +259,22 @@ function Step2({
     <div className="flex flex-1 flex-col overflow-hidden">
       <div className="px-8 pb-4 pt-8">
         <StepIndicator current={2} total={2} />
-        <h1 className="mt-1 text-2xl font-bold text-slate-900">
+        <h1 className="mt-1 text-2xl font-bold text-foreground">
           Review student list
         </h1>
-        <p className="mt-0.5 text-xs font-medium uppercase tracking-wide text-slate-400">
+        <p className="mt-0.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
           {MOCK_PARSED_ROWS.length} records · {fileName}
         </p>
       </div>
 
       <div className="flex flex-1 gap-6 overflow-hidden px-8 pb-6">
         {/* Left — table */}
-        <div className="flex flex-1 flex-col overflow-hidden rounded-xl border bg-white">
+        <div className="flex flex-1 flex-col overflow-hidden rounded-xl border bg-card">
           <div className="overflow-y-auto">
             <Table>
-              <TableHeader className="sticky top-0 bg-white">
+              <TableHeader className="sticky top-0 bg-card">
                 <TableRow>
-                  <TableHead className="w-12 pl-4 text-right text-xs text-slate-400">
+                  <TableHead className="w-12 pl-4 text-right text-xs text-muted-foreground">
                     #
                   </TableHead>
                   <TableHead className="text-xs">Name</TableHead>
@@ -285,19 +285,19 @@ function Step2({
                 {MOCK_PARSED_ROWS.map((r) => (
                   <TableRow
                     key={r.row}
-                    className={cn(issueRows.has(r.row) && 'bg-red-50/50')}
+                    className={cn(issueRows.has(r.row) && 'bg-destructive/5')}
                   >
-                    <TableCell className="pl-4 text-right text-xs tabular-nums text-slate-400">
+                    <TableCell className="pl-4 text-right text-xs tabular-nums text-muted-foreground">
                       {r.row}
                     </TableCell>
                     <TableCell className="text-sm">
                       <span
-                        className={cn(issueRows.has(r.row) && 'text-red-600')}
+                        className={cn(issueRows.has(r.row) && 'text-destructive')}
                       >
                         {r.name}
                       </span>
                     </TableCell>
-                    <TableCell className="text-sm text-slate-600">
+                    <TableCell className="text-sm text-muted-foreground">
                       {r.class}
                     </TableCell>
                   </TableRow>
@@ -310,9 +310,9 @@ function Step2({
         {/* Right — validation panel */}
         <div className="flex w-[320px] shrink-0 flex-col gap-3">
           {hasIssues ? (
-            <div className="flex-1 rounded-xl border bg-white p-5">
+            <div className="flex-1 rounded-xl border bg-card p-5">
               <div className="mb-4 flex items-center justify-between">
-                <p className="font-semibold text-slate-900">
+                <p className="font-semibold text-foreground">
                   {VALIDATION_ISSUES.length} issue
                   {VALIDATION_ISSUES.length !== 1 ? 's' : ''} found
                 </p>
@@ -330,22 +330,22 @@ function Step2({
                 {VALIDATION_ISSUES.map((iss) => (
                   <li
                     key={iss.id}
-                    className="rounded-lg border border-red-100 bg-red-50/50 p-3"
+                    className="rounded-lg border border-destructive/20 bg-destructive/5 p-3"
                   >
                     <div className="flex items-start gap-2">
-                      <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
+                      <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold text-slate-900">
+                        <p className="text-sm font-semibold text-foreground">
                           {iss.title}
                         </p>
-                        <p className="mt-0.5 text-xs text-slate-500">
+                        <p className="mt-0.5 text-xs text-muted-foreground">
                           {iss.description}
                         </p>
                         <div className="mt-2 flex flex-wrap gap-1">
                           {iss.rows.map((row) => (
                             <span
                               key={row}
-                              className="rounded bg-white px-1.5 py-0.5 text-[10px] font-medium text-slate-600 ring-1 ring-slate-200"
+                              className="rounded bg-card px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground ring-1 ring-border"
                             >
                               ROW {row}
                             </span>
@@ -356,19 +356,19 @@ function Step2({
                   </li>
                 ))}
               </ul>
-              <p className="mt-4 text-xs text-slate-500">
+              <p className="mt-4 text-xs text-muted-foreground">
                 {validCount} of {MOCK_PARSED_ROWS.length} students will be
                 added. Rows with issues will be skipped.
               </p>
             </div>
           ) : (
-            <div className="flex flex-1 items-center justify-center rounded-xl border bg-emerald-50/40 p-8">
+            <div className="flex flex-1 items-center justify-center rounded-xl border bg-lime-3/40 p-8">
               <div className="text-center">
-                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
-                  <CheckCircle2 className="h-6 w-6 text-emerald-600" />
+                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-lime-3">
+                  <CheckCircle2 className="h-6 w-6 text-lime-11" />
                 </div>
-                <p className="font-semibold text-slate-900">No issues found</p>
-                <p className="mt-1 text-sm text-slate-500">
+                <p className="font-semibold text-foreground">No issues found</p>
+                <p className="mt-1 text-sm text-muted-foreground">
                   Your file is good to go!
                 </p>
               </div>
@@ -376,7 +376,7 @@ function Step2({
           )}
 
           {/* Group name input */}
-          <div className="rounded-xl border bg-white p-4">
+          <div className="rounded-xl border bg-card p-4">
             <Label htmlFor="group-name" className="text-sm font-semibold">
               Group name
             </Label>
@@ -392,7 +392,7 @@ function Step2({
       </div>
 
       {/* Bottom bar */}
-      <div className="flex items-center justify-between border-t bg-white px-8 py-4">
+      <div className="flex items-center justify-between border-t bg-card px-8 py-4">
         <Button variant="outline" onClick={onBack} className="gap-2">
           <ArrowLeft className="h-4 w-4" />
           Back
@@ -461,8 +461,8 @@ function GroupsUpload() {
   return (
     <div className="flex h-[calc(100vh-57px)] flex-col">
       {/* Top bar */}
-      <div className="flex shrink-0 items-center justify-between border-b bg-white px-8 py-3">
-        <span className="text-sm font-medium text-slate-700">New group</span>
+      <div className="flex shrink-0 items-center justify-between border-b bg-card px-8 py-3">
+        <span className="text-sm font-medium text-foreground">New group</span>
         <Button
           variant="ghost"
           size="sm"

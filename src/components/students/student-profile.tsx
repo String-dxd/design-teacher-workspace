@@ -85,7 +85,7 @@ function Section({
   children,
 }: SectionProps) {
   return (
-    <section id={id} className="scroll-mt-24 rounded-3xl border bg-white p-6">
+    <section id={id} className="scroll-mt-24 rounded-3xl border bg-card p-6">
       <div className="mb-4 flex items-center gap-3">
         <span
           className={cn(
@@ -437,15 +437,15 @@ const REVIEW_STATUS_CONFIG: Record<
 > = {
   pending: {
     label: 'Pending',
-    className: 'bg-slate-100 text-slate-700 hover:bg-slate-100',
+    className: 'bg-muted text-muted-foreground hover:bg-muted',
   },
   in_review: {
     label: 'In Review',
-    className: 'bg-amber-100 text-amber-700 hover:bg-amber-100',
+    className: 'bg-amber-3 text-amber-11 hover:bg-amber-3',
   },
   approved: {
     label: 'Approved',
-    className: 'bg-green-100 text-green-700 hover:bg-green-100',
+    className: 'bg-lime-3 text-lime-11 hover:bg-lime-3',
   },
 }
 
@@ -488,19 +488,19 @@ const AGENCY_STATUS_CONFIG: Record<
 > = {
   draft: {
     label: 'Draft',
-    className: 'bg-slate-100 text-slate-700 hover:bg-slate-100',
+    className: 'bg-muted text-muted-foreground hover:bg-muted',
   },
   pending_review: {
     label: 'In Review',
-    className: 'bg-amber-100 text-amber-700 hover:bg-amber-100',
+    className: 'bg-amber-3 text-amber-11 hover:bg-amber-3',
   },
   edits_requested: {
     label: 'Edits Requested',
-    className: 'bg-orange-100 text-orange-700 hover:bg-orange-100',
+    className: 'bg-orange-3 text-orange-11 hover:bg-orange-3',
   },
   approved: {
     label: 'Approved',
-    className: 'bg-green-100 text-green-700 hover:bg-green-100',
+    className: 'bg-lime-3 text-lime-11 hover:bg-lime-3',
   },
 }
 
@@ -553,10 +553,10 @@ function AgencyReportRow({ report }: { report: AgencyReport }) {
       if (diffDays < 0) {
         const abs = Math.abs(diffDays)
         dueLabel = `${abs} day${abs !== 1 ? 's' : ''} overdue`
-        dueClass = 'text-red-600'
+        dueClass = 'text-destructive'
       } else {
         dueLabel = `${diffDays} day${diffDays !== 1 ? 's' : ''}`
-        dueClass = diffDays <= 2 ? 'text-amber-600' : 'text-muted-foreground'
+        dueClass = diffDays <= 2 ? 'text-amber-11' : 'text-muted-foreground'
       }
     }
   }
@@ -993,7 +993,7 @@ export function StudentProfile({
         {headerControls}
 
         {/* Student Header Card */}
-        <div className="flex items-center gap-4 rounded-3xl border bg-white p-6">
+        <div className="flex items-center gap-4 rounded-3xl border bg-card p-6">
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
             <User className="h-8 w-8 text-muted-foreground" />
           </div>
@@ -1111,7 +1111,7 @@ export function StudentProfile({
             id="attendance"
             title="Attendance"
             icon={<Calendar className="h-5 w-5" />}
-            iconClassName="bg-yellow-100 text-yellow-600"
+            iconClassName="bg-amber-3 text-amber-11"
           >
             <dl className="grid grid-cols-3 gap-x-8 gap-y-4">
               <Field
@@ -1145,7 +1145,7 @@ export function StudentProfile({
                 <Button
                   variant="link"
                   size="sm"
-                  className="h-auto p-0 text-blue-600"
+                  className="h-auto p-0 text-twblue-11"
                   onClick={() => setAnalyticsOpen((prev) => !prev)}
                 >
                   {analyticsOpen ? 'Show less ∧' : 'View analytics ∨'}
@@ -1160,7 +1160,7 @@ export function StudentProfile({
           id="behaviour"
           title="Behaviour"
           icon={<BookOpen className="h-5 w-5" />}
-          iconClassName="bg-indigo-100 text-indigo-600"
+          iconClassName="bg-twblue-3 text-twblue-11"
         >
           <dl className="grid grid-cols-3 gap-x-8 gap-y-4">
             {/* In the Uplift default view the standalone Attendance section is
@@ -1307,7 +1307,7 @@ export function StudentProfile({
           id="wellbeing"
           title="Wellbeing"
           icon={<Heart className="h-5 w-5" />}
-          iconClassName="bg-pink-100 text-pink-600"
+          iconClassName="bg-crimson-3 text-crimson-11"
         >
           {(() => {
             const socialLinks = socialLinksEnabled ? (
@@ -1514,7 +1514,7 @@ export function StudentProfile({
           id="academic"
           title="Academic"
           icon={<GraduationCap className="h-5 w-5" />}
-          iconClassName="bg-blue-100 text-blue-600"
+          iconClassName="bg-twblue-3 text-twblue-11"
         >
           <dl className="grid grid-cols-3 gap-x-8 gap-y-4">
             {overallPercentageEnabled && (
@@ -1603,7 +1603,7 @@ export function StudentProfile({
               <Button
                 variant="link"
                 size="sm"
-                className="h-auto p-0 text-blue-600"
+                className="h-auto p-0 text-twblue-11"
                 onClick={() => setAcademicAnalyticsOpen((prev) => !prev)}
               >
                 {academicAnalyticsOpen ? 'Show less ∧' : 'View analytics ∨'}
@@ -1617,7 +1617,7 @@ export function StudentProfile({
           id="family"
           title="Family"
           icon={<Home className="h-5 w-5" />}
-          iconClassName="bg-green-100 text-green-600"
+          iconClassName="bg-lime-3 text-lime-11"
         >
           <dl className="grid grid-cols-3 gap-x-8 gap-y-4">
             {msfUpliftEnabled ? (
@@ -1743,7 +1743,7 @@ export function StudentProfile({
             id="personal"
             title="Personal"
             icon={<Languages className="h-5 w-5" />}
-            iconClassName="bg-purple-100 text-purple-600"
+            iconClassName="bg-violet-3 text-violet-11"
           >
             <dl className="grid grid-cols-3 gap-x-8 gap-y-4">
               {!isStudentInsightsView && (
@@ -1793,7 +1793,7 @@ export function StudentProfile({
               id="reports"
               title="Reports"
               icon={<FileText className="h-5 w-5" />}
-              iconClassName="bg-red-100 text-red-600"
+              iconClassName="bg-crimson-3 text-crimson-11"
               headerRight={
                 holisticReportsEnabled && studentReports.length > 0 ? (
                   <Button
@@ -1905,7 +1905,7 @@ export function StudentProfile({
             id="others"
             title="Others"
             icon={<LayoutGrid className="h-5 w-5" />}
-            iconClassName="bg-slate-100 text-slate-600"
+            iconClassName="bg-muted text-muted-foreground"
           >
             <dl className="grid grid-cols-3 gap-x-8 gap-y-6">
               {importedColumns.map((col) => (
