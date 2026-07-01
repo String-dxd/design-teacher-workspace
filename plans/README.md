@@ -22,9 +22,42 @@ your row when done.
 | 011 | Color sweep: mechanical batches (Phases 1–6, ~51 small/medium files; grep-anchored palette/hazard swaps) | P2 | L | 010 | DONE — branch `advisor/color-sweep`, 51 files, gates green (build 0 / tsc 113 / vitest 37-16), palette residual 0 in-scope, 2026-07-01 |
 | 012 | Color sweep: giant files (Phases 7–10; 5 files >1.5k lines, palette+dark-hazard ONLY; charts deferred; PDF-facsimile + phone-preview fenced) | P2 | L | 010, 011 | DONE — branch `advisor/color-sweep`, +corrective slate/amber pass (see note), gates green (build 0 / tsc 113 / vitest 37-16), fences intact, 2026-07-01 |
 | 013 | Color sweep: charts & SVG (Phase 11; centralize ~90 chart literals into `src/lib/chart-colors.ts`; visual-review gated) | P3 | M | 010, 011, 012 | DONE — branch `advisor/color-sweep`, chart hex centralized (chrome→slate vars, series→named consts), gates green (build 0 / tsc 111 / vitest 37-16), 2026-07-01. Light-mode verified; **dark-mode + Radix-ifying reserved series hues pending the dark-mode toggle (deferred)** |
+| 014 | Dead code: remove ~10 dead files (3 orphaned subtrees) + ~11 dead deps + declare transitive `@tanstack/react-query` | P2 | S | — | DONE — PR #154 merged to main, reviewer-verified 2026-07-01: 9 files + 12 deps removed, react-query@5.90.21 declared; build 0 / tsc 110 / vitest 37-16, scope clean. |
+| 015 | Dead code: strip 68 unused imports/locals (TS6133); unblocks a blocking typecheck CI gate | P2 | S–M | 014 | DONE — PR #156 merged to main, reviewer-verified 2026-07-01: 27 files, tsc 110→42 (all TS6133 gone, no new codes), build 0 / vitest 37-16. NOTE: 5 unused `useId`/`useMemo` kept as bare calls (hook-ordering) — tidy candidate. |
+| 016 | Dead code: remove ~10 dead public assets + untrack committed `.DS_Store` | P3 | S | — | DONE — PR #155 merged to main, reviewer-verified 2026-07-01: 10 dead assets removed, build 0. (`.DS_Store` were already untracked/gitignored.) |
+| 017 | Dead code: prune ~40 dead non-UI exports (unexport→tsc→delete); keeps shadcn ui/ primitive API | P3 | M | 014 | DONE — PR #157 merged to main, reviewer-verified 2026-07-01: 24 deleted + 27 unexported across 29 files; knip 0 non-ui dead exports; tsc 42 / no new codes / build 0 / vitest 37-16. Kept 4 knip false-positives (real importers). |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) |
 REJECTED (with one-line rationale).
+
+## Round 4 — dead-code audit (2026-07-01)
+
+Focused dead-code audit at commit `8a71db6` (knip + import-graph verification; baseline
+`tsc` 111 errors / `bunx vitest run` 37 pass 16 fail / `bun run build` exit 0). Produced
+plans 014–017.
+
+- **Suggested order: 014 → 016 (independent) → 015 → 017.** 014 removes dead files+deps and
+  is the prerequisite for 017 (deleting files shrinks/changes the dead-export list — re-run
+  `bunx knip` after 014). 016 is fully independent (assets). 015 (unused imports/locals) is
+  independent but pairs naturally after 014.
+- **Coupling in 014**: `@tanstack/react-devtools` + `@tanstack/react-router-devtools` are
+  dead only once the orphan `draggable-tanstack-devtools.tsx` is deleted (same plan); and
+  removing `@tanstack/react-router-ssr-query` requires declaring `@tanstack/react-query`
+  (imported directly in `__root.tsx`/`_guest.tsx`, currently transitive) — 014 does both.
+- **Dead-code tooling gap**: knip is not installed. Run it on demand via
+  `bunx --bun knip@5 --no-progress`. Consider adding it as a devDep + a `knip` script and/or
+  `eslint-plugin-unused-imports` to prevent regressions (optional follow-up).
+
+### Considered and rejected (Round 4)
+
+- **~50 unused exports in `src/components/ui/*`** (shadcn primitives: `DialogPortal`,
+  `SidebarMenuSub`, `Combobox*`, `Field*`, `AlertDialogOverlay`, …) — that is the component
+  library's public API surface; keep per the `AGENTS.md`/`CLAUDE.md` reuse policy.
+- **All 16 feature flags** — every one is actively read/gating and user-toggleable via
+  `/flags`; none is define-but-unused or a fully-rolled-out dead branch.
+- **Commented-out code** — none found (a scan for 3+ consecutive commented code lines came
+  back empty; the earlier `mock-agency-reports.ts` hit was a false positive).
+- **`@tanstack/eslint-config`** flagged by knip — false positive; used in `eslint.config.js:3`.
 
 ## Round 3 — feature-wide color-token sweep (2026-06-30)
 
