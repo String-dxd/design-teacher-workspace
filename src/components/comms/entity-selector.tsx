@@ -236,7 +236,7 @@ function ResultRow({
   onToggle,
   isExpanded = false,
   onToggleExpand,
-  selectedIndividualNames = new Set<string>(),
+  selectedIndividualNames: _selectedIndividualNames = new Set<string>(),
   excludedMemberNames = new Set(),
   onMemberToggle,
 }: ResultRowProps) {

@@ -135,23 +135,6 @@ function toClassGroup(
   }
 }
 
-function toCcaGroup(
-  id: string,
-  label: string,
-  names: Array<string>,
-): EntityItem {
-  const details = names.map((name, i) => memberDetail(name, i + 1))
-  return {
-    id,
-    label,
-    type: 'group',
-    count: names.length,
-    groupType: 'cca',
-    memberNames: names,
-    memberDetails: details,
-  }
-}
-
 // ─── Sec 1 & 2 classes (hardcoded) ───────────────────────────────────────────
 
 const SEC1_CLASSES: Array<EntityItem> = [
@@ -436,18 +419,6 @@ export const TEACHING_GROUPS: Array<EntityItem> = [
     'Sec 4 Mother Tongue',
     sec4TeachingDetails.filter((_, i) => i % 5 !== 4),
   ),
-]
-
-// ─── Custom groups ────────────────────────────────────────────────────────────
-
-const lsStudents = bandungStudents
-  .filter((s) => s.learningSupport !== null)
-  .sort((a, b) => a.indexNumber - b.indexNumber)
-const dramaNames = [
-  'Jordan Tan Jia Le',
-  'Natasha Lee Wei Ling',
-  'Jayden Wong Zhi Hao',
-  'Priya Sundaram',
 ]
 
 // Derived from MOCK_GROUPS so the student selector always reflects the Groups page

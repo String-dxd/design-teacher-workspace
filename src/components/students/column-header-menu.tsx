@@ -60,14 +60,14 @@ export function ColumnHeaderMenu({
   activeFilterFields,
   onSort,
   onClearSort,
-  onAddQuickFilter,
-  onClearFilter,
+  onAddQuickFilter: _onAddQuickFilter,
+  onClearFilter: _onClearFilter,
   className,
   isSticky,
   stickyLeft,
   showStickyShadow,
   onConfigureSubjects,
-  hasCustomSubjects,
+  hasCustomSubjects: _hasCustomSubjects,
   onDelete,
 }: ColumnHeaderMenuProps) {
   const [open, setOpen] = useState(false)

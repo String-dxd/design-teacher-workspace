@@ -829,28 +829,6 @@ const LEVEL_MONTHLY: Record<string, typeof MONTHLY_DATA> = {
   'Primary 3': makeLevelMonthlyData(0.6),
 }
 
-// ─── Level ring helpers ───────────────────────────────────────────────────────
-
-function buildLevelRingSegments(att: LevelAttendance) {
-  const absent = att.total - att.present - att.lta
-  const segments = [
-    { name: 'Present', value: att.present, color: PRESENT_RING },
-    { name: 'LTA', value: att.lta, color: ATTENDANCE_SEVERITY.nonVRAbsence },
-    {
-      name: 'Absent',
-      value: Math.max(absent, 0),
-      color: ATTENDANCE_SEVERITY.pendingReason,
-    },
-  ]
-  let acc = 0
-  return segments.map((seg) => {
-    const len = (seg.value / att.total) * RING_C
-    const dashoffset = acc === 0 ? 0 : RING_C - acc
-    acc += len
-    return { ...seg, len, dashoffset }
-  })
-}
-
 // ─── Attendance Students Table ────────────────────────────────────────────────
 
 const ATT_PAGE_SIZE = 10
@@ -1752,21 +1730,6 @@ interface SegmentSelection {
   count: number
 }
 
-function getStudentsForSegment(
-  categoryKey: string,
-  count: number,
-): typeof mockStudents {
-  // Deterministically pick students based on category key
-  const offset = BAR_CATEGORIES.findIndex((c) => c.key === categoryKey)
-  const pool = [...mockStudents]
-  // rotate the pool by offset to get different students per category
-  const rotated = [
-    ...pool.slice(offset % pool.length),
-    ...pool.slice(0, offset % pool.length),
-  ]
-  return rotated.slice(0, Math.min(count, rotated.length))
-}
-
 export function AttendanceLevelAnalytics() {
   const [level, setLevel] = useState('Secondary 4')
   const [chartExpanded, setChartExpanded] = useState(false)
@@ -1779,7 +1742,6 @@ export function AttendanceLevelAnalytics() {
     total: 105,
   }
   const monthlyData = LEVEL_MONTHLY[level] ?? MONTHLY_DATA
-  const ringSegments = buildLevelRingSegments(attendance)
   const presentPct = Math.round((attendance.present / attendance.total) * 100)
   const ltaPct = ((attendance.lta / attendance.total) * 100).toFixed(1)
 

@@ -199,7 +199,7 @@ function AnnouncementPreview({
   title,
   description,
   shortcuts,
-  staffInCharge,
+  staffInCharge: _staffInCharge,
   enquiryEmail,
   recipients,
   responseType,

@@ -129,10 +129,6 @@ const PERFORMANCE_DATA = [
   },
 ]
 
-const G2_COUNT = 2
-const G3_COUNT = 4
-const TOTAL_SUBJECTS = G2_COUNT + G3_COUNT
-
 const BAR_COLORS = {
   term1WA: SERIES_BLUE_COBALT, // cobalt blue — matches attendance chart
   term2WA: SERIES_BLUE, // blue
@@ -237,9 +233,6 @@ const ASSESSMENT_OPTIONS = [
 ]
 
 const INDICATOR_OPTIONS = ['Distinction', 'Pass'] as const
-
-// Mock results data — Secondary 4, EL-G3, Term 1 WA
-const QUICK_STATS = { total: 120, distinction: 42, pass: 68 }
 
 const GRADE_DATA = [
   { grade: 'A1', count: 15 },
@@ -958,7 +951,7 @@ function GradeDistTooltip({
 // Grade distribution bar chart
 function GradeDistChart({
   data,
-  selectedGrade,
+  selectedGrade: _selectedGrade,
   onGradeClick,
 }: {
   data: BreakdownData['gradeData']

@@ -568,7 +568,7 @@ function TemplateSelection({
   selected,
   onToggle,
   onSelectAndContinue,
-  onBack,
+  onBack: _onBack,
   onContinue,
 }: {
   studentName: string
@@ -1458,7 +1458,7 @@ function SectionPanel({
   aiSourceSelections,
   onAiSourceChange,
   assignedTo,
-  onAssignedChange,
+  onAssignedChange: _onAssignedChange,
   onValueChange,
   onAiDraft,
   onToggleReviewed,
@@ -1671,17 +1671,6 @@ function SectionPanel({
   )
 }
 
-function templateReferenceAsset(template: AgencyTemplate): {
-  kind: 'pdf' | 'image'
-  src: string
-} | null {
-  if (template.templateFile?.toLowerCase().endsWith('.pdf')) {
-    return { kind: 'pdf', src: template.templateFile }
-  }
-  const img = templatePreviewImg(template)
-  return img ? { kind: 'image', src: img } : null
-}
-
 // ── Filled report rendering ───────────────────────────────────────────
 // The preview must look like a faithful reproduction of the agency's
 // actual blank PDF, with the demo data dropped in — same fonts, gray
@@ -1815,28 +1804,6 @@ function FieldBox({ label, value }: { label: string; value?: string }) {
       <span className="flex min-h-[24px] flex-1 items-center border border-black px-2 py-1 text-[12px]">
         {value ?? ''}
       </span>
-    </div>
-  )
-}
-
-function LabeledTickRow({
-  label,
-  on,
-  align = 'right',
-}: {
-  label: string
-  on?: boolean
-  align?: 'left' | 'right'
-}) {
-  return (
-    <div
-      className={cn(
-        'flex items-center gap-3 text-[12px]',
-        align === 'right' ? 'justify-between' : '',
-      )}
-    >
-      <span>{label}</span>
-      <TickBox on={on} />
     </div>
   )
 }
@@ -2745,7 +2712,7 @@ function ReportForm({
   studentId,
   principalNote,
   currentReportId,
-  onBack,
+  onBack: _onBack,
   onSubmittedForReview,
 }: {
   template: AgencyTemplate
@@ -3340,7 +3307,7 @@ function ReportForm({
 function ExportPassword({
   template,
   studentName,
-  onBack,
+  onBack: _onBack,
   onDownload,
 }: {
   template: AgencyTemplate

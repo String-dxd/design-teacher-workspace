@@ -17,7 +17,6 @@ import {
 
 import type {
   GroupTypeFilterOption,
-  StructuredGroup,
   StudentGroup,
 } from '@/types/student-group'
 import { getStructuredTypeLabel } from '@/types/student-group'
@@ -67,12 +66,6 @@ export const Route = createFileRoute('/groups/')({
 const CURRENT_USER_EMAIL = 'tanml@school.edu.sg'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function getUniqueClasses(members: StudentGroup['members']): Array<string> {
-  const seen = new Set<string>()
-  for (const m of members) seen.add(m.class)
-  return [...seen].sort()
-}
 
 function formatRelativeDate(dateStr: string): string {
   const date = new Date(dateStr)
@@ -273,33 +266,6 @@ function OwnershipFilterPopover({
         </div>
       </PopoverContent>
     </Popover>
-  )
-}
-
-// ─── Classes pill list ─────────────────────────────────────────────────────────
-
-function ClassPills({
-  members,
-}: {
-  members: StudentGroup['members'] | StructuredGroup['members']
-}) {
-  const classes = getUniqueClasses(members)
-  const visible = classes.slice(0, 3)
-  const hidden = classes.length - 3
-  return (
-    <div className="flex flex-wrap items-center gap-1">
-      {visible.map((cls) => (
-        <span
-          key={cls}
-          className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground"
-        >
-          {cls}
-        </span>
-      ))}
-      {hidden > 0 && (
-        <span className="text-xs text-muted-foreground">+{hidden}</span>
-      )}
-    </div>
   )
 }
 
