@@ -92,7 +92,7 @@ function StructuredGroupDetailPage() {
               </Badge>
               <Badge
                 variant="outline"
-                className="gap-1 text-blue-700 border-blue-200 bg-blue-50"
+                className="gap-1 text-twblue-11 border-twblue-6 bg-twblue-3"
               >
                 Synced from School Cockpit
               </Badge>
@@ -108,9 +108,9 @@ function StructuredGroupDetailPage() {
 
       {/* ── Info callout ─────────────────────────────────────────────────────── */}
       <div className="px-6 pt-5 pb-0">
-        <Alert className="border-blue-200 bg-blue-50/60 text-blue-900">
-          <Info className="h-4 w-4 text-blue-500" />
-          <AlertDescription className="text-blue-800">
+        <Alert className="border-twblue-6 bg-twblue-3/60 text-twblue-12">
+          <Info className="h-4 w-4 text-twblue-9" />
+          <AlertDescription className="text-twblue-11">
             These groups are managed in School Cockpit. Changes to membership
             and student details must be made by your school administrator.
           </AlertDescription>
@@ -140,7 +140,7 @@ function StructuredGroupDetailPage() {
       </div>
 
       <Table>
-        <TableHeader className="border-b bg-white">
+        <TableHeader className="border-b bg-background">
           <TableRow className="border-0 hover:bg-transparent">
             <TableHead className="pl-6 w-14">#</TableHead>
             <TableHead className="min-w-[200px]">Name</TableHead>

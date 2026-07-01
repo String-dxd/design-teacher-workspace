@@ -359,7 +359,7 @@ function ReportsPage() {
                   <ListFilter className="mr-2 h-4 w-4" />
                   Filters
                   {activeFilterCount > 0 && (
-                    <span className="ml-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#f26c47] px-1.5 text-xs font-medium text-white">
+                    <span className="ml-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-orange-9 px-1.5 text-xs font-medium text-white">
                       {activeFilterCount}
                     </span>
                   )}
@@ -514,7 +514,7 @@ function ReportsPage() {
       {/* Floating Bulk Action Bar */}
       {selectedIds.size > 0 && (
         <div className="fixed inset-x-0 bottom-6 z-50 flex justify-center">
-          <div className="flex items-center gap-3 rounded-full border bg-white px-5 py-2.5 shadow-lg">
+          <div className="flex items-center gap-3 rounded-full border bg-card px-5 py-2.5 shadow-lg">
             <span className="text-sm font-medium text-muted-foreground">
               {selectedIds.size} selected
             </span>

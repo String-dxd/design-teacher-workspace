@@ -72,7 +72,7 @@ function StudentAnalyticsPage() {
           <h1 className="text-2xl font-semibold">Analytics</h1>
           <Badge
             variant="outline"
-            className="border-purple-300 bg-purple-50 text-purple-700 dark:border-purple-700 dark:bg-purple-950 dark:text-purple-300"
+            className="border-violet-6 bg-violet-3 text-violet-11"
           >
             Experiment
           </Badge>

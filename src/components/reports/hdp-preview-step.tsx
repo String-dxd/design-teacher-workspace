@@ -9,6 +9,9 @@ import { CCASection } from './cca-section'
 import type { HolisticReport, SchoolLevel } from '@/types/report'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
+const ACTIVE_TAB_CLASS =
+  'data-active:text-orange-9 data-active:after:bg-orange-9'
+
 function getFirstName(name: string): string {
   return name.split(' ').filter((part) => part.length > 0)[0] ?? name
 }
@@ -34,7 +37,7 @@ export function HdpPreviewStep({
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex items-center gap-2 rounded-lg bg-blue-50 px-4 py-3 text-sm text-blue-700">
+      <div className="flex items-center gap-2 rounded-lg bg-twblue-3 px-4 py-3 text-sm text-twblue-11">
         <Eye className="size-4 shrink-0" />
         <span>
           This is how the report card will appear when downloaded or sent to
@@ -46,14 +49,14 @@ export function HdpPreviewStep({
         <TabsList variant="line">
           <TabsTrigger
             value="overview"
-            className="data-active:text-[#f26c47] data-active:after:bg-[#f26c47]"
+            className={ACTIVE_TAB_CLASS}
           >
             Overview
           </TabsTrigger>
           {selectedSections.academic && (
             <TabsTrigger
               value="academic"
-              className="data-active:text-[#f26c47] data-active:after:bg-[#f26c47]"
+              className={ACTIVE_TAB_CLASS}
             >
               Academic
             </TabsTrigger>
@@ -61,7 +64,7 @@ export function HdpPreviewStep({
           {hasHolistic && (
             <TabsTrigger
               value="holistic"
-              className="data-active:text-[#f26c47] data-active:after:bg-[#f26c47]"
+              className={ACTIVE_TAB_CLASS}
             >
               Holistic
             </TabsTrigger>

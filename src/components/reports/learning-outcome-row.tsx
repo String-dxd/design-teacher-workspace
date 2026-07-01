@@ -2,10 +2,10 @@ import type { LearningOutcome, LearningOutcomeStatus } from '@/types/report'
 import { cn } from '@/lib/utils'
 
 const statusColors: Record<LearningOutcomeStatus, string> = {
-  Accomplished: 'bg-[#e8feea] text-[#12b886]',
-  Competent: 'bg-[rgba(34,139,230,0.1)] text-[#228be6]',
-  Developing: 'bg-[#fef9ee] text-[#fac53e]',
-  Beginning: 'bg-[#f6f7f8] text-[#a7aab5]',
+  Accomplished: 'bg-lime-3 text-lime-11',
+  Competent: 'bg-twblue-3 text-twblue-11',
+  Developing: 'bg-amber-3 text-amber-11',
+  Beginning: 'bg-muted text-muted-foreground',
 }
 
 export function LearningOutcomeRow({ outcome }: { outcome: LearningOutcome }) {

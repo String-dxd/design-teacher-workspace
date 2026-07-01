@@ -75,7 +75,7 @@ export function ParentPreviewDialog({
                 <div className="mb-6 flex flex-col items-center gap-3">
                   <Avatar
                     size="lg"
-                    className="ring-2 ring-[#f26c47] ring-offset-2"
+                    className="ring-2 ring-orange-9 ring-offset-2"
                   >
                     <AvatarFallback>
                       {getInitials(report.studentName)}
@@ -128,19 +128,19 @@ export function ParentPreviewDialog({
               <TabsList variant="line">
                 <TabsTrigger
                   value="overview"
-                  className="text-xs data-active:text-[#f26c47] data-active:after:bg-[#f26c47]"
+                  className="text-xs data-active:text-orange-9 data-active:after:bg-orange-9"
                 >
                   Overview
                 </TabsTrigger>
                 <TabsTrigger
                   value="academic"
-                  className="text-xs data-active:text-[#f26c47] data-active:after:bg-[#f26c47]"
+                  className="text-xs data-active:text-orange-9 data-active:after:bg-orange-9"
                 >
                   Academic
                 </TabsTrigger>
                 <TabsTrigger
                   value="holistic"
-                  className="text-xs data-active:text-[#f26c47] data-active:after:bg-[#f26c47]"
+                  className="text-xs data-active:text-orange-9 data-active:after:bg-orange-9"
                 >
                   Holistic
                 </TabsTrigger>
@@ -169,7 +169,7 @@ export function ParentPreviewDialog({
           {isStudentPreview ? (
             <div className="flex flex-col gap-2">
               <Button
-                className="w-full bg-[#f26c47] text-white hover:bg-[#e05a37]"
+                className="w-full bg-orange-9 text-white hover:bg-orange-10"
                 size="sm"
                 disabled
               >
@@ -185,7 +185,7 @@ export function ParentPreviewDialog({
             <div className="flex flex-col gap-2">
               <div className="flex gap-2">
                 <Button
-                  className="flex-1 bg-[#12b886] text-white hover:bg-[#0ca678]"
+                  className="flex-1 bg-lime-9 text-white hover:bg-lime-10"
                   size="sm"
                   disabled
                 >
