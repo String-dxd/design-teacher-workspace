@@ -25,7 +25,6 @@ A design prototype for the **MOE (Ministry of Education) Teacher Workspace** —
 ## Project Structure
 
 ```
-├── packages/              # Shared packages (e.g. ds-tw-skills)
 ├── public/                # Static assets (images, favicon, manifest)
 ├── src/
 │   ├── components/        # React components
