@@ -21,7 +21,7 @@ your row when done.
 | 010 | Feature-wide color-token sweep — OVERVIEW & canonical mapping (shared reference for 011–013: token vocabulary, resolved decisions, verification gates, phase map) | P2 | L | 007–009 | REFERENCE (not executed on its own) — written 2026-06-30 |
 | 011 | Color sweep: mechanical batches (Phases 1–6, ~51 small/medium files; grep-anchored palette/hazard swaps) | P2 | L | 010 | DONE — branch `advisor/color-sweep`, 51 files, gates green (build 0 / tsc 113 / vitest 37-16), palette residual 0 in-scope, 2026-07-01 |
 | 012 | Color sweep: giant files (Phases 7–10; 5 files >1.5k lines, palette+dark-hazard ONLY; charts deferred; PDF-facsimile + phone-preview fenced) | P2 | L | 010, 011 | DONE — branch `advisor/color-sweep`, +corrective slate/amber pass (see note), gates green (build 0 / tsc 113 / vitest 37-16), fences intact, 2026-07-01 |
-| 013 | Color sweep: charts & SVG (Phase 11; centralize ~90 chart literals into `src/lib/chart-colors.ts`; visual-review gated) | P3 | M | 010, 011, 012 | TODO |
+| 013 | Color sweep: charts & SVG (Phase 11; centralize ~90 chart literals into `src/lib/chart-colors.ts`; visual-review gated) | P3 | M | 010, 011, 012 | DONE — branch `advisor/color-sweep`, chart hex centralized (chrome→slate vars, series→named consts), gates green (build 0 / tsc 111 / vitest 37-16), 2026-07-01. Light-mode verified; **dark-mode + Radix-ifying reserved series hues pending the dark-mode toggle (deferred)** |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) |
 REJECTED (with one-line rationale).
