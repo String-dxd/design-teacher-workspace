@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouterState } from '@tanstack/react-router'
 import {
   Check,
@@ -188,8 +188,6 @@ export function HeyTaliaPanel() {
   const dragStartX = useRef(0)
   const dragStartWidth = useRef(0)
 
-  useId()
-  useId()
   const ctx = usePageContext()
   const seed = SEED[ctx]
   const isMobile = useIsMobile()
@@ -592,7 +590,6 @@ function MessageBubble({
   onThumb: (dir: 'up' | 'down') => void
 }) {
   const isAI = msg.role === 'assistant'
-  useId()
 
   return (
     <div className={cn('flex gap-2', !isAI && 'flex-row-reverse')}>
