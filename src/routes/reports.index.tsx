@@ -28,8 +28,16 @@ export const Route = createFileRoute('/reports/')({
 })
 
 const SCOPE_OPTIONS = [
-  { value: 'my', label: 'My Class', description: `Reports for your class (${MY_CLASS})` },
-  { value: 'school', label: 'School', description: 'All classes in the school' },
+  {
+    value: 'my',
+    label: 'My Class',
+    description: `Reports for your class (${MY_CLASS})`,
+  },
+  {
+    value: 'school',
+    label: 'School',
+    description: 'All classes in the school',
+  },
 ] as const
 
 function ReportsPage() {
@@ -158,7 +166,9 @@ function ReportsPage() {
           <section className="rounded-xl border bg-white p-6">
             <div className="mb-5">
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Generating report for
+                {tab === 'onboarding'
+                  ? 'Generating onboarding report for'
+                  : 'Generating travel declaration report for'}
               </p>
               <p className="mt-1 text-xl font-semibold">
                 {isSchoolWide ? SCHOOL_NAME : MY_CLASS}
