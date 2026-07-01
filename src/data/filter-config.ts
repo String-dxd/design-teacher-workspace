@@ -398,13 +398,7 @@ export const filterFieldConfigs: Array<FilterFieldConfig> = [
     group: 'family',
     defaultOperator: 'is',
     defaultValue: '',
-    enumValues: [
-      'None',
-      'Not applicable',
-      'Rented',
-      'Owner-occupied',
-      'Others',
-    ],
+    enumValues: ['None', 'Not applicable', 'Rented', 'Owner-occupied', 'Others'],
   },
   {
     field: 'siblings',

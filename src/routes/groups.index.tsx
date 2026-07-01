@@ -223,7 +223,7 @@ function ClassPills({
 
 // ─── Main component ────────────────────────────────────────────────────────────
 
-type GroupTab = 'my-groups' | 'assigned'
+type GroupTab = 'my-groups' | 'shared' | 'assigned'
 
 function GroupsIndex() {
   useSetBreadcrumbs([{ label: 'Student Groups', href: '/groups' }])
@@ -239,6 +239,7 @@ function GroupsIndex() {
     'delete-for-self' | 'delete-for-everyone'
   >('delete-for-self')
   const [assignedSearch, setAssignedSearch] = useState('')
+  const [sharedSearch, setSharedSearch] = useState('')
   const filteredCombinedGroups = useMemo(() => {
     const mine = groups
       .filter((g) => g.createdBy.email === CURRENT_USER_EMAIL)
@@ -261,6 +262,17 @@ function GroupsIndex() {
       ),
     [assignedSearch],
   )
+
+  const filteredSharedGroups = useMemo(() => {
+    const shared = groups.filter(
+      (g) =>
+        g.createdBy.email !== CURRENT_USER_EMAIL &&
+        g.sharedWith.some((s) => s.email === CURRENT_USER_EMAIL),
+    )
+    if (!sharedSearch) return shared
+    const q = sharedSearch.toLowerCase()
+    return shared.filter((g) => g.name.toLowerCase().includes(q))
+  }, [groups, sharedSearch])
 
   const sortedGroups = useMemo(() => {
     if (!sort) return filteredCombinedGroups
@@ -372,6 +384,12 @@ function GroupsIndex() {
                 Created by me
               </SegmentedTab>
               <SegmentedTab
+                active={tab === 'shared'}
+                onClick={() => setTab('shared')}
+              >
+                Shared with me
+              </SegmentedTab>
+              <SegmentedTab
                 active={tab === 'assigned'}
                 onClick={() => setTab('assigned')}
               >
@@ -385,11 +403,13 @@ function GroupsIndex() {
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Search groups…"
-                value={tab === 'my-groups' ? mySearch : assignedSearch}
+                value={tab === 'my-groups' ? mySearch : tab === 'shared' ? sharedSearch : assignedSearch}
                 onChange={(e) =>
                   tab === 'my-groups'
                     ? setMySearch(e.target.value)
-                    : setAssignedSearch(e.target.value)
+                    : tab === 'shared'
+                      ? setSharedSearch(e.target.value)
+                      : setAssignedSearch(e.target.value)
                 }
                 className="w-[240px] pl-9"
               />
@@ -548,15 +568,17 @@ function GroupsIndex() {
                         >
                           <div className="flex justify-end">
                             <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                                  aria-label="More actions"
-                                >
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
+                              <DropdownMenuTrigger
+                                render={
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                    aria-label="More actions"
+                                  />
+                                }
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
                                 <DropdownMenuItem
@@ -657,16 +679,75 @@ function GroupsIndex() {
         )}
 
         {/* ── Assigned Groups table ────────────────────────────────────────── */}
+        {tab === 'shared' && (
+          <div className="max-w-full overflow-x-auto bg-background">
+            {filteredSharedGroups.length === 0 ? (
+              <div className="flex flex-col items-center py-16">
+                <EmptyState
+                  title={sharedSearch ? 'No groups found' : 'No shared groups'}
+                  description={
+                    sharedSearch
+                      ? 'Try adjusting your search.'
+                      : 'Groups shared with you by other teachers will appear here.'
+                  }
+                />
+              </div>
+            ) : (
+              <Table tableClassName="table-fixed w-full">
+                <TableHeader className="border-b bg-background">
+                  <TableRow className="border-0 hover:bg-transparent">
+                    <TableHead className="pl-6">Name</TableHead>
+                    <TableHead className="w-24">Students</TableHead>
+                    <TableHead className="w-32">Shared by</TableHead>
+                    <TableHead className="w-36">Last updated</TableHead>
+                    <TableHead className="w-[48px] pr-2" />
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredSharedGroups.map((group) => (
+                    <TableRow
+                      key={group.id}
+                      className="cursor-pointer"
+                      onClick={() =>
+                        navigate({
+                          to: '/groups/$groupId',
+                          params: { groupId: group.id },
+                        })
+                      }
+                    >
+                      <TableCell className="overflow-hidden whitespace-normal pl-6">
+                        <span className="truncate font-medium">{group.name}</span>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                          <Users className="h-3.5 w-3.5 shrink-0" />
+                          {group.members.length}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {stripSalutation(group.createdBy.name)}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {formatRelativeDate(group.updatedAt)}
+                      </TableCell>
+                      <TableCell className="w-[48px] pr-2" />
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </div>
+        )}
+
         {tab === 'assigned' && (
           <>
             <div className="px-6">
-              <Alert className="border-blue-200 bg-blue-50/60 text-blue-900">
-                <Info className="h-4 w-4 text-blue-500" />
-                <AlertDescription className="text-blue-800">
+              <div className="rounded-lg border border-twblue-6 bg-twblue-3/60 px-4 py-2.5">
+                <p className="text-sm text-twblue-11">
                   Membership updates automatically based on selected criteria.
                   Contact your school administrator to make changes.
-                </AlertDescription>
-              </Alert>
+                </p>
+              </div>
             </div>
 
             <div className="max-w-full overflow-x-auto bg-background">
@@ -768,7 +849,7 @@ function GroupsIndex() {
                       'mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border',
                       deleteMode === 'delete-for-self'
                         ? 'border-primary bg-primary'
-                        : 'border-slate-300',
+                        : 'border-border',
                     )}
                   >
                     {deleteMode === 'delete-for-self' && (
@@ -802,7 +883,7 @@ function GroupsIndex() {
                       'mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border',
                       deleteMode === 'delete-for-everyone'
                         ? 'border-destructive bg-destructive'
-                        : 'border-slate-300',
+                        : 'border-border',
                     )}
                   >
                     {deleteMode === 'delete-for-everyone' && (

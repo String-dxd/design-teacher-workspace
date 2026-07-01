@@ -123,7 +123,7 @@ export function GenerateHdpWizard({
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-white">
+    <div className="fixed inset-0 z-50 flex flex-col bg-background">
       {/* Header */}
       <div className="shrink-0 border-b px-6 py-4">
         <div className="mx-auto flex max-w-2xl items-center justify-between">
@@ -236,7 +236,7 @@ export function GenerateHdpWizard({
             )}
             {currentStep === 2 && (
               <Button
-                className="bg-[#f26c47] text-white hover:bg-[#e05a37]"
+                className="bg-orange-9 text-white hover:bg-orange-10"
                 onClick={() => {
                   handleNext()
                   handleSave()
@@ -248,7 +248,7 @@ export function GenerateHdpWizard({
             )}
             {currentStep === 3 && isSaved && generatedReport && (
               <Button
-                className="bg-[#f26c47] text-white hover:bg-[#e05a37]"
+                className="bg-orange-9 text-white hover:bg-orange-10"
                 render={
                   <Link to="/reports/$id" params={{ id: generatedReport.id }} />
                 }
@@ -285,8 +285,8 @@ function SuccessStep({
 
   return (
     <div className="flex flex-col items-center gap-4 py-16 text-center">
-      <div className="flex size-16 items-center justify-center rounded-full bg-emerald-50">
-        <CheckCircle className="size-8 text-[#12b886]" />
+      <div className="flex size-16 items-center justify-center rounded-full bg-lime-3">
+        <CheckCircle className="size-8 text-lime-11" />
       </div>
       <h3 className="text-xl font-semibold">Report Saved Successfully</h3>
       <p className="max-w-sm text-sm text-muted-foreground">

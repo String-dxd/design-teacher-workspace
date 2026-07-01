@@ -61,14 +61,8 @@ export function loadDraft(): DraftData | null {
     const draft = parsed as Partial<DraftData>
     if (typeof draft.savedAt !== 'string') return null
     const arrayFields = [
-      'shortcuts',
-      'websiteLinks',
-      'recipients',
-      'staffInCharge',
-      'questions',
-      'filesMeta',
-      'photosMeta',
-      'coverPhotoIndices',
+      'shortcuts', 'websiteLinks', 'recipients', 'staffInCharge',
+      'questions', 'filesMeta', 'photosMeta', 'coverPhotoIndices',
     ] as const
     for (const f of arrayFields) {
       if (!Array.isArray(draft[f])) (draft as Record<string, unknown>)[f] = []

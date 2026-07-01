@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { Check } from 'lucide-react'
 
 import type { ReactElement } from 'react'
 import { LATEST_LABEL, LATEST_PERIOD, periodYears } from '@/data/filter-config'
 import { cn } from '@/lib/utils'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Popover,
   PopoverContent,
@@ -72,16 +72,7 @@ export function DateRangePicker({
         indented ? 'pl-9 pr-3' : 'px-3',
       )}
     >
-      <div
-        className={cn(
-          'flex h-4 w-4 shrink-0 items-center justify-center rounded border',
-          checked
-            ? 'border-primary bg-primary text-primary-foreground'
-            : 'border-input',
-        )}
-      >
-        {checked && <Check className="h-3 w-3" />}
-      </div>
+      <Checkbox checked={checked} className="pointer-events-none" />
       {label}
     </button>
   )

@@ -94,9 +94,9 @@ export function EnquiryEmailSelector({
             <button
               type="button"
               className={cn(
-                'flex items-center gap-2 rounded-md border border-input bg-background text-sm transition-colors hover:bg-slate-50',
+                'flex items-center gap-2 rounded-md border border-input bg-background text-sm transition-colors hover:bg-accent',
                 value
-                  ? 'px-3 py-1.5 text-slate-700'
+                  ? 'px-3 py-1.5 text-foreground'
                   : 'h-9 w-full px-3 py-2 text-muted-foreground',
               )}
             />
@@ -104,7 +104,7 @@ export function EnquiryEmailSelector({
         >
           <Mail
             className={cn(
-              'shrink-0 text-slate-400',
+              'shrink-0 text-muted-foreground',
               value ? 'h-3.5 w-3.5' : 'h-4 w-4',
             )}
           />
@@ -134,7 +134,7 @@ export function EnquiryEmailSelector({
                   key={email}
                   type="button"
                   onClick={() => selectEmail(email)}
-                  className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm hover:bg-slate-50"
+                  className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm hover:bg-accent"
                 >
                   {/* Radio indicator */}
                   <span
@@ -142,12 +142,14 @@ export function EnquiryEmailSelector({
                       'flex h-4 w-4 shrink-0 items-center justify-center rounded-full border',
                       isSelected
                         ? 'border-primary bg-primary'
-                        : 'border-slate-300',
+                        : 'border-input',
                     )}
                   >
-                    {isSelected && <Check className="h-2.5 w-2.5 text-white" />}
+                    {isSelected && (
+                      <Check className="h-2.5 w-2.5 text-primary-foreground" />
+                    )}
                   </span>
-                  <span className="flex-1 truncate text-slate-700">
+                  <span className="flex-1 truncate text-foreground">
                     {email}
                   </span>
                 </button>
@@ -258,7 +260,7 @@ export function EnquiryEmailSelector({
             <button
               type="button"
               onClick={() => setShowAddNew(true)}
-              className="flex w-full items-center gap-2 px-3 py-2.5 text-sm text-muted-foreground hover:bg-slate-50 hover:text-foreground"
+              className="flex w-full items-center gap-2 px-3 py-2.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
             >
               <Plus className="h-4 w-4" />
               Add new email
@@ -272,7 +274,7 @@ export function EnquiryEmailSelector({
         <button
           type="button"
           onClick={clearEmail}
-          className="flex h-5 w-5 items-center justify-center rounded-full text-muted-foreground hover:bg-slate-100 hover:text-foreground"
+          className="flex h-5 w-5 items-center justify-center rounded-full text-muted-foreground hover:bg-accent hover:text-foreground"
           aria-label="Clear email"
         >
           <X className="h-3 w-3" />

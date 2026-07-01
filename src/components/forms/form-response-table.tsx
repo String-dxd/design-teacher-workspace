@@ -236,7 +236,7 @@ export function FormResponseTable({
             <SlidersHorizontal className="h-3.5 w-3.5" />
             Filter
             {activeFilterCount > 0 && (
-              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-twblue-9 text-[10px] font-semibold text-white">
+              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-twblue-9 text-[10px] font-semibold text-twblue-1">
                 {activeFilterCount}
               </span>
             )}
@@ -257,18 +257,18 @@ export function FormResponseTable({
                     key={cls}
                     type="button"
                     onClick={() => setClassFilter(cls)}
-                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-slate-100"
+                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-slate-4"
                   >
                     <span
                       className={cn(
                         'flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full border transition-colors',
                         classFilter === cls
                           ? 'border-twblue-9 bg-twblue-9'
-                          : 'border-slate-300',
+                          : 'border-slate-6',
                       )}
                     >
                       {classFilter === cls && (
-                        <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                        <span className="h-1.5 w-1.5 rounded-full bg-twblue-1" />
                       )}
                     </span>
                     {cls === 'all' ? 'All classes' : `Class ${cls}`}
@@ -292,18 +292,18 @@ export function FormResponseTable({
                     key={val}
                     type="button"
                     onClick={() => setStatusFilter(val)}
-                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-slate-100"
+                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-slate-4"
                   >
                     <span
                       className={cn(
                         'flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full border transition-colors',
                         statusFilter === val
                           ? 'border-twblue-9 bg-twblue-9'
-                          : 'border-slate-300',
+                          : 'border-slate-6',
                       )}
                     >
                       {statusFilter === val && (
-                        <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                        <span className="h-1.5 w-1.5 rounded-full bg-twblue-1" />
                       )}
                     </span>
                     {label}
@@ -327,18 +327,18 @@ export function FormResponseTable({
                     key={val}
                     type="button"
                     onClick={() => setPgFilter(val)}
-                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-slate-100"
+                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-slate-4"
                   >
                     <span
                       className={cn(
                         'flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full border transition-colors',
                         pgFilter === val
                           ? 'border-twblue-9 bg-twblue-9'
-                          : 'border-slate-300',
+                          : 'border-slate-6',
                       )}
                     >
                       {pgFilter === val && (
-                        <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                        <span className="h-1.5 w-1.5 rounded-full bg-twblue-1" />
                       )}
                     </span>
                     {label}
@@ -352,7 +352,7 @@ export function FormResponseTable({
                 <button
                   type="button"
                   onClick={resetFilters}
-                  className="w-full rounded-md px-2 py-1.5 text-center text-xs font-medium text-muted-foreground transition-colors hover:bg-slate-100 hover:text-foreground"
+                  className="w-full rounded-md px-2 py-1.5 text-center text-xs font-medium text-muted-foreground transition-colors hover:bg-slate-4 hover:text-foreground"
                 >
                   Reset all filters
                 </button>
@@ -382,13 +382,13 @@ export function FormResponseTable({
                   key={col}
                   type="button"
                   onClick={() => toggleCol(col)}
-                  className="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-slate-100"
+                  className="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-slate-4"
                 >
                   <span
                     className={cn(
                       'flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors',
                       show(col)
-                        ? 'border-twblue-9 bg-twblue-9 text-white'
+                        ? 'border-twblue-9 bg-twblue-9 text-twblue-1'
                         : 'border-input',
                     )}
                   >
@@ -402,13 +402,13 @@ export function FormResponseTable({
                 key={`q${i}`}
                 type="button"
                 onClick={() => toggleCol(`q${i}`)}
-                className="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-slate-100"
+                className="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-slate-4"
               >
                 <span
                   className={cn(
                     'flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors',
                     show(`q${i}`)
-                      ? 'border-twblue-9 bg-twblue-9 text-white'
+                      ? 'border-twblue-9 bg-twblue-9 text-twblue-1'
                       : 'border-input',
                   )}
                 >
@@ -552,12 +552,12 @@ export function FormResponseTable({
                   {/* Response status */}
                   <TableCell>
                     {r.responseStatus === 'responded' ? (
-                      <span className="inline-flex items-center gap-1.5 text-sm font-medium text-green-700">
+                      <span className="inline-flex items-center gap-1.5 text-sm font-medium text-lime-11">
                         <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
                         Responded
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1.5 text-sm font-medium text-amber-600">
+                      <span className="inline-flex items-center gap-1.5 text-sm font-medium text-amber-11">
                         <Clock className="h-3.5 w-3.5 shrink-0" />
                         Pending
                       </span>
@@ -591,7 +591,7 @@ export function FormResponseTable({
                           'inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium',
                           r.pgStatus === 'onboarded'
                             ? 'bg-twblue-2 text-twblue-9'
-                            : 'bg-slate-100 text-slate-500',
+                            : 'bg-slate-3 text-slate-11',
                         )}
                       >
                         {r.pgStatus === 'onboarded'
@@ -603,11 +603,11 @@ export function FormResponseTable({
                   {show('formResponse') && responseType === 'yes-no' && (
                     <TableCell>
                       {r.formResponse === 'yes' ? (
-                        <span className="inline-flex items-center rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+                        <span className="inline-flex items-center rounded-md bg-lime-3 px-2 py-0.5 text-xs font-semibold text-lime-11">
                           Yes
                         </span>
                       ) : r.formResponse === 'no' ? (
-                        <span className="inline-flex items-center rounded-md bg-red-50 px-2 py-0.5 text-xs font-semibold text-red-600">
+                        <span className="inline-flex items-center rounded-md bg-crimson-3 px-2 py-0.5 text-xs font-semibold text-crimson-11">
                           No
                         </span>
                       ) : (

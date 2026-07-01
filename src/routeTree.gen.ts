@@ -21,6 +21,7 @@ import { Route as FormsRouteImport } from './routes/forms'
 import { Route as FlagsRouteImport } from './routes/flags'
 import { Route as DsRouteImport } from './routes/ds'
 import { Route as CalendarRouteImport } from './routes/calendar'
+import { Route as AttendanceRouteImport } from './routes/attendance'
 import { Route as AnnouncementsRouteImport } from './routes/announcements'
 import { Route as GuestRouteImport } from './routes/_guest'
 import { Route as SplatRouteImport } from './routes/$'
@@ -31,7 +32,6 @@ import { Route as MeetingsIndexRouteImport } from './routes/meetings.index'
 import { Route as HolisticReportsIndexRouteImport } from './routes/holistic-reports.index'
 import { Route as GroupsIndexRouteImport } from './routes/groups.index'
 import { Route as FormsIndexRouteImport } from './routes/forms.index'
-import { Route as DsIndexRouteImport } from './routes/ds.index'
 import { Route as CalendarIndexRouteImport } from './routes/calendar.index'
 import { Route as AnnouncementsIndexRouteImport } from './routes/announcements.index'
 import { Route as StudentsIdRouteImport } from './routes/students.$id'
@@ -43,16 +43,15 @@ import { Route as GroupsGroupIdRouteImport } from './routes/groups.$groupId'
 import { Route as GlowStudentIdRouteImport } from './routes/glow.$studentId'
 import { Route as FormsNewRouteImport } from './routes/forms.new'
 import { Route as FormsIdRouteImport } from './routes/forms.$id'
-import { Route as DsTwThemeRouteImport } from './routes/ds.tw-theme'
-import { Route as DsFlowTokensRouteImport } from './routes/ds.flow-tokens'
-import { Route as DsFlowComponentsRouteImport } from './routes/ds.flow-components'
 import { Route as AnnouncementsNewRouteImport } from './routes/announcements.new'
 import { Route as AnnouncementsIdRouteImport } from './routes/announcements.$id'
+import { Route as GuestStudentLoginRouteImport } from './routes/_guest.student-login'
 import { Route as GuestPreviewMenuRouteImport } from './routes/_guest.preview-menu'
 import { Route as GuestLoginRouteImport } from './routes/_guest.login'
 import { Route as GuestCreateRouteImport } from './routes/_guest.create'
 import { Route as GroupsStructuredGroupIdRouteImport } from './routes/groups.structured.$groupId'
 import { Route as GuestReportViewTokenRouteImport } from './routes/_guest.report-view.$token'
+import { Route as StudentsIdAgencyReportNewRouteImport } from './routes/students_.$id.agency-report.new'
 
 const StudentsRoute = StudentsRouteImport.update({
   id: '/students',
@@ -114,6 +113,11 @@ const CalendarRoute = CalendarRouteImport.update({
   path: '/calendar',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AttendanceRoute = AttendanceRouteImport.update({
+  id: '/attendance',
+  path: '/attendance',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AnnouncementsRoute = AnnouncementsRouteImport.update({
   id: '/announcements',
   path: '/announcements',
@@ -162,11 +166,6 @@ const FormsIndexRoute = FormsIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => FormsRoute,
-} as any)
-const DsIndexRoute = DsIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => DsRoute,
 } as any)
 const CalendarIndexRoute = CalendarIndexRouteImport.update({
   id: '/',
@@ -223,21 +222,6 @@ const FormsIdRoute = FormsIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => FormsRoute,
 } as any)
-const DsTwThemeRoute = DsTwThemeRouteImport.update({
-  id: '/tw-theme',
-  path: '/tw-theme',
-  getParentRoute: () => DsRoute,
-} as any)
-const DsFlowTokensRoute = DsFlowTokensRouteImport.update({
-  id: '/flow-tokens',
-  path: '/flow-tokens',
-  getParentRoute: () => DsRoute,
-} as any)
-const DsFlowComponentsRoute = DsFlowComponentsRouteImport.update({
-  id: '/flow-components',
-  path: '/flow-components',
-  getParentRoute: () => DsRoute,
-} as any)
 const AnnouncementsNewRoute = AnnouncementsNewRouteImport.update({
   id: '/new',
   path: '/new',
@@ -247,6 +231,11 @@ const AnnouncementsIdRoute = AnnouncementsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => AnnouncementsRoute,
+} as any)
+const GuestStudentLoginRoute = GuestStudentLoginRouteImport.update({
+  id: '/student-login',
+  path: '/student-login',
+  getParentRoute: () => GuestRoute,
 } as any)
 const GuestPreviewMenuRoute = GuestPreviewMenuRouteImport.update({
   id: '/preview-menu',
@@ -273,13 +262,20 @@ const GuestReportViewTokenRoute = GuestReportViewTokenRouteImport.update({
   path: '/report-view/$token',
   getParentRoute: () => GuestRoute,
 } as any)
+const StudentsIdAgencyReportNewRoute =
+  StudentsIdAgencyReportNewRouteImport.update({
+    id: '/students_/$id/agency-report/new',
+    path: '/students/$id/agency-report/new',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
   '/announcements': typeof AnnouncementsRouteWithChildren
+  '/attendance': typeof AttendanceRoute
   '/calendar': typeof CalendarRouteWithChildren
-  '/ds': typeof DsRouteWithChildren
+  '/ds': typeof DsRoute
   '/flags': typeof FlagsRoute
   '/forms': typeof FormsRouteWithChildren
   '/groups': typeof GroupsRouteWithChildren
@@ -293,11 +289,9 @@ export interface FileRoutesByFullPath {
   '/create': typeof GuestCreateRoute
   '/login': typeof GuestLoginRoute
   '/preview-menu': typeof GuestPreviewMenuRoute
+  '/student-login': typeof GuestStudentLoginRoute
   '/announcements/$id': typeof AnnouncementsIdRoute
   '/announcements/new': typeof AnnouncementsNewRoute
-  '/ds/flow-components': typeof DsFlowComponentsRoute
-  '/ds/flow-tokens': typeof DsFlowTokensRoute
-  '/ds/tw-theme': typeof DsTwThemeRoute
   '/forms/$id': typeof FormsIdRoute
   '/forms/new': typeof FormsNewRoute
   '/glow/$studentId': typeof GlowStudentIdRoute
@@ -309,7 +303,6 @@ export interface FileRoutesByFullPath {
   '/students/$id': typeof StudentsIdRoute
   '/announcements/': typeof AnnouncementsIndexRoute
   '/calendar/': typeof CalendarIndexRoute
-  '/ds/': typeof DsIndexRoute
   '/forms/': typeof FormsIndexRoute
   '/groups/': typeof GroupsIndexRoute
   '/holistic-reports/': typeof HolisticReportsIndexRoute
@@ -318,10 +311,13 @@ export interface FileRoutesByFullPath {
   '/students/': typeof StudentsIndexRoute
   '/report-view/$token': typeof GuestReportViewTokenRoute
   '/groups/structured/$groupId': typeof GroupsStructuredGroupIdRoute
+  '/students/$id/agency-report/new': typeof StudentsIdAgencyReportNewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
+  '/attendance': typeof AttendanceRoute
+  '/ds': typeof DsRoute
   '/flags': typeof FlagsRoute
   '/insight-buddy': typeof InsightBuddyRoute
   '/settings': typeof SettingsRoute
@@ -329,11 +325,9 @@ export interface FileRoutesByTo {
   '/create': typeof GuestCreateRoute
   '/login': typeof GuestLoginRoute
   '/preview-menu': typeof GuestPreviewMenuRoute
+  '/student-login': typeof GuestStudentLoginRoute
   '/announcements/$id': typeof AnnouncementsIdRoute
   '/announcements/new': typeof AnnouncementsNewRoute
-  '/ds/flow-components': typeof DsFlowComponentsRoute
-  '/ds/flow-tokens': typeof DsFlowTokensRoute
-  '/ds/tw-theme': typeof DsTwThemeRoute
   '/forms/$id': typeof FormsIdRoute
   '/forms/new': typeof FormsNewRoute
   '/glow/$studentId': typeof GlowStudentIdRoute
@@ -345,7 +339,6 @@ export interface FileRoutesByTo {
   '/students/$id': typeof StudentsIdRoute
   '/announcements': typeof AnnouncementsIndexRoute
   '/calendar': typeof CalendarIndexRoute
-  '/ds': typeof DsIndexRoute
   '/forms': typeof FormsIndexRoute
   '/groups': typeof GroupsIndexRoute
   '/holistic-reports': typeof HolisticReportsIndexRoute
@@ -354,6 +347,7 @@ export interface FileRoutesByTo {
   '/students': typeof StudentsIndexRoute
   '/report-view/$token': typeof GuestReportViewTokenRoute
   '/groups/structured/$groupId': typeof GroupsStructuredGroupIdRoute
+  '/students/$id/agency-report/new': typeof StudentsIdAgencyReportNewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -361,8 +355,9 @@ export interface FileRoutesById {
   '/$': typeof SplatRoute
   '/_guest': typeof GuestRouteWithChildren
   '/announcements': typeof AnnouncementsRouteWithChildren
+  '/attendance': typeof AttendanceRoute
   '/calendar': typeof CalendarRouteWithChildren
-  '/ds': typeof DsRouteWithChildren
+  '/ds': typeof DsRoute
   '/flags': typeof FlagsRoute
   '/forms': typeof FormsRouteWithChildren
   '/groups': typeof GroupsRouteWithChildren
@@ -376,11 +371,9 @@ export interface FileRoutesById {
   '/_guest/create': typeof GuestCreateRoute
   '/_guest/login': typeof GuestLoginRoute
   '/_guest/preview-menu': typeof GuestPreviewMenuRoute
+  '/_guest/student-login': typeof GuestStudentLoginRoute
   '/announcements/$id': typeof AnnouncementsIdRoute
   '/announcements/new': typeof AnnouncementsNewRoute
-  '/ds/flow-components': typeof DsFlowComponentsRoute
-  '/ds/flow-tokens': typeof DsFlowTokensRoute
-  '/ds/tw-theme': typeof DsTwThemeRoute
   '/forms/$id': typeof FormsIdRoute
   '/forms/new': typeof FormsNewRoute
   '/glow/$studentId': typeof GlowStudentIdRoute
@@ -392,7 +385,6 @@ export interface FileRoutesById {
   '/students/$id': typeof StudentsIdRoute
   '/announcements/': typeof AnnouncementsIndexRoute
   '/calendar/': typeof CalendarIndexRoute
-  '/ds/': typeof DsIndexRoute
   '/forms/': typeof FormsIndexRoute
   '/groups/': typeof GroupsIndexRoute
   '/holistic-reports/': typeof HolisticReportsIndexRoute
@@ -401,6 +393,7 @@ export interface FileRoutesById {
   '/students/': typeof StudentsIndexRoute
   '/_guest/report-view/$token': typeof GuestReportViewTokenRoute
   '/groups/structured/$groupId': typeof GroupsStructuredGroupIdRoute
+  '/students_/$id/agency-report/new': typeof StudentsIdAgencyReportNewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -408,6 +401,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$'
     | '/announcements'
+    | '/attendance'
     | '/calendar'
     | '/ds'
     | '/flags'
@@ -423,11 +417,9 @@ export interface FileRouteTypes {
     | '/create'
     | '/login'
     | '/preview-menu'
+    | '/student-login'
     | '/announcements/$id'
     | '/announcements/new'
-    | '/ds/flow-components'
-    | '/ds/flow-tokens'
-    | '/ds/tw-theme'
     | '/forms/$id'
     | '/forms/new'
     | '/glow/$studentId'
@@ -439,7 +431,6 @@ export interface FileRouteTypes {
     | '/students/$id'
     | '/announcements/'
     | '/calendar/'
-    | '/ds/'
     | '/forms/'
     | '/groups/'
     | '/holistic-reports/'
@@ -448,10 +439,13 @@ export interface FileRouteTypes {
     | '/students/'
     | '/report-view/$token'
     | '/groups/structured/$groupId'
+    | '/students/$id/agency-report/new'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/$'
+    | '/attendance'
+    | '/ds'
     | '/flags'
     | '/insight-buddy'
     | '/settings'
@@ -459,11 +453,9 @@ export interface FileRouteTypes {
     | '/create'
     | '/login'
     | '/preview-menu'
+    | '/student-login'
     | '/announcements/$id'
     | '/announcements/new'
-    | '/ds/flow-components'
-    | '/ds/flow-tokens'
-    | '/ds/tw-theme'
     | '/forms/$id'
     | '/forms/new'
     | '/glow/$studentId'
@@ -475,7 +467,6 @@ export interface FileRouteTypes {
     | '/students/$id'
     | '/announcements'
     | '/calendar'
-    | '/ds'
     | '/forms'
     | '/groups'
     | '/holistic-reports'
@@ -484,12 +475,14 @@ export interface FileRouteTypes {
     | '/students'
     | '/report-view/$token'
     | '/groups/structured/$groupId'
+    | '/students/$id/agency-report/new'
   id:
     | '__root__'
     | '/'
     | '/$'
     | '/_guest'
     | '/announcements'
+    | '/attendance'
     | '/calendar'
     | '/ds'
     | '/flags'
@@ -505,11 +498,9 @@ export interface FileRouteTypes {
     | '/_guest/create'
     | '/_guest/login'
     | '/_guest/preview-menu'
+    | '/_guest/student-login'
     | '/announcements/$id'
     | '/announcements/new'
-    | '/ds/flow-components'
-    | '/ds/flow-tokens'
-    | '/ds/tw-theme'
     | '/forms/$id'
     | '/forms/new'
     | '/glow/$studentId'
@@ -521,7 +512,6 @@ export interface FileRouteTypes {
     | '/students/$id'
     | '/announcements/'
     | '/calendar/'
-    | '/ds/'
     | '/forms/'
     | '/groups/'
     | '/holistic-reports/'
@@ -530,6 +520,7 @@ export interface FileRouteTypes {
     | '/students/'
     | '/_guest/report-view/$token'
     | '/groups/structured/$groupId'
+    | '/students_/$id/agency-report/new'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -537,8 +528,9 @@ export interface RootRouteChildren {
   SplatRoute: typeof SplatRoute
   GuestRoute: typeof GuestRouteWithChildren
   AnnouncementsRoute: typeof AnnouncementsRouteWithChildren
+  AttendanceRoute: typeof AttendanceRoute
   CalendarRoute: typeof CalendarRouteWithChildren
-  DsRoute: typeof DsRouteWithChildren
+  DsRoute: typeof DsRoute
   FlagsRoute: typeof FlagsRoute
   FormsRoute: typeof FormsRouteWithChildren
   GroupsRoute: typeof GroupsRouteWithChildren
@@ -550,6 +542,7 @@ export interface RootRouteChildren {
   StudentAnalyticsRoute: typeof StudentAnalyticsRoute
   StudentsRoute: typeof StudentsRouteWithChildren
   GlowStudentIdRoute: typeof GlowStudentIdRoute
+  StudentsIdAgencyReportNewRoute: typeof StudentsIdAgencyReportNewRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -638,6 +631,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CalendarRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/attendance': {
+      id: '/attendance'
+      path: '/attendance'
+      fullPath: '/attendance'
+      preLoaderRoute: typeof AttendanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/announcements': {
       id: '/announcements'
       path: '/announcements'
@@ -707,13 +707,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/forms/'
       preLoaderRoute: typeof FormsIndexRouteImport
       parentRoute: typeof FormsRoute
-    }
-    '/ds/': {
-      id: '/ds/'
-      path: '/'
-      fullPath: '/ds/'
-      preLoaderRoute: typeof DsIndexRouteImport
-      parentRoute: typeof DsRoute
     }
     '/calendar/': {
       id: '/calendar/'
@@ -792,27 +785,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FormsIdRouteImport
       parentRoute: typeof FormsRoute
     }
-    '/ds/tw-theme': {
-      id: '/ds/tw-theme'
-      path: '/tw-theme'
-      fullPath: '/ds/tw-theme'
-      preLoaderRoute: typeof DsTwThemeRouteImport
-      parentRoute: typeof DsRoute
-    }
-    '/ds/flow-tokens': {
-      id: '/ds/flow-tokens'
-      path: '/flow-tokens'
-      fullPath: '/ds/flow-tokens'
-      preLoaderRoute: typeof DsFlowTokensRouteImport
-      parentRoute: typeof DsRoute
-    }
-    '/ds/flow-components': {
-      id: '/ds/flow-components'
-      path: '/flow-components'
-      fullPath: '/ds/flow-components'
-      preLoaderRoute: typeof DsFlowComponentsRouteImport
-      parentRoute: typeof DsRoute
-    }
     '/announcements/new': {
       id: '/announcements/new'
       path: '/new'
@@ -826,6 +798,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/announcements/$id'
       preLoaderRoute: typeof AnnouncementsIdRouteImport
       parentRoute: typeof AnnouncementsRoute
+    }
+    '/_guest/student-login': {
+      id: '/_guest/student-login'
+      path: '/student-login'
+      fullPath: '/student-login'
+      preLoaderRoute: typeof GuestStudentLoginRouteImport
+      parentRoute: typeof GuestRoute
     }
     '/_guest/preview-menu': {
       id: '/_guest/preview-menu'
@@ -862,6 +841,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GuestReportViewTokenRouteImport
       parentRoute: typeof GuestRoute
     }
+    '/students_/$id/agency-report/new': {
+      id: '/students_/$id/agency-report/new'
+      path: '/students/$id/agency-report/new'
+      fullPath: '/students/$id/agency-report/new'
+      preLoaderRoute: typeof StudentsIdAgencyReportNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -869,6 +855,7 @@ interface GuestRouteChildren {
   GuestCreateRoute: typeof GuestCreateRoute
   GuestLoginRoute: typeof GuestLoginRoute
   GuestPreviewMenuRoute: typeof GuestPreviewMenuRoute
+  GuestStudentLoginRoute: typeof GuestStudentLoginRoute
   GuestReportViewTokenRoute: typeof GuestReportViewTokenRoute
 }
 
@@ -876,6 +863,7 @@ const GuestRouteChildren: GuestRouteChildren = {
   GuestCreateRoute: GuestCreateRoute,
   GuestLoginRoute: GuestLoginRoute,
   GuestPreviewMenuRoute: GuestPreviewMenuRoute,
+  GuestStudentLoginRoute: GuestStudentLoginRoute,
   GuestReportViewTokenRoute: GuestReportViewTokenRoute,
 }
 
@@ -908,22 +896,6 @@ const CalendarRouteChildren: CalendarRouteChildren = {
 const CalendarRouteWithChildren = CalendarRoute._addFileChildren(
   CalendarRouteChildren,
 )
-
-interface DsRouteChildren {
-  DsFlowComponentsRoute: typeof DsFlowComponentsRoute
-  DsFlowTokensRoute: typeof DsFlowTokensRoute
-  DsTwThemeRoute: typeof DsTwThemeRoute
-  DsIndexRoute: typeof DsIndexRoute
-}
-
-const DsRouteChildren: DsRouteChildren = {
-  DsFlowComponentsRoute: DsFlowComponentsRoute,
-  DsFlowTokensRoute: DsFlowTokensRoute,
-  DsTwThemeRoute: DsTwThemeRoute,
-  DsIndexRoute: DsIndexRoute,
-}
-
-const DsRouteWithChildren = DsRoute._addFileChildren(DsRouteChildren)
 
 interface FormsRouteChildren {
   FormsIdRoute: typeof FormsIdRoute
@@ -1016,8 +988,9 @@ const rootRouteChildren: RootRouteChildren = {
   SplatRoute: SplatRoute,
   GuestRoute: GuestRouteWithChildren,
   AnnouncementsRoute: AnnouncementsRouteWithChildren,
+  AttendanceRoute: AttendanceRoute,
   CalendarRoute: CalendarRouteWithChildren,
-  DsRoute: DsRouteWithChildren,
+  DsRoute: DsRoute,
   FlagsRoute: FlagsRoute,
   FormsRoute: FormsRouteWithChildren,
   GroupsRoute: GroupsRouteWithChildren,
@@ -1029,6 +1002,7 @@ const rootRouteChildren: RootRouteChildren = {
   StudentAnalyticsRoute: StudentAnalyticsRoute,
   StudentsRoute: StudentsRouteWithChildren,
   GlowStudentIdRoute: GlowStudentIdRoute,
+  StudentsIdAgencyReportNewRoute: StudentsIdAgencyReportNewRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

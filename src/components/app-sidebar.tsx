@@ -4,6 +4,7 @@ import {
   ArrowUpRight,
   BarChart3,
   Bot,
+  CalendarCheck2,
   CalendarClock,
   CalendarDays,
   CircleHelp,
@@ -73,6 +74,11 @@ const mainNavItems: Array<MenuItem> = [
     url: '/',
     icon: Home,
   },
+  {
+    title: 'Attendance',
+    url: '/attendance',
+    icon: CalendarCheck2,
+  },
 ]
 
 const studentInsightItemsWithAnalytics: Array<MenuItem> = [
@@ -97,6 +103,20 @@ const studentInsightItemsWithAnalytics: Array<MenuItem> = [
   },
 ]
 
+const studentInsightItemsBasicAnalytics: Array<MenuItem> = [
+  {
+    title: 'Analytics',
+    url: '/student-analytics',
+    icon: BarChart3,
+    stage: 'Experiment',
+  },
+  {
+    title: 'Profiles',
+    url: '/students',
+    icon: Users,
+  },
+]
+
 const studentInsightItemsWithoutAnalytics: Array<MenuItem> = [
   {
     title: 'Student Insights',
@@ -107,18 +127,11 @@ const studentInsightItemsWithoutAnalytics: Array<MenuItem> = [
 
 const manageItems: Array<MenuItem> = [
   {
-    title: 'Groups',
+    title: 'Student Groups',
     url: '/groups',
     icon: Layers,
     stage: 'Release 2',
     featureFlag: 'student-groups',
-  },
-  {
-    title: 'Reports',
-    url: '/reports',
-    icon: ScrollText,
-    stage: 'Release 2',
-    featureFlag: 'reports',
   },
   {
     title: 'Calendar',
@@ -126,6 +139,13 @@ const manageItems: Array<MenuItem> = [
     icon: CalendarDays,
     stage: 'Release 2',
     featureFlag: 'calendar',
+  },
+  {
+    title: 'Reports',
+    url: '/reports',
+    icon: FileText,
+    stage: 'Release 2',
+    featureFlag: 'reports',
   },
 ]
 
@@ -145,7 +165,7 @@ const parentsCommItems: Array<MenuItem> = [
     featureFlag: 'meetings',
   },
   {
-    title: 'Holistic Reports',
+    title: 'Reports',
     url: '/holistic-reports',
     icon: FileText,
     stage: 'Experiment',
@@ -179,6 +199,7 @@ function SidebarMenuItems({
               (item.alsoActiveFor?.some((p) => currentPath.startsWith(p)) ??
                 false)
             }
+            tooltip={item.title}
             className={
               highlightTitle === item.title
                 ? 'bg-sidebar-accent text-sidebar-accent-foreground'
@@ -192,10 +213,8 @@ function SidebarMenuItems({
                 variant="outline"
                 className={
                   item.stage === 'Experiment'
-                    ? 'border-purple-300 bg-purple-50 text-purple-700 dark:border-purple-700 dark:bg-purple-950 dark:text-purple-300 group-data-[collapsible=icon]:hidden'
-                    : item.stage === 'Concept'
-                      ? 'border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-700 dark:bg-blue-950 dark:text-blue-300 group-data-[collapsible=icon]:hidden'
-                      : 'group-data-[collapsible=icon]:hidden'
+                    ? 'border-violet-6 bg-violet-3 text-violet-11 group-data-[collapsible=icon]:hidden'
+                    : 'group-data-[collapsible=icon]:hidden'
                 }
               >
                 {item.stage}
@@ -225,10 +244,18 @@ export function AppSidebar() {
   const holisticReportsEnabled = useFeatureFlag('holistic-reports')
   const parentsGatewayEnabled = useFeatureFlag('parents-gateway')
   const studentAnalyticsEnabled = useFeatureFlag('student-analytics')
+  const studentAnalyticsBasicEnabled = useFeatureFlag('student-analytics-basic')
   const studentGroupsEnabled = useFeatureFlag('student-groups')
+  const agencyReportsEnabled = useFeatureFlag('agency-reports')
+  const msfUpliftEnabled = useFeatureFlag('msf-uplift-data')
   const reportsEnabled = useFeatureFlag('reports')
   const calendarEnabled = useFeatureFlag('calendar')
   const meetingsEnabled = useFeatureFlag('meetings')
+
+  const hideAttendanceAndReports =
+    msfUpliftEnabled ||
+    ((studentAnalyticsEnabled || studentAnalyticsBasicEnabled) &&
+      !agencyReportsEnabled)
 
   React.useEffect(() => {
     if (localStorage.getItem(COACHMARK_KEY)) return
@@ -272,8 +299,12 @@ export function AppSidebar() {
       return true
     })
 
-  const filteredMainItems = filterItems(mainNavItems)
-  const filteredParentsItems = filterItems(parentsCommItems)
+  const filteredMainItems = filterItems(mainNavItems).filter(
+    (item) => !(hideAttendanceAndReports && item.title === 'Attendance'),
+  )
+  const filteredParentsItems = filterItems(parentsCommItems).filter(
+    (item) => !(hideAttendanceAndReports && item.title === 'Reports'),
+  )
   const filteredManageItems = filterItems(manageItems)
   const filteredStudentItems = studentAnalyticsEnabled
     ? studentInsightItemsWithAnalytics.filter((item) =>
@@ -281,7 +312,9 @@ export function AppSidebar() {
           ? studentAnalyticsEnabled
           : true,
       )
-    : studentInsightItemsWithoutAnalytics
+    : studentAnalyticsBasicEnabled
+      ? studentInsightItemsBasicAnalytics
+      : studentInsightItemsWithoutAnalytics
 
   return (
     <Sidebar collapsible="icon">
@@ -305,7 +338,7 @@ export function AppSidebar() {
             />
           </SidebarGroupContent>
           <>
-            {studentAnalyticsEnabled && (
+            {(studentAnalyticsEnabled || studentAnalyticsBasicEnabled) && (
               <SidebarGroupLabel className="mt-2 group-data-[collapsible=icon]:pointer-events-none">
                 Student Insights
               </SidebarGroupLabel>
@@ -381,6 +414,7 @@ export function AppSidebar() {
             <SidebarMenuButton
               render={<Link to="/settings" />}
               isActive={location.pathname === '/settings'}
+              tooltip="Settings"
             >
               <Settings className="size-4" />
               <span>Settings</span>
@@ -390,7 +424,7 @@ export function AppSidebar() {
             <DropdownMenu>
               <DropdownMenuTrigger
                 render={
-                  <SidebarMenuButton>
+                  <SidebarMenuButton tooltip="Help">
                     <CircleHelp className="size-4" />
                     <span>Help</span>
                   </SidebarMenuButton>

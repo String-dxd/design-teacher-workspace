@@ -4,19 +4,6 @@ export interface OffenceDetail {
   latestDate: string
 }
 
-export interface CounsellingSubcase {
-  name: string
-  count: number
-  latestDate: string
-}
-
-export interface CounsellingCase {
-  category: string
-  subcases?: Array<CounsellingSubcase>
-  count?: number
-  latestDate?: string
-}
-
 export interface RiskIndicatorRecord {
   year: number
   term: string
@@ -38,7 +25,10 @@ export interface Student {
   id: string
   name: string
   class: string
+  /** Comma-separated CCA names for table/header display. */
   cca: string
+  /** Per-CCA attendance, set for students enrolled in more than one CCA. */
+  ccaDetails?: Array<{ name: string; attendance: number }>
   attentionTags: Array<AttentionTag>
   // Academic Performance
   overallPercentage: number
@@ -57,12 +47,13 @@ export interface Student {
   riskIndicators: number
   riskIndicatorHistory?: Array<RiskIndicatorRecord>
   lowMoodFlagged: string | null
-  lowMoodTerms?: Array<string>
+  lowMoodTerms?: Array<{ year: number; terms: Array<string> }>
   socialLinks: number
   selectedBy?: Array<SocialLinkPerson>
   selectedFriends?: Array<SocialLinkPerson>
   counsellingSessions: number
-  counsellingCases?: Array<CounsellingCase>
+  /** Severity bucket for the single counselling case, shown in the table/filter. */
+  counsellingComplexity?: 'Less complex cases' | 'Complex cases'
   sen: string | null
   fas: string | null
   // Family, Housing, Finance
@@ -75,6 +66,12 @@ export interface Student {
   siblings: number
   siblingDetails?: Array<{ name: string; class: string; relationship?: string }>
   externalAgencies: string | null
+  supportedByComLink?: 'Yes' | 'No'
+  /** Name of the FSC or SSO providing ComLink+ support (shown on the profile) */
+  supportedByComLinkBy?: string
+  supportedByFsc?: 'Yes' | 'No'
+  parentsConsideringDivorce?: 'Yes' | 'No'
+  nonIntactFamily?: 'Yes' | 'No'
   // Personal
   birthday?: string
   citizenship?: 'Singapore citizen' | 'Permanent resident' | 'Foreigner'
@@ -105,6 +102,22 @@ export type AttentionTag =
 
 export type ConductGrade = 'Excellent' | 'Very Good' | 'Good' | 'Fair' | 'Poor'
 
+export type TemporalType =
+  | 'accumulating'
+  | 'event-based'
+  | 'fixed'
+  | 'cross-term'
+
+export interface TermlyAccumulatingData {
+  offences: number
+  counsellingSessions: number
+  daysPresent: number
+  totalSchoolDays: number
+  lateComing: number
+  absences: number
+  ccaMissed: number
+}
+
 export interface ClassOption {
   value: string
   label: string
@@ -112,6 +125,7 @@ export interface ClassOption {
 
 export type FilterField =
   // General
+  | 'dateRange'
   | 'class'
   | 'cca'
   // Academic Performance
@@ -140,6 +154,10 @@ export type FilterField =
   | 'afterSchoolArrangement'
   | 'siblings'
   | 'externalAgencies'
+  | 'supportedByComLink'
+  | 'supportedByFsc'
+  | 'parentsConsideringDivorce'
+  | 'nonIntactFamily'
 
 export type FilterOperator =
   // Numeric operators
@@ -166,7 +184,7 @@ export interface FilterRangeValue {
 
 export interface FilterCriterion {
   id: string
-  field: FilterField
+  field: FilterField | string
   operator: FilterOperator
   value: string | number | FilterRangeValue | Array<string>
 }

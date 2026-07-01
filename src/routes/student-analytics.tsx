@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { Clock } from 'lucide-react'
 
@@ -7,6 +7,7 @@ import {
   DEFAULT_FEATURE_FLAGS,
   FEATURE_FLAGS_STORAGE_KEY,
 } from '@/lib/feature-flags'
+import { useFeatureFlag } from '@/hooks/use-feature-flag'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { MonitoringAcademicAnalytics } from '@/components/students/academic-analytics'
 import { AttendanceLevelAnalytics } from '@/components/students/attendance-analytics'
@@ -26,7 +27,8 @@ export const Route = createFileRoute('/student-analytics')({
     const flags = stored
       ? { ...DEFAULT_FEATURE_FLAGS, ...JSON.parse(stored) }
       : DEFAULT_FEATURE_FLAGS
-    if (!flags['student-analytics']) throw redirect({ to: '/' })
+    if (!flags['student-analytics'] && !flags['student-analytics-basic'])
+      throw redirect({ to: '/' })
   },
   component: StudentAnalyticsPage,
 })
@@ -35,7 +37,7 @@ function ComingSoon({ description }: { description?: string }) {
   return (
     <div className="mt-6 flex flex-col items-center justify-center rounded-xl border border-dashed py-20 text-center">
       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-        <Clock className="size-5 text-muted-foreground" />
+        <Clock className="size-5 text-muted-foreground" aria-hidden="true" />
       </div>
       <p className="mt-4 text-xl font-medium text-foreground">Coming soon</p>
       {description && (
@@ -52,7 +54,15 @@ type AcademicView = 'monitoring' | 'benchmark'
 function StudentAnalyticsPage() {
   useSetBreadcrumbs([{ label: 'Analytics', href: '/student-analytics' }])
 
+  useEffect(() => {
+    document.title = 'Analytics | MOE Workspace'
+    return () => {
+      document.title = 'MOE Workspace Homepage'
+    }
+  }, [])
+
   const [academicView, setAcademicView] = useState<AcademicView>('monitoring')
+  const studentAnalyticsEnabled = useFeatureFlag('student-analytics')
 
   return (
     <div className="flex flex-col p-6">
@@ -60,6 +70,12 @@ function StudentAnalyticsPage() {
         {/* Page header */}
         <div className="flex items-center gap-2">
           <h1 className="text-2xl font-semibold">Analytics</h1>
+          <Badge
+            variant="outline"
+            className="border-violet-6 bg-violet-3 text-violet-11"
+          >
+            Experiment
+          </Badge>
         </div>
         <p className="mt-1 text-sm text-muted-foreground">
           Monitor trends and explore student data
@@ -70,19 +86,19 @@ function StudentAnalyticsPage() {
           <TabsList variant="line">
             <TabsTrigger
               value="attendance"
-              className="after:bg-blue-600! data-active:text-blue-600"
+              className="after:bg-primary! data-active:text-primary"
             >
               Attendance
             </TabsTrigger>
             <TabsTrigger
               value="academic"
-              className="after:bg-blue-600! data-active:text-blue-600"
+              className="after:bg-primary! data-active:text-primary"
             >
               Academic
             </TabsTrigger>
             <TabsTrigger
               value="wellbeing"
-              className="after:bg-blue-600! data-active:text-blue-600"
+              className="after:bg-primary! data-active:text-primary"
             >
               Wellbeing
             </TabsTrigger>
@@ -101,10 +117,10 @@ function StudentAnalyticsPage() {
                 onClick={() => setAcademicView('monitoring')}
                 aria-pressed={academicView === 'monitoring'}
                 className={cn(
-                  'rounded-full px-4 py-1.5 text-sm font-medium transition-colors',
+                  'rounded-full px-4 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
                   academicView === 'monitoring'
                     ? 'bg-background/90 text-foreground shadow-xs'
-                    : 'text-foreground/50 hover:text-foreground/80',
+                    : 'text-muted-foreground hover:text-foreground',
                 )}
               >
                 Monitoring
@@ -113,10 +129,10 @@ function StudentAnalyticsPage() {
                 onClick={() => setAcademicView('benchmark')}
                 aria-pressed={academicView === 'benchmark'}
                 className={cn(
-                  'rounded-full px-4 py-1.5 text-sm font-medium transition-colors',
+                  'rounded-full px-4 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
                   academicView === 'benchmark'
                     ? 'bg-background/90 text-foreground shadow-xs'
-                    : 'text-foreground/50 hover:text-foreground/80',
+                    : 'text-muted-foreground hover:text-foreground',
                 )}
               >
                 Benchmark reports
@@ -138,7 +154,9 @@ function StudentAnalyticsPage() {
       </div>
 
       {/* Insight Buddy — floating FAB + overlay (does not affect page layout) */}
-      <InsightBuddy examplePrompts={ANALYTICS_PROMPTS} floating />
+      {studentAnalyticsEnabled && (
+        <InsightBuddy examplePrompts={ANALYTICS_PROMPTS} floating />
+      )}
     </div>
   )
 }

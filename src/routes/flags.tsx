@@ -58,8 +58,15 @@ const featureFlagConfigs: Array<FeatureFlagConfig> = [
     stage: 'Experiment',
   },
   {
+    key: 'student-analytics-basic',
+    label: 'Student Analytics',
+    description:
+      'Show Analytics and Profiles pages in the sidebar — attendance cohort analytics, academic analytics, and export CSV. Insight Buddy is not included.',
+    stage: 'Experiment',
+  },
+  {
     key: 'student-analytics',
-    label: 'Student Analytics (Research)',
+    label: 'Student Analytics with Insight buddy',
     description:
       'Show Student Analytics and Insight Buddy in the sidebar — attendance cohort analytics, academic analytics, export CSV, and AI-powered student insights',
     stage: 'Experiment',
@@ -96,6 +103,76 @@ const featureFlagConfigs: Array<FeatureFlagConfig> = [
       'Show the Import Data option in the student list to upload custom fields via a guided wizard',
     stage: 'Experiment',
   },
+  {
+    key: 'agency-reports',
+    label: 'Agency Reports',
+    description:
+      'Show the Agency Reports subsection on the student profile and enable the Agency Report generation wizard (template picker, Fill Report with split-pane template reference, Review & Submit, Export)',
+    stage: 'Experiment',
+  },
+  {
+    key: 'report-generation',
+    label: 'Report Generation',
+    description:
+      "Allow new agency reports to be generated. When off, existing reports stay visible on the student profile but the '+ New Agency Report' button and the wizard entry point are hidden",
+    stage: 'Experiment',
+  },
+  {
+    key: 'msf-uplift-data',
+    label: 'Student data from MSF via Uplift Office',
+    description:
+      'Show student data sourced from MSF via Uplift Office when this flag is enabled',
+    stage: 'Experiment',
+  },
+  {
+    key: 'date-range-filter',
+    label: 'Date range filter',
+    description:
+      'Show the Date range selector in the student list filter bar for filtering data by period',
+    stage: 'Experiment',
+  },
+  {
+    key: 'attention-tag',
+    label: 'Attention tag',
+    description:
+      'Show the Attention tag column in the student list with tags such as LTA, SEN, and FAS',
+    stage: 'Experiment',
+  },
+  {
+    key: 'column-visibility',
+    label: 'Show/hide columns',
+    description:
+      'Show the Show/hide columns control in the student list to toggle which columns are visible',
+    stage: 'Experiment',
+  },
+  {
+    key: 'overall-percentage',
+    label: 'Overall % across selected subjects',
+    description:
+      'Show the Overall % across selected subjects field in the student list column, student profile, filters, and group-by dropdown',
+    stage: 'Experiment',
+  },
+  {
+    key: 'social-links',
+    label: 'Social links',
+    description:
+      'Show the Social links field in the student list column, student profile, filters, and group-by dropdown',
+    stage: 'Experiment',
+  },
+  {
+    key: 'export',
+    label: 'Export',
+    description:
+      'Show the Export data option in the student list to export student data',
+    stage: 'Experiment',
+  },
+  {
+    key: 'primary-contact',
+    label: 'Primary contact',
+    description:
+      'Show the Primary contact button in the student profile header and the Primary contact field in the Family section',
+    stage: 'Experiment',
+  },
 ]
 
 function FeatureFlagsPage() {
@@ -126,7 +203,7 @@ function FeatureFlagsPage() {
                     variant="outline"
                     className={
                       config.stage === 'Experiment'
-                        ? 'border-purple-300 bg-purple-50 text-purple-700 dark:border-purple-700 dark:bg-purple-950 dark:text-purple-300'
+                        ? 'border-violet-6 bg-violet-3 text-violet-11'
                         : undefined
                     }
                   >

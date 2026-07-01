@@ -1,10 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import {
-  clearDraft,
-  daysRemaining,
-  loadDraft,
-  saveDraft,
-} from './draft-storage'
+import { clearDraft, daysRemaining, loadDraft, saveDraft } from './draft-storage'
 import type { DraftData } from './draft-storage'
 
 function makeDraft(overrides: Partial<DraftData> = {}): DraftData {
@@ -51,10 +46,7 @@ describe('loadDraft', () => {
 
 describe('saveDraft / loadDraft', () => {
   it('round-trips a DraftData object', () => {
-    const draft = makeDraft({
-      title: 'Hello world',
-      enquiryEmail: 'test@example.com',
-    })
+    const draft = makeDraft({ title: 'Hello world', enquiryEmail: 'test@example.com' })
     saveDraft(draft)
     const loaded = loadDraft()
     expect(loaded).not.toBeNull()
@@ -149,9 +141,7 @@ describe('daysRemaining', () => {
     vi.useFakeTimers()
     vi.setSystemTime(NOW)
     // 29.5 days before NOW → 0.5 days remaining → Math.ceil(0.5) = 1
-    const uploadedAt = new Date(
-      NOW.getTime() - 29.5 * 24 * 60 * 60 * 1000,
-    ).toISOString()
+    const uploadedAt = new Date(NOW.getTime() - 29.5 * 24 * 60 * 60 * 1000).toISOString()
     expect(daysRemaining(uploadedAt)).toBe(1)
   })
 })

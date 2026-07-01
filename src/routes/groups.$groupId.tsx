@@ -1,5 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
-import { toast } from 'sonner'
+import { useMemo, useState } from 'react'
 import {
   Link,
   createFileRoute,
@@ -19,9 +18,10 @@ import {
   Search,
   Share2,
   Trash2,
-  X,
+  UserMinus,
   UserPlus,
   Users,
+  X,
 } from 'lucide-react'
 
 import type { GroupSharedWith, StudentGroup } from '@/types/student-group'
@@ -68,6 +68,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { EmptyState } from '@/components/empty-state'
 
 const CURRENT_USER_EMAIL = 'tanml@school.edu.sg'
@@ -102,35 +109,6 @@ function StaffAvatar({ name, size = 8 }: { name: string; size?: number }) {
   )
 }
 
-function expandToStaffIds(entities: Array<SelectedEntity>): Array<string> {
-  const ids: Array<string> = []
-  const seen = new Set<string>()
-  for (const entity of entities) {
-    if (entity.type === 'individual') {
-      if (!seen.has(entity.id)) {
-        seen.add(entity.id)
-        ids.push(entity.id)
-      }
-    } else {
-      const grp = MOCK_STAFF_GROUPS.find((g) => g.id === entity.id)
-      if (!grp) continue
-      const excluded = new Set(entity.excludedMemberNames ?? [])
-      for (const memberId of grp.memberIds) {
-        const member = MOCK_STAFF.find((s) => s.id === memberId)
-        if (!member) continue
-        if (
-          !excluded.has(stripSalutation(member.name)) &&
-          !seen.has(memberId)
-        ) {
-          seen.add(memberId)
-          ids.push(memberId)
-        }
-      }
-    }
-  }
-  return ids
-}
-
 function SharingDialog({
   group,
   open,
@@ -145,129 +123,152 @@ function SharingDialog({
     sharedWith: Array<GroupSharedWith>,
   ) => void
 }) {
-  // Already-saved collaborators — shown as person rows
-  const [existingStaff, setExistingStaff] = useState<Array<GroupSharedWith>>([])
-  // New additions via the search field chips
-  const [pendingStaff, setPendingStaff] = useState<Array<SelectedEntity>>([])
-
-  useEffect(() => {
-    if (!open) return
-    setExistingStaff([...group.sharedWith])
-    setPendingStaff([])
-  }, [open, group])
-
-  const pendingIds = useMemo(
-    () => expandToStaffIds(pendingStaff),
-    [pendingStaff],
+  // Seed StaffSelector value from existing sharedWith entries
+  const [selectedStaff, setSelectedStaff] = useState<Array<SelectedEntity>>(
+    () =>
+      group.sharedWith.map((sw) => ({
+        id: sw.staffId,
+        label: stripSalutation(sw.name),
+        type: 'individual' as const,
+        count: 1,
+      })),
   )
 
-  const hasChanges =
-    pendingStaff.length > 0 || existingStaff.length !== group.sharedWith.length
+  // Role overrides per staffId — defaults to 'viewer' for newly added people
+  const [staffRoles, setStaffRoles] = useState<
+    Record<string, 'viewer' | 'editor'>
+  >(() =>
+    Object.fromEntries(group.sharedWith.map((sw) => [sw.staffId, sw.role])),
+  )
 
-  const [discardOpen, setDiscardOpen] = useState(false)
+  // Expand the selectedStaff entities (groups → individual staff IDs)
+  const expandedStaffIds = useMemo<Array<string>>(() => {
+    const ids: Array<string> = []
+    const seen = new Set<string>()
+    for (const entity of selectedStaff) {
+      if (entity.type === 'individual') {
+        if (!seen.has(entity.id)) {
+          seen.add(entity.id)
+          ids.push(entity.id)
+        }
+      } else {
+        // Group — find and expand, respecting exclusions
+        const grp = MOCK_STAFF_GROUPS.find((g) => g.id === entity.id)
+        if (!grp) continue
+        const excluded = new Set(entity.excludedMemberNames ?? [])
+        for (const memberId of grp.memberIds) {
+          const member = MOCK_STAFF.find((s) => s.id === memberId)
+          if (!member) continue
+          const memberName = stripSalutation(member.name)
+          if (!excluded.has(memberName) && !seen.has(memberId)) {
+            seen.add(memberId)
+            ids.push(memberId)
+          }
+        }
+      }
+    }
+    return ids
+  }, [selectedStaff])
 
-  const handleSave = () => {
-    const added: Array<GroupSharedWith> = pendingIds.flatMap((id) => {
-      const s = MOCK_STAFF.find((m) => m.id === id)
+  function updateRole(staffId: string, role: 'viewer' | 'editor') {
+    setStaffRoles((prev) => ({ ...prev, [staffId]: role }))
+  }
+
+  /** Remove an individual from the selection, even if they came from a group entity. */
+  function removeStaff(staffId: string) {
+    const member = MOCK_STAFF.find((s) => s.id === staffId)
+    if (!member) return
+    const memberName = stripSalutation(member.name)
+    setSelectedStaff((prev) =>
+      prev.flatMap((entity) => {
+        if (entity.type === 'individual' && entity.id === staffId) {
+          return [] // drop this individual
+        }
+        if (entity.type === 'group') {
+          const grp = MOCK_STAFF_GROUPS.find((g) => g.id === entity.id)
+          if (grp?.memberIds.includes(staffId)) {
+            // Exclude this member from the group entity
+            return [
+              {
+                ...entity,
+                excludedMemberNames: [
+                  ...(entity.excludedMemberNames ?? []),
+                  memberName,
+                ],
+              },
+            ]
+          }
+        }
+        return [entity]
+      }),
+    )
+  }
+
+  // Derive final sharedWith for saving
+  const derivedSharedWith: Array<GroupSharedWith> = expandedStaffIds.flatMap(
+    (staffId) => {
+      const s = MOCK_STAFF.find((m) => m.id === staffId)
       if (!s) return []
       return [
         {
           staffId: s.id,
           name: s.name,
           email: s.email,
-          role: 'editor' as const,
+          role: staffRoles[s.id] ?? 'viewer',
         },
       ]
-    })
-    const existingIds = new Set(existingStaff.map((s) => s.staffId))
-    const removed = group.sharedWith.filter((s) => !existingIds.has(s.staffId))
+    },
+  )
 
-    onSave(group.visibility, [...existingStaff, ...added])
-    setPendingStaff([])
-    onOpenChange(false)
-
-    const nameList = (people: Array<{ name: string }>) => {
-      const names = people.map((s) => stripSalutation(s.name))
-      return names.length === 1
-        ? names[0]
-        : names.length === 2
-          ? `${names[0]} and ${names[1]}`
-          : `${names[0]} and ${names.length - 1} others`
-    }
-
-    if (added.length > 0) {
-      toast.success(`"${group.name}" shared with ${nameList(added)}`)
-    }
-    if (removed.length > 0) {
-      toast.success(`Removed ${nameList(removed)} from "${group.name}"`)
-    }
-  }
-
-  // Intercept close: warn if the user has typed/selected people but hasn't shared yet
-  const handleRequestClose = () => {
-    if (pendingStaff.length > 0) {
-      setDiscardOpen(true)
-    } else {
-      onOpenChange(false)
-    }
-  }
+  // Detect whether any changes have been made vs the saved state
+  const hasChanges = useMemo(() => {
+    if (derivedSharedWith.length !== group.sharedWith.length) return true
+    const origMap = new Map(group.sharedWith.map((sw) => [sw.staffId, sw.role]))
+    return derivedSharedWith.some((sw) => origMap.get(sw.staffId) !== sw.role)
+  }, [derivedSharedWith, group.sharedWith])
 
   return (
-    <>
-      <Dialog
-        open={open}
-        onOpenChange={(next) => {
-          if (!next) handleRequestClose()
-        }}
-      >
-        <DialogContent
-          showCloseButton={false}
-          className="max-w-[460px] gap-0 p-0"
-        >
-          {/* Header — inline title + close button */}
-          <div className="flex items-center justify-between border-b px-5 py-4">
-            <DialogTitle className="text-base font-semibold">
-              Share group
-            </DialogTitle>
-            <button
-              type="button"
-              onClick={handleRequestClose}
-              className="rounded-full p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
-              aria-label="Close"
-            >
-              <X className="size-4" />
-            </button>
-          </div>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="flex max-h-[85vh] max-w-md flex-col gap-0 p-0">
+        <DialogHeader className="border-b px-5 py-4">
+          <DialogTitle>Share this group</DialogTitle>
+        </DialogHeader>
 
-          <div className="px-5 py-4 space-y-4">
-            {/* Info note — always visible */}
-            <div className="flex items-start gap-2.5 rounded-lg bg-muted/50 px-3 py-2.5">
-              <Info className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Added staff get{' '}
-                <span className="font-medium text-foreground">
-                  editor access
-                </span>{' '}
-                — they can view and send to the group, edit its name, add or
-                remove students, and share it with others.
-              </p>
-            </div>
-
-            {/* Staff selector — chips appear inline inside the field */}
+        <div className="flex flex-1 flex-col">
+          {/* Staff selector — only auto-opens dropdown when list is empty */}
+          <div className="px-5 pt-4">
             <StaffSelector
               key={String(open)}
-              value={pendingStaff}
-              onChange={setPendingStaff}
+              value={selectedStaff}
+              onChange={setSelectedStaff}
+              hideChips
+              autoOpen={expandedStaffIds.length === 0}
             />
+          </div>
 
-            {/* People with access (already saved) */}
-            {existingStaff.length > 0 && (
-              <div>
-                <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          {/* People with access — role management for each expanded individual */}
+          <div className="max-h-72 overflow-y-auto px-5 pb-4 pt-4">
+            {expandedStaffIds.length === 0 ? (
+              <div className="flex flex-col items-center gap-2 py-10 text-center">
+                <div className="flex size-12 items-center justify-center rounded-full bg-muted">
+                  <Users className="size-5 text-muted-foreground" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-foreground">
+                    No one added yet
+                  </p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    Search above to add staff
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <>
+                <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                   People with access
                 </p>
                 <div className="space-y-0.5">
-                  {existingStaff.map((sw) => {
+                  {derivedSharedWith.map((sw) => {
                     const staffMeta = MOCK_STAFF.find(
                       (s) => s.id === sw.staffId,
                     )
@@ -280,24 +281,34 @@ function SharingDialog({
                     return (
                       <div
                         key={sw.staffId}
-                        className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-muted/40"
+                        className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 hover:bg-muted/30"
                       >
-                        <StaffAvatar name={sw.name} size={8} />
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium">
+                        <StaffAvatar name={sw.name} size={7} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">
                             {sw.name}
                           </p>
-                          <p className="truncate text-xs text-muted-foreground">
+                          <p className="text-xs text-muted-foreground truncate">
                             {sublabel}
                           </p>
                         </div>
+                        <Select
+                          value={sw.role}
+                          onValueChange={(val) =>
+                            updateRole(sw.staffId, val as 'viewer' | 'editor')
+                          }
+                        >
+                          <SelectTrigger className="w-24 h-7 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="viewer">Viewer</SelectItem>
+                            <SelectItem value="editor">Editor</SelectItem>
+                          </SelectContent>
+                        </Select>
                         <button
                           type="button"
-                          onClick={() =>
-                            setExistingStaff((prev) =>
-                              prev.filter((s) => s.staffId !== sw.staffId),
-                            )
-                          }
+                          onClick={() => removeStaff(sw.staffId)}
                           className="shrink-0 rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                         >
                           <X className="size-3.5" />
@@ -306,45 +317,28 @@ function SharingDialog({
                     )
                   })}
                 </div>
-              </div>
+              </>
             )}
           </div>
+        </div>
 
-          <DialogFooter className="border-t px-5 py-3">
-            <Button variant="outline" size="sm" onClick={handleRequestClose}>
+        <DialogFooter className="border-t px-5 py-4">
+          {hasChanges && (
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button size="sm" disabled={!hasChanges} onClick={handleSave}>
-              Save
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Discard warning — shown when closing with unsaved pending selections */}
-      <AlertDialog open={discardOpen} onOpenChange={setDiscardOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Discard changes?</AlertDialogTitle>
-            <AlertDialogDescription>
-              You've added people but haven't shared yet. If you leave now, your
-              selections will be lost.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Keep editing</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                setDiscardOpen(false)
-                onOpenChange(false)
-              }}
-            >
-              Discard
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
+          )}
+          <Button
+            onClick={() => {
+              if (hasChanges) onSave(group.visibility, derivedSharedWith)
+              onOpenChange(false)
+            }}
+          >
+            {hasChanges ? 'Save' : 'Done'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -488,23 +482,16 @@ function GroupDetailPage() {
 
             <div className="mt-2 flex items-center gap-2 flex-wrap">
               <Badge variant="outline">{group.members.length} students</Badge>
-              {group.visibility === 'school' && (
-                <Badge
-                  variant="outline"
-                  className="border-green-200 bg-green-50 text-green-700"
-                >
-                  School-wide
-                </Badge>
-              )}
-              {group.sharedWith.length > 0 && (
-                <Badge
-                  variant="outline"
-                  className="border-slate-200 bg-slate-50 text-slate-600"
-                >
-                  {group.sharedWith.length} collaborator
-                  {group.sharedWith.length !== 1 ? 's' : ''}
-                </Badge>
-              )}
+              <Badge
+                variant="outline"
+                className={cn(
+                  group.visibility === 'school'
+                    ? 'border-lime-6 bg-lime-3 text-lime-11'
+                    : 'border-border bg-muted text-muted-foreground',
+                )}
+              >
+                {group.visibility === 'school' ? 'School-wide' : 'Private'}
+              </Badge>
             </div>
           </div>
 
@@ -519,10 +506,12 @@ function GroupDetailPage() {
               Share
             </Button>
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" className="size-8">
-                  <MoreHorizontal className="size-4" />
-                </Button>
+              <DropdownMenuTrigger
+                render={
+                  <Button variant="outline" size="icon" className="size-8" />
+                }
+              >
+                <MoreHorizontal className="size-4" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem render={<Link to="/groups/new" />}>
@@ -575,14 +564,14 @@ function GroupDetailPage() {
 
       {/* Live group criteria banner */}
       {group.listType === 'live' && (
-        <Alert className="border-blue-200 bg-blue-50/60 text-blue-900">
-          <Info className="size-4 text-blue-500" />
-          <AlertDescription className="text-blue-800">
+        <Alert className="border-twblue-6 bg-twblue-3/60 text-twblue-12">
+          <Info className="size-4 text-twblue-9" />
+          <AlertDescription className="text-twblue-11">
             Membership updates automatically based on selected criteria.{' '}
             {group.criteriaSourceHref && (
               <Link
                 to={group.criteriaSourceHref as '/students'}
-                className="inline-flex items-center gap-1 underline underline-offset-2 hover:text-blue-700"
+                className="inline-flex items-center gap-1 underline underline-offset-2 hover:text-twblue-11"
               >
                 Manage in source
                 <ExternalLink className="size-3" />
@@ -639,8 +628,8 @@ function GroupDetailPage() {
           <>
             <div className="rounded-lg border overflow-hidden">
               <Table tableClassName="table-fixed w-full">
-                <TableHeader className="border-b bg-background">
-                  <TableRow className="border-0 hover:bg-transparent">
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
                     <TableHead className="w-12">#</TableHead>
                     <TableHead>Name</TableHead>
                     <TableHead className="w-24">Class</TableHead>
@@ -671,12 +660,12 @@ function GroupDetailPage() {
                       <TableCell className="text-muted-foreground text-xs font-mono">
                         {member.nric ?? '—'}
                       </TableCell>
-                      <TableCell className="w-14 pr-5 text-right">
+                      <TableCell>
                         {canEdit && group.listType !== 'live' && (
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="size-7 text-muted-foreground hover:text-destructive"
+                            className="size-7 opacity-0 group-hover/row:opacity-100 text-muted-foreground hover:text-destructive transition-opacity"
                             onClick={() => {
                               if (currentRole === 'owner') {
                                 handleRemoveMember(member.id)
@@ -685,7 +674,7 @@ function GroupDetailPage() {
                               }
                             }}
                           >
-                            <X className="size-3.5" />
+                            <UserMinus className="size-3.5" />
                           </Button>
                         )}
                       </TableCell>

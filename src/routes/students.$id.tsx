@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { Link, createFileRoute, notFound } from '@tanstack/react-router'
-import { ArrowLeft, ChevronLeft, ChevronRight, Download } from 'lucide-react'
+import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { StudentProfile } from '@/components/students/student-profile'
@@ -62,7 +62,7 @@ function StudentProfilePage() {
         render={<Link to="/students" />}
       >
         <ArrowLeft className="mr-1 size-4" />
-        Dashboard
+        {studentAnalyticsEnabled ? 'Profiles' : 'Student Insights'}
       </Button>
 
       <div className="flex items-center gap-2">
@@ -95,11 +95,6 @@ function StudentProfilePage() {
             <ChevronRight className="size-4" />
           </Button>
         </div>
-
-        {/* Download button (placeholder) */}
-        <Button variant="outline" size="icon" className="size-8">
-          <Download className="size-4" />
-        </Button>
       </div>
     </div>
   )

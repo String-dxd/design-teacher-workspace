@@ -336,7 +336,7 @@ export function GlowStudentSupportPage({
       <div className="flex items-center justify-between px-6 py-4">
         <div className="flex items-center gap-2.5">
           <GlowBotIcon size={28} />
-          <span className="text-sm font-medium text-slate-700">
+          <span className="text-sm font-medium text-foreground">
             Glow · Student Support
           </span>
         </div>

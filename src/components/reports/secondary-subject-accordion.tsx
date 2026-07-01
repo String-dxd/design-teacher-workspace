@@ -27,7 +27,7 @@ export function SecondarySubjectAccordion({
                   <span className="text-base font-bold">
                     {subject.currentScore}
                   </span>
-                  <span className="rounded bg-gray-100 px-2 py-0.5 text-xs font-semibold">
+                  <span className="rounded bg-muted px-2 py-0.5 text-xs font-semibold">
                     {subject.currentGrade}
                   </span>
                 </span>

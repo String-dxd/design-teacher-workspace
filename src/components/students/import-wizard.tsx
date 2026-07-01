@@ -260,25 +260,22 @@ function WizardStepper({ current }: { current: number }) {
             <div className="flex items-center gap-2">
               <div
                 className={cn(
-                  'flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-white transition-colors',
-                  (isActive || isCompleted) &&
-                    'bg-[var(--color-twblue-9,#0064ff)]',
-                  isDimmed && 'bg-[var(--btn-color-fill-disabled,#b9bbc6)]',
+                  'flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-primary-foreground transition-colors',
+                  (isActive || isCompleted) && 'bg-twblue-9',
+                  isDimmed && 'bg-muted',
                 )}
               >
                 {isCompleted ? (
                   <Check className="h-3 w-3" strokeWidth={2.5} />
                 ) : (
-                  <span className="text-[11px]">{stepNum}</span>
+                  <span className="text-xs">{stepNum}</span>
                 )}
               </div>
               <span
                 className={cn(
                   'hidden text-sm min-[562px]:inline',
-                  (isActive || isCompleted) &&
-                    'text-[var(--color-slate-12,#1c2024)]',
-                  isDimmed &&
-                    'text-[var(--btn-color-foreground-disabled,#b9bbc6)]',
+                  (isActive || isCompleted) && 'text-slate-12',
+                  isDimmed && 'text-muted-foreground',
                 )}
               >
                 {label}
@@ -330,7 +327,7 @@ function DropZone({
           : 'border-twblue-7 bg-twblue-2 hover:border-twblue-9',
       )}
     >
-      <div className="flex items-center justify-center rounded-full bg-white p-3 shadow-xs">
+      <div className="flex items-center justify-center rounded-full bg-card p-3 shadow-xs">
         <Upload className="h-6 w-6 text-twblue-9" />
       </div>
       <p className="text-base text-slate-12">
@@ -365,7 +362,7 @@ function Step1({
       <div className="mx-auto flex w-full max-w-[632px] flex-col gap-6 px-6 pt-10 pb-16">
         {/* Prepare your file section */}
         <section className="flex flex-col gap-6">
-          <h1 className="text-[23px] font-semibold leading-7 text-slate-12">
+          <h1 className="text-2xl font-semibold leading-7 text-slate-12">
             Prepare your file
           </h1>
           <ul className="flex list-disc flex-col gap-3 pl-6 text-base leading-6 text-slate-12 marker:text-slate-11">
@@ -400,13 +397,13 @@ function Step1({
 
         {/* Upload your file section */}
         <section className="flex flex-col gap-6">
-          <h2 className="text-[23px] font-semibold leading-7 text-slate-12">
+          <h2 className="text-2xl font-semibold leading-7 text-slate-12">
             Upload your file
           </h2>
 
           <div className="flex flex-col gap-4">
             {hasError && (
-              <Alert className="rounded-2xl border-slate-6 bg-white [&>svg]:text-[var(--crimson-11)]">
+              <Alert className="rounded-2xl border-slate-6 bg-card [&>svg]:text-[var(--crimson-11)]">
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle className="font-semibold text-[var(--crimson-11)]">
                   File upload failed
@@ -460,7 +457,7 @@ function Step2({
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto">
         <div className="px-8 pb-2 pt-8">
-          <h1 className="text-2xl font-semibold text-slate-900">Review</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Review</h1>
           <Badge
             variant="outline"
             className="mt-6 border-transparent bg-[var(--color-slate-3)] text-[var(--color-slate-11)] text-sm"
@@ -472,7 +469,7 @@ function Step2({
         <div className="flex flex-col gap-4 px-8 pb-6 sm:flex-row sm:items-start">
           {/* Table — second on mobile, first on desktop */}
           <div className="order-2 flex min-w-0 flex-1 flex-col gap-2 sm:order-1">
-            <div className="overflow-hidden rounded-2xl border bg-white">
+            <div className="overflow-hidden rounded-2xl border bg-card">
               <div className="overflow-x-auto [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar]:border-t [&::-webkit-scrollbar]:border-[var(--color-slate-6)] [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[var(--color-slate-5)] [&::-webkit-scrollbar-track]:ml-4 [&::-webkit-scrollbar-track]:mr-4 [&::-webkit-scrollbar-track]:rounded-full">
                 <Table>
                   <TableHeader className="bg-[var(--color-slate-2)]">
@@ -500,22 +497,22 @@ function Step2({
                   <TableBody>
                     {MOCK_REVIEW_ROWS.map((r) => (
                       <TableRow key={r.row} className="hover:bg-transparent">
-                        <TableCell className="text-center text-base tabular-nums text-slate-400">
+                        <TableCell className="text-center text-base tabular-nums text-muted-foreground">
                           {r.row}
                         </TableCell>
-                        <TableCell className="text-base text-slate-700">
+                        <TableCell className="text-base text-foreground">
                           {r.name}
                         </TableCell>
-                        <TableCell className="text-base text-slate-500">
+                        <TableCell className="text-base text-muted-foreground">
                           {r.class}
                         </TableCell>
-                        <TableCell className="text-base text-slate-500">
+                        <TableCell className="text-base text-muted-foreground">
                           {r.viaMissed}
                         </TableCell>
-                        <TableCell className="max-w-0 text-base text-slate-500">
+                        <TableCell className="max-w-0 text-base text-muted-foreground">
                           <span className="block truncate">{r.nextSteps}</span>
                         </TableCell>
-                        <TableCell className="max-w-0 text-base text-slate-500">
+                        <TableCell className="max-w-0 text-base text-muted-foreground">
                           <span className="block truncate">
                             {r.teacherRemarks}
                           </span>
@@ -534,7 +531,7 @@ function Step2({
           {/* Validation panel — first on mobile (top), second on desktop (right) */}
           <div className="order-1 w-full sm:order-2 sm:h-[620px] sm:w-[412px] sm:shrink-0">
             {hasIssues ? (
-              <div className="flex flex-col rounded-2xl border bg-white px-6 py-6 sm:min-h-[620px] sm:p-6">
+              <div className="flex flex-col rounded-2xl border bg-card px-6 py-6 sm:min-h-[620px] sm:p-6">
                 <div className="mb-5 flex items-center justify-between">
                   <p className="text-lg font-semibold text-[var(--color-slate-11)]">
                     Few issues found
@@ -548,7 +545,7 @@ function Step2({
                   {REVIEW_ISSUES.map((iss) => (
                     <li
                       key={iss.id}
-                      className="flex items-start gap-3 rounded-xl border border-[var(--color-slate-3)] bg-slate-50 p-3"
+                      className="flex items-start gap-3 rounded-xl border border-[var(--color-slate-3)] bg-muted p-3"
                     >
                       <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-[var(--crimson-11)]" />
                       <div className="flex min-w-0 flex-col gap-2">
@@ -556,7 +553,7 @@ function Step2({
                           <p className="text-base font-semibold text-[var(--crimson-11)]">
                             {iss.title}
                           </p>
-                          <p className="text-sm text-slate-500">
+                          <p className="text-sm text-muted-foreground">
                             {iss.description}
                           </p>
                         </div>
@@ -572,7 +569,7 @@ function Step2({
                 </ul>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center rounded-[var(--radius-3xl,24px)] border border-[var(--color-slate-6)] bg-white px-6 py-6 sm:h-full sm:py-5">
+              <div className="flex flex-col items-center justify-center rounded-[var(--radius-3xl,24px)] border border-[var(--color-slate-6)] bg-card px-6 py-6 sm:h-full sm:py-5">
                 <div className="flex flex-col items-center">
                   <img
                     src="/no-issues-illustration.png"
@@ -580,7 +577,7 @@ function Step2({
                     className="size-[200px] object-cover"
                   />
                   <div className="mt-3 flex flex-col items-center gap-3 text-center">
-                    <p className="text-[23px] font-semibold leading-7 text-[var(--color-slate-12)]">
+                    <p className="text-2xl font-semibold leading-7 text-[var(--color-slate-12)]">
                       No issues found
                     </p>
                     <p className="text-base text-[var(--color-slate-11)]">
@@ -595,7 +592,7 @@ function Step2({
       </div>
 
       {/* Bottom nav */}
-      <div className="flex items-center justify-between border-t bg-white px-8 py-4">
+      <div className="flex items-center justify-between border-t bg-card px-8 py-4">
         <Button variant="outline" onClick={onBack} className="gap-2">
           <ArrowLeft className="h-4 w-4" />
           Back
@@ -650,7 +647,7 @@ function CategorySelectRow({
     return (
       <TableRow className="hover:bg-transparent">
         <TableCell className="w-1/2 py-4 pl-5">
-          <span className="text-sm font-medium text-slate-800">
+          <span className="text-sm font-medium text-foreground">
             {fieldName}
           </span>
         </TableCell>
@@ -671,16 +668,16 @@ function CategorySelectRow({
                     onChange({ mode: 'unset', newValue: '', newError: '' })
                 }}
                 className={cn(
-                  'h-9 flex-1 rounded-lg border bg-white px-3 text-sm outline-none transition-colors',
+                  'h-9 flex-1 rounded-lg border bg-card px-3 text-sm outline-none transition-colors',
                   state.newError
                     ? 'border-[var(--crimson-9)] ring-1 ring-[var(--crimson-9)]'
-                    : 'border-blue-400 ring-1 ring-blue-300',
+                    : 'border-twblue-7 ring-1 ring-twblue-6',
                 )}
               />
               <button
                 type="button"
                 onClick={handleConfirmNew}
-                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-slate-400 hover:text-slate-600"
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:text-foreground"
               >
                 <Check className="h-4 w-4" />
               </button>
@@ -700,11 +697,11 @@ function CategorySelectRow({
     <TableRow className="hover:bg-transparent">
       <TableCell className="w-1/2 py-4 pl-5">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-slate-800">
+          <span className="text-sm font-medium text-foreground">
             {fieldName}
           </span>
           {state.mode === 'selected' && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-[#E0F8F3] px-2 py-0.5 text-xs font-medium text-[#008573]">
+            <span className="inline-flex items-center gap-1 rounded-full bg-lime-3 px-2 py-0.5 text-xs font-medium text-lime-11">
               <Check className="h-3 w-3" />
               Done
             </span>
@@ -718,7 +715,7 @@ function CategorySelectRow({
               'flex h-9 w-full items-center justify-between rounded-lg border border-[var(--color-slate-6)] px-3 text-sm',
               state.mode === 'skipped'
                 ? 'bg-[var(--color-slate-2)]'
-                : 'bg-white',
+                : 'bg-card',
             )}
           >
             <span
@@ -872,35 +869,35 @@ function Step3({
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto w-[632px] pt-8">
-          <h1 className="text-2xl font-semibold text-slate-900">
+          <h1 className="text-2xl font-semibold text-foreground">
             Choose where new fields appear
           </h1>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-muted-foreground">
             Pick the section where each field should appear in the student
             profile
           </p>
         </div>
 
         {/* Hint note */}
-        <div className="mx-auto mb-4 mt-12 w-[632px] border-l-2 border-slate-300 pl-3">
-          <p className="text-sm text-slate-500">
+        <div className="mx-auto mb-4 mt-12 w-[632px] border-l-2 border-border pl-3">
+          <p className="text-sm text-muted-foreground">
             If a field fits more than one section, pick the best match. You can
             edit it later
           </p>
         </div>
 
         {/* Table */}
-        <div className="mx-auto mb-6 w-[632px] overflow-hidden rounded-xl border bg-white">
+        <div className="mx-auto mb-6 w-[632px] overflow-hidden rounded-xl border bg-card">
           <Table>
             <TableHeader className="bg-[var(--color-slate-2)]">
               <TableRow className="hover:bg-[var(--color-slate-2)]">
-                <TableHead className="w-1/2 pl-5 pr-0 typography-label-md-strong text-[var(--color-slate-11)]">
+                <TableHead className="w-1/2 pl-5 pr-0 text-sm font-semibold text-[var(--color-slate-11)]">
                   <span className="flex items-center justify-between">
                     New fields
                     <ArrowRight className="h-3.5 w-3.5 text-[var(--color-slate-9)]" />
                   </span>
                 </TableHead>
-                <TableHead className="w-1/2 pr-5 typography-label-md-strong text-[var(--color-slate-11)]">
+                <TableHead className="w-1/2 pr-5 text-sm font-semibold text-[var(--color-slate-11)]">
                   Place under
                 </TableHead>
               </TableRow>
@@ -922,7 +919,7 @@ function Step3({
       </div>
 
       {/* Bottom nav */}
-      <div className="flex shrink-0 items-center justify-between border-t bg-white px-8 py-4">
+      <div className="flex shrink-0 items-center justify-between border-t bg-card px-8 py-4">
         <Button variant="outline" onClick={onBack} className="gap-2">
           <ArrowLeft className="h-4 w-4" />
           Back
@@ -1048,10 +1045,10 @@ export function ImportWizard({
       {/* Header */}
       <div className="flex shrink-0 items-center justify-between gap-6 px-6 py-4">
         <div className="flex items-center gap-4">
-          <span className="text-base font-semibold text-slate-900">
+          <span className="text-base font-semibold text-foreground">
             Import data
           </span>
-          <div className="h-4 w-px bg-slate-200" />
+          <div className="h-4 w-px bg-border" />
           <WizardStepper current={step} />
         </div>
         <Button
@@ -1087,8 +1084,8 @@ export function ImportWizard({
       <Popover>
         <PopoverTrigger
           render={
-            <button className="fixed bottom-4 right-4 flex h-10 w-10 items-center justify-center rounded-full border bg-white shadow-lg transition-shadow hover:shadow-xl">
-              <Settings2 className="h-4 w-4 text-slate-500" />
+            <button className="fixed bottom-4 right-4 flex h-10 w-10 items-center justify-center rounded-full border bg-card shadow-lg transition-shadow hover:shadow-xl">
+              <Settings2 className="h-4 w-4 text-muted-foreground" />
             </button>
           }
         />
@@ -1098,7 +1095,7 @@ export function ImportWizard({
           </PopoverHeader>
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
-              <label className="text-xs font-medium text-slate-500">
+              <label className="text-xs font-medium text-muted-foreground">
                 Step 1 — Upload state
               </label>
               <Select
@@ -1115,7 +1112,7 @@ export function ImportWizard({
               </Select>
             </div>
             <div className="flex flex-col gap-2">
-              <label className="text-xs font-medium text-slate-500">
+              <label className="text-xs font-medium text-muted-foreground">
                 Step 2 — Review state
               </label>
               <Select

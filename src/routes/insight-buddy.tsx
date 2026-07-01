@@ -17,6 +17,7 @@ import {
   FEATURE_FLAGS_STORAGE_KEY,
 } from '@/lib/feature-flags'
 
+import { PRESENT_RING, SERIES_BLUE } from '@/lib/chart-colors'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -76,7 +77,7 @@ interface LtaStudent {
 
 const LTA_STUDENTS: Array<LtaStudent> = [
   {
-    name: 'Ahmad Bin Ismail',
+    name: 'Lim Zhi Yong',
     class: '3A',
     attendedDays: 30,
     latecoming: 5,
@@ -87,7 +88,7 @@ const LTA_STUDENTS: Array<LtaStudent> = [
     absencePendingReason: 1,
   },
   {
-    name: 'Siti Nurhaliza',
+    name: 'Tan Mei Ling',
     class: '3A',
     attendedDays: 32,
     latecoming: 3,
@@ -109,7 +110,7 @@ const LTA_STUDENTS: Array<LtaStudent> = [
     absencePendingReason: 2,
   },
   {
-    name: 'Priya Devi',
+    name: 'Goh Hui Wen',
     class: '3B',
     attendedDays: 31,
     latecoming: 2,
@@ -131,7 +132,7 @@ const LTA_STUDENTS: Array<LtaStudent> = [
     absencePendingReason: 0,
   },
   {
-    name: 'Mohamed Faiz',
+    name: 'Chua Jian Hao',
     class: '4A',
     attendedDays: 27,
     latecoming: 10,
@@ -153,7 +154,7 @@ const LTA_STUDENTS: Array<LtaStudent> = [
     absencePendingReason: 1,
   },
   {
-    name: 'Raj Kumar',
+    name: 'Ng Wei Sheng',
     class: '4B',
     attendedDays: 26,
     latecoming: 7,
@@ -164,7 +165,7 @@ const LTA_STUDENTS: Array<LtaStudent> = [
     absencePendingReason: 1,
   },
   {
-    name: 'Nurul Aisyah',
+    name: 'Foo Jia Min',
     class: '4B',
     attendedDays: 34,
     latecoming: 3,
@@ -186,7 +187,7 @@ const LTA_STUDENTS: Array<LtaStudent> = [
     absencePendingReason: 1,
   },
   {
-    name: 'Aisha Binte Rahman',
+    name: 'Tan Hui Xian',
     class: '3C',
     attendedDays: 25,
     latecoming: 9,
@@ -359,13 +360,13 @@ function PerformancePerSubjectChart() {
           <Bar
             dataKey="thisTerm"
             name="thisTerm"
-            fill="#228be6"
+            fill={SERIES_BLUE}
             radius={[4, 4, 0, 0]}
           />
           <Bar
             dataKey="lastTerm"
             name="lastTerm"
-            fill="#12b886"
+            fill={PRESENT_RING}
             radius={[4, 4, 0, 0]}
           />
         </BarChart>
@@ -536,7 +537,7 @@ function InsightBuddyPage() {
         resultType === 'performance-per-subject'
           ? "Here's a comparison of weighted assessment scores per subject for this term versus last term."
           : resultType === 'lta'
-            ? `I found ${LTA_STUDENTS.length} students with Latecoming/Truancy/Absenteeism (LTA) this term. The results are shown on the right.`
+            ? `I found ${LTA_STUDENTS.length} students with Long-Term Absenteeism (LTA) this term. The results are shown on the right.`
             : `I'm analysing your query: "${query}". Results will appear on the right.`
 
       const assistantMsg: Message = {
@@ -569,6 +570,12 @@ function InsightBuddyPage() {
         <div className="flex h-14 items-center gap-2 border-b px-4">
           <Sparkles className="size-4 text-primary" />
           <span className="font-semibold">Insight Buddy</span>
+          <Badge
+            variant="outline"
+            className="border-violet-6 bg-violet-3 text-violet-11"
+          >
+            Experiment
+          </Badge>
         </div>
 
         {/* Messages / Empty state */}

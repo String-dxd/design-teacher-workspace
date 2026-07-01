@@ -190,19 +190,19 @@ function ReportDetailPage() {
         <TabsList variant="line">
           <TabsTrigger
             value="overview"
-            className="data-active:text-[#f26c47] data-active:after:bg-[#f26c47]"
+            className="data-active:text-orange-9 data-active:after:bg-orange-9"
           >
             Overview
           </TabsTrigger>
           <TabsTrigger
             value="academic"
-            className="data-active:text-[#f26c47] data-active:after:bg-[#f26c47]"
+            className="data-active:text-orange-9 data-active:after:bg-orange-9"
           >
             Academic
           </TabsTrigger>
           <TabsTrigger
             value="holistic"
-            className="data-active:text-[#f26c47] data-active:after:bg-[#f26c47]"
+            className="data-active:text-orange-9 data-active:after:bg-orange-9"
           >
             Holistic
           </TabsTrigger>
@@ -228,14 +228,14 @@ function ReportDetailPage() {
         </TabsContent>
       </Tabs>
 
-      <div className="sticky bottom-0 flex gap-3 border-t bg-white py-4">
+      <div className="sticky bottom-0 flex gap-3 border-t bg-card py-4">
         <Button variant="outline" className="flex-1" onClick={handlePreview}>
           <Eye className="mr-2 size-4" />
           {isPrimary ? 'Preview as Parent' : 'Preview as Student'}
         </Button>
         {!isPrimary && (
           <Button
-            className="flex-1 bg-[#f26c47] text-white hover:bg-[#e05a37]"
+            className="flex-1 bg-orange-9 text-white hover:bg-orange-10"
             onClick={handleSendToStudent}
           >
             <Send className="mr-2 size-4" />
@@ -244,7 +244,7 @@ function ReportDetailPage() {
         )}
         {isPrimary && (
           <Button
-            className="flex-1 bg-[#f26c47] text-white hover:bg-[#e05a37]"
+            className="flex-1 bg-orange-9 text-white hover:bg-orange-10"
             onClick={handleSendViaPg}
           >
             <Send className="mr-2 size-4" />

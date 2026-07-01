@@ -744,14 +744,14 @@ export function StudentTable({
       }
     >
       {isVisible('index') && (
-        <TableCell className="sticky left-0 z-10 bg-white pl-6 text-muted-foreground transition-colors group-hover:bg-[color-mix(in_oklab,var(--muted)_50%,white)]">
+        <TableCell className="sticky left-0 z-10 bg-card pl-6 text-muted-foreground transition-colors group-hover:bg-[color-mix(in_oklab,var(--muted)_50%,white)]">
           {displayIndex}
         </TableCell>
       )}
       {isVisible('name') && (
         <TableCell
           className={cn(
-            'sticky z-10 bg-white font-medium shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] transition-colors group-hover:bg-[color-mix(in_oklab,var(--muted)_50%,white)]',
+            'sticky z-10 bg-card font-medium shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] transition-colors group-hover:bg-[color-mix(in_oklab,var(--muted)_50%,white)]',
             isVisible('index') ? 'left-12' : 'left-0',
           )}
         >
@@ -782,7 +782,7 @@ export function StudentTable({
             {meta?.primaryTag ? (
               <Badge
                 variant="secondary"
-                className="border-emerald-300 bg-emerald-50 text-emerald-700"
+                className="border-lime-6 bg-lime-3 text-lime-11"
               >
                 {meta.primaryTag}
               </Badge>
@@ -830,7 +830,9 @@ export function StudentTable({
             </TableCell>
           )
         })()}
-      {isVisible('lateComing') && <TableCell>{student.lateComing}</TableCell>}
+      {isVisible('lateComing') && (
+        <TableCell>{student.lateComing}</TableCell>
+      )}
       {isVisible('absences') && <TableCell>{student.absences}</TableCell>}
       {isVisible('ccaMissed') && (
         <TableCell>{100 - student.ccaMissed * 5}%</TableCell>
@@ -913,9 +915,7 @@ export function StudentTable({
       )}
       {isVisible('housing') && (
         <TableCell>
-          {student.housing || (
-            <span className="text-muted-foreground">None</span>
-          )}
+          {student.housing || <span className="text-muted-foreground">None</span>}
         </TableCell>
       )}
       {isVisible('housingType') && (
@@ -963,14 +963,14 @@ export function StudentTable({
       <div
         ref={stickyHeaderRef}
         className={cn(
-          'sticky top-0 z-30 overflow-x-auto bg-white',
+          'sticky top-0 z-30 overflow-x-auto bg-card',
           isHeaderVisible ? 'invisible h-0 overflow-hidden' : 'shadow-md',
         )}
         style={{ scrollbarWidth: 'none' }}
         onScroll={handleStickyHeaderScroll}
       >
         <Table>
-          <TableHeader className="border-b bg-white">
+          <TableHeader className="border-b bg-card">
             {renderHeaderContent()}
           </TableHeader>
         </Table>
@@ -979,10 +979,10 @@ export function StudentTable({
       {/* Main table container */}
       <div
         ref={tableContainerRef}
-        className={cn('max-w-full overflow-x-auto bg-white', className)}
+        className={cn('max-w-full overflow-x-auto bg-card', className)}
       >
         <Table>
-          <TableHeader className="border-b bg-white">
+          <TableHeader className="border-b bg-card">
             {renderHeaderContent()}
           </TableHeader>
           <TableBody>
@@ -1046,7 +1046,7 @@ export function StudentTable({
 
       {/* Record count and Pagination - outside scroll container so it stays horizontally sticky */}
       {!isGrouped && (
-        <div className="flex shrink-0 items-center justify-between bg-white px-6 py-4">
+        <div className="flex shrink-0 items-center justify-between bg-card px-6 py-4">
           <div className="text-sm text-muted-foreground">
             {displayStartIndex}–
             {Math.min(startIndex + pageSize, students.length)} of{' '}

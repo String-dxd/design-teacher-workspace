@@ -39,7 +39,7 @@ function CheckboxCard({
       className={cn(
         'flex w-full items-start gap-2 rounded-[14px] border p-4 text-left transition-colors',
         checked
-          ? 'border-[#98c1ff] bg-[#f5f9ff]'
+          ? 'border-twblue-7 bg-twblue-2'
           : 'border-border bg-background hover:bg-muted/50',
       )}
     >
@@ -49,9 +49,9 @@ function CheckboxCard({
         className="pointer-events-none mt-0.5 shrink-0"
       />
       <span className="flex flex-col gap-1">
-        <span className="text-base leading-none text-[#1c2024]">{label}</span>
+        <span className="text-base leading-none text-foreground">{label}</span>
         {description && (
-          <span className="text-sm leading-none text-[#60646c]">
+          <span className="text-sm leading-none text-muted-foreground">
             {description}
           </span>
         )}

@@ -5,11 +5,11 @@ import type { AppColor } from '@/data/apps'
 import { cn } from '@/lib/utils'
 
 const iconHoverColorVariants: Record<AppColor, string> = {
-  pink: 'group-hover:text-pink-500',
+  pink: 'group-hover:text-crimson-9',
   blue: 'group-hover:text-twblue-9',
-  orange: 'group-hover:text-orange-500',
-  green: 'group-hover:text-green-500',
-  purple: 'group-hover:text-purple-500',
+  orange: 'group-hover:text-orange-9',
+  green: 'group-hover:text-lime-9',
+  purple: 'group-hover:text-violet-9',
 }
 
 function AppBadge({ label }: { label: string }) {
@@ -36,7 +36,7 @@ export function AppIcon({ icon, color, className }: AppIconProps) {
         )}
       >
         <img src={icon} alt="" className="h-full w-full object-contain" />
-        <div className="pointer-events-none absolute inset-0 bg-[#0064ff] mix-blend-color transition-opacity duration-200 will-change-[opacity] group-hover:opacity-0" />
+        <div className="pointer-events-none absolute inset-0 bg-twblue-9 mix-blend-color transition-opacity duration-200 will-change-[opacity] group-hover:opacity-0" />
       </div>
     )
   }
@@ -51,7 +51,7 @@ export function AppIcon({ icon, color, className }: AppIconProps) {
     >
       <Icon
         className={cn(
-          'size-8 text-[#0064ff] transition-colors duration-200',
+          'size-8 text-twblue-9 transition-colors duration-200',
           iconHoverColorVariants[color],
         )}
       />
@@ -148,7 +148,7 @@ export function FeaturedAppCard({
   className,
 }: FeaturedAppCardProps) {
   const featuredClassName = cn(
-    'group flex w-full flex-col gap-4 rounded-[14px] border border-[#C8C8C8] bg-white p-4 transition-colors hover:bg-muted/50 sm:h-[132px] sm:flex-row sm:items-center',
+    'group flex w-full flex-col gap-4 rounded-[14px] border border-border bg-card p-4 transition-colors hover:bg-muted/50 sm:h-[132px] sm:flex-row sm:items-center',
     className,
   )
 

@@ -27,8 +27,8 @@ export function SecondarySubjectDetail({
                 <span
                   className={cn(
                     'text-xs font-medium',
-                    sem.delta > 0 && 'text-emerald-600',
-                    sem.delta < 0 && 'text-red-500',
+                    sem.delta > 0 && 'text-lime-11',
+                    sem.delta < 0 && 'text-crimson-11',
                     sem.delta === 0 && 'text-muted-foreground',
                   )}
                 >
@@ -37,7 +37,7 @@ export function SecondarySubjectDetail({
                 </span>
               )}
               <span className="font-semibold">{sem.score}</span>
-              <span className="text-muted-foreground rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium">
+              <span className="text-muted-foreground rounded bg-muted px-1.5 py-0.5 text-xs font-medium">
                 {sem.grade}
               </span>
             </span>

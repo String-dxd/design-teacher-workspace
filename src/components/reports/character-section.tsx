@@ -16,11 +16,11 @@ interface CharacterSectionProps {
 
 export function CharacterSection({ data }: CharacterSectionProps) {
   const conductColors: Record<string, string> = {
-    Excellent: 'bg-green-100 text-green-700 hover:bg-green-100',
-    'Very Good': 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100',
-    Good: 'bg-slate-100 text-slate-700 hover:bg-slate-100',
-    Fair: 'bg-amber-100 text-amber-700 hover:bg-amber-100',
-    Poor: 'bg-red-100 text-red-700 hover:bg-red-100',
+    Excellent: 'bg-lime-3 text-lime-11 hover:bg-lime-3',
+    'Very Good': 'bg-lime-3 text-lime-11 hover:bg-lime-3',
+    Good: 'bg-muted text-muted-foreground hover:bg-muted',
+    Fair: 'bg-amber-3 text-amber-11 hover:bg-amber-3',
+    Poor: 'bg-crimson-3 text-crimson-11 hover:bg-crimson-3',
   }
 
   return (

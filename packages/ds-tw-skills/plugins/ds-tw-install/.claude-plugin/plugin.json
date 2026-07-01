@@ -1,5 +1,0 @@
-{
-  "name": "ds-tw-install",
-  "description": "Install and configure the Flow Design System with 3-layer CSS token bridge, dark mode, and Shadcn migration.",
-  "version": "0.1.0"
-}
