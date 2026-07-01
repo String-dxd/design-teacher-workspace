@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils'
 
 export type TemplateId = 'quarterly' | 'comprehensive' | 'custom'
 
-export interface HdpTemplate {
+interface HdpTemplate {
   id: TemplateId
   name: string
   description: string

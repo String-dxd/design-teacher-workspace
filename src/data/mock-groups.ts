@@ -1,17 +1,6 @@
 import type { StudentGroup } from '@/types/student-group'
 import { mockStudents } from '@/data/mock-students'
 
-export function getMockStudentById(id: string) {
-  const s = mockStudents.find((student) => student.id === id)
-  if (!s) return undefined
-  return {
-    name: s.name,
-    class: s.class,
-    nric: s.nric,
-    indexNumber: s.indexNumber,
-  }
-}
-
 // Learning Support Students — students from Bandung Secondary where learningSupport is not null
 const lsStudents = mockStudents
   .filter(

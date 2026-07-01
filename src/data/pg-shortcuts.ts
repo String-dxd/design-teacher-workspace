@@ -1,4 +1,4 @@
-export interface PGShortcutPreset {
+interface PGShortcutPreset {
   id: string
   label: string // parent-facing label shown in the PG app
   composerLabel: string // teacher-facing label shown in the announcement composer

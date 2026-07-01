@@ -7,8 +7,6 @@ import {
   getStudentScopes,
 } from '@/data/mock-student-groups'
 
-// Backward-compatible type alias — existing code that imports SelectedRecipient continues to work
-export type { SelectedEntity as SelectedRecipient }
 
 interface StudentRecipientSelectorProps {
   value: Array<SelectedEntity>

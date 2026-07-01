@@ -12,7 +12,7 @@ export interface App {
   badge?: string
 }
 
-export interface AppCategory {
+interface AppCategory {
   id: string
   title: string
   description: string

@@ -118,10 +118,6 @@ export interface TermlyAccumulatingData {
   ccaMissed: number
 }
 
-export interface ClassOption {
-  value: string
-  label: string
-}
 
 export type FilterField =
   // General

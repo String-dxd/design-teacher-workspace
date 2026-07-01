@@ -1,4 +1,4 @@
-export interface StaffMember {
+interface StaffMember {
   id: string
   name: string
   email: string
@@ -6,7 +6,7 @@ export interface StaffMember {
   formClass?: string // e.g. "3A" — undefined for non-form teachers (HODs, etc.)
 }
 
-export interface StaffGroup {
+interface StaffGroup {
   id: string
   label: string
   memberIds: Array<string>
