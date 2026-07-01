@@ -20,7 +20,7 @@ your row when done.
 | 009 | Add a `/ds` route rendering the existing (unrouted) Shadcn component gallery `component-example.tsx` | P3 | S | — | DONE — advisor/color-system-007-009, /ds renders 2026-06-26 |
 | 010 | Feature-wide color-token sweep — OVERVIEW & canonical mapping (shared reference for 011–013: token vocabulary, resolved decisions, verification gates, phase map) | P2 | L | 007–009 | REFERENCE (not executed on its own) — written 2026-06-30 |
 | 011 | Color sweep: mechanical batches (Phases 1–6, ~51 small/medium files; grep-anchored palette/hazard swaps) | P2 | L | 010 | DONE — branch `advisor/color-sweep`, 51 files, gates green (build 0 / tsc 113 / vitest 37-16), palette residual 0 in-scope, 2026-07-01 |
-| 012 | Color sweep: giant files (Phases 7–10; 5 files >1.5k lines, palette+dark-hazard ONLY; charts deferred; PDF-facsimile + phone-preview fenced) | P2 | L | 010, 011 | TODO |
+| 012 | Color sweep: giant files (Phases 7–10; 5 files >1.5k lines, palette+dark-hazard ONLY; charts deferred; PDF-facsimile + phone-preview fenced) | P2 | L | 010, 011 | DONE — branch `advisor/color-sweep`, +corrective slate/amber pass (see note), gates green (build 0 / tsc 113 / vitest 37-16), fences intact, 2026-07-01 |
 | 013 | Color sweep: charts & SVG (Phase 11; centralize ~90 chart literals into `src/lib/chart-colors.ts`; visual-review gated) | P3 | M | 010, 011, 012 | TODO |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) |
@@ -46,6 +46,24 @@ full palette.
 - The token *foundation* is already done (plans 007/008 registered slate-3..12, violet,
   `--destructive-foreground`), so every proposed utility resolves — this is purely
   consumer-side class/prop swaps, no `styles.css` work.
+
+### Correction during execution (2026-07-01) — missed `slate`-numeric scale
+
+The original audit/gate grep **excluded `slate`** (since Radix `slate-1..12` is on-token),
+which had two consequences, both fixed:
+- **Tailwind-numeric `slate-50..900` (and dual-name `orange/amber/lime/violet-50..900`)
+  were missed** — verified in the built CSS to resolve to Tailwind's *static default*
+  palette, which is off-brand AND does not dark-flip. Plan 010's mapping row + PALETTE
+  gate pattern were corrected to catch any Tailwind-numeric step (50–950).
+- **5 files were never audited** (`_guest.create`, `groups.create`,
+  `enquiry-email-selector`, `send-confirmation-sheet`, `lta-dialog`, plus leftovers in
+  `student-recipient-selector`/`hdp-template-step`) because slate-only files didn't match
+  the discovery grep. A corrective pass migrated all of them.
+
+Final residual after 011+012+corrective: the only Tailwind-numeric palette left is the
+**~84 inside `announcements.new`'s fenced PG phone-preview** (intentional permanent
+light-mode mimicry of the Parents-Gateway app). Box-shadow `rgba()`, DS-gallery token
+displays, and chart literals (→ 013) are documented acceptable residuals.
 
 ### Resolved design decisions (confirmed with the maintainer 2026-06-30)
 
