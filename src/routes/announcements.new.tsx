@@ -152,10 +152,10 @@ function YesNoMockup() {
       <div className="h-2 w-2/3 rounded-full bg-slate-300" />
       <div className="h-1.5 w-full rounded-full bg-slate-200" />
       <div className="mt-1 flex gap-2">
-        <div className="flex h-7 flex-1 items-center justify-center rounded-md bg-green-100 text-[9px] font-semibold text-green-700">
+        <div className="flex h-7 flex-1 items-center justify-center rounded-md bg-lime-3 text-[9px] font-semibold text-lime-11">
           Yes
         </div>
-        <div className="flex h-7 flex-1 items-center justify-center rounded-md bg-red-100 text-[9px] font-semibold text-red-700">
+        <div className="flex h-7 flex-1 items-center justify-center rounded-md bg-crimson-3 text-[9px] font-semibold text-crimson-11">
           No
         </div>
       </div>
@@ -420,8 +420,8 @@ function AnnouncementPreview({
         )}
         {responseType !== 'view-only' && eventStart && (
           <div className="mt-1.5 flex items-center gap-1.5">
-            <CalendarDays className="h-3 w-3 shrink-0 text-blue-500" />
-            <p className="text-[11px] font-medium text-blue-600">
+            <CalendarDays className="h-3 w-3 shrink-0 text-twblue-11" />
+            <p className="text-[11px] font-medium text-twblue-11">
               {formattedEventDate}
             </p>
           </div>
@@ -654,7 +654,7 @@ function AnnouncementPreview({
       {/* Question body */}
       <div className="flex-1 overflow-y-auto px-4 py-4">
         <p className="mb-4 text-[11px] font-medium leading-snug text-slate-800">
-          {currentQ.required && <span className="text-red-500">* </span>}
+          {currentQ.required && <span className="text-destructive">* </span>}
           {currentQ.text || (
             <span className="text-slate-300">Question text</span>
           )}
@@ -713,8 +713,8 @@ function AnnouncementPreview({
         </div>
       </div>
       <div className="flex flex-1 flex-col items-center justify-center gap-3 px-4 py-8">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
-          <CheckCircle2 className="h-6 w-6 text-emerald-500" />
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-lime-3">
+          <CheckCircle2 className="h-6 w-6 text-lime-11" />
         </div>
         <p className="text-center text-sm font-semibold text-slate-800">
           Response submitted
@@ -1650,9 +1650,9 @@ function NewAnnouncementPage() {
     : null
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50">
+    <div className="flex min-h-screen flex-col bg-muted">
       {/* Sticky header */}
-      <div className="sticky top-0 z-10 bg-white">
+      <div className="sticky top-0 z-10 bg-background">
         {/* Top bar */}
         <PageHeader
           title={isEditing ? 'Edit Post' : 'New Post'}
@@ -1673,11 +1673,11 @@ function NewAnnouncementPage() {
                   <span>Saving…</span>
                 ) : savedAt ? (
                   <>
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                    <CheckCircle2 className="h-3.5 w-3.5 text-lime-11" />
                     <span>Saved · {savedTimeLabel}</span>
                   </>
                 ) : title ? (
-                  <span className="text-slate-400">Draft</span>
+                  <span className="text-muted-foreground">Draft</span>
                 ) : null}
               </div>
 
@@ -1780,14 +1780,14 @@ function NewAnnouncementPage() {
                       align="end"
                       className="w-64 gap-2 p-3"
                     >
-                      <p className="text-sm font-medium text-slate-800">
+                      <p className="text-sm font-medium text-foreground">
                         Complete these fields before posting
                       </p>
                       <ul className="mt-1.5 space-y-1">
                         {missingFields.map((f) => (
                           <li
                             key={f.field}
-                            className="flex items-start gap-1.5 text-xs text-slate-600"
+                            className="flex items-start gap-1.5 text-xs text-muted-foreground"
                           >
                             <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-destructive" />
                             {f.hint}
@@ -1804,29 +1804,29 @@ function NewAnnouncementPage() {
 
         {/* Scheduling strip — hidden when editing a posted post */}
         {!isEditingPosted && sendOption === 'scheduled' && (
-          <div className="flex items-center gap-3 border-b bg-blue-50 px-6 py-2">
-            <CalendarClock className="h-4 w-4 shrink-0 text-blue-600" />
-            <span className="text-sm font-medium text-blue-800">Send on</span>
+          <div className="flex items-center gap-3 border-b bg-twblue-3 px-6 py-2">
+            <CalendarClock className="h-4 w-4 shrink-0 text-twblue-11" />
+            <span className="text-sm font-medium text-twblue-12">Send on</span>
             <input
               type="date"
               value={scheduledDate}
               min={new Date().toISOString().split('T')[0]}
               onChange={(e) => setScheduledDate(e.target.value)}
-              className="rounded-md border border-blue-200 bg-white px-2.5 py-1 text-sm text-foreground outline-none focus:ring-2 focus:ring-blue-300"
+              className="rounded-md border border-twblue-6 bg-background px-2.5 py-1 text-sm text-foreground outline-none focus:ring-2 focus:ring-twblue-7"
             />
-            <span className="text-sm text-blue-600">at</span>
+            <span className="text-sm text-twblue-11">at</span>
             <input
               type="time"
               value={scheduledTime}
               onChange={(e) => setScheduledTime(e.target.value)}
-              className="rounded-md border border-blue-200 bg-white px-2.5 py-1 text-sm text-foreground outline-none focus:ring-2 focus:ring-blue-300"
+              className="rounded-md border border-twblue-6 bg-background px-2.5 py-1 text-sm text-foreground outline-none focus:ring-2 focus:ring-twblue-7"
             />
             <div className="ml-auto flex items-center gap-3">
               <Button
                 size="sm"
                 onClick={() => setShowConfirmSheet(true)}
                 disabled={!canSchedule}
-                className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+                className="bg-primary hover:bg-primary/90 disabled:opacity-50"
               >
                 <CalendarClock className="mr-1.5 h-3.5 w-3.5" />
                 Schedule
@@ -1834,7 +1834,7 @@ function NewAnnouncementPage() {
               <button
                 type="button"
                 onClick={() => setSendOption('now')}
-                className="flex items-center gap-1 text-xs text-blue-500 hover:text-blue-700"
+                className="flex items-center gap-1 text-xs text-twblue-11 hover:text-twblue-12"
               >
                 <X className="h-3 w-3" />
                 Cancel
@@ -1862,13 +1862,13 @@ function NewAnnouncementPage() {
           <div className="space-y-6">
             {/* Locked-fields notice — shown when editing a posted post */}
             {isEditingPosted && (
-              <div className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs">
-                <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-500" />
+              <div className="flex items-start gap-3 rounded-xl border border-border bg-muted px-4 py-3 text-xs">
+                <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                 <div>
-                  <p className="font-semibold text-slate-700">
+                  <p className="font-semibold text-foreground">
                     Some fields are locked
                   </p>
-                  <p className="mt-0.5 text-slate-500">
+                  <p className="mt-0.5 text-muted-foreground">
                     Title, description, recipients, shortcuts, links, and
                     attachments cannot be changed for a posted post. You can
                     still update staff-in-charge and enquiry email.
@@ -1899,16 +1899,16 @@ function NewAnnouncementPage() {
                   .filter(Boolean)
                   .join(' and ')
                 return (
-                  <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs">
-                    <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600" />
+                  <div className="flex items-start gap-3 rounded-xl border border-amber-6 bg-amber-3 px-4 py-3 text-xs">
+                    <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-11" />
                     <div className="flex-1">
-                      <p className="font-semibold text-amber-900">
+                      <p className="font-semibold text-amber-12">
                         {mediaLabel} from this draft{' '}
                         {minDays === 0
                           ? 'have expired'
                           : `expire${minDays === 1 ? 's' : ''} in ${minDays} day${minDays > 1 ? 's' : ''}`}
                       </p>
-                      <p className="mt-0.5 text-amber-700">
+                      <p className="mt-0.5 text-amber-11">
                         Files and photos are retained for 30 days from upload.
                         Re-upload them before posting to avoid losing them.
                       </p>
@@ -1916,7 +1916,7 @@ function NewAnnouncementPage() {
                     <button
                       type="button"
                       onClick={() => setFileBannerDismissed(true)}
-                      className="shrink-0 rounded p-0.5 text-amber-500 hover:bg-amber-100 hover:text-amber-700"
+                      className="shrink-0 rounded p-0.5 text-amber-11 hover:bg-amber-4 hover:text-amber-12"
                       aria-label="Dismiss"
                     >
                       <X className="h-3.5 w-3.5" />
@@ -1926,7 +1926,7 @@ function NewAnnouncementPage() {
               })()}
 
             {/* RECIPIENTS — first section */}
-            <section className="rounded-xl border bg-white p-6">
+            <section className="rounded-xl border bg-card p-6">
               <h2 className="mb-5 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                 Recipients
               </h2>
@@ -1981,8 +1981,8 @@ function NewAnnouncementPage() {
                           className={cn(
                             'flex items-center gap-0.5 rounded border px-1.5 py-0.5 text-[10px] font-semibold transition-colors',
                             isEditor
-                              ? 'border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100'
-                              : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50',
+                              ? 'border-twblue-6 bg-twblue-3 text-twblue-11 hover:bg-twblue-4'
+                              : 'border-border bg-card text-muted-foreground hover:bg-muted',
                           )}
                         >
                           {isEditor ? 'Editor' : 'Viewer'}
@@ -2011,7 +2011,7 @@ function NewAnnouncementPage() {
             </section>
 
             {/* CONTENT */}
-            <section className="rounded-xl border bg-white p-6">
+            <section className="rounded-xl border bg-card p-6">
               <h2 className="mb-5 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                 Content
               </h2>
@@ -2086,7 +2086,7 @@ function NewAnnouncementPage() {
                 {/* Shortcuts */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-slate-700">
+                    <span className="text-xs font-semibold text-foreground">
                       Shortcuts
                     </span>
                     <span className="text-xs text-muted-foreground">
@@ -2102,7 +2102,7 @@ function NewAnnouncementPage() {
                 {/* Links */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-slate-700">
+                    <span className="text-xs font-semibold text-foreground">
                       Links
                     </span>
                     <span className="text-xs text-muted-foreground">
@@ -2114,10 +2114,10 @@ function NewAnnouncementPage() {
                     <div className="space-y-1.5">
                       {/* Column labels */}
                       <div className="flex items-center gap-1.5">
-                        <span className="flex-1 text-[10px] font-medium uppercase tracking-wide text-slate-400">
+                        <span className="flex-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
                           URL
                         </span>
-                        <span className="w-48 shrink-0 text-[10px] font-medium uppercase tracking-wide text-slate-400">
+                        <span className="w-48 shrink-0 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
                           Description{' '}
                           <span className="text-destructive">*</span>
                         </span>
@@ -2154,7 +2154,7 @@ function NewAnnouncementPage() {
                               type="button"
                               aria-label="Remove link"
                               onClick={() => removeWebsiteLink(i)}
-                              className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                              className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
                             >
                               <X className="h-3.5 w-3.5" />
                             </button>
@@ -2168,7 +2168,7 @@ function NewAnnouncementPage() {
                     <button
                       type="button"
                       onClick={addWebsiteLink}
-                      className="flex items-center gap-2 rounded-lg border border-dashed border-slate-300 px-3 py-2 text-xs text-muted-foreground transition-colors hover:border-slate-400 hover:bg-slate-50 hover:text-foreground"
+                      className="flex items-center gap-2 rounded-lg border border-dashed border-border px-3 py-2 text-xs text-muted-foreground transition-colors hover:border-input hover:bg-muted hover:text-foreground"
                     >
                       <Plus className="h-3.5 w-3.5" />
                       {websiteLinks.length > 0
@@ -2181,7 +2181,7 @@ function NewAnnouncementPage() {
                 {/* Files */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-slate-700">
+                    <span className="text-xs font-semibold text-foreground">
                       Files
                     </span>
                     <span className="text-xs text-muted-foreground">
@@ -2194,11 +2194,11 @@ function NewAnnouncementPage() {
                       {uploadedFiles.map((file, i) => (
                         <div
                           key={i}
-                          className="flex items-center gap-2.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2"
+                          className="flex items-center gap-2.5 rounded-lg border border-border bg-muted px-3 py-2"
                         >
-                          <FileText className="h-4 w-4 shrink-0 text-slate-400" />
+                          <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
                           <div className="min-w-0 flex-1">
-                            <p className="truncate text-xs font-medium text-slate-700">
+                            <p className="truncate text-xs font-medium text-foreground">
                               {file.name}
                             </p>
                             <p className="text-[10px] text-muted-foreground">
@@ -2209,7 +2209,7 @@ function NewAnnouncementPage() {
                             type="button"
                             aria-label={`Remove ${file.name}`}
                             onClick={() => removeFile(i)}
-                            className="shrink-0 rounded p-0.5 text-slate-400 transition-colors hover:bg-slate-200 hover:text-slate-600"
+                            className="shrink-0 rounded p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                           >
                             <X className="h-3 w-3" />
                           </button>
@@ -2224,11 +2224,11 @@ function NewAnnouncementPage() {
                       {draftFilesMeta.map((meta, i) => (
                         <div
                           key={`draft-file-${i}`}
-                          className="flex items-center gap-2.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2"
+                          className="flex items-center gap-2.5 rounded-lg border border-border bg-muted px-3 py-2"
                         >
-                          <FileText className="h-4 w-4 shrink-0 text-slate-400" />
+                          <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
                           <div className="min-w-0 flex-1">
-                            <p className="truncate text-xs font-medium text-slate-700">
+                            <p className="truncate text-xs font-medium text-foreground">
                               {meta.name}
                             </p>
                             <p className="text-[10px] text-muted-foreground">
@@ -2243,7 +2243,7 @@ function NewAnnouncementPage() {
                                 prev.filter((_, j) => j !== i),
                               )
                             }
-                            className="shrink-0 rounded p-0.5 text-slate-400 transition-colors hover:bg-slate-200 hover:text-slate-600"
+                            className="shrink-0 rounded p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                           >
                             <X className="h-3 w-3" />
                           </button>
@@ -2269,7 +2269,7 @@ function NewAnnouncementPage() {
                         'flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed px-4 py-4 text-center transition-colors',
                         fileDragOver
                           ? 'border-primary bg-primary/5 text-primary'
-                          : 'border-slate-300 text-muted-foreground hover:border-slate-400 hover:bg-slate-50 hover:text-foreground',
+                          : 'border-border text-muted-foreground hover:border-input hover:bg-muted hover:text-foreground',
                       )}
                     >
                       <Paperclip className="h-4 w-4" />
@@ -2295,7 +2295,7 @@ function NewAnnouncementPage() {
                 {/* Photos */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-slate-700">
+                    <span className="text-xs font-semibold text-foreground">
                       Photos
                     </span>
                     <span className="text-xs text-muted-foreground">
@@ -2338,14 +2338,14 @@ function NewAnnouncementPage() {
                             'relative cursor-grab overflow-hidden rounded-md border transition-all active:cursor-grabbing',
                             coverPhotoIndices.has(i)
                               ? 'border-primary ring-2 ring-primary ring-offset-1'
-                              : 'border-slate-200',
+                              : 'border-border',
                             dragOverIndex === i && dragSourceIndex.current !== i
                               ? 'scale-95 ring-2 ring-primary/50 ring-offset-1'
                               : '',
                           )}
                         >
                           {/* Top toolbar — cover toggle + delete */}
-                          <div className="absolute inset-x-0 top-0 z-10 flex items-center gap-0.5 bg-slate-900/75 px-1.5 py-1">
+                          <div className="absolute inset-x-0 top-0 z-10 flex items-center gap-0.5 bg-[oklch(0_0_0/0.75)] px-1.5 py-1">
                             <button
                               type="button"
                               onClick={() => toggleCoverPhoto(i)}
@@ -2381,7 +2381,7 @@ function NewAnnouncementPage() {
                             draggable={false}
                           />
 
-                          <div className="flex items-center gap-1 bg-white px-1.5 py-0.5">
+                          <div className="flex items-center gap-1 bg-card px-1.5 py-0.5">
                             {coverPhotoIndices.has(i) && (
                               <span className="shrink-0 rounded bg-primary/10 px-1 py-px text-[8px] font-semibold uppercase tracking-wide text-primary">
                                 Cover
@@ -2402,7 +2402,7 @@ function NewAnnouncementPage() {
                       {draftPhotosMeta.map((meta, i) => (
                         <div
                           key={`draft-photo-${i}`}
-                          className="relative overflow-hidden rounded-md border border-slate-200"
+                          className="relative overflow-hidden rounded-md border border-border"
                         >
                           {meta.thumbnailUrl ? (
                             <img
@@ -2412,9 +2412,9 @@ function NewAnnouncementPage() {
                               draggable={false}
                             />
                           ) : (
-                            <div className="flex aspect-square w-full flex-col items-center justify-center gap-1 bg-slate-100 p-2">
-                              <ImagePlus className="h-5 w-5 text-slate-400" />
-                              <p className="line-clamp-2 text-center text-[9px] leading-tight text-slate-500">
+                            <div className="flex aspect-square w-full flex-col items-center justify-center gap-1 bg-muted p-2">
+                              <ImagePlus className="h-5 w-5 text-muted-foreground" />
+                              <p className="line-clamp-2 text-center text-[9px] leading-tight text-muted-foreground">
                                 {meta.name}
                               </p>
                             </div>
@@ -2427,7 +2427,7 @@ function NewAnnouncementPage() {
                                 prev.filter((_, j) => j !== i),
                               )
                             }
-                            className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-slate-900/50 text-white hover:bg-slate-900/70"
+                            className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[oklch(0_0_0/0.5)] text-white hover:bg-[oklch(0_0_0/0.7)]"
                           >
                             <X className="h-2.5 w-2.5" />
                           </button>
@@ -2453,7 +2453,7 @@ function NewAnnouncementPage() {
                         'flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed px-4 py-4 text-center transition-colors',
                         photoDragOver
                           ? 'border-primary bg-primary/5 text-primary'
-                          : 'border-slate-300 text-muted-foreground hover:border-slate-400 hover:bg-slate-50 hover:text-foreground',
+                          : 'border-border text-muted-foreground hover:border-input hover:bg-muted hover:text-foreground',
                       )}
                     >
                       <ImagePlus className="h-4 w-4" />
@@ -2480,7 +2480,7 @@ function NewAnnouncementPage() {
 
             {/* RESPONSE TYPE */}
             {showResponseSection && (
-              <section className="rounded-xl border bg-white p-6">
+              <section className="rounded-xl border bg-card p-6">
                 <h2 className="mb-1 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                   Response Type
                 </h2>
@@ -2512,15 +2512,15 @@ function NewAnnouncementPage() {
                         'flex flex-col gap-3 rounded-xl border-2 p-4 text-left transition-all',
                         responseType === opt.value
                           ? 'border-primary bg-primary/[0.04] ring-1 ring-primary/20'
-                          : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50',
+                          : 'border-border bg-card hover:border-input hover:bg-muted',
                       )}
                     >
                       <div
                         className={cn(
                           'flex h-[100px] w-full items-center justify-center overflow-hidden rounded-lg border',
                           responseType === opt.value
-                            ? 'border-primary/15 bg-white'
-                            : 'border-slate-100 bg-slate-50/50',
+                            ? 'border-primary/15 bg-card'
+                            : 'border-border bg-muted/50',
                         )}
                       >
                         <div className="w-full">{opt.mockup}</div>
@@ -2535,7 +2535,7 @@ function NewAnnouncementPage() {
                           </p>
                         </div>
                         {responseType === opt.value && (
-                          <div className="mt-0.5 shrink-0 rounded-full bg-primary p-0.5 text-white">
+                          <div className="mt-0.5 shrink-0 rounded-full bg-primary p-0.5 text-primary-foreground">
                             <Check className="h-3 w-3" />
                           </div>
                         )}
@@ -2545,9 +2545,9 @@ function NewAnnouncementPage() {
                 </div>
 
                 {/* Attach a Form — coming soon */}
-                <div className="mt-4 flex cursor-not-allowed items-center gap-3 rounded-lg border border-dashed border-slate-200 px-4 py-3 opacity-50">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100">
-                    <FileText className="h-4 w-4 text-slate-400" />
+                <div className="mt-4 flex cursor-not-allowed items-center gap-3 rounded-lg border border-dashed border-border px-4 py-3 opacity-50">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted">
+                    <FileText className="h-4 w-4 text-muted-foreground" />
                   </div>
                   <div className="flex-1">
                     <p className="text-sm font-medium text-foreground">
@@ -2573,7 +2573,7 @@ function NewAnnouncementPage() {
 
             {/* EVENT DETAILS — acknowledge + yes/no */}
             {responseType !== 'view-only' && (
-              <section className="rounded-xl border bg-white p-6">
+              <section className="rounded-xl border bg-card p-6">
                 <h2 className="mb-5 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                   Event Details
                 </h2>
@@ -2634,7 +2634,7 @@ function NewAnnouncementPage() {
 
             {/* SETTINGS (due date + reminders) — acknowledge + yes/no */}
             {responseType !== 'view-only' && (
-              <section className="rounded-xl border bg-white p-6">
+              <section className="rounded-xl border bg-card p-6">
                 <h2 className="mb-5 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                   Settings
                 </h2>

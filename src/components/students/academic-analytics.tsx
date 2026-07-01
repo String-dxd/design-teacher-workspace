@@ -749,7 +749,7 @@ export function LevelDropdown({ value, onValueChange }: LevelDropdownProps) {
         render={
           <button
             type="button"
-            className="border-border bg-white hover:bg-muted flex h-8 items-center gap-1.5 rounded-full border px-3 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+            className="border-border bg-card hover:bg-muted flex h-8 items-center gap-1.5 rounded-full border px-3 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
           />
         }
       >
@@ -869,7 +869,7 @@ function IndicatorDropdown({ value, onValueChange }: IndicatorDropdownProps) {
         render={
           <button
             type="button"
-            className="border-border bg-white hover:bg-muted flex h-8 items-center gap-1.5 rounded-full border px-3 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+            className="border-border bg-card hover:bg-muted flex h-8 items-center gap-1.5 rounded-full border px-3 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
           />
         }
       >
@@ -1206,7 +1206,7 @@ export function AcademicAnalytics() {
             </thead>
             <tbody className="divide-y">
               {SUBJECTS_BANDING.map((row) => (
-                <tr key={row.subject} className="bg-white">
+                <tr key={row.subject} className="bg-card">
                   <td className="px-4 py-3 text-sm text-foreground">
                     {row.subject}
                   </td>
@@ -1255,10 +1255,10 @@ export function AcademicAnalytics() {
       {chartExpanded && (
         <>
           <div
-            className="fixed inset-0 z-40 bg-black/20"
+            className="fixed inset-0 z-40 bg-foreground/20"
             onClick={() => setChartExpanded(false)}
           />
-          <div className="fixed inset-6 z-50 flex flex-col rounded-xl border bg-white p-6 shadow-2xl">
+          <div className="fixed inset-6 z-50 flex flex-col rounded-xl border bg-card p-6 shadow-2xl">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-sm font-semibold text-foreground">
                 Results over time
@@ -1455,7 +1455,7 @@ export function MonitoringAcademicAnalytics() {
           <Select value={subject} onValueChange={setSubject}>
             <SelectTrigger
               size="sm"
-              className="h-8 w-auto gap-1.5 rounded-full border-border bg-white"
+              className="h-8 w-auto gap-1.5 rounded-full border-border bg-card"
             >
               <span className="text-muted-foreground text-sm">Subject:</span>
               <SelectValue>
@@ -1481,7 +1481,7 @@ export function MonitoringAcademicAnalytics() {
           <Select value={assessment} onValueChange={setAssessment}>
             <SelectTrigger
               size="sm"
-              className="h-8 w-auto gap-1.5 rounded-full border-border bg-white"
+              className="h-8 w-auto gap-1.5 rounded-full border-border bg-card"
             >
               <span className="text-muted-foreground text-sm">Assessment:</span>
               <SelectValue>
@@ -1503,13 +1503,13 @@ export function MonitoringAcademicAnalytics() {
 
         {/* ── Quick stats ─────────────────────────────────────────────── */}
         <div className="mt-6 grid grid-cols-3 gap-4">
-          <div className="rounded-lg border bg-white p-4">
+          <div className="rounded-lg border bg-card p-4">
             <p className="text-xs text-muted-foreground">No. of students sat</p>
             <p className="mt-1 text-2xl font-bold text-foreground">
               {breakdown.quickStats.total}
             </p>
           </div>
-          <div className="rounded-lg border bg-white p-4">
+          <div className="rounded-lg border bg-card p-4">
             <p className="text-xs text-muted-foreground">
               Students with distinction
             </p>
@@ -1522,7 +1522,7 @@ export function MonitoringAcademicAnalytics() {
               %
             </p>
           </div>
-          <div className="rounded-lg border bg-white p-4">
+          <div className="rounded-lg border bg-card p-4">
             <p className="text-xs text-muted-foreground">Students with pass</p>
             <p className="mt-1 text-2xl font-bold text-foreground">
               {Math.round(
@@ -1536,7 +1536,7 @@ export function MonitoringAcademicAnalytics() {
         {/* ── Charts row ──────────────────────────────────────────────── */}
         <div className="mt-4 grid grid-cols-1 gap-4">
           {/* No. of students in each grade */}
-          <div className="rounded-lg border bg-white p-4 [&_svg:focus]:outline-none [&_svg]:outline-none">
+          <div className="rounded-lg border bg-card p-4 [&_svg:focus]:outline-none [&_svg]:outline-none">
             <p className="mb-3 text-sm font-semibold text-foreground">
               No. of students in each grade
             </p>
@@ -1550,7 +1550,7 @@ export function MonitoringAcademicAnalytics() {
           </div>
 
           {/* Scores by class */}
-          <div className="rounded-lg border bg-white overflow-hidden">
+          <div className="rounded-lg border bg-card overflow-hidden">
             <p className="px-4 pt-4 pb-3 text-sm font-semibold text-foreground">
               Scores by class
             </p>
@@ -1563,15 +1563,15 @@ export function MonitoringAcademicAnalytics() {
             </div>
             <div className="px-4 pb-4 mt-3 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
               <div className="flex items-center gap-1.5">
-                <span className="inline-block h-3 w-4 rounded-sm border border-blue-400 bg-blue-400/10" />
+                <span className="inline-block h-3 w-4 rounded-sm border border-twblue-6 bg-twblue-9/10" />
                 IQR (Q1–Q3)
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="inline-block h-[2px] w-4 bg-blue-500" />
+                <span className="inline-block h-[2px] w-4 bg-twblue-9" />
                 Median
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="inline-block h-3 w-px bg-gray-400" />
+                <span className="inline-block h-3 w-px bg-slate-9" />
                 Min / Max
               </div>
             </div>
@@ -1581,7 +1581,7 @@ export function MonitoringAcademicAnalytics() {
         {/* ── Students sorted by results ──────────────────────────────── */}
         <div
           ref={candidatesTableRef}
-          className="mt-4 scroll-mt-8 rounded-lg border bg-white p-4"
+          className="mt-4 scroll-mt-8 rounded-lg border bg-card p-4"
         >
           <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -1627,8 +1627,8 @@ export function MonitoringAcademicAnalytics() {
                     className={cn(
                       'border-border flex h-8 items-center gap-1.5 rounded-full border px-3 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
                       hasActiveTableFilters
-                        ? 'bg-blue-50 border-blue-300 text-blue-700'
-                        : 'bg-white hover:bg-muted',
+                        ? 'bg-twblue-3 border-twblue-6 text-twblue-11'
+                        : 'bg-card hover:bg-muted',
                     )}
                   />
                 }
@@ -1636,7 +1636,7 @@ export function MonitoringAcademicAnalytics() {
                 <SlidersHorizontal className="h-3.5 w-3.5" />
                 Filter
                 {hasActiveTableFilters && (
-                  <span className="ml-0.5 rounded-full bg-blue-600 px-1.5 py-0.5 text-[10px] font-medium text-white leading-none">
+                  <span className="ml-0.5 rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-medium text-primary-foreground leading-none">
                     {
                       [
                         filterClass !== 'all',
@@ -1810,7 +1810,7 @@ export function MonitoringAcademicAnalytics() {
                                 to="/students/$id"
                                 params={{ id: realId }}
                                 onClick={(e) => e.stopPropagation()}
-                                className="flex items-center justify-center rounded p-0.5 text-blue-500 hover:bg-blue-50 hover:text-blue-600"
+                                className="flex items-center justify-center rounded p-0.5 text-twblue-11 hover:bg-twblue-3 hover:text-twblue-12"
                               >
                                 <FileText className="h-4 w-4" />
                               </Link>
@@ -1933,7 +1933,7 @@ export function MonitoringAcademicAnalytics() {
           <Select value={trendsSubject} onValueChange={setTrendsSubject}>
             <SelectTrigger
               size="sm"
-              className="h-8 w-auto gap-1.5 rounded-full border-border bg-white"
+              className="h-8 w-auto gap-1.5 rounded-full border-border bg-card"
             >
               <span className="text-muted-foreground text-sm">Subject:</span>
               <SelectValue>
@@ -1958,7 +1958,7 @@ export function MonitoringAcademicAnalytics() {
         </div>
 
         {/* Subject performance over time */}
-        <div className="mt-4 rounded-lg border bg-white p-4">
+        <div className="mt-4 rounded-lg border bg-card p-4">
           <p className="mb-3 text-sm font-semibold text-foreground">
             Subject performance over time
           </p>

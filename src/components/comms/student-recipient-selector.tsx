@@ -50,7 +50,7 @@ export function StudentRecipientSelector({
         maxVisibleTokens={3}
       />
       {overlaps.map((w, i) => (
-        <p key={i} className="mt-1.5 text-xs text-amber-600">
+        <p key={i} className="mt-1.5 text-xs text-amber-11">
           {w.childLabel} is already included in {w.parentLabel}. Some students
           may receive duplicates.
         </p>

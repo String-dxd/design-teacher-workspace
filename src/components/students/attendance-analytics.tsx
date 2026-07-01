@@ -712,7 +712,7 @@ function CustomBarTooltip({
   const total = itemsWithValue.reduce((sum, p) => sum + p.value, 0)
   if (total === 0) return null
   return (
-    <div className="w-[220px] rounded-lg border border-border/60 bg-white px-3 py-2.5 shadow-lg text-xs">
+    <div className="w-[220px] rounded-lg border border-border/60 bg-popover px-3 py-2.5 shadow-lg text-xs">
       <p className="mb-2 text-[11px] font-semibold text-foreground">{label}</p>
       <div className="space-y-1.5">
         {itemsWithValue.map((item) => {
@@ -1032,10 +1032,10 @@ function AttSortableHeader({
               dir === 'asc' && 'bg-[var(--slate-5)]',
             )}
           >
-            <ArrowUp className="h-4 w-4 text-[var(--slate-11)]" />
+            <ArrowUp className="h-4 w-4 text-muted-foreground" />
             Sort ascending
             {dir === 'asc' && (
-              <Check className="ml-auto h-4 w-4 text-[var(--slate-11)]" />
+              <Check className="ml-auto h-4 w-4 text-muted-foreground" />
             )}
           </button>
           <button
@@ -1050,10 +1050,10 @@ function AttSortableHeader({
               dir === 'desc' && 'bg-[var(--slate-5)]',
             )}
           >
-            <ArrowDown className="h-4 w-4 text-[var(--slate-11)]" />
+            <ArrowDown className="h-4 w-4 text-muted-foreground" />
             Sort descending
             {dir === 'desc' && (
-              <Check className="ml-auto h-4 w-4 text-[var(--slate-11)]" />
+              <Check className="ml-auto h-4 w-4 text-muted-foreground" />
             )}
           </button>
         </PopoverContent>
@@ -1082,7 +1082,7 @@ function NumericFilterRow({
           value={filter.op}
           onValueChange={(v) => onChange({ ...filter, op: v as FilterOp })}
         >
-          <SelectTrigger className="h-9 w-[180px] shrink-0 rounded-[14px] bg-white text-sm">
+          <SelectTrigger className="h-9 w-[180px] shrink-0 rounded-[14px] bg-background text-sm">
             <SelectValue>{OP_LABELS[filter.op]}</SelectValue>
           </SelectTrigger>
           <SelectContent
@@ -1286,13 +1286,13 @@ function AttendanceStudentsTable({
     : null
 
   return (
-    <div ref={tableRef} className="scroll-mt-8 rounded-lg border bg-white p-4">
+    <div ref={tableRef} className="scroll-mt-8 rounded-lg border bg-card p-4">
       <div className="mb-3 flex items-center gap-2">
         <p className="text-sm font-semibold text-foreground">
           Students sorted by absences / late-coming
         </p>
         {segment && segmentCat && (
-          <span className="flex items-center gap-1.5 rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
+          <span className="flex items-center gap-1.5 rounded-full bg-twblue-3 px-2 py-0.5 text-xs font-medium text-twblue-11">
             <span
               className="inline-block h-2 w-2 shrink-0 rounded-sm"
               style={{ backgroundColor: segmentCat.color }}
@@ -1302,7 +1302,7 @@ function AttendanceStudentsTable({
             <button
               type="button"
               onClick={onClearSegment}
-              className="ml-0.5 rounded-full hover:text-blue-900"
+              className="ml-0.5 rounded-full hover:text-twblue-12"
               aria-label="Clear segment filter"
             >
               <X className="h-3 w-3" />
@@ -1336,7 +1336,7 @@ function AttendanceStudentsTable({
         >
           <SelectTrigger
             size="sm"
-            className="h-8 w-auto gap-1.5 rounded-[14px] border border-border bg-white px-3 text-sm hover:bg-muted"
+            className="h-8 w-auto gap-1.5 rounded-[14px] border border-border bg-background px-3 text-sm hover:bg-muted"
           >
             <SelectValue>
               {filterMonth === 'all' ? 'All' : filterMonth}
@@ -1361,8 +1361,8 @@ function AttendanceStudentsTable({
                 className={cn(
                   'border-border flex h-8 items-center gap-1.5 rounded-full border px-3 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
                   hasPopoverFilters
-                    ? 'border-blue-300 bg-blue-50 text-blue-700'
-                    : 'bg-white hover:bg-muted',
+                    ? 'border-twblue-6 bg-twblue-3 text-twblue-11'
+                    : 'bg-background hover:bg-muted',
                 )}
               />
             }
@@ -1370,7 +1370,7 @@ function AttendanceStudentsTable({
             <SlidersHorizontal className="h-3.5 w-3.5" />
             Filter
             {hasPopoverFilters && (
-              <span className="ml-0.5 rounded-full bg-blue-600 px-1.5 py-0.5 text-[10px] font-medium leading-none text-white">
+              <span className="ml-0.5 rounded-full bg-twblue-9 px-1.5 py-0.5 text-[10px] font-medium leading-none text-twblue-1">
                 {activeFilterCount}
               </span>
             )}
@@ -1460,7 +1460,7 @@ function AttendanceStudentsTable({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-7 w-full gap-1.5 text-xs font-medium text-[var(--slate-12)]"
+                  className="h-7 w-full gap-1.5 text-xs font-medium text-foreground"
                   onClick={() => {
                     clearFilters()
                     setFilterOpen(false)
@@ -1593,7 +1593,7 @@ function AttendanceStudentsTable({
                             to="/students/$id"
                             params={{ id: realId }}
                             onClick={(e) => e.stopPropagation()}
-                            className="flex items-center justify-center rounded p-0.5 text-blue-500 hover:bg-blue-50 hover:text-blue-600"
+                            className="flex items-center justify-center rounded p-0.5 text-twblue-11 hover:bg-twblue-3 hover:text-twblue-12"
                           >
                             <FileText className="h-4 w-4" />
                           </Link>
@@ -1767,7 +1767,7 @@ export function AttendanceLevelAnalytics() {
         {/* Cards */}
         <div className="mt-4 grid grid-cols-1 gap-4">
           {/* Current Attendance card */}
-          <div className="rounded-lg border bg-white p-4">
+          <div className="rounded-lg border bg-card p-4">
             <p className="mb-4 text-sm font-semibold text-foreground">
               Current attendance
             </p>
@@ -1828,7 +1828,7 @@ export function AttendanceLevelAnalytics() {
           </div>
 
           {/* Absences / Late-coming by Month card */}
-          <div className="rounded-lg border bg-white p-4 [&_svg:focus]:outline-none [&_svg]:outline-none">
+          <div className="rounded-lg border bg-card p-4 [&_svg:focus]:outline-none [&_svg]:outline-none">
             <div className="mb-3 flex items-center justify-between">
               <p className="text-sm font-semibold text-foreground">
                 Absences / Late-coming by month
@@ -1864,12 +1864,12 @@ export function AttendanceLevelAnalytics() {
       {chartExpanded && (
         <>
           <div
-            className="fixed inset-0 z-40 bg-black/20"
+            className="fixed inset-0 z-40 bg-foreground/20"
             onClick={() => setChartExpanded(false)}
             role="presentation"
           />
           <div
-            className="fixed inset-6 z-50 flex flex-col rounded-xl border bg-white p-6 shadow-2xl"
+            className="fixed inset-6 z-50 flex flex-col rounded-xl border bg-card p-6 shadow-2xl"
             role="dialog"
             aria-modal="true"
             aria-label="Absences / Late-coming by Month"
@@ -2108,12 +2108,12 @@ export function AttendanceAnalytics({ student }: AttendanceAnalyticsProps) {
       {chartExpanded && (
         <>
           <div
-            className="fixed inset-0 z-40 bg-black/20"
+            className="fixed inset-0 z-40 bg-foreground/20"
             onClick={() => setChartExpanded(false)}
             role="presentation"
           />
           <div
-            className="fixed inset-6 z-50 flex flex-col rounded-xl border bg-white p-6 shadow-2xl"
+            className="fixed inset-6 z-50 flex flex-col rounded-xl border bg-card p-6 shadow-2xl"
             role="dialog"
             aria-modal="true"
             aria-label="Absences / Late-coming by Month"
@@ -2163,7 +2163,7 @@ export function AttendanceAnalytics({ student }: AttendanceAnalyticsProps) {
             >
               <SelectTrigger
                 size="sm"
-                className="h-8 w-auto gap-1.5 rounded-[14px] border border-border bg-white px-3 text-sm hover:bg-muted"
+                className="h-8 w-auto gap-1.5 rounded-[14px] border border-border bg-background px-3 text-sm hover:bg-muted"
               >
                 <SelectValue>
                   {detailsFilterMonth === 'all'
@@ -2190,7 +2190,7 @@ export function AttendanceAnalytics({ student }: AttendanceAnalyticsProps) {
             >
               <SelectTrigger
                 size="sm"
-                className="h-8 w-auto gap-1.5 rounded-[14px] border border-border bg-white px-3 text-sm hover:bg-muted"
+                className="h-8 w-auto gap-1.5 rounded-[14px] border border-border bg-background px-3 text-sm hover:bg-muted"
               >
                 <SelectValue>
                   {detailsFilterType === 'all'
@@ -2229,11 +2229,11 @@ export function AttendanceAnalytics({ student }: AttendanceAnalyticsProps) {
             </thead>
             <tbody className="divide-y">
               {pagedDetails.map((row, i) => (
-                <tr key={i} className="bg-white">
+                <tr key={i} className="bg-card">
                   <td className="px-4 py-3 text-sm text-foreground">
                     {row.date}
                   </td>
-                  <td className="px-4 py-3 text-sm font-medium text-[var(--slate-12)]">
+                  <td className="px-4 py-3 text-sm font-medium text-foreground">
                     {row.type}
                   </td>
                   <td className="px-4 py-3 text-sm text-muted-foreground">

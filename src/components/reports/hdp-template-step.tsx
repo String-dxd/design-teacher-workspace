@@ -67,7 +67,7 @@ export const TEMPLATES: Array<HdpTemplate> = [
     id: 'custom',
     name: 'Custom Report',
     description: 'Select your own sections to create a personalized report',
-    icon: <Pencil className="size-5 text-amber-600" />,
+    icon: <Pencil className="size-5 text-amber-11" />,
     tags: ['Customisable'],
     sections: {
       studentInfo: true,

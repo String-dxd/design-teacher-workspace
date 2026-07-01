@@ -66,7 +66,7 @@ export function CoreValuesSection({
                 {value.supportedBy.map((s) => (
                   <div
                     key={s}
-                    className="flex items-center gap-2 rounded-md bg-gray-50 px-3 py-1.5 text-sm"
+                    className="flex items-center gap-2 rounded-md bg-muted px-3 py-1.5 text-sm"
                   >
                     <Award className="text-muted-foreground size-3.5 shrink-0" />
                     <span>
