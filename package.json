@@ -54,7 +54,7 @@
     "@vitejs/plugin-react": "^5.0.4",
     "jsdom": "^27.0.0",
     "prettier": "^3.5.3",
-    "shadcn": "^3.6.3",
+    "shadcn": "^4",
     "typescript": "^5.7.2",
     "vite": "^7.3.5",
     "vitest": "^3.2.6"
