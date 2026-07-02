@@ -8,6 +8,7 @@ import {
   useSearch,
 } from '@tanstack/react-router'
 import { Check, ChevronDown, Plus } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Popover,
@@ -57,7 +58,14 @@ function AnnouncementsLayout() {
       <div className="shrink-0 space-y-4 pt-6">
         <div className="flex items-start justify-between px-6">
           <div>
-            <h1 className="text-2xl font-semibold">Posts</h1>
+            <h1 className="flex items-center gap-2 text-2xl font-semibold">
+              Posts
+              {isAdmin && (
+                <Badge variant="outline" className="text-xs font-medium">
+                  Admin
+                </Badge>
+              )}
+            </h1>
             <p className="mt-1 hidden text-sm text-muted-foreground lg:block">
               Send a read only post or collect responses from parents via
               Parents Gateway.
