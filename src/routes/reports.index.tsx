@@ -1,11 +1,12 @@
 import { useCallback, useMemo, useState } from 'react'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import {
   ClipboardCheck,
   Columns3,
   ListFilter,
   Search,
   Send,
+  Wand2,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -42,6 +43,7 @@ import {
 import { CURRENT_ACADEMIC_YEAR, mockReports } from '@/data/mock-reports'
 import { getSchoolLevel } from '@/data/mock-students'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
+import { useFeatureFlag } from '@/hooks/use-feature-flag'
 import {
   Popover,
   PopoverContent,
@@ -103,6 +105,19 @@ function ReportsPage() {
   )
 
   useSetBreadcrumbs([{ label: 'Reports', href: '/reports' }])
+
+  const navigate = useNavigate()
+  const builderEnabled = useFeatureFlag('hdp-report-builder')
+
+  const handleOpenInBuilder = () => {
+    const first = reports.find((r) => selectedIds.has(r.id))
+    navigate({
+      to: '/reports/build',
+      search: first
+        ? { studentId: first.studentId, term: first.term }
+        : {},
+    })
+  }
 
   // Filter by school level first
   const levelFilteredReports = useMemo(() => {
@@ -296,13 +311,21 @@ function ReportsPage() {
       {/* Fixed content area */}
       <div className="shrink-0 space-y-6 pt-6">
         {/* Page Header */}
-        <div className="px-6">
-          <h1 className="text-2xl font-semibold">
-            Holistic Development Reports
-          </h1>
-          <p className="text-muted-foreground">
-            View student progress across academic and character development
-          </p>
+        <div className="flex items-start justify-between gap-4 px-6">
+          <div>
+            <h1 className="text-2xl font-semibold">
+              Holistic Development Reports
+            </h1>
+            <p className="text-muted-foreground">
+              View student progress across academic and character development
+            </p>
+          </div>
+          {builderEnabled && (
+            <Button onClick={() => navigate({ to: '/reports/build', search: {} })}>
+              <Wand2 className="mr-2 size-4" />
+              Build report
+            </Button>
+          )}
         </div>
 
         {/* Class Selector */}
@@ -518,6 +541,16 @@ function ReportsPage() {
             <span className="text-sm font-medium text-muted-foreground">
               {selectedIds.size} selected
             </span>
+            {builderEnabled && (
+              <Button
+                size="sm"
+                className="rounded-full"
+                onClick={handleOpenInBuilder}
+              >
+                <Wand2 className="mr-2 h-4 w-4" />
+                Open in builder
+              </Button>
+            )}
             <AlertDialog>
               <AlertDialogTrigger
                 render={

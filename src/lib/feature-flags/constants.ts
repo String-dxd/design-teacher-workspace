@@ -23,4 +23,6 @@ export const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
   'social-links': false,
   export: false,
   'primary-contact': false,
+  'hdp-report-builder': false,
+  'hdp-template-admin': false,
 }

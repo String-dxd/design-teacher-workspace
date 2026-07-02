@@ -29,6 +29,7 @@ import { Route as GroupsIndexRouteImport } from './routes/groups.index'
 import { Route as FormsIndexRouteImport } from './routes/forms.index'
 import { Route as AnnouncementsIndexRouteImport } from './routes/announcements.index'
 import { Route as StudentsIdRouteImport } from './routes/students.$id'
+import { Route as ReportsBuildRouteImport } from './routes/reports.build'
 import { Route as ReportsIdRouteImport } from './routes/reports.$id'
 import { Route as GroupsUploadRouteImport } from './routes/groups.upload'
 import { Route as GroupsNewRouteImport } from './routes/groups.new'
@@ -146,6 +147,11 @@ const StudentsIdRoute = StudentsIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => StudentsRoute,
 } as any)
+const ReportsBuildRoute = ReportsBuildRouteImport.update({
+  id: '/build',
+  path: '/build',
+  getParentRoute: () => ReportsRoute,
+} as any)
 const ReportsIdRoute = ReportsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -261,6 +267,7 @@ export interface FileRoutesByFullPath {
   '/groups/new': typeof GroupsNewRoute
   '/groups/upload': typeof GroupsUploadRoute
   '/reports/$id': typeof ReportsIdRoute
+  '/reports/build': typeof ReportsBuildRoute
   '/students/$id': typeof StudentsIdRoute
   '/announcements/': typeof AnnouncementsIndexRoute
   '/forms/': typeof FormsIndexRoute
@@ -294,6 +301,7 @@ export interface FileRoutesByTo {
   '/groups/new': typeof GroupsNewRoute
   '/groups/upload': typeof GroupsUploadRoute
   '/reports/$id': typeof ReportsIdRoute
+  '/reports/build': typeof ReportsBuildRoute
   '/students/$id': typeof StudentsIdRoute
   '/announcements': typeof AnnouncementsIndexRoute
   '/forms': typeof FormsIndexRoute
@@ -334,6 +342,7 @@ export interface FileRoutesById {
   '/groups/new': typeof GroupsNewRoute
   '/groups/upload': typeof GroupsUploadRoute
   '/reports/$id': typeof ReportsIdRoute
+  '/reports/build': typeof ReportsBuildRoute
   '/students/$id': typeof StudentsIdRoute
   '/announcements/': typeof AnnouncementsIndexRoute
   '/forms/': typeof FormsIndexRoute
@@ -374,6 +383,7 @@ export interface FileRouteTypes {
     | '/groups/new'
     | '/groups/upload'
     | '/reports/$id'
+    | '/reports/build'
     | '/students/$id'
     | '/announcements/'
     | '/forms/'
@@ -407,6 +417,7 @@ export interface FileRouteTypes {
     | '/groups/new'
     | '/groups/upload'
     | '/reports/$id'
+    | '/reports/build'
     | '/students/$id'
     | '/announcements'
     | '/forms'
@@ -446,6 +457,7 @@ export interface FileRouteTypes {
     | '/groups/new'
     | '/groups/upload'
     | '/reports/$id'
+    | '/reports/build'
     | '/students/$id'
     | '/announcements/'
     | '/forms/'
@@ -617,6 +629,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/students/$id'
       preLoaderRoute: typeof StudentsIdRouteImport
       parentRoute: typeof StudentsRoute
+    }
+    '/reports/build': {
+      id: '/reports/build'
+      path: '/build'
+      fullPath: '/reports/build'
+      preLoaderRoute: typeof ReportsBuildRouteImport
+      parentRoute: typeof ReportsRoute
     }
     '/reports/$id': {
       id: '/reports/$id'
@@ -811,11 +830,13 @@ const GroupsRouteWithChildren =
 
 interface ReportsRouteChildren {
   ReportsIdRoute: typeof ReportsIdRoute
+  ReportsBuildRoute: typeof ReportsBuildRoute
   ReportsIndexRoute: typeof ReportsIndexRoute
 }
 
 const ReportsRouteChildren: ReportsRouteChildren = {
   ReportsIdRoute: ReportsIdRoute,
+  ReportsBuildRoute: ReportsBuildRoute,
   ReportsIndexRoute: ReportsIndexRoute,
 }
 

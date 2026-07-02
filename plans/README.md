@@ -22,9 +22,33 @@ your row when done.
 | 011 | Color sweep: mechanical batches (Phases 1–6, ~51 small/medium files; grep-anchored palette/hazard swaps) | P2 | L | 010 | DONE — branch `advisor/color-sweep`, 51 files, gates green (build 0 / tsc 113 / vitest 37-16), palette residual 0 in-scope, 2026-07-01 |
 | 012 | Color sweep: giant files (Phases 7–10; 5 files >1.5k lines, palette+dark-hazard ONLY; charts deferred; PDF-facsimile + phone-preview fenced) | P2 | L | 010, 011 | DONE — branch `advisor/color-sweep`, +corrective slate/amber pass (see note), gates green (build 0 / tsc 113 / vitest 37-16), fences intact, 2026-07-01 |
 | 013 | Color sweep: charts & SVG (Phase 11; centralize ~90 chart literals into `src/lib/chart-colors.ts`; visual-review gated) | P3 | M | 010, 011, 012 | DONE — branch `advisor/color-sweep`, chart hex centralized (chrome→slate vars, series→named consts), gates green (build 0 / tsc 111 / vitest 37-16), 2026-07-01. Light-mode verified; **dark-mode + Radix-ifying reserved series hues pending the dark-mode toggle (deferred)** |
+| 018 | HDP "Report Builder" prototype (P1) — feature-flagged builder (section toggle/reorder/viz) + generation + P1 parents-first sharing, aimed at the "would use over SC" bet; test track (A0–A5) then demo track (B1–B3) | P1 (test) / P2 (demo) | L | `holistic-reports` flag (exists) | TEST TRACK DONE (verified) — branch `worktree-sdp+hdp-report-builder-prototype`. Built + verified via the tfx-design-ui harness (Phases 1–6). Ships: flags, `report-layouts.ts`, `reports.build` split-view builder, shared `ReportPreview`, inline Suggest, parents-first share + parent guest view (layout persisted), one-door entry, profile wizard hidden, admin Save. Evaluator verdict: **pass-with-findings** → all 3 blocking L1s fixed (TYP-2/3 label sizes, A11Y-9 guest title); LAY-2 320px confirmed. Gates: build/tsc no-regress (111), a11y-static clean. Decision record + verbatim verdict: `docs/decisions/report-builder.md`. Ratchet: proposed "sanitise shared user-authored HTML" anti-pattern. **Demo track B1–B3 (bulk, extended holistic, gamified secondary) not started.** Uncommitted on the branch. |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) |
 REJECTED (with one-line rationale).
+
+> **Numbering note**: 014–017 (dead-code/import cleanup) live on the unmerged `advisor/deadcode-plans`
+> branch and are not present on this branch. 018 skips ahead deliberately to stay monotonic across the
+> project.
+
+## Round 4 — HDP report-builder prototype (2026-07-01)
+
+A **feature/direction** plan (not tech-debt like rounds 1–3), scoped by the `HDP Mid-Point Check-In
+Discussion Guide` and sharpened via an 11-question grilling. Full context in the plan header.
+
+- **One bet**: teachers would use this **over SC + Smart Compose**. **Kill-criterion**: they can't name
+  a concrete reason to prefer it. Everything in the test track (A0–A5) serves this; **inline Smart
+  Compose is therefore non-negotiable**.
+- **Two audiences, kept separate**: TEST TRACK (P1 teachers touch it) vs DEMO TRACK (STCI/CDC vision:
+  bulk, extended holistic view, gamified secondary sharing). **If AI-build velocity slips, cut the demo
+  track first; the test track is sacrosanct.**
+- **Locked calls**: P1 sharing = parents-first (not student-first); P1 content must come from a real P1
+  HDP artifact + HOD sign-off (blocking prerequisite); builder = sections toggle/reorder/viz, **no
+  field-level edits**; bulk built with P1-curated + secondary auto-hide; one entry door (Reports page);
+  extended holistic view uses **progression charts, NOT radar**.
+- Everything is flag-gated (`hdp-report-builder`, `hdp-extended-template`) and default-off, so it can't
+  regress the shipped surface. Consistent with the existing `_guest.report-view.$token.tsx`
+  "by-design mock, no real data" note under Findings-rejected.
 
 ## Round 3 — feature-wide color-token sweep (2026-06-30)
 

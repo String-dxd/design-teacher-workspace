@@ -730,6 +730,7 @@ export function StudentProfile({
   const overallPercentageEnabled = useFeatureFlag('overall-percentage')
   const socialLinksEnabled = useFeatureFlag('social-links')
   const primaryContactEnabled = useFeatureFlag('primary-contact')
+  const reportBuilderEnabled = useFeatureFlag('hdp-report-builder')
   // Default "Student Insights" view — applies when both analytics flags are off
   const isStudentInsightsView =
     !studentAnalyticsEnabled && !studentAnalyticsBasicEnabled
@@ -1844,7 +1845,7 @@ export function StudentProfile({
                     </div>
                   )}
 
-                  {missingTerms.length > 0 && (
+                  {missingTerms.length > 0 && !reportBuilderEnabled && (
                     <div className="mt-4 flex items-center gap-2 border-t pt-4">
                       <Button
                         variant="outline"

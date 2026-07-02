@@ -155,6 +155,20 @@ const featureFlagConfigs: Array<FeatureFlagConfig> = [
       'Show the Primary contact button in the student profile header and the Primary contact field in the Family section',
     stage: 'Experiment',
   },
+  {
+    key: 'hdp-report-builder',
+    label: 'HDP Report Builder',
+    description:
+      'Enable the HDP report builder — Reports-page entry, the split-view section builder (toggle, reorder, choose visualisation), inline Smart Compose, and the P1 parents-first share flow',
+    stage: 'Experiment',
+  },
+  {
+    key: 'hdp-template-admin',
+    label: 'HDP Template Management',
+    description:
+      'Role-gated: show the template-management view so an admin/HOD can create, modify, and save the built-in HDP templates that teachers build reports from',
+    stage: 'Experiment',
+  },
 ]
 
 function FeatureFlagsPage() {
