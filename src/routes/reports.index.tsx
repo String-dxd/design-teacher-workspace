@@ -105,13 +105,15 @@ function ReportsPage({ isAdmin = false }: { isAdmin?: boolean }) {
         {/* ── Page header ─────────────────────────────────────────────────────── */}
         <div className="px-6">
           <h1 className="text-2xl font-semibold">Reports</h1>
-          {isAdmin && (
-            <p className="mt-1 hidden text-sm text-muted-foreground lg:block">
-              Export reports for your {isSchoolWide ? 'school' : 'class'}.
-              <br />
-              Switch between your class and a school-wide view below.
-            </p>
-          )}
+          <p className="mt-1 hidden text-sm text-muted-foreground lg:block">
+            Export reports for your {isSchoolWide ? 'school' : 'class'}.
+            {isAdmin && (
+              <>
+                <br />
+                Switch between your class and a school-wide view below.
+              </>
+            )}
+          </p>
         </div>
 
         {/* ── Scope selector ──────────────────────────────────────────────────── */}

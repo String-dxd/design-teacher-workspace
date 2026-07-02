@@ -58,14 +58,16 @@ function AnnouncementsLayout() {
         <div className="flex items-start justify-between px-6">
           <div>
             <h1 className="text-2xl font-semibold">Posts</h1>
-            {isAdmin && (
-              <p className="mt-1 hidden text-sm text-muted-foreground lg:block">
-                Send a read only post or collect responses from parents via
-                Parents Gateway.
-                <br />
-                Switch between your posts and a school-wide view below.
-              </p>
-            )}
+            <p className="mt-1 hidden text-sm text-muted-foreground lg:block">
+              Send a read only post or collect responses from parents via
+              Parents Gateway.
+              {isAdmin && (
+                <>
+                  <br />
+                  Switch between your posts and a school-wide view below.
+                </>
+              )}
+            </p>
           </div>
           {!isSchoolWide && (
             <Button size="sm" render={<Link to="/create" />}>
