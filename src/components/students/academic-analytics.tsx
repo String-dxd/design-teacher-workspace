@@ -20,7 +20,6 @@ import {
   RotateCcw,
   Search,
   SlidersHorizontal,
-  X,
 } from 'lucide-react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import {
@@ -40,6 +39,7 @@ import {
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import {
   Popover,
@@ -1286,48 +1286,34 @@ export function AcademicAnalytics() {
       </div>
 
       {/* Expanded overlay */}
-      {chartExpanded && (
-        <>
-          <div
-            className="fixed inset-0 z-40 bg-foreground/20"
-            onClick={() => setChartExpanded(false)}
-          />
-          <div className="fixed inset-6 z-50 flex flex-col rounded-xl border bg-card p-6 shadow-2xl">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-foreground">
-                Results over time
-              </h3>
-              <button
-                onClick={() => setChartExpanded(false)}
-                className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            <div className="min-h-0 flex-1">
-              <ResponsiveContainer width="100%" height="100%">
-                <PerformanceBarChart barSize={16} />
-              </ResponsiveContainer>
-            </div>
-            <div
-              className="flex gap-2"
-              style={{ paddingLeft: 28, paddingRight: 8 }}
-            >
-              <div className="flex flex-1 items-center justify-center border-t border-muted-foreground/30 py-1.5">
-                <span className="text-xs font-semibold text-foreground">
-                  G2
-                </span>
-              </div>
-              <div className="flex flex-[2] items-center justify-center border-t border-muted-foreground/30 py-1.5">
-                <span className="text-xs font-semibold text-foreground">
-                  G3
-                </span>
-              </div>
-            </div>
-            <PerformanceLegend />
+      <Dialog open={chartExpanded} onOpenChange={setChartExpanded}>
+        <DialogContent className="flex h-[calc(100vh-3rem)] w-[calc(100vw-3rem)] max-w-none flex-col p-6">
+          <DialogTitle className="text-sm font-semibold">
+            Results over time
+          </DialogTitle>
+          <div className="min-h-0 flex-1">
+            <ResponsiveContainer width="100%" height="100%">
+              <PerformanceBarChart barSize={16} />
+            </ResponsiveContainer>
           </div>
-        </>
-      )}
+          <div
+            className="flex gap-2"
+            style={{ paddingLeft: 28, paddingRight: 8 }}
+          >
+            <div className="flex flex-1 items-center justify-center border-t border-muted-foreground/30 py-1.5">
+              <span className="text-xs font-semibold text-foreground">
+                G2
+              </span>
+            </div>
+            <div className="flex flex-[2] items-center justify-center border-t border-muted-foreground/30 py-1.5">
+              <span className="text-xs font-semibold text-foreground">
+                G3
+              </span>
+            </div>
+          </div>
+          <PerformanceLegend />
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

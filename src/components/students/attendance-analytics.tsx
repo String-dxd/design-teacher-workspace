@@ -41,6 +41,7 @@ import {
   SERIES_BLUE_LIGHT,
 } from '@/lib/chart-colors'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import {
   Popover,
@@ -1855,53 +1856,26 @@ export function AttendanceLevelAnalytics() {
       />
 
       {/* Expanded overlay */}
-      {chartExpanded && (
-        <>
-          <div
-            className="fixed inset-0 z-40 bg-foreground/20"
-            onClick={() => setChartExpanded(false)}
-            role="presentation"
-          />
-          <div
-            className="fixed inset-6 z-50 flex flex-col rounded-xl border bg-card p-6 shadow-2xl"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Absences / Late-coming by Month"
-            tabIndex={-1}
-            // eslint-disable-next-line jsx-a11y/no-autofocus
-            autoFocus
-            onKeyDown={(e) => {
-              if (e.key === 'Escape') setChartExpanded(false)
-            }}
-          >
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-foreground">
-                Absences / Late-coming by month
-              </h3>
-              <button
-                onClick={() => setChartExpanded(false)}
-                className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                aria-label="Close chart"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            <div className="min-h-0 flex-1">
-              <ResponsiveContainer width="100%" height="100%">
-                <AbsenceBarChart
-                  data={monthlyData}
-                  barSize={36}
-                  onSegmentClick={(month, categoryKey, count) => {
-                    setChartExpanded(false)
-                    setSelectedSegment({ month, categoryKey, count })
-                  }}
-                />
-              </ResponsiveContainer>
-            </div>
-            <AbsenceLegend />
+      <Dialog open={chartExpanded} onOpenChange={setChartExpanded}>
+        <DialogContent className="flex h-[calc(100vh-3rem)] w-[calc(100vw-3rem)] max-w-none flex-col p-6">
+          <DialogTitle className="text-sm font-semibold">
+            Absences / Late-coming by month
+          </DialogTitle>
+          <div className="min-h-0 flex-1">
+            <ResponsiveContainer width="100%" height="100%">
+              <AbsenceBarChart
+                data={monthlyData}
+                barSize={36}
+                onSegmentClick={(month, categoryKey, count) => {
+                  setChartExpanded(false)
+                  setSelectedSegment({ month, categoryKey, count })
+                }}
+              />
+            </ResponsiveContainer>
           </div>
-        </>
-      )}
+          <AbsenceLegend />
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
@@ -2103,46 +2077,19 @@ export function AttendanceAnalytics({ student }: AttendanceAnalyticsProps) {
       </div>
 
       {/* Expanded overlay */}
-      {chartExpanded && (
-        <>
-          <div
-            className="fixed inset-0 z-40 bg-foreground/20"
-            onClick={() => setChartExpanded(false)}
-            role="presentation"
-          />
-          <div
-            className="fixed inset-6 z-50 flex flex-col rounded-xl border bg-card p-6 shadow-2xl"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Absences / Late-coming by Month"
-            tabIndex={-1}
-            // eslint-disable-next-line jsx-a11y/no-autofocus
-            autoFocus
-            onKeyDown={(e) => {
-              if (e.key === 'Escape') setChartExpanded(false)
-            }}
-          >
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-foreground">
-                Absences / Late-coming by month
-              </h3>
-              <button
-                onClick={() => setChartExpanded(false)}
-                className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                aria-label="Close chart"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            <div className="min-h-0 flex-1">
-              <ResponsiveContainer width="100%" height="100%">
-                <AbsenceBarChart barSize={36} />
-              </ResponsiveContainer>
-            </div>
-            <AbsenceLegend />
+      <Dialog open={chartExpanded} onOpenChange={setChartExpanded}>
+        <DialogContent className="flex h-[calc(100vh-3rem)] w-[calc(100vw-3rem)] max-w-none flex-col p-6">
+          <DialogTitle className="text-sm font-semibold">
+            Absences / Late-coming by month
+          </DialogTitle>
+          <div className="min-h-0 flex-1">
+            <ResponsiveContainer width="100%" height="100%">
+              <AbsenceBarChart barSize={36} />
+            </ResponsiveContainer>
           </div>
-        </>
-      )}
+          <AbsenceLegend />
+        </DialogContent>
+      </Dialog>
 
       {/* 4. Absences / Late-coming details */}
       <div>
