@@ -287,11 +287,21 @@ const SUBJECT_OUTCOMES: Record<
   ],
 }
 
+// Lower primary (P1–P2) reports grade LOs for languages and Maths only —
+// Science starts at P3, and Music/Art/PE are not graded LO subjects at P1.
+const LOWER_PRIMARY_SUBJECTS = [
+  'English Language',
+  'Chinese Language',
+  'Mathematics',
+]
+
 function generateSubjects(
   student: Student,
   seed: number,
 ): Array<SubjectPerformance> {
-  const subjectNames = Object.keys(SUBJECT_OUTCOMES)
+  const subjectNames = /^P[12]/.test(student.class)
+    ? LOWER_PRIMARY_SUBJECTS
+    : Object.keys(SUBJECT_OUTCOMES)
   return subjectNames.map((name, i) => {
     const outcomes = SUBJECT_OUTCOMES[name]
     const learningOutcomes: Array<LearningOutcome> = outcomes.map((o, j) => {

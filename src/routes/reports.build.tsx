@@ -151,6 +151,11 @@ function ReportBuilderPage() {
   const [message, setMessage] = useState('')
   const errorRef = useRef<HTMLDivElement>(null)
 
+  // Focus must move after the error banner renders (A11Y-11 focus-move channel).
+  useEffect(() => {
+    if (genState === 'error') errorRef.current?.focus()
+  }, [genState])
+
   if (!builderEnabled) {
     return (
       <main className="mx-auto flex max-w-md flex-col items-center gap-4 px-4 py-16 text-center">
@@ -231,7 +236,6 @@ function ReportBuilderPage() {
     window.setTimeout(() => {
       if (search.fail) {
         setGenState('error')
-        errorRef.current?.focus()
         return
       }
       const built = commit()
