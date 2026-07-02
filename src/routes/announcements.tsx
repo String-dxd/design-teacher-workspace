@@ -16,8 +16,6 @@ import {
 } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
 
-const IS_ADMIN = true
-
 const SCOPE_OPTIONS = [
   {
     value: 'my',
@@ -28,7 +26,6 @@ const SCOPE_OPTIONS = [
     value: 'school',
     label: 'School',
     description: 'All posts across the school',
-    adminOnly: true,
   },
 ] as const
 
@@ -41,7 +38,8 @@ function AnnouncementsLayout() {
   const navigate = useNavigate()
   const search = useSearch({ strict: false })
   const scope = search.scope ?? 'my'
-  const isSchoolWide = IS_ADMIN && scope === 'school'
+  const isAdmin = (search as Record<string, unknown>).view === 'admin'
+  const isSchoolWide = isAdmin && scope === 'school'
   const [open, setOpen] = useState(false)
 
   const isSubPage =
@@ -54,21 +52,20 @@ function AnnouncementsLayout() {
     return <Outlet />
   }
 
-  const currentLabel = isSchoolWide ? 'School' : 'My Posts'
-  const visibleOptions = SCOPE_OPTIONS.filter((o) => !o.adminOnly || IS_ADMIN)
-
   return (
     <div className="flex flex-col">
       <div className="shrink-0 space-y-4 pt-6">
         <div className="flex items-start justify-between px-6">
           <div>
             <h1 className="text-2xl font-semibold">Posts</h1>
-            <p className="mt-1 hidden text-sm text-muted-foreground lg:block">
-              Send a read only post or collect responses from parents via
-              Parents Gateway.
-              <br />
-              Switch between your posts and a school-wide view below.
-            </p>
+            {isAdmin && (
+              <p className="mt-1 hidden text-sm text-muted-foreground lg:block">
+                Send a read only post or collect responses from parents via
+                Parents Gateway.
+                <br />
+                Switch between your posts and a school-wide view below.
+              </p>
+            )}
           </div>
           {!isSchoolWide && (
             <Button size="sm" render={<Link to="/create" />}>
@@ -78,17 +75,17 @@ function AnnouncementsLayout() {
           )}
         </div>
         <div className="px-6">
-          {IS_ADMIN ? (
+          {isAdmin ? (
             <Popover open={open} onOpenChange={setOpen}>
               <PopoverTrigger className="inline-flex cursor-pointer items-center gap-1.5 bg-transparent p-0 text-lg font-semibold outline-none">
-                {currentLabel}
+                {isSchoolWide ? 'School' : 'My Posts'}
                 <ChevronDown className="h-5 w-5 text-muted-foreground" />
               </PopoverTrigger>
               <PopoverContent
                 className="w-56 gap-0 overflow-hidden rounded-2xl p-1"
                 align="start"
               >
-                {visibleOptions.map((opt) => (
+                {SCOPE_OPTIONS.map((opt) => (
                   <button
                     key={opt.value}
                     type="button"

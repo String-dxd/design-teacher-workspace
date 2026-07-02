@@ -36,7 +36,7 @@ function ReportsRouteComponent() {
 
 // AdminReportsPage — admin handover view (do not amend)
 function AdminReportsPage() {
-  return <ReportsPage />
+  return <ReportsPage isAdmin />
 }
 
 // RegularReportsPage — regular teacher view (amend this for regular users)
@@ -57,10 +57,10 @@ const SCOPE_OPTIONS = [
   },
 ] as const
 
-function ReportsPage() {
+function ReportsPage({ isAdmin = false }: { isAdmin?: boolean }) {
   const { tab, scope } = Route.useSearch()
   const navigate = useNavigate()
-  const isSchoolWide = scope === 'school'
+  const isSchoolWide = isAdmin && scope === 'school'
 
   const [open, setOpen] = useState(false)
   const [declarationStatus, setDeclarationStatus] =
@@ -105,15 +105,18 @@ function ReportsPage() {
         {/* ── Page header ─────────────────────────────────────────────────────── */}
         <div className="px-6">
           <h1 className="text-2xl font-semibold">Reports</h1>
-          <p className="mt-1 hidden text-sm text-muted-foreground lg:block">
-            Export reports for your {isSchoolWide ? 'school' : 'class'}.
-            <br />
-            Switch between your class and a school-wide view below.
-          </p>
+          {isAdmin && (
+            <p className="mt-1 hidden text-sm text-muted-foreground lg:block">
+              Export reports for your {isSchoolWide ? 'school' : 'class'}.
+              <br />
+              Switch between your class and a school-wide view below.
+            </p>
+          )}
         </div>
 
         {/* ── Scope selector ──────────────────────────────────────────────────── */}
         <div className="px-6">
+          {isAdmin ? (
           <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger className="inline-flex cursor-pointer items-center gap-1.5 bg-transparent p-0 text-lg font-semibold outline-none">
               {isSchoolWide ? 'School' : 'My Class'}
@@ -153,6 +156,9 @@ function ReportsPage() {
               ))}
             </PopoverContent>
           </Popover>
+          ) : (
+            <span className="text-lg font-semibold">My Class</span>
+          )}
         </div>
       </div>
 
