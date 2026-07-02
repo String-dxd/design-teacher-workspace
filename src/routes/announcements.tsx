@@ -25,7 +25,7 @@ const SCOPE_OPTIONS = [
   {
     value: 'school',
     label: 'School',
-    description: 'All posts across your school',
+    description: 'Posts across your school',
   },
 ] as const
 

@@ -53,7 +53,7 @@ const SCOPE_OPTIONS = [
   {
     value: 'school',
     label: 'School',
-    description: 'All reports across your school',
+    description: 'Reports across your school',
   },
 ] as const
 
