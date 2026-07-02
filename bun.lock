@@ -25,7 +25,7 @@
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "date-fns": "^4.1.0",
-        "lucide-react": "^0.562.0",
+        "lucide-react": "^1",
         "made-refine": "^0.2.20",
         "nitro": "3.0.1-alpha.2",
         "react": "^19.2.0",
@@ -1256,7 +1256,7 @@
 
     "lru-cache": ["lru-cache@11.2.6", "", {}, "sha512-ESL2CrkS/2wTPfuend7Zhkzo2u0daGJ/A2VucJOgQ/C48S/zB8MMeMHSGKYpXhIjbPxfuezITkaBH1wqv00DDQ=="],
 
-    "lucide-react": ["lucide-react@0.562.0", "", { "peerDependencies": { "react": "^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0" } }, "sha512-82hOAu7y0dbVuFfmO4bYF1XEwYk/mEbM5E+b1jgci/udUBEE/R7LF5Ip0CCEmXe8AybRM8L+04eP+LGZeDvkiw=="],
+    "lucide-react": ["lucide-react@1.23.0", "", { "peerDependencies": { "react": "^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0" } }, "sha512-38BpJcD0JhFosxHApP/BYsBetLpQFRoTRzEzstM/XCc3jsAG7wqaY1lgVwxiUe3xqYE+lNxo2PkCmYwXWrwwIw=="],
 
     "made-refine": ["made-refine@0.2.20", "", { "dependencies": { "@base-ui/react": "^1.1.0", "clsx": "^2.1.1", "lucide-react": "^0.574.0", "tailwind-merge": "^2.6.0" }, "peerDependencies": { "react": ">=18", "react-dom": ">=18" }, "bin": { "made-refine": "dist/cli.cjs" } }, "sha512-61sDAh+qrMPy47wPSEeez/TlqHbmystlWDaEqPlF66gU0NJTMqglwmTxSh0rHfKPSuf5OxdvXaFbyipaysL8cQ=="],
 
