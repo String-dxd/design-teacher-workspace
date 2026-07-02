@@ -307,12 +307,14 @@ function ReportsPage({ isAdmin = false }: { isAdmin?: boolean }) {
             </div>
           )}
 
-          <div className="mt-6 border-t pt-5">
-            <p className="text-xs text-muted-foreground">
-              To allow or remove PG access for custodians, please do so in
-              School Cockpit.
-            </p>
-          </div>
+          {tab === 'onboarding' && (
+            <div className="mt-6 border-t pt-5">
+              <p className="text-xs text-muted-foreground">
+                To allow or remove PG access for custodians, please do so in
+                School Cockpit.
+              </p>
+            </div>
+          )}
         </section>
       </div>
     </div>
