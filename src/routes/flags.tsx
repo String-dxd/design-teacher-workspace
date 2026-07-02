@@ -97,6 +97,20 @@ const featureFlagConfigs: Array<FeatureFlagConfig> = [
     stage: 'Release 2',
   },
   {
+    key: 'posts-admin-view',
+    label: 'Posts — Admin view',
+    description:
+      'Show a "Posts (Admin)" sidebar link that renders the Posts page with admin layout at /announcements?view=admin',
+    stage: 'Release 2',
+  },
+  {
+    key: 'reports-admin-view',
+    label: 'Reports — Admin view',
+    description:
+      'Show a "Reports (Admin)" sidebar link that renders the Reports page with admin layout at /reports?view=admin',
+    stage: 'Release 2',
+  },
+  {
     key: 'import-data',
     label: 'Import Data',
     description:

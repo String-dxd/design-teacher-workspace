@@ -6,9 +6,12 @@ import {
   ArrowUp,
   Check,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Copy,
   Lock,
   MoreHorizontal,
+  Paperclip,
   Search,
   Trash2,
   Users,
@@ -17,6 +20,7 @@ import { toast } from 'sonner'
 import type { PGAnnouncement, PGStatus } from '@/types/pg-announcement'
 import type { FormStatus } from '@/types/form'
 import type { AnnouncementFilters } from '@/components/comms/announcement-filter-bar'
+import { usePagination } from '@/hooks/use-pagination'
 import { clearDraft, loadDraft } from '@/lib/draft-storage'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
 import {
@@ -71,9 +75,26 @@ export const Route = createFileRoute('/announcements/')({
   validateSearch: (search) => ({
     tab: (search.tab as PostTab) ?? 'with-responses',
     scope: (search.scope as 'my' | 'school') ?? 'my',
+    view: (search.view as 'admin' | undefined) ?? undefined,
   }),
-  component: ParentsGatewayPage,
+  component: PostsRouteComponent,
 })
+
+function PostsRouteComponent() {
+  const { view } = Route.useSearch()
+  if (view === 'admin') return <AdminPostsPage />
+  return <RegularPostsPage />
+}
+
+// AdminPostsPage — admin handover view (do not amend)
+function AdminPostsPage() {
+  return <ParentsGatewayPage />
+}
+
+// RegularPostsPage — regular teacher view (amend this for regular users)
+function RegularPostsPage() {
+  return <ParentsGatewayPage />
+}
 
 function formatDate(iso: string | undefined): string {
   if (!iso) return '—'
@@ -422,6 +443,33 @@ function ParentsGatewayPage() {
     })
   }, [allSchoolPosts, tab, searchQuery])
 
+  const PAGE_SIZE = 20
+  const myPostsPagination = usePagination({
+    totalItems: sortedAnnouncements.length,
+    pageSize: PAGE_SIZE,
+  })
+  const schoolPostsPagination = usePagination({
+    totalItems: schoolFiltered.length,
+    pageSize: PAGE_SIZE,
+  })
+  const formsPagination = usePagination({
+    totalItems: filteredForms.length,
+    pageSize: PAGE_SIZE,
+  })
+
+  const pagedAnnouncements = sortedAnnouncements.slice(
+    myPostsPagination.startIndex,
+    myPostsPagination.startIndex + PAGE_SIZE,
+  )
+  const pagedSchoolPosts = schoolFiltered.slice(
+    schoolPostsPagination.startIndex,
+    schoolPostsPagination.startIndex + PAGE_SIZE,
+  )
+  const pagedForms = filteredForms.slice(
+    formsPagination.startIndex,
+    formsPagination.startIndex + PAGE_SIZE,
+  )
+
   const tabs: Array<{ value: PostTab; label: string; hidden?: boolean }> = [
     { value: 'with-responses', label: 'With responses' },
     { value: 'view-only', label: 'Read only' },
@@ -492,8 +540,8 @@ function ParentsGatewayPage() {
   return (
     <div className="flex flex-col">
       {/* Tabs + search/filter — single row */}
-      <div className="mt-4 space-y-4">
-        <div className="flex items-center justify-between gap-4 px-6 pb-0">
+      <div className="mt-4">
+        <div className="flex items-center justify-between gap-4 border-b px-6 pb-4">
           <div className="flex items-center gap-3">
             {/* Content type tabs */}
             <div className="flex shrink-0 rounded-full bg-muted p-1 gap-1">
@@ -537,7 +585,7 @@ function ParentsGatewayPage() {
 
         {/* School-wide mode indicator */}
         {isSchoolWide && (
-          <div className="mx-6 rounded-lg border border-twblue-6 bg-twblue-3/60 px-4 py-2.5">
+          <div className="mx-6 mt-4 rounded-lg border border-twblue-6 bg-twblue-3/60 px-4 py-2.5">
             <p className="text-sm text-twblue-11">
               Viewing all sent posts across the school. Posts cannot be created
               in this view.
@@ -560,7 +608,9 @@ function ParentsGatewayPage() {
               <Table tableClassName="table-fixed w-full">
                 <TableHeader className="border-b bg-background">
                   <TableRow className="border-0 hover:bg-transparent">
-                    <TableHead className="w-[420px] pl-6 sticky left-0 z-10 bg-background">Title</TableHead>
+                    <TableHead className="w-[420px] pl-6 sticky left-0 z-10 bg-background">
+                      Title
+                    </TableHead>
                     <TableHead className="w-[110px]">Date sent</TableHead>
                     <TableHead className="w-[160px]">Teacher</TableHead>
                     <TableHead className="w-[150px]">Read</TableHead>
@@ -570,7 +620,7 @@ function ParentsGatewayPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {schoolFiltered.map((a) => {
+                  {pagedSchoolPosts.map((a) => {
                     const totalCount = a.recipients.length
                     const readCount = a.recipients.filter(
                       (r) => r.readStatus === 'read',
@@ -647,46 +697,46 @@ function ParentsGatewayPage() {
                           onClick={(e) => e.stopPropagation()}
                         >
                           <div className="flex justify-end">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                                aria-label="More actions"
-                              >
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  navigate({
-                                    to: '/announcements/new',
-                                    search: { edit: a.id },
-                                  })
-                                }
-                              >
-                                Edit post
-                              </DropdownMenuItem>
-                              {isOwnPost && (
-                                <>
-                                  <DropdownMenuItem>
-                                    <Copy className="mr-2 h-4 w-4" />
-                                    Duplicate
-                                  </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem
-                                    className="text-destructive focus:text-destructive"
-                                    onClick={() => openDeleteDialog(a.id)}
-                                  >
-                                    <Trash2 className="mr-2 h-4 w-4" />
-                                    Delete
-                                  </DropdownMenuItem>
-                                </>
-                              )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                  aria-label="More actions"
+                                >
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    navigate({
+                                      to: '/announcements/new',
+                                      search: { edit: a.id },
+                                    })
+                                  }
+                                >
+                                  Edit post
+                                </DropdownMenuItem>
+                                {isOwnPost && (
+                                  <>
+                                    <DropdownMenuItem>
+                                      <Copy className="mr-2 h-4 w-4" />
+                                      Duplicate
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                      className="text-destructive focus:text-destructive"
+                                      onClick={() => openDeleteDialog(a.id)}
+                                    >
+                                      <Trash2 className="mr-2 h-4 w-4" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -695,6 +745,62 @@ function ParentsGatewayPage() {
                 </TableBody>
               </Table>
             )}
+            <div className="flex shrink-0 items-center justify-between bg-card px-6 py-4">
+              <div className="text-sm text-muted-foreground">
+                {schoolPostsPagination.startIndex + 1}–
+                {Math.min(
+                  schoolPostsPagination.startIndex + PAGE_SIZE,
+                  schoolFiltered.length,
+                )}{' '}
+                of {schoolFiltered.length} records
+              </div>
+              {schoolPostsPagination.totalPages > 1 && (
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={schoolPostsPagination.goToPreviousPage}
+                    disabled={!schoolPostsPagination.canGoPrevious}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Previous
+                  </Button>
+                  {schoolPostsPagination.pageNumbers.map((page, index) =>
+                    page === 'ellipsis' ? (
+                      <span
+                        key={`ellipsis-${index}`}
+                        className="px-2 text-muted-foreground"
+                      >
+                        ...
+                      </span>
+                    ) : (
+                      <Button
+                        key={page}
+                        variant={
+                          schoolPostsPagination.currentPage === page
+                            ? 'outline'
+                            : 'ghost'
+                        }
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => schoolPostsPagination.goToPage(page)}
+                      >
+                        {page}
+                      </Button>
+                    ),
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={schoolPostsPagination.goToNextPage}
+                    disabled={!schoolPostsPagination.canGoNext}
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
         ) : tab === 'custom-forms' ? (
           <div className="max-w-full overflow-x-auto bg-background">
@@ -709,7 +815,9 @@ function ParentsGatewayPage() {
               <Table tableClassName="table-fixed w-full">
                 <TableHeader className="border-b bg-background">
                   <TableRow className="border-0 hover:bg-transparent">
-                    <TableHead className="w-[460px] pl-6 sticky left-0 z-10 bg-background">Title</TableHead>
+                    <TableHead className="w-[460px] pl-6 sticky left-0 z-10 bg-background">
+                      Title
+                    </TableHead>
                     <TableHead className="w-[110px]">Date</TableHead>
                     <TableHead className="w-[100px]">Status</TableHead>
                     <TableHead className="w-[130px]">Created by</TableHead>
@@ -720,7 +828,7 @@ function ParentsGatewayPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredForms.map((form) => {
+                  {pagedForms.map((form) => {
                     const isShared = form.ownership === 'shared'
                     return (
                       <TableRow
@@ -785,31 +893,31 @@ function ParentsGatewayPage() {
                           onClick={(e) => e.stopPropagation()}
                         >
                           <div className="flex justify-end">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger
-                              render={
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                                  aria-label="More actions"
-                                />
-                              }
-                            >
-                              <MoreHorizontal className="h-4 w-4" />
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem>
-                                <Copy className="mr-2 h-4 w-4" />
-                                Duplicate
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem className="text-destructive focus:text-destructive">
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger
+                                render={
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                    aria-label="More actions"
+                                  />
+                                }
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem>
+                                  <Copy className="mr-2 h-4 w-4" />
+                                  Duplicate
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem className="text-destructive focus:text-destructive">
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -818,6 +926,62 @@ function ParentsGatewayPage() {
                 </TableBody>
               </Table>
             )}
+            <div className="flex shrink-0 items-center justify-between bg-card px-6 py-4">
+              <div className="text-sm text-muted-foreground">
+                {formsPagination.startIndex + 1}–
+                {Math.min(
+                  formsPagination.startIndex + PAGE_SIZE,
+                  filteredForms.length,
+                )}{' '}
+                of {filteredForms.length} records
+              </div>
+              {formsPagination.totalPages > 1 && (
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={formsPagination.goToPreviousPage}
+                    disabled={!formsPagination.canGoPrevious}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Previous
+                  </Button>
+                  {formsPagination.pageNumbers.map((page, index) =>
+                    page === 'ellipsis' ? (
+                      <span
+                        key={`ellipsis-${index}`}
+                        className="px-2 text-muted-foreground"
+                      >
+                        ...
+                      </span>
+                    ) : (
+                      <Button
+                        key={page}
+                        variant={
+                          formsPagination.currentPage === page
+                            ? 'outline'
+                            : 'ghost'
+                        }
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => formsPagination.goToPage(page)}
+                      >
+                        {page}
+                      </Button>
+                    ),
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={formsPagination.goToNextPage}
+                    disabled={!formsPagination.canGoNext}
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
         ) : (
           <div className="max-w-full overflow-x-auto bg-background">
@@ -889,7 +1053,7 @@ function ParentsGatewayPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {sortedAnnouncements.map((announcement) => {
+                  {pagedAnnouncements.map((announcement) => {
                     const totalCount = announcement.recipients.length
                     const readCount = announcement.recipients.filter(
                       (r) => r.readStatus === 'read',
@@ -1038,36 +1202,36 @@ function ParentsGatewayPage() {
                           onClick={(e) => e.stopPropagation()}
                         >
                           <div className="flex justify-end">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger
-                              render={
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                                  aria-label="More actions"
-                                />
-                              }
-                            >
-                              <MoreHorizontal className="h-4 w-4" />
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem>
-                                <Copy className="mr-2 h-4 w-4" />
-                                Duplicate
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                className="text-destructive focus:text-destructive"
-                                onClick={() =>
-                                  openDeleteDialog(announcement.id)
+                            <DropdownMenu>
+                              <DropdownMenuTrigger
+                                render={
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                    aria-label="More actions"
+                                  />
                                 }
                               >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                                <MoreHorizontal className="h-4 w-4" />
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem>
+                                  <Copy className="mr-2 h-4 w-4" />
+                                  Duplicate
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  className="text-destructive focus:text-destructive"
+                                  onClick={() =>
+                                    openDeleteDialog(announcement.id)
+                                  }
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -1076,6 +1240,62 @@ function ParentsGatewayPage() {
                 </TableBody>
               </Table>
             )}
+            <div className="flex shrink-0 items-center justify-between bg-card px-6 py-4">
+              <div className="text-sm text-muted-foreground">
+                {myPostsPagination.startIndex + 1}–
+                {Math.min(
+                  myPostsPagination.startIndex + PAGE_SIZE,
+                  sortedAnnouncements.length,
+                )}{' '}
+                of {sortedAnnouncements.length} records
+              </div>
+              {myPostsPagination.totalPages > 1 && (
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={myPostsPagination.goToPreviousPage}
+                    disabled={!myPostsPagination.canGoPrevious}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Previous
+                  </Button>
+                  {myPostsPagination.pageNumbers.map((page, index) =>
+                    page === 'ellipsis' ? (
+                      <span
+                        key={`ellipsis-${index}`}
+                        className="px-2 text-muted-foreground"
+                      >
+                        ...
+                      </span>
+                    ) : (
+                      <Button
+                        key={page}
+                        variant={
+                          myPostsPagination.currentPage === page
+                            ? 'outline'
+                            : 'ghost'
+                        }
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => myPostsPagination.goToPage(page)}
+                      >
+                        {page}
+                      </Button>
+                    ),
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={myPostsPagination.goToNextPage}
+                    disabled={!myPostsPagination.canGoNext}
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
 
             {/* Floating bulk action bar — same pattern as Reports */}
             {selectedIds.size > 0 && tab !== 'custom-forms' && (

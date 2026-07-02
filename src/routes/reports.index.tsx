@@ -23,9 +23,26 @@ export const Route = createFileRoute('/reports/')({
   validateSearch: (search) => ({
     tab: (search.tab as ReportTab | undefined) ?? 'onboarding',
     scope: (search.scope as 'my' | 'school' | undefined) ?? 'my',
+    view: (search.view as 'admin' | undefined) ?? undefined,
   }),
-  component: ReportsPage,
+  component: ReportsRouteComponent,
 })
+
+function ReportsRouteComponent() {
+  const { view } = Route.useSearch()
+  if (view === 'admin') return <AdminReportsPage />
+  return <RegularReportsPage />
+}
+
+// AdminReportsPage — admin handover view (do not amend)
+function AdminReportsPage() {
+  return <ReportsPage />
+}
+
+// RegularReportsPage — regular teacher view (amend this for regular users)
+function RegularReportsPage() {
+  return <ReportsPage />
+}
 
 const SCOPE_OPTIONS = [
   {
@@ -36,7 +53,7 @@ const SCOPE_OPTIONS = [
   {
     value: 'school',
     label: 'School',
-    description: 'All classes in the school',
+    description: 'All reports across the school',
   },
 ] as const
 
@@ -84,11 +101,21 @@ function ReportsPage() {
 
   return (
     <div className="flex flex-col">
-      <div className="shrink-0 space-y-5">
-        {/* ── Title with scope selector ────────────────────────────────────────── */}
-        <div className="border-b px-4 py-4">
+      <div className="shrink-0 space-y-4 pt-6">
+        {/* ── Page header ─────────────────────────────────────────────────────── */}
+        <div className="px-6">
+          <h1 className="text-2xl font-semibold">Reports</h1>
+          <p className="mt-1 hidden text-sm text-muted-foreground lg:block">
+            Export reports for your {isSchoolWide ? 'school' : 'class'}.
+            <br />
+            Switch between your class and a school-wide view below.
+          </p>
+        </div>
+
+        {/* ── Scope selector ──────────────────────────────────────────────────── */}
+        <div className="px-6">
           <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger className="inline-flex cursor-pointer items-center gap-1.5 bg-transparent p-0 text-lg font-semibold outline-none md:text-2xl">
+            <PopoverTrigger className="inline-flex cursor-pointer items-center gap-1.5 bg-transparent p-0 text-lg font-semibold outline-none">
               {isSchoolWide ? 'School' : 'My Class'}
               <ChevronDown className="h-5 w-5 text-muted-foreground" />
             </PopoverTrigger>
@@ -126,161 +153,158 @@ function ReportsPage() {
               ))}
             </PopoverContent>
           </Popover>
-          <p className="mt-1 hidden text-sm text-muted-foreground md:block">
-            Export reports for your {isSchoolWide ? 'school' : 'class'}.
-          </p>
         </div>
+      </div>
 
-        {/* ── Filter row: report tabs ──────────────────────────────────────────── */}
-        <div className="px-6">
-          <div className="flex w-fit shrink-0 rounded-full bg-muted p-1 gap-1">
-            <button
-              type="button"
-              onClick={() => switchTab('onboarding')}
-              className={cn(
-                'whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition-all',
-                tab === 'onboarding'
-                  ? 'bg-background text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground',
-              )}
-            >
-              Onboarding
-            </button>
-            <button
-              type="button"
-              onClick={() => switchTab('travel-declaration')}
-              className={cn(
-                'whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition-all',
-                tab === 'travel-declaration'
-                  ? 'bg-background text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground',
-              )}
-            >
-              Travel Declaration
-            </button>
+      {/* ── Filter row: report tabs ──────────────────────────────────────────── */}
+      <div className="mt-4 border-b px-6 pb-4">
+        <div className="flex w-fit shrink-0 rounded-full bg-muted p-1 gap-1">
+          <button
+            type="button"
+            onClick={() => switchTab('onboarding')}
+            className={cn(
+              'whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition-all',
+              tab === 'onboarding'
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground',
+            )}
+          >
+            Onboarding
+          </button>
+          <button
+            type="button"
+            onClick={() => switchTab('travel-declaration')}
+            className={cn(
+              'whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition-all',
+              tab === 'travel-declaration'
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground',
+            )}
+          >
+            Travel Declaration
+          </button>
+        </div>
+      </div>
+
+      {/* ── Content section ─────────────────────────────────────────────────── */}
+      <div className="mt-6 px-6 pb-8">
+        <section className="rounded-xl border bg-white p-6">
+          <div className="mb-5">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              {tab === 'onboarding'
+                ? 'Generating onboarding report for'
+                : 'Generating travel declaration report for'}
+            </p>
+            <p className="mt-1 text-xl font-semibold">
+              {isSchoolWide ? SCHOOL_NAME : MY_CLASS}
+            </p>
           </div>
-        </div>
 
-        {/* ── Content section ─────────────────────────────────────────────────── */}
-        <div className="px-6 pb-8">
-          <section className="rounded-xl border bg-white p-6">
-            <div className="mb-5">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                {tab === 'onboarding'
-                  ? 'Generating onboarding report for'
-                  : 'Generating travel declaration report for'}
-              </p>
-              <p className="mt-1 text-xl font-semibold">
-                {isSchoolWide ? SCHOOL_NAME : MY_CLASS}
+          {/* Onboarding */}
+          {tab === 'onboarding' && (
+            <div className="space-y-1.5">
+              <Button onClick={handleExport}>
+                <FileDown className="mr-2 h-4 w-4" />
+                {exportButtonLabel}
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                To allow or remove PG access for custodians, please do so in
+                School Cockpit.
               </p>
             </div>
+          )}
 
-            {/* Onboarding */}
-            {tab === 'onboarding' && (
+          {/* Travel Declaration */}
+          {tab === 'travel-declaration' && (
+            <div className="space-y-5">
+              {/* Declaration status */}
               <div className="space-y-1.5">
-                <Button onClick={handleExport}>
+                <p className="text-sm font-medium">Declaration status</p>
+                <div className="space-y-2">
+                  {(
+                    [
+                      {
+                        value: 'not-declared' as const,
+                        label: 'Did Not Declare (No declarations made)',
+                      },
+                      {
+                        value: 'declared' as const,
+                        label:
+                          'Declared (Include travelling and not travelling)',
+                      },
+                    ] satisfies Array<{
+                      value: DeclarationStatus
+                      label: string
+                    }>
+                  ).map((opt) => {
+                    const isSelected = declarationStatus === opt.value
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setDeclarationStatus(opt.value)}
+                        className={cn(
+                          'flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-sm transition-all text-left',
+                          isSelected
+                            ? 'border-primary bg-primary/5'
+                            : 'border-border bg-background hover:border-primary/40',
+                        )}
+                      >
+                        <div
+                          className={cn(
+                            'h-4 w-4 shrink-0 rounded-full border-2 transition-all',
+                            isSelected
+                              ? 'border-primary bg-primary'
+                              : 'border-muted-foreground',
+                          )}
+                        >
+                          {isSelected && (
+                            <div className="h-full w-full scale-[0.4] rounded-full bg-white" />
+                          )}
+                        </div>
+                        <span className={cn(isSelected && 'font-medium')}>
+                          {opt.label}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Date range */}
+              <div className="space-y-1.5">
+                <p className="text-sm font-medium">Date range</p>
+                <p className="text-xs text-muted-foreground">
+                  E.g. For the June 2025 School Holidays, enter Start Date (30
+                  May) and End Date (28 Jun).
+                </p>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="flex-1 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
+                  />
+                  <span className="text-sm text-muted-foreground">→</span>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="flex-1 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
+                  />
+                </div>
+              </div>
+
+              {/* Export */}
+              <div>
+                <Button onClick={handleExport} disabled={!canExport}>
                   <FileDown className="mr-2 h-4 w-4" />
                   {exportButtonLabel}
                 </Button>
-                <p className="text-xs text-muted-foreground">
-                  To allow or remove PG access for custodians, please do so in
-                  School Cockpit.
-                </p>
               </div>
-            )}
-
-            {/* Travel Declaration */}
-            {tab === 'travel-declaration' && (
-              <div className="space-y-5">
-                {/* Declaration status */}
-                <div className="space-y-1.5">
-                  <p className="text-sm font-medium">Declaration status</p>
-                  <div className="space-y-2">
-                    {(
-                      [
-                        {
-                          value: 'not-declared' as const,
-                          label: 'Did Not Declare (No declarations made)',
-                        },
-                        {
-                          value: 'declared' as const,
-                          label:
-                            'Declared (Include travelling and not travelling)',
-                        },
-                      ] satisfies Array<{
-                        value: DeclarationStatus
-                        label: string
-                      }>
-                    ).map((opt) => {
-                      const isSelected = declarationStatus === opt.value
-                      return (
-                        <button
-                          key={opt.value}
-                          type="button"
-                          onClick={() => setDeclarationStatus(opt.value)}
-                          className={cn(
-                            'flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-sm transition-all text-left',
-                            isSelected
-                              ? 'border-primary bg-primary/5'
-                              : 'border-border bg-background hover:border-primary/40',
-                          )}
-                        >
-                          <div
-                            className={cn(
-                              'h-4 w-4 shrink-0 rounded-full border-2 transition-all',
-                              isSelected
-                                ? 'border-primary bg-primary'
-                                : 'border-muted-foreground',
-                            )}
-                          >
-                            {isSelected && (
-                              <div className="h-full w-full scale-[0.4] rounded-full bg-white" />
-                            )}
-                          </div>
-                          <span className={cn(isSelected && 'font-medium')}>
-                            {opt.label}
-                          </span>
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-
-                {/* Date range */}
-                <div className="space-y-1.5">
-                  <p className="text-sm font-medium">Date range</p>
-                  <p className="text-xs text-muted-foreground">
-                    E.g. For the June 2025 School Holidays, enter Start Date (30
-                    May) and End Date (28 Jun).
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="date"
-                      value={startDate}
-                      onChange={(e) => setStartDate(e.target.value)}
-                      className="flex-1 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
-                    />
-                    <span className="text-sm text-muted-foreground">→</span>
-                    <input
-                      type="date"
-                      value={endDate}
-                      onChange={(e) => setEndDate(e.target.value)}
-                      className="flex-1 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
-                    />
-                  </div>
-                </div>
-
-                {/* Export */}
-                <div>
-                  <Button onClick={handleExport} disabled={!canExport}>
-                    <FileDown className="mr-2 h-4 w-4" />
-                    {exportButtonLabel}
-                  </Button>
-                </div>
-              </div>
-            )}
-          </section>
-        </div>
+            </div>
+          )}
+        </section>
       </div>
     </div>
   )
