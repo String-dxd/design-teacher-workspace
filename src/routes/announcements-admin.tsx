@@ -20,7 +20,6 @@ import {
 import type { PGAnnouncement } from '@/types/pg-announcement'
 import { StatusBadge } from '@/components/comms/status-badge'
 import { ReadRate } from '@/components/comms/read-rate'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -200,16 +199,13 @@ function AdminPostsExperiment() {
       )}
     >
       <div className="shrink-0 space-y-4 pt-6">
+        {/* Admin banner — top of page, above title */}
+        <AdminBanner scope={scope} />
+
         {/* Header */}
         <div className="flex items-start justify-between px-6">
           <div>
-            <h1 className="flex items-center gap-2 text-2xl font-semibold">
-              Posts
-              <Badge className="h-6 gap-1 border border-amber-300 bg-amber-100 px-2.5 text-sm font-semibold text-amber-800">
-                <Crown className="h-3 w-3" />
-                Admin
-              </Badge>
-            </h1>
+            <h1 className="text-2xl font-semibold">Posts</h1>
             <p className="mt-1 hidden text-sm text-muted-foreground lg:block">
               Send a read only post or collect responses from parents via
               Parents Gateway.
@@ -220,16 +216,6 @@ function AdminPostsExperiment() {
             Create
           </Button>
         </div>
-
-        {/* Scope label */}
-        <div className="px-6">
-          <p className="text-2xl font-semibold">
-            {isSchoolWide ? 'School' : 'My Posts'}
-          </p>
-        </div>
-
-        {/* Admin banner — replaces the scope dropdown */}
-        <AdminBanner scope={scope} />
       </div>
 
       {/* Tabs */}
