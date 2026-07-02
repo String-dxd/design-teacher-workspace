@@ -477,12 +477,31 @@ function ParentsGatewayPage() {
   ]
   const visibleTabs = tabs.filter((t) => !t.hidden)
 
-  // Selection helpers
+  // Selection helpers — My Posts
   const filteredIds = sortedAnnouncements.map((a) => a.id)
   const selectedInView = filteredIds.filter((id) => selectedIds.has(id))
   const allSelectedInView =
     filteredIds.length > 0 && selectedInView.length === filteredIds.length
   const someSelectedInView = selectedInView.length > 0 && !allSelectedInView
+
+  // Selection helpers — School-wide
+  const schoolFilteredIds = schoolFiltered.map((a) => a.id)
+  const schoolSelectedInView = schoolFilteredIds.filter((id) => selectedIds.has(id))
+  const schoolAllSelectedInView =
+    schoolFilteredIds.length > 0 && schoolSelectedInView.length === schoolFilteredIds.length
+  const schoolSomeSelectedInView = schoolSelectedInView.length > 0 && !schoolAllSelectedInView
+
+  function toggleSelectAllSchool() {
+    if (schoolAllSelectedInView) {
+      setSelectedIds((prev) => {
+        const next = new Set(prev)
+        schoolFilteredIds.forEach((id) => next.delete(id))
+        return next
+      })
+    } else {
+      setSelectedIds((prev) => new Set([...prev, ...schoolFilteredIds]))
+    }
+  }
 
   const selectedItems = allAnnouncements.filter((a) => selectedIds.has(a.id))
   const postedSelected = selectedItems.filter((a) => a.status === 'posted')
@@ -607,7 +626,15 @@ function ParentsGatewayPage() {
               <Table tableClassName="table-fixed w-full">
                 <TableHeader className="border-b bg-background">
                   <TableRow className="border-0 hover:bg-transparent">
-                    <TableHead className="w-[420px] pl-6 sticky left-0 z-10 bg-background">
+                    <TableHead className="w-[44px] pl-5 sticky left-0 z-10 bg-background">
+                      <Checkbox
+                        checked={schoolAllSelectedInView}
+                        indeterminate={schoolSomeSelectedInView}
+                        onCheckedChange={toggleSelectAllSchool}
+                        aria-label="Select all"
+                      />
+                    </TableHead>
+                    <TableHead className="w-[376px] pl-2 sticky left-[44px] z-10 bg-background">
                       Title
                     </TableHead>
                     <TableHead className="w-[110px]">Date sent</TableHead>
@@ -635,10 +662,14 @@ function ParentsGatewayPage() {
                         ? 'Me (Daniel Tan)'
                         : (a.postedBy ?? 'Unknown')
                     const isOwnPost = a.ownership === 'mine'
+                    const isSelected = selectedIds.has(a.id)
                     return (
                       <TableRow
                         key={a.id}
-                        className="cursor-pointer"
+                        className={cn(
+                          'cursor-pointer',
+                          isSelected && 'bg-primary/[0.04] hover:bg-primary/[0.06]',
+                        )}
                         onClick={() =>
                           navigate({
                             to: '/announcements/$id',
@@ -646,7 +677,17 @@ function ParentsGatewayPage() {
                           })
                         }
                       >
-                        <TableCell className="overflow-hidden whitespace-normal pl-6 sticky left-0 z-10 bg-background">
+                        <TableCell
+                          className="pl-5 w-[44px] sticky left-0 z-10 bg-background"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => toggleSelect(a.id)}
+                            aria-label={`Select ${a.title}`}
+                          />
+                        </TableCell>
+                        <TableCell className="overflow-hidden whitespace-normal pl-2 sticky left-[44px] z-10 bg-background">
                           <div className="min-w-0">
                             <div className="flex items-center gap-1.5">
                               <span className="truncate font-medium">
@@ -749,6 +790,7 @@ function ParentsGatewayPage() {
                 )}{' '}
                 of {schoolFiltered.length} records
               </div>
+
               {schoolPostsPagination.totalPages > 1 && (
                 <div className="flex items-center gap-1">
                   <Button
@@ -798,6 +840,7 @@ function ParentsGatewayPage() {
             </div>
           </div>
         ) : tab === 'custom-forms' ? (
+
           <div className="max-w-full overflow-x-auto bg-background">
             {filteredForms.length === 0 ? (
               <div className="flex flex-col items-center py-16">
@@ -1286,41 +1329,42 @@ function ParentsGatewayPage() {
               )}
             </div>
 
-            {/* Floating bulk action bar — same pattern as Reports */}
-            {selectedIds.size > 0 && tab !== 'custom-forms' && (
-              <div className="fixed inset-x-0 bottom-6 z-50 flex justify-center">
-                <div className="flex items-center gap-3 rounded-full border bg-popover px-5 py-2.5 shadow-lg">
-                  <span className="text-sm font-medium text-muted-foreground">
-                    {selectedIds.size} selected
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedIds(new Set())}
-                    className="text-xs text-muted-foreground hover:text-foreground"
-                  >
-                    Clear
-                  </button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="rounded-full text-destructive hover:text-destructive"
-                    onClick={() => {
-                      setDeleteMode('remove-from-list')
-                      setShowDeleteDialog(true)
-                    }}
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Delete{' '}
-                    {selectedIds.size > 1
-                      ? `${selectedIds.size} posts`
-                      : 'post'}
-                  </Button>
-                </div>
-              </div>
-            )}
           </div>
         )}
       </div>
+
+      {/* Floating bulk action bar */}
+      {selectedIds.size > 0 && tab !== 'custom-forms' && (
+        <div className="fixed inset-x-0 bottom-6 z-50 flex justify-center">
+          <div className="flex items-center gap-3 rounded-full border bg-popover px-5 py-2.5 shadow-lg">
+            <span className="text-sm font-medium text-muted-foreground">
+              {selectedIds.size} selected
+            </span>
+            <button
+              type="button"
+              onClick={() => setSelectedIds(new Set())}
+              className="text-xs text-muted-foreground hover:text-foreground"
+            >
+              Clear
+            </button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="rounded-full text-destructive hover:text-destructive"
+              onClick={() => {
+                setDeleteMode('remove-from-list')
+                setShowDeleteDialog(true)
+              }}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete{' '}
+              {selectedIds.size > 1
+                ? `${selectedIds.size} posts`
+                : 'post'}
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Delete confirmation dialog */}
       <Dialog
