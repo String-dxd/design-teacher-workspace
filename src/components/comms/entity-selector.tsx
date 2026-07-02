@@ -507,9 +507,7 @@ function EntityChip({
       )}
       <span className="truncate">{entity.label}</span>
       {entity.type === 'group' && (
-        <span
-          className={cn('shrink-0', large ? 'text-slate-9' : 'opacity-60')}
-        >
+        <span className={cn('shrink-0', large ? 'text-slate-9' : 'opacity-60')}>
           · {entity.count}
         </span>
       )}

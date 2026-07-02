@@ -100,9 +100,7 @@ function CreateCard({ option }: { option: CreateOption }) {
       }}
       className="group flex flex-col overflow-hidden rounded-xl border-2 border-border bg-card text-left transition-all duration-150 ease-out hover:border-slate-8 hover:shadow-sm active:scale-[0.98]"
     >
-      <div className="border-b border-border bg-muted">
-        {option.mockup}
-      </div>
+      <div className="border-b border-border bg-muted">{option.mockup}</div>
       <div className="flex flex-1 flex-col justify-between p-4">
         <div>
           <p className="text-sm font-semibold text-foreground">

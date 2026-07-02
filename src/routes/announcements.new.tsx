@@ -952,7 +952,6 @@ function AnnouncementPreview({
             )}
           </div>
         </div>
-
       </div>
     </div>
   )
@@ -2203,8 +2202,12 @@ function NewAnnouncementPage() {
                   <div className="space-y-3">
                     <div className="space-y-1.5">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-semibold text-slate-700">Event start</span>
-                        <span className="text-xs text-muted-foreground">Optional</span>
+                        <span className="text-xs font-semibold text-slate-700">
+                          Event start
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          Optional
+                        </span>
                       </div>
                       <div className="flex gap-2">
                         <input
@@ -2260,8 +2263,12 @@ function NewAnnouncementPage() {
                     </div>
                     <div className="space-y-1.5">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-semibold text-slate-700">Event end</span>
-                        <span className="text-xs text-muted-foreground">Optional</span>
+                        <span className="text-xs font-semibold text-slate-700">
+                          Event end
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          Optional
+                        </span>
                       </div>
                       <div className="flex gap-2">
                         <input
@@ -2327,7 +2334,9 @@ function NewAnnouncementPage() {
                   </div>
                   <div className="space-y-1.5">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold text-slate-700">Venue</span>
+                      <span className="text-xs font-semibold text-slate-700">
+                        Venue
+                      </span>
                       <span className="text-xs tabular-nums text-muted-foreground">
                         Optional · {venue.length}/100
                       </span>

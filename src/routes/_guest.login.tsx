@@ -193,7 +193,9 @@ function LoginPage() {
                       required
                       aria-invalid={showEmailError}
                       className={
-                        showEmailError ? 'border-destructive ring-destructive/20' : ''
+                        showEmailError
+                          ? 'border-destructive ring-destructive/20'
+                          : ''
                       }
                     />
                     {otpState === 'invalid-email' && (
@@ -326,8 +328,8 @@ function OtpVerifyCard({
       </h1>
       <p className="mt-2 text-sm text-muted-foreground">
         We sent a one-time password to{' '}
-        <span className="font-semibold text-foreground">{email}</span>. Enter the
-        characters that follow the prefix shown.
+        <span className="font-semibold text-foreground">{email}</span>. Enter
+        the characters that follow the prefix shown.
       </p>
 
       <form onSubmit={onSignIn} className="mt-6">
@@ -343,7 +345,9 @@ function OtpVerifyCard({
             value={otpCode}
             onChange={(e) => onOtpChange(e.target.value)}
             aria-invalid={showInvalidOtp}
-            className={showInvalidOtp ? 'border-destructive ring-destructive/20' : ''}
+            className={
+              showInvalidOtp ? 'border-destructive ring-destructive/20' : ''
+            }
           />
           <Button type="submit" className="shrink-0">
             Sign in

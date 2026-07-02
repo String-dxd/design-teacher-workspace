@@ -2969,9 +2969,9 @@ export const AI_DRAFTS: Record<string, string> = {
   'ms-par-other':
     'Both parents have attended every parent-teacher conference scheduled this academic year and respond to school WhatsApp messages within a day¹. They acknowledge the recent disciplinary incidents, do not minimise them, and have been receptive to the counselling recommendations the school has put forward. The mother, Mdm Tan Siew Lee, is the day-to-day point of contact and supervises homework; the father works long shifts as a taxi driver and engages less frequently with school matters but joins meetings when scheduled in advance². Both parents have asked the school for clearer behavioural expectations they can reinforce at home — the underlying issue appears to be capacity rather than willingness³.',
   'ms-fam-other':
-    'School records hold no information indicating criminal activity, drug abuse, sexual abuse, or physical abuse in the immediate family¹. The household consists of both biological parents, Jun Kai, and a younger sister currently in Primary 5 at Bandung Primary School. The family qualifies for the MOE Financial Assistance Scheme; combined household income from the father\'s taxi-driving and the mother\'s part-time cleaning role sits below the FAS threshold². Term 1 Termly Check-In responses note moderate financial stress at home but raise no flags around safety, conflict, or substance use³.',
+    "School records hold no information indicating criminal activity, drug abuse, sexual abuse, or physical abuse in the immediate family¹. The household consists of both biological parents, Jun Kai, and a younger sister currently in Primary 5 at Bandung Primary School. The family qualifies for the MOE Financial Assistance Scheme; combined household income from the father's taxi-driving and the mother's part-time cleaning role sits below the FAS threshold². Term 1 Termly Check-In responses note moderate financial stress at home but raise no flags around safety, conflict, or substance use³.",
   'ms-care-arrangements':
-    'Jun Kai lives with both biological parents and his younger sister in a three-room HDB rental flat in Bedok North¹. The strongest emotional bond, consistently described in counselling notes, is with his mother — she is named as his primary emergency contact, attends every school engagement, and is the parent Jun Kai turns to first². His relationship with his father is functional but less close; the father\'s shift-based work limits one-on-one time, and Jun Kai has described feeling closer to his sister than to his father in counselling sessions. He takes an active role caring for his sister after school, walking her home from her after-school programme on most weekdays³.',
+    "Jun Kai lives with both biological parents and his younger sister in a three-room HDB rental flat in Bedok North¹. The strongest emotional bond, consistently described in counselling notes, is with his mother — she is named as his primary emergency contact, attends every school engagement, and is the parent Jun Kai turns to first². His relationship with his father is functional but less close; the father's shift-based work limits one-on-one time, and Jun Kai has described feeling closer to his sister than to his father in counselling sessions. He takes an active role caring for his sister after school, walking her home from her after-school programme on most weekdays³.",
   'ms-health-medical':
     'School health records show no chronic medical conditions, no known allergies, and no long-term medication for Jun Kai¹. He has had no health-related absences this academic year — the eight Term 2 absences logged were disciplinary, unexcused, or attributable to family commitments rather than illness². The Secondary 1 medical screening flagged mild myopia, now corrected with prescription glasses, and the most recent annual screening on 18 January 2026 raised no new concerns. Jun Kai self-reports good general health and has not visited the school sickbay this year³.',
   'ms-health-other':
@@ -2986,7 +2986,7 @@ export const AI_DRAFTS: Record<string, string> = {
   // counselling), distinct openings per field, ¹²³ markers tied to
   // AI_DRAFT_CITATIONS entries below.
   'ch-cond-comments':
-    "Overall conduct has shifted across his Secondary years — Good in Secondary 1, Fair in Secondary 2, and Poor this year¹. The Secondary 3 disciplinary record shows recurring truancy, two fighting incidents during unstructured breaks (one in late January and one on 12 March 2026 which led to a two-day suspension), and consistent defiance toward classroom instructions². Jun Kai responds productively to one-on-one conversations with his Year Head and form teacher; he is able to recount the lead-up to each incident accurately and accepts consequences without dispute. The pattern clusters around Monday mornings and the days immediately after each school break, pointing to environment-specific stressors rather than chronic behavioural disorder¹.",
+    'Overall conduct has shifted across his Secondary years — Good in Secondary 1, Fair in Secondary 2, and Poor this year¹. The Secondary 3 disciplinary record shows recurring truancy, two fighting incidents during unstructured breaks (one in late January and one on 12 March 2026 which led to a two-day suspension), and consistent defiance toward classroom instructions². Jun Kai responds productively to one-on-one conversations with his Year Head and form teacher; he is able to recount the lead-up to each incident accurately and accepts consequences without dispute. The pattern clusters around Monday mornings and the days immediately after each school break, pointing to environment-specific stressors rather than chronic behavioural disorder¹.',
   'ch-acad-remarks':
     'Academic performance dropped from Satisfactory in Secondary 1 and Secondary 2 to Poor in his current year, with Mathematics and English producing the weakest Term 2 results¹. The decline tracks closely with the Term 2 attendance pattern of 39 of 47 possible school days present, twelve late-comings, and three unexcused absences². Subject teachers report that engagement in practical components (Design & Technology, Science labs) holds up considerably better than written examinations, suggesting capability is intact when attendance and focus are restored. Targeted remedial support in Mathematics and English would likely lift both grades if attendance stabilises through Term 3³.',
   'ch-cca-behaviour':
@@ -3433,13 +3433,21 @@ export const AI_DRAFT_CITATIONS: Record<
   ],
   'ch-acad-remarks': [
     { num: 1, source: 'School Cockpit', detail: 'Academic results, Sec 1–3' },
-    { num: 2, source: 'School Cockpit', detail: 'Attendance record, Term 2 2026' },
+    {
+      num: 2,
+      source: 'School Cockpit',
+      detail: 'Attendance record, Term 2 2026',
+    },
     { num: 3, source: 'Case Sync', detail: 'Counselling notes, Apr 2026' },
   ],
   'ch-cca-behaviour': [
     { num: 1, source: 'School Cockpit', detail: 'CCA attendance log, 2026' },
     { num: 2, source: 'Case Sync', detail: 'CCA teacher feedback' },
-    { num: 3, source: 'School Cockpit', detail: 'CCA attendance log, Mar 2026' },
+    {
+      num: 3,
+      source: 'School Cockpit',
+      detail: 'CCA attendance log, Mar 2026',
+    },
   ],
   'ch-par-other': [
     { num: 1, source: 'Case Sync', detail: 'Parent communication log, 2026' },
@@ -3458,22 +3466,42 @@ export const AI_DRAFT_CITATIONS: Record<
   ],
   'ch-health-medical': [
     { num: 1, source: 'School Cockpit', detail: 'Medical alerts, EduHub' },
-    { num: 2, source: 'School Cockpit', detail: 'Attendance record, Term 2 2026' },
+    {
+      num: 2,
+      source: 'School Cockpit',
+      detail: 'Attendance record, Term 2 2026',
+    },
     { num: 3, source: 'School Cockpit', detail: 'Annual screening, Jan 2026' },
   ],
   'ch-health-other': [
     { num: 1, source: 'TCI', detail: 'Term 1 wellbeing check-in' },
     { num: 2, source: 'Case Sync', detail: 'Counselling notes, Apr 2026' },
-    { num: 3, source: 'School Cockpit', detail: 'Behavioural incident records, 2026' },
+    {
+      num: 3,
+      source: 'School Cockpit',
+      detail: 'Behavioural incident records, 2026',
+    },
   ],
   'ch-couns-other': [
-    { num: 1, source: 'Case Sync', detail: 'Counselling sessions, Jan 2026 onwards' },
+    {
+      num: 1,
+      source: 'Case Sync',
+      detail: 'Counselling sessions, Jan 2026 onwards',
+    },
     { num: 2, source: 'Case Sync', detail: 'Family engagement log' },
-    { num: 3, source: 'Case Sync', detail: 'Counsellor progress notes, Apr 2026' },
+    {
+      num: 3,
+      source: 'Case Sync',
+      detail: 'Counsellor progress notes, Apr 2026',
+    },
   ],
   'ch-other-info': [
     { num: 1, source: 'Case Sync', detail: 'Agency engagement history' },
-    { num: 2, source: 'School Cockpit', detail: 'Staff–student relationship records' },
+    {
+      num: 2,
+      source: 'School Cockpit',
+      detail: 'Staff–student relationship records',
+    },
     { num: 3, source: 'Case Sync', detail: 'Year Head case summary, Apr 2026' },
   ],
 }

@@ -63,9 +63,9 @@ This plan also defines the missing `--destructive-foreground` and aligns
 **`@theme inline` slate registration — only 1 and 2 exist** (lines 218–219):
 
 ```css
-  --color-slate-1: var(--slate-1);
-  --color-slate-2: var(--slate-2);
-  /* slate-3 … slate-12 are MISSING here — that is the bug */
+--color-slate-1: var(--slate-1);
+--color-slate-2: var(--slate-2);
+/* slate-3 … slate-12 are MISSING here — that is the bug */
 ```
 
 For contrast, the full registration pattern is right there for `twblue`,
@@ -89,17 +89,17 @@ is absent from `@theme inline` (the destructive line there is line 320:
 - Tailwind v4, CSS-first config in `src/styles.css` (no `tailwind.config.js`).
   Color utilities generate only for scale steps registered in `@theme inline`.
 - Conventional commits (`fix(...)`, e.g. `fix(ui): replace Radix asChild with
-  Base UI render prop` from `git log`).
+Base UI render prop` from `git log`).
 - `bun` is the runtime; `src/routeTree.gen.ts` is auto-generated (not touched here).
 
 ## Commands you will need
 
-| Purpose   | Command            | Expected on success |
-|-----------|--------------------|---------------------|
-| Install   | `bun install`      | exit 0 |
-| Build     | `bun run build`    | exit 0 (Vite build; does not run tsc) |
-| Typecheck | `npx tsc --noEmit 2>&1 \| grep -c "error TS"` | **≤ 113** (baseline at `9eb7dee`); must NOT increase |
-| Tests     | `bunx vitest run 2>&1 \| grep "Tests "` | **37 passed, 16 failed** (baseline — unchanged; see note) |
+| Purpose   | Command                                       | Expected on success                                       |
+| --------- | --------------------------------------------- | --------------------------------------------------------- |
+| Install   | `bun install`                                 | exit 0                                                    |
+| Build     | `bun run build`                               | exit 0 (Vite build; does not run tsc)                     |
+| Typecheck | `npx tsc --noEmit 2>&1 \| grep -c "error TS"` | **≤ 113** (baseline at `9eb7dee`); must NOT increase      |
+| Tests     | `bunx vitest run 2>&1 \| grep "Tests "`       | **37 passed, 16 failed** (baseline — unchanged; see note) |
 
 > **Pre-existing failing tests**: at `9eb7dee`, `bunx vitest run` reports
 > **37 passed / 16 failed** (`draft-storage.test.ts` 10, `imported-columns.test.ts`
@@ -148,16 +148,16 @@ Record `npx tsc --noEmit 2>&1 | grep -c "error TS"` (expect `113`),
 Immediately after `--color-slate-2: var(--slate-2);` (line 219), add:
 
 ```css
-  --color-slate-3: var(--slate-3);
-  --color-slate-4: var(--slate-4);
-  --color-slate-5: var(--slate-5);
-  --color-slate-6: var(--slate-6);
-  --color-slate-7: var(--slate-7);
-  --color-slate-8: var(--slate-8);
-  --color-slate-9: var(--slate-9);
-  --color-slate-10: var(--slate-10);
-  --color-slate-11: var(--slate-11);
-  --color-slate-12: var(--slate-12);
+--color-slate-3: var(--slate-3);
+--color-slate-4: var(--slate-4);
+--color-slate-5: var(--slate-5);
+--color-slate-6: var(--slate-6);
+--color-slate-7: var(--slate-7);
+--color-slate-8: var(--slate-8);
+--color-slate-9: var(--slate-9);
+--color-slate-10: var(--slate-10);
+--color-slate-11: var(--slate-11);
+--color-slate-12: var(--slate-12);
 ```
 
 **Verify**: `grep -c "color-slate-12" src/styles.css` → `1`; `bun run build` → exit 0.

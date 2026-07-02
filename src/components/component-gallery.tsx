@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import type { ReactNode } from 'react'
 import {
   AlignCenterIcon,
   AlignLeftIcon,
@@ -16,7 +15,10 @@ import {
   TerminalIcon,
   UserIcon,
 } from 'lucide-react'
+import type { ReactNode } from 'react'
 
+import type { FormQuestion } from '@/types/form'
+import type { AnnouncementFilters } from '@/components/comms/announcement-filter-bar'
 import { Example } from '@/components/example'
 // UI primitives
 import {
@@ -134,14 +136,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
 import { Toggle } from '@/components/ui/toggle'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 // Shared components
 import { AgencyLogo } from '@/components/agency-logo'
 import { AppCard, FeaturedAppCard } from '@/components/app-card'
 import {
   AnnouncementFilterBar,
   EMPTY_ANNOUNCEMENT_FILTERS,
-  type AnnouncementFilters,
 } from '@/components/comms/announcement-filter-bar'
 import { QuestionBuilder } from '@/components/comms/question-builder'
 import { ReadRate } from '@/components/comms/read-rate'
@@ -149,7 +154,6 @@ import { StatusBadge } from '@/components/comms/status-badge'
 import { DataCard } from '@/components/data-card'
 import { EmptyState } from '@/components/empty-state'
 import { FeedbackDialog } from '@/components/feedback-dialog'
-import type { FormQuestion } from '@/types/form'
 
 // Stateful demos ----------------------------------------------------------
 
@@ -173,7 +177,12 @@ function AnnouncementFilterBarDemo() {
 function QuestionBuilderDemo() {
   const [questions, setQuestions] = useState<Array<FormQuestion>>([
     { id: '1', text: 'Will your child attend?', type: 'free-text' },
-    { id: '2', text: 'Preferred slot', type: 'mcq', options: ['Morning', 'Afternoon'] },
+    {
+      id: '2',
+      text: 'Preferred slot',
+      type: 'mcq',
+      options: ['Morning', 'Afternoon'],
+    },
   ])
   return (
     <QuestionBuilder
@@ -232,7 +241,12 @@ const PRIMITIVES: Array<GalleryItem> = [
   },
   {
     title: 'Textarea',
-    node: <Textarea className="max-w-sm" placeholder="Add any additional comments" />,
+    node: (
+      <Textarea
+        className="max-w-sm"
+        placeholder="Add any additional comments"
+      />
+    ),
   },
   {
     title: 'Field',
@@ -376,7 +390,9 @@ const PRIMITIVES: Array<GalleryItem> = [
         <Alert>
           <TerminalIcon />
           <AlertTitle>Heads up!</AlertTitle>
-          <AlertDescription>You can add components to your app.</AlertDescription>
+          <AlertDescription>
+            You can add components to your app.
+          </AlertDescription>
         </Alert>
         <Alert variant="destructive">
           <TerminalIcon />
@@ -392,7 +408,9 @@ const PRIMITIVES: Array<GalleryItem> = [
       <Accordion className="w-full max-w-sm" defaultValue={['item-1']}>
         <AccordionItem value="item-1">
           <AccordionTrigger>Is it accessible?</AccordionTrigger>
-          <AccordionContent>Yes. It follows WAI-ARIA patterns.</AccordionContent>
+          <AccordionContent>
+            Yes. It follows WAI-ARIA patterns.
+          </AccordionContent>
         </AccordionItem>
         <AccordionItem value="item-2">
           <AccordionTrigger>Is it styled?</AccordionTrigger>
@@ -550,7 +568,9 @@ const PRIMITIVES: Array<GalleryItem> = [
     title: 'Popover',
     node: (
       <Popover>
-        <PopoverTrigger render={<Button variant="outline">Open popover</Button>} />
+        <PopoverTrigger
+          render={<Button variant="outline">Open popover</Button>}
+        />
         <PopoverContent>
           <PopoverHeader>
             <PopoverTitle>Dimensions</PopoverTitle>
@@ -564,7 +584,9 @@ const PRIMITIVES: Array<GalleryItem> = [
     title: 'Dropdown Menu',
     node: (
       <DropdownMenu>
-        <DropdownMenuTrigger render={<Button variant="outline">Open menu</Button>} />
+        <DropdownMenuTrigger
+          render={<Button variant="outline">Open menu</Button>}
+        />
         <DropdownMenuContent align="start" className="w-48">
           <DropdownMenuLabel>My Account</DropdownMenuLabel>
           <DropdownMenuItem>
@@ -589,7 +611,9 @@ const PRIMITIVES: Array<GalleryItem> = [
     title: 'Alert Dialog',
     node: (
       <AlertDialog>
-        <AlertDialogTrigger render={<Button variant="destructive">Delete</Button>} />
+        <AlertDialogTrigger
+          render={<Button variant="destructive">Delete</Button>}
+        />
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>

@@ -32,9 +32,7 @@ export function DsNav() {
       (entries) => {
         const visible = entries
           .filter((e) => e.isIntersecting)
-          .sort(
-            (a, b) => a.boundingClientRect.top - b.boundingClientRect.top,
-          )
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)
         if (visible[0]) setActive((visible[0].target as HTMLElement).id)
       },
       { rootMargin: '0px 0px -70% 0px' },

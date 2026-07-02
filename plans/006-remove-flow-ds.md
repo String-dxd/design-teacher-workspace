@@ -42,19 +42,19 @@ deletes every Flow DS artifact. The maintainer chose to delete the **entire**
 
 ### Flow DS usage map (complete — verified by `grep -rln "@flow" src/`)
 
-| File | Uses |
-|------|------|
-| `src/routes/attendance.tsx` (245 lines) | `Avatar`, `AvatarFallback`, `Button`, `ToggleGroup`, `ToggleGroupItem` from `@flow/core`; 6 icons from `@flow/icons`; Flow utility classes |
-| `src/routes/_guest.student-login.tsx` (91 lines) | `Button`, `Card`, `CardContent`, `CardDescription`, `CardHeader`, `CardTitle`, `Input`, `Label` from `@flow/core` |
-| `src/routes/ds.tsx` (9 lines) | layout: just an `<Outlet/>` |
-| `src/routes/ds.index.tsx` (64 lines) | links to the demo pages |
-| `src/routes/ds.flow-components.tsx` (1,081 lines) | Flow component showcase |
-| `src/routes/ds.flow-tokens.tsx` (1,056 lines) | Flow token tables |
-| `src/routes/ds.tw-theme.tsx` (1,647 lines) | app TW theme reference (no `@flow` imports — deleted anyway per maintainer decision) |
-| `src/styles.css` | 5 Flow-related imports (below) |
-| `src/flow-ds-theme.css` (429 lines) | maps Flow DS vars from app tokens |
-| `package.json` | `"@flow/core": "^0.1.17"`, `"@flow/design-tokens": "^0.1.7"`, `"workspaces": ["apps/*"]` |
-| `apps/flow-ds-test/` | standalone Vite workspace app |
+| File                                              | Uses                                                                                                                                       |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `src/routes/attendance.tsx` (245 lines)           | `Avatar`, `AvatarFallback`, `Button`, `ToggleGroup`, `ToggleGroupItem` from `@flow/core`; 6 icons from `@flow/icons`; Flow utility classes |
+| `src/routes/_guest.student-login.tsx` (91 lines)  | `Button`, `Card`, `CardContent`, `CardDescription`, `CardHeader`, `CardTitle`, `Input`, `Label` from `@flow/core`                          |
+| `src/routes/ds.tsx` (9 lines)                     | layout: just an `<Outlet/>`                                                                                                                |
+| `src/routes/ds.index.tsx` (64 lines)              | links to the demo pages                                                                                                                    |
+| `src/routes/ds.flow-components.tsx` (1,081 lines) | Flow component showcase                                                                                                                    |
+| `src/routes/ds.flow-tokens.tsx` (1,056 lines)     | Flow token tables                                                                                                                          |
+| `src/routes/ds.tw-theme.tsx` (1,647 lines)        | app TW theme reference (no `@flow` imports — deleted anyway per maintainer decision)                                                       |
+| `src/styles.css`                                  | 5 Flow-related imports (below)                                                                                                             |
+| `src/flow-ds-theme.css` (429 lines)               | maps Flow DS vars from app tokens                                                                                                          |
+| `package.json`                                    | `"@flow/core": "^0.1.17"`, `"@flow/design-tokens": "^0.1.7"`, `"workspaces": ["apps/*"]`                                                   |
+| `apps/flow-ds-test/`                              | standalone Vite workspace app                                                                                                              |
 
 Nothing else in `src/` references `@flow` or links to `/ds` (verified:
 `grep -rn "to=\"/ds" src/ --include="*.tsx"` outside `src/routes/ds.*` → empty).
@@ -95,17 +95,17 @@ derived from `flow-ds-theme.css` Section A (e.g. `--color-critical-1: var(--crim
 and the app's token values (`--_spacing-xs: 0.5rem`, `--_text-label-sm: 0.75rem`,
 weight 500):
 
-| Flow utility | Replace with | Basis |
-|---|---|---|
-| `text-default` | `text-foreground` | Flow default text → app foreground |
-| `text-subtle` | `text-muted-foreground` | Flow subtle → app muted |
-| `border-default` | `border-border` | convention: `src/components/app-header.tsx:62` |
-| `border-success-7` / `bg-success-3` / `text-success-11` | `border-lime-7` / `bg-lime-3` / `text-lime-11` | Flow success scale maps to lime (verify in `flow-ds-theme.css` Section A before deleting it) |
-| `border-critical-7` / `bg-critical-3` / `text-critical-11` | `border-crimson-7` / `bg-crimson-3` / `text-crimson-11` | `flow-ds-theme.css:65-72` |
-| `border-amber-7` / `bg-amber-3` / `text-amber-11` | unchanged — `amber-*` is app-native via `@theme inline` | |
-| `gap-xs` | `gap-2` | `--spacing-xs` = 0.5rem |
-| `px-sm` | `px-3` | Flow `sm` spacing = 0.75rem |
-| `typography-label-sm` | `text-xs font-medium` | 0.75rem / weight 500 |
+| Flow utility                                               | Replace with                                            | Basis                                                                                        |
+| ---------------------------------------------------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `text-default`                                             | `text-foreground`                                       | Flow default text → app foreground                                                           |
+| `text-subtle`                                              | `text-muted-foreground`                                 | Flow subtle → app muted                                                                      |
+| `border-default`                                           | `border-border`                                         | convention: `src/components/app-header.tsx:62`                                               |
+| `border-success-7` / `bg-success-3` / `text-success-11`    | `border-lime-7` / `bg-lime-3` / `text-lime-11`          | Flow success scale maps to lime (verify in `flow-ds-theme.css` Section A before deleting it) |
+| `border-critical-7` / `bg-critical-3` / `text-critical-11` | `border-crimson-7` / `bg-crimson-3` / `text-crimson-11` | `flow-ds-theme.css:65-72`                                                                    |
+| `border-amber-7` / `bg-amber-3` / `text-amber-11`          | unchanged — `amber-*` is app-native via `@theme inline` |                                                                                              |
+| `gap-xs`                                                   | `gap-2`                                                 | `--spacing-xs` = 0.5rem                                                                      |
+| `px-sm`                                                    | `px-3`                                                  | Flow `sm` spacing = 0.75rem                                                                  |
+| `typography-label-sm`                                      | `text-xs font-medium`                                   | 0.75rem / weight 500                                                                         |
 
 ### `attendance.tsx` ToggleGroup — current usage (lines 191–236)
 
@@ -163,18 +163,18 @@ Icons: all six (`CalendarCheck2`, `CircleCheck`, `CircleX`, `Clock`,
   `dev`/`build` and is committed — after deleting routes, run a build and
   commit the regenerated file.
 - Conventional commits (`refactor:`, `chore:`, e.g. `fix(ui): replace Radix
-  asChild with Base UI render prop on triggers` from `git log`).
+asChild with Base UI render prop on triggers` from `git log`).
 
 ## Commands you will need
 
-| Purpose   | Command            | Expected on success |
-|-----------|--------------------|---------------------|
-| Install   | `bun install`      | exit 0 |
-| Tests     | `bun run test`     | 53 tests pass (3 files) |
-| Build     | `bun run build`    | exit 0 (also regenerates `routeTree.gen.ts`) |
-| Typecheck | `npx tsc --noEmit 2>&1 \| grep -c "error TS"` | baseline ~120 at `b22bd52`; must be LOWER after (ds pages carry several errors) |
-| Dev smoke | `bun run dev` then `curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3000/<route>` | 200 |
-| Add component | `bunx shadcn@latest add toggle-group` | creates `src/components/ui/toggle-group.tsx` |
+| Purpose       | Command                                                                                   | Expected on success                                                             |
+| ------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Install       | `bun install`                                                                             | exit 0                                                                          |
+| Tests         | `bun run test`                                                                            | 53 tests pass (3 files)                                                         |
+| Build         | `bun run build`                                                                           | exit 0 (also regenerates `routeTree.gen.ts`)                                    |
+| Typecheck     | `npx tsc --noEmit 2>&1 \| grep -c "error TS"`                                             | baseline ~120 at `b22bd52`; must be LOWER after (ds pages carry several errors) |
+| Dev smoke     | `bun run dev` then `curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3000/<route>` | 200                                                                             |
+| Add component | `bunx shadcn@latest add toggle-group`                                                     | creates `src/components/ui/toggle-group.tsx`                                    |
 
 ## Suggested executor toolkit
 

@@ -18,7 +18,7 @@
 - **Priority**: P2
 - **Effort**: M
 - **Risk**: MED (recolors a visible, interactive AI panel; visual review required)
-- **Depends on**: plan 007 *recommended first* (both edit `src/styles.css`; see
+- **Depends on**: plan 007 _recommended first_ (both edit `src/styles.css`; see
   "Coordination"). Not a hard code dependency.
 - **Category**: tech-debt / design
 - **Planned at**: commit `9eb7dee`, 2026-06-26
@@ -53,28 +53,28 @@ The component centralizes some colors in an `HT` constant object (used via inlin
 
 ```tsx
 const HT = {
-  primary: 'var(--twpurple-9)',     // user message bubble bg (line 763); Info icon color (line 854)
-  hover: 'var(--twpurple-10)',      // DEFINED BUT UNUSED (verified)
-  ultraLight: 'var(--twpurple-2)',  // draft title-bar bg (826); warning box bg (847)
-  light: 'var(--twpurple-3)',       // title pill bg (833); [For input] pill bg (970)
-  border: 'var(--twpurple-5)',      // draft card border (821, 826); warning border (849)
-  text: 'var(--twpurple-11)',       // title pill text (833); warning text (849); [For input] text (970)
+  primary: 'var(--twpurple-9)', // user message bubble bg (line 763); Info icon color (line 854)
+  hover: 'var(--twpurple-10)', // DEFINED BUT UNUSED (verified)
+  ultraLight: 'var(--twpurple-2)', // draft title-bar bg (826); warning box bg (847)
+  light: 'var(--twpurple-3)', // title pill bg (833); [For input] pill bg (970)
+  border: 'var(--twpurple-5)', // draft card border (821, 826); warning border (849)
+  text: 'var(--twpurple-11)', // title pill text (833); warning text (849); [For input] text (970)
 } as const
 ```
 
 **Tailwind-class sites** (line → current → intent):
 
-| Line | Current classes | Role |
-|---|---|---|
-| 466 | `group-active:bg-twpurple-9` | resize-handle active indicator |
-| 585 | `bg-twpurple-9 text-white` | **send-message button** (primary action) |
-| 740 | `bg-twpurple-3` | AI avatar chip bg |
-| 787 | `border-twpurple-5 bg-twpurple-3 ... text-twpurple-11 ... hover:bg-twpurple-4` | suggestion chips |
-| 895 | `border-twpurple-9 bg-white ... text-twpurple-9 hover:bg-twpurple-2` | "Send email" (secondary/outline action) |
-| 902 | `bg-twpurple-9 ... text-white` | **"Use draft" button** (primary action) |
-| 946 | `bg-twpurple-9 text-white` | draft icon-button **active** state |
-| 991 | `bg-twpurple-3` | typing-indicator avatar chip bg |
-| 1002 | `bg-twpurple-9` | typing-indicator bouncing dots |
+| Line | Current classes                                                                | Role                                     |
+| ---- | ------------------------------------------------------------------------------ | ---------------------------------------- |
+| 466  | `group-active:bg-twpurple-9`                                                   | resize-handle active indicator           |
+| 585  | `bg-twpurple-9 text-white`                                                     | **send-message button** (primary action) |
+| 740  | `bg-twpurple-3`                                                                | AI avatar chip bg                        |
+| 787  | `border-twpurple-5 bg-twpurple-3 ... text-twpurple-11 ... hover:bg-twpurple-4` | suggestion chips                         |
+| 895  | `border-twpurple-9 bg-white ... text-twpurple-9 hover:bg-twpurple-2`           | "Send email" (secondary/outline action)  |
+| 902  | `bg-twpurple-9 ... text-white`                                                 | **"Use draft" button** (primary action)  |
+| 946  | `bg-twpurple-9 text-white`                                                     | draft icon-button **active** state       |
+| 991  | `bg-twpurple-3`                                                                | typing-indicator avatar chip bg          |
+| 1002 | `bg-twpurple-9`                                                                | typing-indicator bouncing dots           |
 
 The mascot SVG (`HeyTaliaLogo`, lines 46–155) hardcodes `#9575CD` (purple) and
 the `AGENTS` array has `color: '#9575CD'` (line 286). **Leave these untouched** —
@@ -113,13 +113,13 @@ Radix equivalents (Radix step semantics: 3 = subtle bg, 6 = border, 11 = low-con
 
 ## Commands you will need
 
-| Purpose   | Command            | Expected on success |
-|-----------|--------------------|---------------------|
-| Install   | `bun install`      | exit 0 |
-| Build     | `bun run build`    | exit 0 |
-| Typecheck | `npx tsc --noEmit 2>&1 \| grep -c "error TS"` | ≤ 113 (baseline at `9eb7dee`); must NOT increase |
-| Tests     | `bunx vitest run 2>&1 \| grep "Tests "` | 37 passed, 16 failed (baseline — unchanged) |
-| Dev smoke | `bun run dev` then open `/announcements` (HeyTalia panel lives here) | panel renders |
+| Purpose   | Command                                                              | Expected on success                              |
+| --------- | -------------------------------------------------------------------- | ------------------------------------------------ |
+| Install   | `bun install`                                                        | exit 0                                           |
+| Build     | `bun run build`                                                      | exit 0                                           |
+| Typecheck | `npx tsc --noEmit 2>&1 \| grep -c "error TS"`                        | ≤ 113 (baseline at `9eb7dee`); must NOT increase |
+| Tests     | `bunx vitest run 2>&1 \| grep "Tests "`                              | 37 passed, 16 failed (baseline — unchanged)      |
+| Dev smoke | `bun run dev` then open `/announcements` (HeyTalia panel lives here) | panel renders                                    |
 
 > The 16 failing tests (`draft-storage`, `imported-columns`) are pre-existing and
 > unrelated; this plan touches no tests/logic. Gate: count unchanged.
@@ -128,7 +128,7 @@ Radix equivalents (Radix step semantics: 3 = subtle bg, 6 = border, 11 = low-con
 
 - If `agent-browser` is available, use it for the step 4 visual check (open
   `/announcements`, open the HeyTalia panel via its launcher, screenshot the chat
-  + a generated draft). Otherwise report that the visual check was skipped.
+  - a generated draft). Otherwise report that the visual check was skipped.
 
 ## Scope
 
@@ -175,18 +175,18 @@ anywhere among the other scales — it will replace twpurple in step 5). Mirror 
 existing `--color-twblue-*` form:
 
 ```css
-  --color-violet-1: var(--violet-1);
-  --color-violet-2: var(--violet-2);
-  --color-violet-3: var(--violet-3);
-  --color-violet-4: var(--violet-4);
-  --color-violet-5: var(--violet-5);
-  --color-violet-6: var(--violet-6);
-  --color-violet-7: var(--violet-7);
-  --color-violet-8: var(--violet-8);
-  --color-violet-9: var(--violet-9);
-  --color-violet-10: var(--violet-10);
-  --color-violet-11: var(--violet-11);
-  --color-violet-12: var(--violet-12);
+--color-violet-1: var(--violet-1);
+--color-violet-2: var(--violet-2);
+--color-violet-3: var(--violet-3);
+--color-violet-4: var(--violet-4);
+--color-violet-5: var(--violet-5);
+--color-violet-6: var(--violet-6);
+--color-violet-7: var(--violet-7);
+--color-violet-8: var(--violet-8);
+--color-violet-9: var(--violet-9);
+--color-violet-10: var(--violet-10);
+--color-violet-11: var(--violet-11);
+--color-violet-12: var(--violet-12);
 ```
 
 Also add the dark-mode swap for the raw scale, immediately after
@@ -194,18 +194,18 @@ Also add the dark-mode swap for the raw scale, immediately after
 like every other Radix scale:
 
 ```css
-  --violet-1: var(--violet-dark-1);
-  --violet-2: var(--violet-dark-2);
-  --violet-3: var(--violet-dark-3);
-  --violet-4: var(--violet-dark-4);
-  --violet-5: var(--violet-dark-5);
-  --violet-6: var(--violet-dark-6);
-  --violet-7: var(--violet-dark-7);
-  --violet-8: var(--violet-dark-8);
-  --violet-9: var(--violet-dark-9);
-  --violet-10: var(--violet-dark-10);
-  --violet-11: var(--violet-dark-11);
-  --violet-12: var(--violet-dark-12);
+--violet-1: var(--violet-dark-1);
+--violet-2: var(--violet-dark-2);
+--violet-3: var(--violet-dark-3);
+--violet-4: var(--violet-dark-4);
+--violet-5: var(--violet-dark-5);
+--violet-6: var(--violet-dark-6);
+--violet-7: var(--violet-dark-7);
+--violet-8: var(--violet-dark-8);
+--violet-9: var(--violet-dark-9);
+--violet-10: var(--violet-dark-10);
+--violet-11: var(--violet-dark-11);
+--violet-12: var(--violet-dark-12);
 ```
 
 **Verify**: `grep -c "color-violet-12" src/styles.css` → ≥ 1; `bun run build` → exit 0.
@@ -230,28 +230,28 @@ two primary action buttons and the user's own message bubble.**
 
 ```tsx
 const HT = {
-  primary: 'var(--primary)',       // user bubble bg — the brand accent for the user's own voice
-  hover: 'var(--twblue-10)',       // (still unused; harmless)
-  ultraLight: 'var(--slate-2)',    // draft title-bar bg, warning box bg
-  light: 'var(--slate-3)',         // title pill bg, [For input] pill bg
-  border: 'var(--slate-6)',        // draft card / warning borders (matches --border)
-  text: 'var(--slate-11)',         // pill + warning text (matches --muted-foreground)
+  primary: 'var(--primary)', // user bubble bg — the brand accent for the user's own voice
+  hover: 'var(--twblue-10)', // (still unused; harmless)
+  ultraLight: 'var(--slate-2)', // draft title-bar bg, warning box bg
+  light: 'var(--slate-3)', // title pill bg, [For input] pill bg
+  border: 'var(--slate-6)', // draft card / warning borders (matches --border)
+  text: 'var(--slate-11)', // pill + warning text (matches --muted-foreground)
 } as const
 ```
 
 **Class sites**:
 
-| Line | Replace with | Note |
-|---|---|---|
-| 466 | `group-active:bg-primary` | brand cue on the resize grip |
-| 585 | `bg-primary text-primary-foreground` | primary action (send) |
-| 740 | `bg-muted` | neutral avatar chip |
-| 787 | `border-border bg-muted ... text-foreground ... hover:bg-accent` | neutral suggestion chips (drop all 4 twpurple tokens) |
-| 895 | `border-border bg-white ... text-foreground hover:bg-muted` | neutral outline (secondary action) |
-| 902 | `bg-primary ... text-primary-foreground` | primary action (use draft) |
-| 946 | `bg-secondary text-secondary-foreground` | neutral selected state for the icon button (replaces `bg-twpurple-9 text-white`) |
-| 991 | `bg-muted` | neutral typing avatar |
-| 1002 | `bg-muted-foreground` | neutral typing dots |
+| Line | Replace with                                                     | Note                                                                             |
+| ---- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| 466  | `group-active:bg-primary`                                        | brand cue on the resize grip                                                     |
+| 585  | `bg-primary text-primary-foreground`                             | primary action (send)                                                            |
+| 740  | `bg-muted`                                                       | neutral avatar chip                                                              |
+| 787  | `border-border bg-muted ... text-foreground ... hover:bg-accent` | neutral suggestion chips (drop all 4 twpurple tokens)                            |
+| 895  | `border-border bg-white ... text-foreground hover:bg-muted`      | neutral outline (secondary action)                                               |
+| 902  | `bg-primary ... text-primary-foreground`                         | primary action (use draft)                                                       |
+| 946  | `bg-secondary text-secondary-foreground`                         | neutral selected state for the icon button (replaces `bg-twpurple-9 text-white`) |
+| 991  | `bg-muted`                                                       | neutral typing avatar                                                            |
+| 1002 | `bg-muted-foreground`                                            | neutral typing dots                                                              |
 
 **Info icon** (line 854, currently `style={{ color: HT.primary }}`): change to
 `style={{ color: 'var(--slate-11)' }}` so the warning box is fully neutral (the
@@ -278,6 +278,7 @@ If purple remains in the chrome, a `twpurple` site was missed — find it and fi
 ### Step 5: Delete the `twpurple` scale from `src/styles.css`
 
 Only now (nothing references it). Delete:
+
 - `:root` twpurple block (comment + 12 lines, ~51–63).
 - `.dark` twpurple block (12 lines, ~197–208).
 - `@theme inline` twpurple registrations (12 lines, ~244–255).
@@ -321,7 +322,7 @@ Stop and report back (do not improvise) if:
 
 - `src/styles.css` / `heytalia-panel.tsx` excerpts don't match live code (drift).
   If plan 007 landed, styles.css line numbers shifted — re-match by content; only
-  STOP if the *content* differs.
+  STOP if the _content_ differs.
 - `grep -rn "twpurple" src/` finds usage outside `heytalia-panel.tsx` + `styles.css`
   (the usage map was complete at `9eb7dee`; a new site means drift).
 - After step 5, `bun run build` fails or any `twpurple` utility still resolves.

@@ -53,21 +53,18 @@ This plan also fixes the one tsc error in `students.index.tsx`
   - `computeStudentOverall(student, selectedSubjects)` at lines 60-74:
     computes overall % from `student.subjectScores` filtered to
     `selectedSubjects`, falling back to `student.overallPercentage`.
-  - `matchesCondition(student, filter, selectedSubjects?)` at lines 81-181:
-    - Lines 82-116: local `knownFields` set; unknown field → `return true`,
-      with the comment `// Imported/custom fields have no student data — skip
-      filter (show all)`. **This is documented, intentional behavior for this
-      page — preserve it.**
-    - Value extraction handles `overallPercentage` (via
-      `computeStudentOverall`), `attendance` (percent from
-      `daysPresent/totalSchoolDays`), `housingType` (maps
-      `'Owned'→'Owner-occupied'`, `'Rented'→'Rented'`, else `'-'`), otherwise
-      `student[field as keyof Student]`. It does NOT bucket
-      `counsellingSessions` (the bug).
-    - Operator switch: `gt/gte/lt/lte/eq/neq` via `Number()` casts;
-      `between/not_between` via a `{min,max}` cast; `contains/not_contains/
-      is/is_not` via `String(value ?? '')`; `is_empty/is_not_empty`;
-      `default: return false`.
+  - `matchesCondition(student, filter, selectedSubjects?)` at lines 81-181: - Lines 82-116: local `knownFields` set; unknown field → `return true`,
+    with the comment `// Imported/custom fields have no student data — skip
+filter (show all)`. **This is documented, intentional behavior for this
+    page — preserve it.** - Value extraction handles `overallPercentage` (via
+    `computeStudentOverall`), `attendance` (percent from
+    `daysPresent/totalSchoolDays`), `housingType` (maps
+    `'Owned'→'Owner-occupied'`, `'Rented'→'Rented'`, else `'-'`), otherwise
+    `student[field as keyof Student]`. It does NOT bucket
+    `counsellingSessions` (the bug). - Operator switch: `gt/gte/lt/lte/eq/neq` via `Number()` casts;
+    `between/not_between` via a `{min,max}` cast; `contains/not_contains/
+is/is_not` via `String(value ?? '')`; `is_empty/is_not_empty`;
+    `default: return false`.
   - Line 331-334: `activeFilterFields = new Set(filters.filter(isFilterComplete).map((f) => f.field))`
     — inferred as `Set<string>` because `FilterCriterion.field` is
     `FilterField | string` (`src/types/student.ts:189-194`).
@@ -98,12 +95,12 @@ This plan also fixes the one tsc error in `students.index.tsx`
 
 ## Commands you will need
 
-| Purpose   | Command            | Expected on success |
-|-----------|--------------------|---------------------|
-| Install   | `bun install`      | exit 0 |
-| Tests     | `bun run test`     | all pass (plan 001 must have landed) |
+| Purpose   | Command                                          | Expected on success                     |
+| --------- | ------------------------------------------------ | --------------------------------------- |
+| Install   | `bun install`                                    | exit 0                                  |
+| Tests     | `bun run test`                                   | all pass (plan 001 must have landed)    |
 | Typecheck | `npx tsc --noEmit 2>&1 \| grep "students.index"` | only TS6133 unused-var lines, no TS2322 |
-| Build     | `bun run build`    | exit 0 |
+| Build     | `bun run build`                                  | exit 0                                  |
 
 ## Scope
 
@@ -286,6 +283,7 @@ Cases, each asserting through `evaluateCriterion`:
 ### Step 5: Full verification pass
 
 **Verify**:
+
 - `bun run test` → exit 0.
 - `bun run build` → exit 0.
 - `npx tsc --noEmit 2>&1 | grep -c "error TS"` → strictly lower than before

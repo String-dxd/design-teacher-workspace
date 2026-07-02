@@ -39,9 +39,9 @@ with an async or destructive action inherits the `applies_to: [flow]` controls
 
 ## Waivers granted
 
-| Control | Tier | Reason | Approver | Where recorded |
-|---------|------|--------|----------|----------------|
-| | | | | inline `tfx-waive` / this record |
+| Control | Tier | Reason | Approver | Where recorded                   |
+| ------- | ---- | ------ | -------- | -------------------------------- |
+|         |      |        |          | inline `tfx-waive` / this record |
 
 > L0 controls are never waivable. L1 waivers need a named human approver. L2 waivers
 > need a specific, real reason.

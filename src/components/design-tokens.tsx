@@ -155,103 +155,103 @@ export function DesignTokens() {
   return (
     <div className="space-y-6">
       <header className="mb-2">
-          <h1 className="text-xl font-semibold text-foreground">Design Tokens</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Semantic Shadcn tokens and the Radix / brand scales they map to.
-            Source: <code className="font-mono text-xs">src/styles.css</code>.
-          </p>
-        </header>
+        <h1 className="text-xl font-semibold text-foreground">Design Tokens</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Semantic Shadcn tokens and the Radix / brand scales they map to.
+          Source: <code className="font-mono text-xs">src/styles.css</code>.
+        </p>
+      </header>
 
-        <Card
-          id="semantic-tokens"
-          data-ds-section="Semantic tokens"
-          data-ds-group="Design Tokens"
-          className="mb-6 scroll-mt-6"
-        >
-          <CardHeader>
-            <CardTitle>Semantic tokens</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto rounded-lg border border-border">
-              <Table>
-                <TableHeader>
-                  <TableRow className="hover:bg-transparent">
-                    <TableHead className="h-9 w-20">Preview</TableHead>
-                    <TableHead className="h-9">Token</TableHead>
-                    <TableHead className="h-9">Maps to</TableHead>
-                    <TableHead className="h-9 text-right">Value</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {SEMANTIC_GROUPS.map((group) => (
-                    <Fragment key={group.title}>
-                      <TableRow className="hover:bg-transparent">
-                        <TableCell
-                          colSpan={4}
-                          className="bg-muted/50 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
-                        >
-                          {group.title}
+      <Card
+        id="semantic-tokens"
+        data-ds-section="Semantic tokens"
+        data-ds-group="Design Tokens"
+        className="mb-6 scroll-mt-6"
+      >
+        <CardHeader>
+          <CardTitle>Semantic tokens</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto rounded-lg border border-border">
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="h-9 w-20">Preview</TableHead>
+                  <TableHead className="h-9">Token</TableHead>
+                  <TableHead className="h-9">Maps to</TableHead>
+                  <TableHead className="h-9 text-right">Value</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {SEMANTIC_GROUPS.map((group) => (
+                  <Fragment key={group.title}>
+                    <TableRow className="hover:bg-transparent">
+                      <TableCell
+                        colSpan={4}
+                        className="bg-muted/50 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+                      >
+                        {group.title}
+                      </TableCell>
+                    </TableRow>
+                    {group.tokens.map((token) => (
+                      <TableRow key={token.name}>
+                        <TableCell className="py-2">
+                          <div
+                            data-tok={token.name}
+                            className="h-7 w-10 rounded-md border border-border"
+                            style={{ backgroundColor: `var(${token.name})` }}
+                          />
+                        </TableCell>
+                        <TableCell className="py-2 font-mono text-xs text-foreground">
+                          {token.name}
+                        </TableCell>
+                        <TableCell className="py-2 font-mono text-xs text-muted-foreground">
+                          {token.maps}
+                        </TableCell>
+                        <TableCell className="py-2 text-right font-mono text-[11px] tabular-nums text-muted-foreground">
+                          {resolved[token.name] ?? ''}
                         </TableCell>
                       </TableRow>
-                      {group.tokens.map((token) => (
-                        <TableRow key={token.name}>
-                          <TableCell className="py-2">
-                            <div
-                              data-tok={token.name}
-                              className="h-7 w-10 rounded-md border border-border"
-                              style={{ backgroundColor: `var(${token.name})` }}
-                            />
-                          </TableCell>
-                          <TableCell className="py-2 font-mono text-xs text-foreground">
-                            {token.name}
-                          </TableCell>
-                          <TableCell className="py-2 font-mono text-xs text-muted-foreground">
-                            {token.maps}
-                          </TableCell>
-                          <TableCell className="py-2 text-right font-mono text-[11px] tabular-nums text-muted-foreground">
-                            {resolved[token.name] ?? ''}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </Fragment>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-            <p className="mt-4 font-mono text-[11px] text-muted-foreground">
-              --radius-input: 14px&nbsp;&nbsp;·&nbsp;&nbsp;--overlay:
-              rgba(0,0,0,0.8)
-            </p>
-          </CardContent>
-        </Card>
+                    ))}
+                  </Fragment>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+          <p className="mt-4 font-mono text-[11px] text-muted-foreground">
+            --radius-input: 14px&nbsp;&nbsp;·&nbsp;&nbsp;--overlay:
+            rgba(0,0,0,0.8)
+          </p>
+        </CardContent>
+      </Card>
 
-        <Card
-          id="color-scales"
-          data-ds-section="Color scales"
-          data-ds-group="Design Tokens"
-          className="scroll-mt-6"
-        >
-          <CardHeader>
-            <CardTitle>Color scales</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              {SCALES.map((scale) => (
-                <ScaleRow
-                  key={scale.name}
-                  name={scale.name}
-                  label={scale.label}
-                  steps={STEPS}
-                />
-              ))}
+      <Card
+        id="color-scales"
+        data-ds-section="Color scales"
+        data-ds-group="Design Tokens"
+        className="scroll-mt-6"
+      >
+        <CardHeader>
+          <CardTitle>Color scales</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            {SCALES.map((scale) => (
               <ScaleRow
-                name="twblue"
-                label="brand alpha (over the page background)"
-                steps={ALPHA_STEPS}
+                key={scale.name}
+                name={scale.name}
+                label={scale.label}
+                steps={STEPS}
               />
-            </div>
-          </CardContent>
-        </Card>
+            ))}
+            <ScaleRow
+              name="twblue"
+              label="brand alpha (over the page background)"
+              steps={ALPHA_STEPS}
+            />
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

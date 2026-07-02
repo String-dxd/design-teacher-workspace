@@ -9,7 +9,7 @@ export interface MeetingEvent {
   title: string
   description: string
   venue?: string
-  meetingDays: MeetingDay[]
+  meetingDays: Array<MeetingDay>
   durationMinutes: number
   maxPerSlot: number
   bookingOpens: string // ISO datetime string
@@ -21,7 +21,7 @@ export interface MeetingEvent {
   pending: number
 }
 
-export const mockMeetings: MeetingEvent[] = [
+export const mockMeetings: Array<MeetingEvent> = [
   {
     id: 'm-1',
     title: 'Parent Teaching Day',
@@ -68,8 +68,7 @@ export const mockMeetings: MeetingEvent[] = [
   {
     id: 'm-3',
     title: 'PSLE Results Day',
-    description:
-      'Consultation session for PSLE results with homeroom teacher.',
+    description: 'Consultation session for PSLE results with homeroom teacher.',
     meetingDays: [
       { date: '2026-07-03', startTime: '09:00', endTime: '10:00' },
       { date: '2026-07-04', startTime: '09:00', endTime: '10:00' },
@@ -90,9 +89,7 @@ export const mockMeetings: MeetingEvent[] = [
     description:
       'End of term parent-teacher consultation to review student progress for Semester 1.',
     venue: 'School Hall',
-    meetingDays: [
-      { date: '2026-05-10', startTime: '08:00', endTime: '12:00' },
-    ],
+    meetingDays: [{ date: '2026-05-10', startTime: '08:00', endTime: '12:00' }],
     durationMinutes: 30,
     maxPerSlot: 1,
     bookingOpens: '2026-04-28T08:00:00',

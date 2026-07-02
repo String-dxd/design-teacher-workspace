@@ -1,5 +1,5 @@
-import { CHART_GRID, RADAR_FILL, RADAR_STROKE } from '@/lib/chart-colors'
 import type { CoreValue } from '@/types/report'
+import { CHART_GRID, RADAR_FILL, RADAR_STROKE } from '@/lib/chart-colors'
 
 interface RadarChartProps {
   values: Array<CoreValue>

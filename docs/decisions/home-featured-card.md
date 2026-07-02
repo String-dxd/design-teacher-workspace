@@ -45,8 +45,8 @@ LAY-2, A11Y-4, TOK-2, TOK-3, SLP-7, and the Phase-4 conservative-defaults rule. 
 ## Waivers granted
 
 | Control | Tier | Reason | Approver | Where recorded |
-|---------|------|--------|----------|----------------|
-| — | — | none | — | — |
+| ------- | ---- | ------ | -------- | -------------- |
+| —       | —    | none   | —        | —              |
 
 > L0 controls are never waivable. L1 waivers need a named human approver. L2 waivers
 > need a specific, real reason.
@@ -72,18 +72,22 @@ LAY-2, A11Y-4, TOK-2, TOK-3, SLP-7, and the Phase-4 conservative-defaults rule. 
   > VERDICT: pass
   >
   > BLOCKING (must fix before ship):
+  >
   > - None.
   >
   > ADVISORY (should fix):
+  >
   > - None within scope. One note for the decision record (not a control failure): the stated "before" className in the sprint brief included `w-full`, but the actual committed `before` (git HEAD, line 151) did NOT — `w-full` is a net-new utility added by this diff, not a relocation. It is a verified no-op (parent `<section className="flex flex-col">` in `src/routes/index.tsx:20` already stretches the card to full width, and the prior version had no width constraint), so behavior is unchanged and reversible. Flagging only because the brief's diff text and the real diff disagree; the real diff is 1 insertion / 1 deletion as claimed.
   >
   > QUALITY GRADES:
+  >
   > - Design quality — strong. The vertical stack at 320/360 (icon → "Student Insights" + "Beta" badge → "Holistic insights that help every student thrive") reads top-to-bottom in task order and now matches the Frequently Used cards' orientation directly below it (verified ok-360.png, clean-320.png); hierarchy and gap rhythm are preserved.
   > - Originality — strong (appropriate, non-novel). The change makes the Featured card converge on the existing `AppCard` `flex flex-col gap-4` pattern rather than inventing a new responsive scheme; no unwarranted novelty.
   > - Craft — strong. The responsive boundary is deliberate and clean: horizontal `h-[132px]` layout intact at 768/1280 (clean-768.png, desktop-clean.png), vertical with no clipping or overflow at 320 (clean-320.png). Edge content length (the full description, un-truncated since `FeaturedAppCard` has no `line-clamp`) wraps cleanly at every width.
   > - Functionality — strong. The card remains a single link to the app at every width; no dead ends, no state regressions. Hover (`hover:bg-muted/50`) and the icon `mix-blend` hover are untouched by a layout-only diff.
   >
   > JUDGMENT CONTROL NOTES (one line per in-scope control):
+  >
   > - [LAY-2] pass — verified from screenshot (clean-320.png at 320 CSS px): single-column reflow, no horizontal scroll on the page body, reading order icon→title+badge→description intact, the card (the only primary control on this surface) fully reachable. The 320 target was explicitly tested, satisfying the control's "do not rely on 360" caveat.
   > - [A11Y-4] pass — verified from code + screenshot: the entire card is one `<a>`/`<Link>` (app-card.tsx:168-185); at 320/360 it renders as a full-width block far exceeding 44px in both dimensions (the `AppIcon` alone is `size-16` = 64px). Tap target stays ≥44px on mobile.
   > - [TOK-2] pass — verified from code: this diff introduces no new spacing values. Spacing utilities are `gap-4`, `p-4` (on-scale), plus layout-only `flex-col`/`sm:flex-row`/`sm:items-center`/`w-full`. No off-scale margin/padding/gap added.
@@ -92,18 +96,21 @@ LAY-2, A11Y-4, TOK-2, TOK-3, SLP-7, and the Phase-4 conservative-defaults rule. 
   > - [Conservative-defaults rule, Phase 4] pass — verified from diff: colors (`border-[#C8C8C8]`, `bg-white`, `bg-muted/50`), border, radius (`rounded-[14px]`), icon, and copy are byte-for-byte unchanged; the diff is purely orientation utilities and is trivially reversible (1 insertion / 1 deletion).
   >
   > Contract compliance (items 1–4):
+  >
   > - Contract 1 (stacks vertically <640px: icon → title+badge → description, matching Frequently Used) — MET. Verified clean-320.png and ok-360.png: vertical order is icon, then "Student Insights" + "Beta", then description, mirroring the SC/SC Mobile cards below.
   > - Contract 2 (≥640px keeps horizontal layout unchanged, fixed h-[132px]) — MET. Verified clean-768.png and desktop-clean.png: icon left, text right, fixed-height card; `sm:h-[132px] sm:flex-row sm:items-center` restores the original behavior at the `sm` breakpoint.
   > - Contract 3 (orientation only — no copy/icon/color/border/radius/hover change) — MET. Verified from diff: only flex-direction/alignment/height-breakpoint/width utilities changed; everything else identical.
   > - Contract 4 (clean reflow to 320, no clipping/overflow, LAY-2; tap target ≥44px, A11Y-4) — MET. clean-320.png shows clean reflow with no clipping/overflow; tap target is the full card link (≥44px).
   >
   > Pre-existing issues confirmation:
+  >
   > - `border-[#C8C8C8]` and `bg-white` on `FeaturedAppCard` — CONFIRMED pre-existing (git HEAD line 151 carries both); untouched by this diff (TOK-1/COL-1/COL-2, not introduced or worsened).
   > - `bg-[#0064ff]`, `text-[#0064ff]`, and Tailwind-palette hover classes (`group-hover:text-pink-500`, `orange-500`, `green-500`, `purple-500`) in `AppIcon` — CONFIRMED pre-existing (git HEAD lines 8,10,11,12,39,54); `AppIcon` was not modified (TOK-1/COL-1/COL-2, not introduced or worsened).
   > - `rounded-[14px]` off-scale radius — CONFIRMED pre-existing on both `AppCard` and `FeaturedAppCard` (git HEAD lines 84, 151); not introduced or worsened.
   > - All 7 token-audit findings are attributable to lines unchanged by this diff. Note: I did not re-run token-audit.py myself; I confirmed pre-existence by diffing against git HEAD, which is sufficient to establish the diff did not introduce them.
   >
   > UNCOVERED (defects no control covers):
+  >
   > - None.
   >
   > Overall verdict: SHIP. The diff is a minimal, reversible, layout-only change (1 insertion / 1 deletion) that fully satisfies all four contract items and passes every in-scope control on verified evidence. The 320px reflow target was explicitly captured and is clean (the most important control here, LAY-2). All TOK-1/COL-1/COL-2 violations present on the surface are confirmed pre-existing via git HEAD and were deliberately left out of scope. The only thing worth recording is the cosmetic discrepancy between the brief's stated "before" and the real `before` (`w-full` is added, not relocated) — a verified no-op, not a blocker.

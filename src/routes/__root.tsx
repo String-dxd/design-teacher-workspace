@@ -15,7 +15,11 @@ import { AppHeader } from '@/components/app-header'
 import { AppSidebar } from '@/components/app-sidebar'
 import { WelcomeModal } from '@/components/welcome-modal'
 import { ErrorBoundary } from '@/components/ui/error-boundary'
-import { SidebarInset, SidebarProvider, useSidebar } from '@/components/ui/sidebar'
+import {
+  SidebarInset,
+  SidebarProvider,
+  useSidebar,
+} from '@/components/ui/sidebar'
 import { Toaster } from '@/components/ui/sonner'
 import { FeatureFlagProvider } from '@/lib/feature-flags'
 import { AuthProvider } from '@/lib/auth'
@@ -41,7 +45,8 @@ function SidebarAutoCollapse() {
     prevPathnameRef.current = pathname
 
     const inSection = AUTO_COLLAPSE_ROUTES.some((r) => pathname.startsWith(r))
-    const wasInSection = prev !== null && AUTO_COLLAPSE_ROUTES.some((r) => prev.startsWith(r))
+    const wasInSection =
+      prev !== null && AUTO_COLLAPSE_ROUTES.some((r) => prev.startsWith(r))
 
     // Only collapse when crossing into a section from outside
     if (inSection && !wasInSection) {

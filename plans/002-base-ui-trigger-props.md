@@ -44,15 +44,11 @@ The repo already contains the correct pattern. Exemplar —
 ```tsx
 <PopoverTrigger
   render={
-    <Button
-      variant="outline"
-      className="h-9 gap-2 aria-expanded:bg-white"
-    />
+    <Button variant="outline" className="h-9 gap-2 aria-expanded:bg-white" />
   }
 >
   <Filter className="h-4 w-4" />
-  Filter
-  ...
+  Filter ...
 </PopoverTrigger>
 ```
 
@@ -67,21 +63,21 @@ Key facts about the pattern:
 The broken sites — all currently shaped like
 `<SomeTrigger asChild><Button ...>content</Button></SomeTrigger>`:
 
-| # | File:line | Trigger |
-|---|-----------|---------|
-| 1 | `src/components/forms/form-response-table.tsx:224` | PopoverTrigger |
-| 2 | `src/components/forms/form-response-table.tsx:364` | PopoverTrigger |
-| 3 | `src/components/comms/recipient-read-table.tsx:295` | PopoverTrigger |
-| 4 | `src/components/comms/recipient-read-table.tsx:429` | PopoverTrigger |
-| 5 | `src/components/students/column-header-menu.tsx:267` | PopoverTrigger |
-| 6 | `src/components/students/import-wizard.tsx:932` | TooltipTrigger |
-| 7 | `src/routes/groups.$groupId.tsx:509` | DropdownMenuTrigger |
-| 8 | `src/routes/forms.index.tsx:208` | DropdownMenuTrigger |
-| 9 | `src/routes/announcements.index.tsx:460` | DropdownMenuTrigger |
-| 10 | `src/routes/announcements.index.tsx:680` | DropdownMenuTrigger |
-| 11 | `src/routes/groups.index.tsx:643` | DropdownMenuTrigger |
-| 12 | `src/routes/groups.index.tsx:712` | DropdownMenuTrigger |
-| 13 | `src/routes/students_.$id.agency-report.new.tsx:755` | PopoverTrigger |
+| #   | File:line                                            | Trigger             |
+| --- | ---------------------------------------------------- | ------------------- |
+| 1   | `src/components/forms/form-response-table.tsx:224`   | PopoverTrigger      |
+| 2   | `src/components/forms/form-response-table.tsx:364`   | PopoverTrigger      |
+| 3   | `src/components/comms/recipient-read-table.tsx:295`  | PopoverTrigger      |
+| 4   | `src/components/comms/recipient-read-table.tsx:429`  | PopoverTrigger      |
+| 5   | `src/components/students/column-header-menu.tsx:267` | PopoverTrigger      |
+| 6   | `src/components/students/import-wizard.tsx:932`      | TooltipTrigger      |
+| 7   | `src/routes/groups.$groupId.tsx:509`                 | DropdownMenuTrigger |
+| 8   | `src/routes/forms.index.tsx:208`                     | DropdownMenuTrigger |
+| 9   | `src/routes/announcements.index.tsx:460`             | DropdownMenuTrigger |
+| 10  | `src/routes/announcements.index.tsx:680`             | DropdownMenuTrigger |
+| 11  | `src/routes/groups.index.tsx:643`                    | DropdownMenuTrigger |
+| 12  | `src/routes/groups.index.tsx:712`                    | DropdownMenuTrigger |
+| 13  | `src/routes/students_.$id.agency-report.new.tsx:755` | PopoverTrigger      |
 
 (Line numbers are as of commit `9f03003`; locate by searching each file for
 `asChild` if they have drifted slightly — `grep -n "asChild" <file>`.)
@@ -102,7 +98,7 @@ And the two `nativeButton` sites —
 
 Verified against `node_modules/@base-ui/react/esm/tooltip/trigger/TooltipTrigger.d.ts`:
 `Tooltip.Trigger` props are `handle`, `payload`, `delay`, `closeDelay`, etc. —
-there is **no `nativeButton`**. (`Popover.Trigger` *does* accept
+there is **no `nativeButton`**. (`Popover.Trigger` _does_ accept
 `nativeButton`; do not "fix" popover sites that use it legitimately, e.g.
 `src/components/ui/pagination.tsx:56`.)
 
@@ -112,12 +108,12 @@ library that supports `asChild`. They produce no tsc errors.
 
 ## Commands you will need
 
-| Purpose   | Command                              | Expected on success |
-|-----------|--------------------------------------|---------------------|
-| Install   | `bun install`                        | exit 0 |
-| Typecheck | `npx tsc --noEmit 2>&1 \| grep -c "error TS"` | baseline 139; ≤ 124 after this plan |
-| Dev server (manual spot check) | `bun run dev` | serves on http://127.0.0.1:3000 |
-| Build     | `bun run build`                      | exit 0 |
+| Purpose                        | Command                                       | Expected on success                 |
+| ------------------------------ | --------------------------------------------- | ----------------------------------- |
+| Install                        | `bun install`                                 | exit 0                              |
+| Typecheck                      | `npx tsc --noEmit 2>&1 \| grep -c "error TS"` | baseline 139; ≤ 124 after this plan |
+| Dev server (manual spot check) | `bun run dev`                                 | serves on http://127.0.0.1:3000     |
+| Build                          | `bun run build`                               | exit 0                              |
 
 ## Scope
 
@@ -199,6 +195,7 @@ exactly as they are.
 ### Step 4: Confirm the error count dropped and nothing else broke
 
 **Verify**:
+
 - `npx tsc --noEmit 2>&1 | grep -c "error TS"` → at most (baseline − 15).
 - `npx tsc --noEmit 2>&1 | grep -i "aschild\|nativeButton"` → no output.
 - `bun run build` → exit 0.

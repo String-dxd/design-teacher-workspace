@@ -29,8 +29,8 @@ strategy:
    usage rules. `academic-analytics.tsx` already imports `CATEGORICAL_6` (but the audit
    found it largely unused — scattered ad-hoc hexes are used instead).
 2. **That module explicitly reserves semantic chart colors** — its header says do NOT
-   use the categorical palette for *attendance severity* (`red/orange/yellow`), the
-   *"Present" ring* (`#12b886`), or *grade diverging scales*. Those reserved hexes are
+   use the categorical palette for _attendance severity_ (`red/orange/yellow`), the
+   _"Present" ring_ (`#12b886`), or _grade diverging scales_. Those reserved hexes are
    **intentional, not drift.**
 
 So the DS-correct move is **centralize, don't scatter**: pull the loose chart hexes into
@@ -84,7 +84,7 @@ For every chart literal, classify it:
   neutral chrome + brand).
 - `components/heytalia/heytalia-panel.tsx` — the mascot SVG `#9575CD` and `AGENTS[].color`
   are **brand artwork; LEAVE per plan 008**. Only the `${color}18` alpha-concat that
-  feeds a *background tint* (not the logo) gets the `color-mix` treatment. If every
+  feeds a _background tint_ (not the logo) gets the `color-mix` treatment. If every
   `#9575CD` is logo/agent artwork, this file's residual is intentional — document it.
 
 ## Steps
@@ -114,6 +114,7 @@ and DARK-HAZARD gates → still 0. This phase must not have re-introduced palett
 ### Step 4: MANDATORY visual review (the real gate)
 
 `bun run dev`. Open every touched chart in **light AND dark mode** and eyeball:
+
 - bars, donut/ring, box-plot, line, radar render with intended, distinguishable hues;
 - gridlines/axes/ticks are visible but recessive in both themes;
 - attendance severity reads red/orange as before; the Present ring reads green;
