@@ -106,7 +106,7 @@ function ReportsPage({ isAdmin = false }: { isAdmin?: boolean }) {
         <div className="px-6">
           <h1 className="text-2xl font-semibold">Reports</h1>
           <p className="mt-1 hidden text-sm text-muted-foreground lg:block">
-            Export reports for your {isSchoolWide ? 'school' : 'class'}.
+            Download onboarding and travel declaration records as Excel files.
             {isAdmin && (
               <>
                 <br />
