@@ -587,8 +587,7 @@ function ParentsGatewayPage() {
         {isSchoolWide && (
           <div className="mx-6 mt-4 rounded-lg border border-twblue-6 bg-twblue-3/60 px-4 py-2.5">
             <p className="text-sm text-twblue-11">
-              Viewing all sent posts across the school. Posts cannot be created
-              in this view.
+              Viewing all sent posts across the school.
             </p>
           </div>
         )}
@@ -719,22 +718,18 @@ function ParentsGatewayPage() {
                                 >
                                   Edit post
                                 </DropdownMenuItem>
-                                {isOwnPost && (
-                                  <>
-                                    <DropdownMenuItem>
-                                      <Copy className="mr-2 h-4 w-4" />
-                                      Duplicate
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem
-                                      className="text-destructive focus:text-destructive"
-                                      onClick={() => openDeleteDialog(a.id)}
-                                    >
-                                      <Trash2 className="mr-2 h-4 w-4" />
-                                      Delete
-                                    </DropdownMenuItem>
-                                  </>
-                                )}
+                                <DropdownMenuItem>
+                                  <Copy className="mr-2 h-4 w-4" />
+                                  Duplicate
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  className="text-destructive focus:text-destructive"
+                                  onClick={() => openDeleteDialog(a.id)}
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Delete
+                                </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </div>

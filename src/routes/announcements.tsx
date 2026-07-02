@@ -78,7 +78,7 @@ function AnnouncementsLayout() {
               )}
             </p>
           </div>
-          {!isSchoolWide && (
+          {(!isSchoolWide || isAdmin) && (
             <Button size="sm" render={<Link to="/create" />}>
               <Plus className="mr-1.5 h-4 w-4" />
               Create
