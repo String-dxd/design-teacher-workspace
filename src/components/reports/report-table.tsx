@@ -514,9 +514,11 @@ export function ReportTable({
       </Table>
 
       {/* Record count and Pagination */}
-      <div className="flex shrink-0 items-center justify-between px-6 py-4">
+      <div className="flex shrink-0 items-center justify-between bg-card px-6 py-4">
         <div className="text-sm text-muted-foreground">
-          {reports.length} reports
+          {isGrouped
+            ? `${reports.length} records`
+            : `${flatPagination.startIndex + 1}–${Math.min(flatPagination.startIndex + pageSize, reports.length)} of ${reports.length} records`}
         </div>
         {totalPages > 1 && (
           <div className="flex items-center gap-1">

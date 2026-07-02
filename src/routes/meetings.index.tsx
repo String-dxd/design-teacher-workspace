@@ -2,11 +2,11 @@ import { useMemo } from 'react'
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { CalendarDays, Check, Clock, Grid3x3, Plus, Users } from 'lucide-react'
 
+import type { MeetingEvent } from '@/data/mock-meetings'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { mockMeetings } from '@/data/mock-meetings'
-import type { MeetingEvent } from '@/data/mock-meetings'
 
 export const Route = createFileRoute('/meetings/')({
   component: MeetingsPage,
@@ -141,9 +141,9 @@ function MeetingsPage() {
   useSetBreadcrumbs([{ label: 'Meetings', href: '/meetings' }])
 
   const { ongoing, upcoming, past } = useMemo(() => {
-    const ongoing: MeetingEvent[] = []
-    const upcoming: MeetingEvent[] = []
-    const past: MeetingEvent[] = []
+    const ongoing: Array<MeetingEvent> = []
+    const upcoming: Array<MeetingEvent> = []
+    const past: Array<MeetingEvent> = []
     for (const m of mockMeetings) {
       const s = getMeetingStatus(m)
       if (s === 'ongoing') ongoing.push(m)

@@ -6,6 +6,8 @@ import {
   ArrowUp,
   Check,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Copy,
   Edit2,
   Info,
@@ -18,6 +20,7 @@ import {
 } from 'lucide-react'
 
 import type { StructuredGroup, StudentGroup } from '@/types/student-group'
+import { usePagination } from '@/hooks/use-pagination'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
 import { MOCK_GROUPS } from '@/data/mock-groups'
 import { TEACHER_STRUCTURED_GROUPS } from '@/data/mock-structured-groups'
@@ -297,6 +300,33 @@ function GroupsIndex() {
     })
   }, [filteredCombinedGroups, sort])
 
+  const GROUPS_PAGE_SIZE = 20
+  const myGroupsPagination = usePagination({
+    totalItems: sortedGroups.length,
+    pageSize: GROUPS_PAGE_SIZE,
+  })
+  const sharedGroupsPagination = usePagination({
+    totalItems: filteredSharedGroups.length,
+    pageSize: GROUPS_PAGE_SIZE,
+  })
+  const assignedGroupsPagination = usePagination({
+    totalItems: filteredAssignedGroups.length,
+    pageSize: GROUPS_PAGE_SIZE,
+  })
+
+  const pagedMyGroups = sortedGroups.slice(
+    myGroupsPagination.startIndex,
+    myGroupsPagination.startIndex + GROUPS_PAGE_SIZE,
+  )
+  const pagedSharedGroups = filteredSharedGroups.slice(
+    sharedGroupsPagination.startIndex,
+    sharedGroupsPagination.startIndex + GROUPS_PAGE_SIZE,
+  )
+  const pagedAssignedGroups = filteredAssignedGroups.slice(
+    assignedGroupsPagination.startIndex,
+    assignedGroupsPagination.startIndex + GROUPS_PAGE_SIZE,
+  )
+
   const filteredGroupIds = sortedGroups.map((g) => g.id)
   const allSelectedInView =
     filteredGroupIds.length > 0 &&
@@ -403,7 +433,13 @@ function GroupsIndex() {
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Search groups…"
-                value={tab === 'my-groups' ? mySearch : tab === 'shared' ? sharedSearch : assignedSearch}
+                value={
+                  tab === 'my-groups'
+                    ? mySearch
+                    : tab === 'shared'
+                      ? sharedSearch
+                      : assignedSearch
+                }
                 onChange={(e) =>
                   tab === 'my-groups'
                     ? setMySearch(e.target.value)
@@ -504,7 +540,7 @@ function GroupsIndex() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {sortedGroups.map((group) => {
+                  {pagedMyGroups.map((group) => {
                     const isSelected = selectedIds.has(group.id)
                     return (
                       <TableRow
@@ -644,6 +680,62 @@ function GroupsIndex() {
                 </TableBody>
               </Table>
             )}
+            <div className="flex shrink-0 items-center justify-between bg-card px-6 py-4">
+              <div className="text-sm text-muted-foreground">
+                {myGroupsPagination.startIndex + 1}–
+                {Math.min(
+                  myGroupsPagination.startIndex + GROUPS_PAGE_SIZE,
+                  sortedGroups.length,
+                )}{' '}
+                of {sortedGroups.length} records
+              </div>
+              {myGroupsPagination.totalPages > 1 && (
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={myGroupsPagination.goToPreviousPage}
+                    disabled={!myGroupsPagination.canGoPrevious}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Previous
+                  </Button>
+                  {myGroupsPagination.pageNumbers.map((page, index) =>
+                    page === 'ellipsis' ? (
+                      <span
+                        key={`ellipsis-${index}`}
+                        className="px-2 text-muted-foreground"
+                      >
+                        ...
+                      </span>
+                    ) : (
+                      <Button
+                        key={page}
+                        variant={
+                          myGroupsPagination.currentPage === page
+                            ? 'outline'
+                            : 'ghost'
+                        }
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => myGroupsPagination.goToPage(page)}
+                      >
+                        {page}
+                      </Button>
+                    ),
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={myGroupsPagination.goToNextPage}
+                    disabled={!myGroupsPagination.canGoNext}
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
 
             {/* Selection action bar */}
             {selectedIds.size > 0 && (
@@ -704,7 +796,7 @@ function GroupsIndex() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredSharedGroups.map((group) => (
+                  {pagedSharedGroups.map((group) => (
                     <TableRow
                       key={group.id}
                       className="cursor-pointer"
@@ -716,7 +808,9 @@ function GroupsIndex() {
                       }
                     >
                       <TableCell className="overflow-hidden whitespace-normal pl-6">
-                        <span className="truncate font-medium">{group.name}</span>
+                        <span className="truncate font-medium">
+                          {group.name}
+                        </span>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
@@ -736,6 +830,62 @@ function GroupsIndex() {
                 </TableBody>
               </Table>
             )}
+            <div className="flex shrink-0 items-center justify-between bg-card px-6 py-4">
+              <div className="text-sm text-muted-foreground">
+                {sharedGroupsPagination.startIndex + 1}–
+                {Math.min(
+                  sharedGroupsPagination.startIndex + GROUPS_PAGE_SIZE,
+                  filteredSharedGroups.length,
+                )}{' '}
+                of {filteredSharedGroups.length} records
+              </div>
+              {sharedGroupsPagination.totalPages > 1 && (
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={sharedGroupsPagination.goToPreviousPage}
+                    disabled={!sharedGroupsPagination.canGoPrevious}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Previous
+                  </Button>
+                  {sharedGroupsPagination.pageNumbers.map((page, index) =>
+                    page === 'ellipsis' ? (
+                      <span
+                        key={`ellipsis-${index}`}
+                        className="px-2 text-muted-foreground"
+                      >
+                        ...
+                      </span>
+                    ) : (
+                      <Button
+                        key={page}
+                        variant={
+                          sharedGroupsPagination.currentPage === page
+                            ? 'outline'
+                            : 'ghost'
+                        }
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => sharedGroupsPagination.goToPage(page)}
+                      >
+                        {page}
+                      </Button>
+                    ),
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={sharedGroupsPagination.goToNextPage}
+                    disabled={!sharedGroupsPagination.canGoNext}
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -774,7 +924,7 @@ function GroupsIndex() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredAssignedGroups.map((group) => (
+                    {pagedAssignedGroups.map((group) => (
                       <TableRow
                         key={group.id}
                         className="cursor-pointer"
@@ -805,6 +955,64 @@ function GroupsIndex() {
                   </TableBody>
                 </Table>
               )}
+              <div className="flex shrink-0 items-center justify-between bg-card px-6 py-4">
+                <div className="text-sm text-muted-foreground">
+                  {assignedGroupsPagination.startIndex + 1}–
+                  {Math.min(
+                    assignedGroupsPagination.startIndex + GROUPS_PAGE_SIZE,
+                    filteredAssignedGroups.length,
+                  )}{' '}
+                  of {filteredAssignedGroups.length} records
+                </div>
+                {assignedGroupsPagination.totalPages > 1 && (
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={assignedGroupsPagination.goToPreviousPage}
+                      disabled={!assignedGroupsPagination.canGoPrevious}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      Previous
+                    </Button>
+                    {assignedGroupsPagination.pageNumbers.map((page, index) =>
+                      page === 'ellipsis' ? (
+                        <span
+                          key={`ellipsis-${index}`}
+                          className="px-2 text-muted-foreground"
+                        >
+                          ...
+                        </span>
+                      ) : (
+                        <Button
+                          key={page}
+                          variant={
+                            assignedGroupsPagination.currentPage === page
+                              ? 'outline'
+                              : 'ghost'
+                          }
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() =>
+                            assignedGroupsPagination.goToPage(page)
+                          }
+                        >
+                          {page}
+                        </Button>
+                      ),
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={assignedGroupsPagination.goToNextPage}
+                      disabled={!assignedGroupsPagination.canGoNext}
+                    >
+                      Next
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
           </>
         )}

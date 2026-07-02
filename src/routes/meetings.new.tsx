@@ -12,6 +12,7 @@ import {
 import { toast } from 'sonner'
 import type { ChangeEvent } from 'react'
 import type { SelectedEntity } from '@/components/comms/entity-selector'
+import { RichTextArea } from '@/components/comms/rich-text-area'
 import { StudentRecipientSelector } from '@/components/comms/student-recipient-selector'
 import { StaffSelector } from '@/components/comms/staff-selector'
 import { EnquiryEmailSelector } from '@/components/comms/enquiry-email-selector'
@@ -54,7 +55,10 @@ function buildTimeSlots(): Array<{ value: string; label: string }> {
     const value = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
     const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h
     const period = h < 12 ? 'AM' : 'PM'
-    slots.push({ value, label: `${h12}:${String(m).padStart(2, '0')} ${period}` })
+    slots.push({
+      value,
+      label: `${h12}:${String(m).padStart(2, '0')} ${period}`,
+    })
   }
   return slots
 }
@@ -146,9 +150,7 @@ function StepIndicator({ current }: { current: number }) {
               <span
                 className={cn(
                   'text-xs font-medium',
-                  done || active
-                    ? 'text-primary'
-                    : 'text-muted-foreground/40',
+                  done || active ? 'text-primary' : 'text-muted-foreground/40',
                 )}
               >
                 {label}
@@ -197,8 +199,8 @@ function CreateMeetingPage() {
   )
 
   // Step 1 — basic info
-  const [recipients, setRecipients] = useState<SelectedEntity[]>([])
-  const [staffInCharge, setStaffInCharge] = useState<SelectedEntity[]>([])
+  const [recipients, setRecipients] = useState<Array<SelectedEntity>>([])
+  const [staffInCharge, setStaffInCharge] = useState<Array<SelectedEntity>>([])
   const [enquiryEmail, setEnquiryEmail] = useState('')
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -206,14 +208,14 @@ function CreateMeetingPage() {
   const [websiteLinks, setWebsiteLinks] = useState<
     Array<{ url: string; label: string }>
   >([])
-  const [uploadedFiles, setUploadedFiles] = useState<File[]>([])
+  const [uploadedFiles, setUploadedFiles] = useState<Array<File>>([])
   const [fileDragOver, setFileDragOver] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Step 2 — meeting details
   const [durationMinutes, setDurationMinutes] = useState<number | null>(null)
   const [maxPerSlot, setMaxPerSlot] = useState<1 | 2 | 3 | null>(null)
-  const [meetingDays, setMeetingDays] = useState<MeetingDayEntry[]>([
+  const [meetingDays, setMeetingDays] = useState<Array<MeetingDayEntry>>([
     { date: '', startTime: '', endTime: '' },
   ])
 
@@ -271,13 +273,11 @@ function CreateMeetingPage() {
   }, [bookingOpensDate, bookingClosesDate])
 
   const previewSlots = useMemo(() => {
-    const firstDay = meetingDays.find(
-      (d) => d.date && d.startTime && d.endTime,
-    )
+    const firstDay = meetingDays.find((d) => d.date && d.startTime && d.endTime)
     if (!firstDay || !durationMinutes) return []
     const start = toMinutes(firstDay.startTime)
     const end = toMinutes(firstDay.endTime)
-    const slots: string[] = []
+    const slots: Array<string> = []
     for (
       let t = start;
       t + durationMinutes <= end && slots.length < 6;
@@ -294,6 +294,8 @@ function CreateMeetingPage() {
     return slots
   }, [meetingDays, durationMinutes])
 
+  const descriptionCharCount = description.replace(/<[^>]*>/g, '').length
+
   // ---------------------------------------------------------------------------
   // Validation
   // ---------------------------------------------------------------------------
@@ -302,7 +304,8 @@ function CreateMeetingPage() {
     recipients.length > 0 &&
     enquiryEmail !== '' &&
     title.trim() !== '' &&
-    description.trim() !== ''
+    Boolean(description.trim()) &&
+    description.trim() !== '<p></p>'
 
   const step2Valid =
     durationMinutes !== null &&
@@ -346,7 +349,9 @@ function CreateMeetingPage() {
 
   function handlePublish() {
     // Add to mock data and navigate
-    const validDays = meetingDays.filter((d) => d.date && d.startTime && d.endTime)
+    const validDays = meetingDays.filter(
+      (d) => d.date && d.startTime && d.endTime,
+    )
     mockMeetings.unshift({
       id: `m-${Date.now()}`,
       title: title.trim(),
@@ -368,7 +373,7 @@ function CreateMeetingPage() {
   }
 
   // File handlers
-  function processFiles(incoming: File[]) {
+  function processFiles(incoming: Array<File>) {
     const MAX_SIZE = 5 * 1024 * 1024
     const oversized = incoming.filter((f) => f.size > MAX_SIZE)
     const valid = incoming.filter((f) => f.size <= MAX_SIZE)
@@ -416,7 +421,10 @@ function CreateMeetingPage() {
 
   // Meeting day handlers
   function addMeetingDay() {
-    setMeetingDays((prev) => [...prev, { date: '', startTime: '', endTime: '' }])
+    setMeetingDays((prev) => [
+      ...prev,
+      { date: '', startTime: '', endTime: '' },
+    ])
   }
 
   function removeMeetingDay(index: number) {
@@ -481,19 +489,18 @@ function CreateMeetingPage() {
               </p>
             </div>
 
-            {/* Recipients (Parents) */}
+            {/* Recipients */}
             <section className="rounded-xl border bg-white p-6">
               <h3 className="mb-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Recipients (Parents)
+                Recipients
               </h3>
               <div className="space-y-1.5">
                 <Label>
-                  Student groups{' '}
-                  <span className="text-destructive">*</span>
+                  Students <span className="text-destructive">*</span>
                 </Label>
                 <p className="text-xs text-muted-foreground">
-                  Parents of these students will choose from the same set of
-                  available slots.
+                  Parents of the selected students will choose from the same set
+                  of available booking slots.
                 </p>
                 <StudentRecipientSelector
                   value={recipients}
@@ -505,13 +512,9 @@ function CreateMeetingPage() {
                   </p>
                 )}
               </div>
-            </section>
 
-            {/* Recipients (School Staff) */}
-            <section className="rounded-xl border bg-white p-6">
-              <h3 className="mb-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Recipients (School Staff)
-              </h3>
+              <Separator className="my-5" />
+
               <div className="space-y-1.5">
                 <Label>Staff-in-charge</Label>
                 <p className="text-xs text-muted-foreground">
@@ -523,13 +526,9 @@ function CreateMeetingPage() {
                   onChange={setStaffInCharge}
                 />
               </div>
-            </section>
 
-            {/* Enquiry Details */}
-            <section className="rounded-xl border bg-white p-6">
-              <h3 className="mb-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Enquiry Details
-              </h3>
+              <Separator className="my-5" />
+
               <div className="space-y-1.5">
                 <Label>
                   Enquiry email <span className="text-destructive">*</span>
@@ -575,7 +574,7 @@ function CreateMeetingPage() {
                   </div>
                   <Input
                     id="meeting-title"
-                    placeholder="E.g. 'PTM with Form/Math Teacher' or 'Meeting with Form & Co-Form Teachers'"
+                    placeholder="e.g. PTM with Form/Math Teacher"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     maxLength={120}
@@ -587,75 +586,66 @@ function CreateMeetingPage() {
                   )}
                 </div>
 
-                {/* Description */}
+                {/* Details */}
                 <div className="space-y-1.5">
                   <div className="flex items-baseline justify-between">
-                    <Label htmlFor="meeting-description">
-                      Description <span className="text-destructive">*</span>
+                    <Label>
+                      Details <span className="text-destructive">*</span>
                     </Label>
                     <span
                       className={cn(
                         'text-xs tabular-nums',
-                        description.length > 2000
+                        descriptionCharCount > 2000
                           ? 'text-destructive'
                           : 'text-muted-foreground',
                       )}
                     >
-                      {description.length}/2000
+                      {descriptionCharCount}/2000
                     </span>
                   </div>
-                  <textarea
-                    id="meeting-description"
-                    placeholder="Additional details"
+                  <RichTextArea
                     value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    maxLength={2000}
-                    rows={5}
-                    className="w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm outline-none placeholder:text-muted-foreground focus:ring-1 focus:ring-ring"
+                    onChange={setDescription}
+                    placeholder="Write your meeting details here. Use the toolbar to format text and insert inline links."
+                    toolbar="simple"
                   />
                   {showErrors && !description.trim() && (
                     <p className="text-xs text-destructive">
-                      Description is required.
+                      Details are required.
                     </p>
                   )}
                 </div>
 
                 {/* Venue */}
                 <div className="space-y-1.5">
-                  <div className="flex items-baseline justify-between">
-                    <Label htmlFor="meeting-venue">
-                      Venue{' '}
-                      <span className="text-sm font-normal text-muted-foreground">
-                        (optional)
-                      </span>
-                    </Label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold text-slate-700">
+                      Venue
+                    </span>
                     <span
                       className={cn(
-                        'text-xs tabular-nums',
-                        venue.length > 120
-                          ? 'text-destructive'
-                          : 'text-muted-foreground',
+                        'text-xs tabular-nums text-muted-foreground',
+                        venue.length > 100 && 'text-destructive',
                       )}
                     >
-                      {venue.length}/120
+                      Optional · {venue.length}/100
                     </span>
                   </div>
                   <Input
-                    id="meeting-venue"
-                    placeholder="Where will the meeting be held?"
+                    placeholder="e.g. School hall, Library"
                     value={venue}
                     onChange={(e) => setVenue(e.target.value)}
-                    maxLength={120}
+                    maxLength={100}
                   />
                 </div>
 
                 <Separator />
 
-                {/* Website links */}
+                {/* Links */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-semibold text-slate-700">
-                      Website link
+                      Links
                     </span>
                     <span className="text-xs text-muted-foreground">
                       Optional · {websiteLinks.length}/3
@@ -712,18 +702,18 @@ function CreateMeetingPage() {
                       <Plus className="h-3.5 w-3.5" />
                       {websiteLinks.length > 0
                         ? 'Add another link'
-                        : 'Add website link'}
+                        : 'Add link'}
                     </button>
                   )}
                 </div>
 
                 <Separator />
 
-                {/* File attachment */}
+                {/* Files */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-semibold text-slate-700">
-                      File attachment
+                      Files
                     </span>
                     <span className="text-xs text-muted-foreground">
                       Optional · {uploadedFiles.length}/3 · Max 5 MB each
@@ -817,8 +807,7 @@ function CreateMeetingPage() {
                 {/* Duration */}
                 <div className="space-y-1.5">
                   <Label>
-                    Meeting duration{' '}
-                    <span className="text-destructive">*</span>
+                    Meeting duration <span className="text-destructive">*</span>
                   </Label>
                   <p className="text-xs text-muted-foreground">
                     How long is each time slot?
@@ -924,8 +913,7 @@ function CreateMeetingPage() {
                   <div key={i} className="flex items-end gap-2">
                     <div className="space-y-1">
                       <Label className="text-xs">
-                        Day {i + 1}{' '}
-                        <span className="text-destructive">*</span>
+                        Day {i + 1} <span className="text-destructive">*</span>
                       </Label>
                       <input
                         type="date"
@@ -961,17 +949,14 @@ function CreateMeetingPage() {
                       <Label className="text-xs">To</Label>
                       <Select
                         value={day.endTime}
-                        onValueChange={(v) =>
-                          updateMeetingDay(i, 'endTime', v)
-                        }
+                        onValueChange={(v) => updateMeetingDay(i, 'endTime', v)}
                       >
                         <SelectTrigger size="sm" className="w-32">
                           <SelectValue placeholder="End time" />
                         </SelectTrigger>
                         <SelectContent>
                           {TIME_SLOTS.filter(
-                            (s) =>
-                              !day.startTime || s.value > day.startTime,
+                            (s) => !day.startTime || s.value > day.startTime,
                           ).map((s) => (
                             <SelectItem key={s.value} value={s.value}>
                               {s.label}
@@ -1042,8 +1027,8 @@ function CreateMeetingPage() {
               </h3>
               <div className="rounded-xl border bg-slate-50 p-4">
                 <p className="font-semibold">
-                  You have selected{' '}
-                  {meetingDays.filter((d) => d.date).length} meeting day
+                  You have selected {meetingDays.filter((d) => d.date).length}{' '}
+                  meeting day
                   {meetingDays.filter((d) => d.date).length !== 1 ? 's' : ''}
                 </p>
                 <div className="mt-3 space-y-2">
@@ -1082,9 +1067,7 @@ function CreateMeetingPage() {
                         <input
                           type="date"
                           value={bookingOpensDate}
-                          onChange={(e) =>
-                            setBookingOpensDate(e.target.value)
-                          }
+                          onChange={(e) => setBookingOpensDate(e.target.value)}
                           className="rounded-md border border-input bg-background px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
                         />
                         <Select
@@ -1118,9 +1101,7 @@ function CreateMeetingPage() {
                           type="date"
                           value={bookingClosesDate}
                           min={bookingOpensDate || undefined}
-                          onChange={(e) =>
-                            setBookingClosesDate(e.target.value)
-                          }
+                          onChange={(e) => setBookingClosesDate(e.target.value)}
                           className="rounded-md border border-input bg-background px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
                         />
                         <Select
@@ -1222,9 +1203,8 @@ function CreateMeetingPage() {
                       .filter((d) => d.date)
                       .map((d, i) => (
                         <p key={i}>
-                          {formatDateFull(d.date)},{' '}
-                          {formatTime12(d.startTime)} –{' '}
-                          {formatTime12(d.endTime)}
+                          {formatDateFull(d.date)}, {formatTime12(d.startTime)}{' '}
+                          – {formatTime12(d.endTime)}
                         </p>
                       ))}
                   </dd>
@@ -1235,9 +1215,7 @@ function CreateMeetingPage() {
                   </dt>
                   <dd>
                     {durationMinutes} min ·{' '}
-                    {maxPerSlot === 1
-                      ? '1 parent'
-                      : `${maxPerSlot} parents`}{' '}
+                    {maxPerSlot === 1 ? '1 parent' : `${maxPerSlot} parents`}{' '}
                     per slot
                   </dd>
                 </div>
@@ -1258,8 +1236,8 @@ function CreateMeetingPage() {
                   </dt>
                   <dd className="font-semibold">
                     {totalMeetings} meeting slot
-                    {totalMeetings !== 1 ? 's' : ''} for {totalStudents}{' '}
-                    student{totalStudents !== 1 ? 's' : ''}
+                    {totalMeetings !== 1 ? 's' : ''} for {totalStudents} student
+                    {totalStudents !== 1 ? 's' : ''}
                   </dd>
                 </div>
               </dl>
@@ -1394,9 +1372,7 @@ function CreateMeetingPage() {
           <div />
         )}
         <Button
-          onClick={
-            step === 4 ? () => setShowPublishDialog(true) : handleNext
-          }
+          onClick={step === 4 ? () => setShowPublishDialog(true) : handleNext}
           disabled={!canProceed}
         >
           {nextLabel}

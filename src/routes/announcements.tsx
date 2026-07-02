@@ -26,7 +26,7 @@ const SCOPE_OPTIONS = [
   },
   {
     value: 'school',
-    label: 'School Posts',
+    label: 'School',
     description: 'All posts across the school',
     adminOnly: true,
   },
@@ -54,16 +54,33 @@ function AnnouncementsLayout() {
     return <Outlet />
   }
 
-  const currentLabel = isSchoolWide ? 'School Posts' : 'My Posts'
+  const currentLabel = isSchoolWide ? 'School' : 'My Posts'
   const visibleOptions = SCOPE_OPTIONS.filter((o) => !o.adminOnly || IS_ADMIN)
 
   return (
     <div className="flex flex-col">
-      <div className="border-b px-4 py-4">
-        <div className="flex items-center justify-between">
+      <div className="shrink-0 space-y-4 pt-6">
+        <div className="flex items-start justify-between px-6">
+          <div>
+            <h1 className="text-2xl font-semibold">Posts</h1>
+            <p className="mt-1 hidden text-sm text-muted-foreground lg:block">
+              Send a read only post or collect responses from parents via
+              Parents Gateway.
+              <br />
+              Switch between your posts and a school-wide view below.
+            </p>
+          </div>
+          {!isSchoolWide && (
+            <Button size="sm" render={<Link to="/create" />}>
+              <Plus className="mr-1.5 h-4 w-4" />
+              Create
+            </Button>
+          )}
+        </div>
+        <div className="px-6">
           {IS_ADMIN ? (
             <Popover open={open} onOpenChange={setOpen}>
-              <PopoverTrigger className="inline-flex cursor-pointer items-center gap-1.5 bg-transparent p-0 text-lg font-semibold outline-none md:text-2xl">
+              <PopoverTrigger className="inline-flex cursor-pointer items-center gap-1.5 bg-transparent p-0 text-lg font-semibold outline-none">
                 {currentLabel}
                 <ChevronDown className="h-5 w-5 text-muted-foreground" />
               </PopoverTrigger>
@@ -105,19 +122,9 @@ function AnnouncementsLayout() {
               </PopoverContent>
             </Popover>
           ) : (
-            <h1 className="text-lg font-semibold md:text-2xl">My Posts</h1>
-          )}
-          {!isSchoolWide && (
-            <Button size="sm" render={<Link to="/create" />}>
-              <Plus className="mr-1.5 h-4 w-4" />
-              Create
-            </Button>
+            <span className="text-lg font-semibold">My Posts</span>
           )}
         </div>
-        <p className="mt-1 hidden text-sm text-muted-foreground md:block">
-          Send a read only post or collect responses from parents via Parents
-          Gateway.
-        </p>
       </div>
       <Outlet />
     </div>
