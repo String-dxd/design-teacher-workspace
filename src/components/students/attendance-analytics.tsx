@@ -55,6 +55,14 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import {
   TooltipContent,
   TooltipTrigger,
   Tooltip as TooltipUI,
@@ -999,9 +1007,9 @@ function AttSortableHeader({
   )
 
   return (
-    <th
+    <TableHead
       className={cn(
-        'h-12 px-4 align-middle font-medium text-muted-foreground overflow-hidden',
+        'overflow-hidden',
         align === 'right' ? 'text-right' : 'text-left',
         className,
       )}
@@ -1063,7 +1071,7 @@ function AttSortableHeader({
           </button>
         </PopoverContent>
       </Popover>
-    </th>
+    </TableHead>
   )
 }
 
@@ -1482,12 +1490,12 @@ function AttendanceStudentsTable({
 
       {/* Table */}
       <div className="overflow-x-auto rounded-lg border">
-        <table className="w-full table-fixed text-sm">
-          <thead>
-            <tr className="border-b bg-muted/40">
-              <th className="w-[96px] h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+        <Table tableClassName="table-fixed">
+          <TableHeader>
+            <TableRow className="bg-muted/40 hover:bg-muted/40">
+              <TableHead className="w-[96px] text-muted-foreground">
                 Profile
-              </th>
+              </TableHead>
               <AttSortableHeader
                 label="Name"
                 field="name"
@@ -1573,24 +1581,21 @@ function AttendanceStudentsTable({
                 className="w-[140px]"
                 truncate
               />
-            </tr>
-          </thead>
-          <tbody className="divide-y">
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {paged.map((s) => {
               const realId = studentIdByName.get(s.name)
               return (
-                <tr
+                <TableRow
                   key={s.id}
-                  className={cn(
-                    'transition-colors hover:bg-muted/50',
-                    realId && 'cursor-pointer',
-                  )}
+                  className={cn(realId && 'cursor-pointer')}
                   onClick={() => {
                     if (realId)
                       navigate({ to: '/students/$id', params: { id: realId } })
                   }}
                 >
-                  <td className="w-[96px] p-4 align-middle">
+                  <TableCell className="w-[96px]">
                     <TooltipUI>
                       <TooltipTrigger>
                         {realId ? (
@@ -1614,51 +1619,51 @@ function AttendanceStudentsTable({
                           : 'Profile not available'}
                       </TooltipContent>
                     </TooltipUI>
-                  </td>
-                  <td className="w-[192px] p-4 align-middle font-medium">
+                  </TableCell>
+                  <TableCell className="w-[192px] font-medium">
                     {s.name}
-                  </td>
-                  <td className="min-w-[140px] p-4 align-middle">{s.class}</td>
-                  <td className="min-w-[200px] p-4 align-middle tabular-nums">
+                  </TableCell>
+                  <TableCell className="min-w-[140px]">{s.class}</TableCell>
+                  <TableCell className="min-w-[200px] tabular-nums">
                     {s.nonVRAbsences +
                       s.absentPendingReason +
                       s.mc +
                       s.absentValidPrivate +
                       s.absentValidOfficial}
-                  </td>
-                  <td className="min-w-[140px] p-4 align-middle tabular-nums">
+                  </TableCell>
+                  <TableCell className="min-w-[140px] tabular-nums">
                     {s.late}
-                  </td>
-                  <td className="min-w-[140px] p-4 align-middle tabular-nums">
+                  </TableCell>
+                  <TableCell className="min-w-[140px] tabular-nums">
                     {s.nonVRAbsences}
-                  </td>
-                  <td className="min-w-[140px] p-4 align-middle tabular-nums">
+                  </TableCell>
+                  <TableCell className="min-w-[140px] tabular-nums">
                     {s.absentPendingReason}
-                  </td>
-                  <td className="min-w-[140px] p-4 align-middle tabular-nums">
+                  </TableCell>
+                  <TableCell className="min-w-[140px] tabular-nums">
                     {s.mc}
-                  </td>
-                  <td className="min-w-[140px] p-4 align-middle tabular-nums">
+                  </TableCell>
+                  <TableCell className="min-w-[140px] tabular-nums">
                     {s.absentValidPrivate}
-                  </td>
-                  <td className="min-w-[140px] p-4 align-middle tabular-nums">
+                  </TableCell>
+                  <TableCell className="min-w-[140px] tabular-nums">
                     {s.absentValidOfficial}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               )
             })}
             {paged.length === 0 && (
-              <tr>
-                <td
+              <TableRow className="hover:bg-transparent">
+                <TableCell
                   colSpan={10}
-                  className="px-4 py-8 text-center text-sm text-muted-foreground"
+                  className="py-8 text-center text-muted-foreground"
                 >
                   No students match your filters.
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
       {/* Pagination */}
@@ -2203,42 +2208,42 @@ export function AttendanceAnalytics({ student }: AttendanceAnalyticsProps) {
           </div>
         </div>
         <div className="overflow-hidden rounded-lg border">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-muted/40">
-                <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/40 hover:bg-muted/40">
+                <TableHead className="h-auto px-4 py-2.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Date
-                </th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                </TableHead>
+                <TableHead className="h-auto px-4 py-2.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Absences / Latecoming
-                </th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                </TableHead>
+                <TableHead className="h-auto px-4 py-2.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Sub-reason
-                </th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                </TableHead>
+                <TableHead className="h-auto px-4 py-2.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Remarks
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {pagedDetails.map((row, i) => (
-                <tr key={i} className="bg-card">
-                  <td className="px-4 py-3 text-sm text-foreground">
+                <TableRow key={i} className="bg-card hover:bg-card">
+                  <TableCell className="px-4 py-3 text-sm whitespace-normal text-foreground">
                     {row.date}
-                  </td>
-                  <td className="px-4 py-3 text-sm font-medium text-foreground">
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-sm font-medium whitespace-normal text-foreground">
                     {row.type}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-muted-foreground">
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-sm whitespace-normal text-muted-foreground">
                     {row.subReason}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-sm whitespace-normal text-foreground">
                     {row.remarks}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
         {/* Pagination */}
         <div className="mt-3 flex items-center justify-between text-sm">

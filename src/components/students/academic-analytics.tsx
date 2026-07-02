@@ -56,6 +56,14 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import {
   TooltipContent,
   TooltipTrigger,
   Tooltip as TooltipUI,
@@ -1219,30 +1227,30 @@ export function AcademicAnalytics() {
           Subjects taken and current grades
         </h3>
         <div className="overflow-hidden rounded-lg border">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-muted/40">
-                <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/40 hover:bg-muted/40">
+                <TableHead className="h-auto px-4 py-2.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Subject
-                </th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                </TableHead>
+                <TableHead className="h-auto px-4 py-2.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Current grades
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {SUBJECTS_BANDING.map((row) => (
-                <tr key={row.subject} className="bg-card">
-                  <td className="px-4 py-3 text-sm text-foreground">
+                <TableRow key={row.subject} className="bg-card hover:bg-card">
+                  <TableCell className="px-4 py-3 text-sm whitespace-normal text-foreground">
                     {row.subject}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-sm whitespace-normal text-foreground">
                     {row.grade}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       </div>
 
@@ -1790,36 +1798,33 @@ export function MonitoringAcademicAnalytics() {
 
           {/* Table */}
           <div className="overflow-x-auto rounded-lg border">
-            <table className="w-full table-fixed text-sm">
-              <thead>
-                <tr className="border-b bg-muted/40">
+            <Table tableClassName="table-fixed">
+              <TableHeader>
+                <TableRow className="bg-muted/40 hover:bg-muted/40">
                   {(
                     ['Profile', 'Name', 'Class', 'Score', 'Grade'] as const
                   ).map((label, i) => (
-                    <th
+                    <TableHead
                       key={label}
                       className={cn(
-                        'h-12 px-4 text-left align-middle font-medium text-muted-foreground',
+                        'text-muted-foreground',
                         i === 0 && 'w-[96px]',
                         i === 1 && 'w-[300px]',
                         (i === 2 || i === 3 || i === 4) && 'w-[140px]',
                       )}
                     >
                       {label}
-                    </th>
+                    </TableHead>
                   ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y">
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {pagedCandidates.map((c) => {
                   const realId = studentIdByName.get(c.name)
                   return (
-                    <tr
+                    <TableRow
                       key={c.id}
-                      className={cn(
-                        'transition-colors hover:bg-muted/50',
-                        realId && 'cursor-pointer',
-                      )}
+                      className={cn(realId && 'cursor-pointer')}
                       onClick={() => {
                         if (realId)
                           navigate({
@@ -1828,7 +1833,7 @@ export function MonitoringAcademicAnalytics() {
                           })
                       }}
                     >
-                      <td className="w-[96px] p-4 align-middle">
+                      <TableCell className="w-[96px]">
                         <TooltipUI>
                           <TooltipTrigger>
                             {realId ? (
@@ -1852,30 +1857,30 @@ export function MonitoringAcademicAnalytics() {
                               : 'Profile not available'}
                           </TooltipContent>
                         </TooltipUI>
-                      </td>
-                      <td className="w-[300px] p-4 align-middle font-medium">
+                      </TableCell>
+                      <TableCell className="w-[300px] font-medium">
                         {c.name}
-                      </td>
-                      <td className="w-[140px] p-4 align-middle">{c.class}</td>
-                      <td className="w-[140px] p-4 align-middle tabular-nums">
+                      </TableCell>
+                      <TableCell className="w-[140px]">{c.class}</TableCell>
+                      <TableCell className="w-[140px] tabular-nums">
                         {c.score}
-                      </td>
-                      <td className="w-[140px] p-4 align-middle">{c.grade}</td>
-                    </tr>
+                      </TableCell>
+                      <TableCell className="w-[140px]">{c.grade}</TableCell>
+                    </TableRow>
                   )
                 })}
                 {pagedCandidates.length === 0 && (
-                  <tr>
-                    <td
+                  <TableRow className="hover:bg-transparent">
+                    <TableCell
                       colSpan={5}
-                      className="px-4 py-8 text-center text-sm text-muted-foreground"
+                      className="py-8 text-center text-muted-foreground"
                     >
                       No students match your filters.
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
 
           {/* Pagination */}
