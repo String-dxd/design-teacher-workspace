@@ -47,25 +47,16 @@ export function HdpPreviewStep({
 
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as string)}>
         <TabsList variant="line">
-          <TabsTrigger
-            value="overview"
-            className={ACTIVE_TAB_CLASS}
-          >
+          <TabsTrigger value="overview" className={ACTIVE_TAB_CLASS}>
             Overview
           </TabsTrigger>
           {selectedSections.academic && (
-            <TabsTrigger
-              value="academic"
-              className={ACTIVE_TAB_CLASS}
-            >
+            <TabsTrigger value="academic" className={ACTIVE_TAB_CLASS}>
               Academic
             </TabsTrigger>
           )}
           {hasHolistic && (
-            <TabsTrigger
-              value="holistic"
-              className={ACTIVE_TAB_CLASS}
-            >
+            <TabsTrigger value="holistic" className={ACTIVE_TAB_CLASS}>
               Holistic
             </TabsTrigger>
           )}

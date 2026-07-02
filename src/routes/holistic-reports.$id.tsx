@@ -33,7 +33,7 @@ import { getSchoolLevel } from '@/data/mock-students'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
 import { cn } from '@/lib/utils'
 
-export const Route = createFileRoute('/reports/$id')({
+export const Route = createFileRoute('/holistic-reports/$id')({
   component: ReportDetailPage,
 })
 
@@ -69,8 +69,8 @@ function ReportDetailPage() {
     : 'Report'
 
   useSetBreadcrumbs([
-    { label: 'Reports', href: '/reports' },
-    { label: breadcrumbLabel, href: `/reports/${id}` },
+    { label: 'Reports', href: '/holistic-reports' },
+    { label: breadcrumbLabel, href: `/holistic-reports/${id}` },
   ])
 
   if (!report) {
@@ -81,7 +81,7 @@ function ReportDetailPage() {
           <p className="text-muted-foreground mt-2">
             The report you're looking for doesn't exist.
           </p>
-          <Link to="/reports" className={cn(buttonVariants(), 'mt-4')}>
+          <Link to="/holistic-reports" className={cn(buttonVariants(), 'mt-4')}>
             Back to Reports
           </Link>
         </div>
@@ -124,7 +124,7 @@ function ReportDetailPage() {
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-8">
       <div className="flex items-center gap-4">
         <Link
-          to="/reports"
+          to="/holistic-reports"
           className={buttonVariants({ variant: 'ghost', size: 'icon' })}
         >
           <ArrowLeft className="size-4" />

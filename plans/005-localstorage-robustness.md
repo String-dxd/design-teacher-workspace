@@ -38,7 +38,7 @@ gold standard is `src/lib/profile-group-storage.ts` — SSR guard
   typed-as-`Array<ImportedColumn>` into the students table and throws far
   from the cause.
 - `src/lib/draft-storage.ts` — `loadDraft()` casts `JSON.parse(raw) as
-  DraftData` unvalidated; a draft saved by an older code version (the
+DraftData` unvalidated; a draft saved by an older code version (the
   `DraftData` shape has visibly grown — it now has 24 fields) can return an
   object missing arrays the composer then calls `.map` on.
 
@@ -128,12 +128,12 @@ in-repo standard and pin the behavior with tests.
 
 ## Commands you will need
 
-| Purpose   | Command          | Expected on success |
-|-----------|------------------|---------------------|
-| Install   | `bun install`    | exit 0 |
-| Tests     | `bun run test`   | all pass |
-| Typecheck | `npx tsc --noEmit 2>&1 \| grep -E "imported-columns\|draft-storage"` | no output |
-| Build     | `bun run build`  | exit 0 |
+| Purpose   | Command                                                              | Expected on success |
+| --------- | -------------------------------------------------------------------- | ------------------- |
+| Install   | `bun install`                                                        | exit 0              |
+| Tests     | `bun run test`                                                       | all pass            |
+| Typecheck | `npx tsc --noEmit 2>&1 \| grep -E "imported-columns\|draft-storage"` | no output           |
+| Build     | `bun run build`                                                      | exit 0              |
 
 ## Scope
 
@@ -158,7 +158,7 @@ in-repo standard and pin the behavior with tests.
 
 - Branch: `advisor/005-localstorage-robustness`
 - One commit, e.g. `fix(storage): SSR guards, quota safety, and shape
-  validation for imported columns and drafts`.
+validation for imported columns and drafts`.
 - Do NOT push or open a PR unless the operator instructed it.
 
 ## Steps
@@ -203,8 +203,14 @@ export function loadDraft(): DraftData | null {
     const draft = parsed as Partial<DraftData>
     if (typeof draft.savedAt !== 'string') return null
     const arrayFields = [
-      'shortcuts', 'websiteLinks', 'recipients', 'staffInCharge',
-      'questions', 'filesMeta', 'photosMeta', 'coverPhotoIndices',
+      'shortcuts',
+      'websiteLinks',
+      'recipients',
+      'staffInCharge',
+      'questions',
+      'filesMeta',
+      'photosMeta',
+      'coverPhotoIndices',
     ] as const
     for (const f of arrayFields) {
       if (!Array.isArray(draft[f])) (draft as Record<string, unknown>)[f] = []

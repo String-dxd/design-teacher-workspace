@@ -292,7 +292,9 @@ function Step2({
                     </TableCell>
                     <TableCell className="text-sm">
                       <span
-                        className={cn(issueRows.has(r.row) && 'text-destructive')}
+                        className={cn(
+                          issueRows.has(r.row) && 'text-destructive',
+                        )}
                       >
                         {r.name}
                       </span>

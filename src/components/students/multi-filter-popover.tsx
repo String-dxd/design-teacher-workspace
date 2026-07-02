@@ -635,7 +635,9 @@ export function MultiFilterPopover({
                               : []
                             const q = multiselectQuery.trim().toLowerCase()
                             const sortedEnumValues = [
-                              ...((fieldOption.enumValues ?? []).includes('None')
+                              ...((fieldOption.enumValues ?? []).includes(
+                                'None',
+                              )
                                 ? ['None']
                                 : []),
                               ...(fieldOption.enumValues ?? []).filter(

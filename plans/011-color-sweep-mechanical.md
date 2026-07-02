@@ -9,7 +9,7 @@
 >
 > **Drift check (run first)**: `git diff --stat 6e3d7e5..HEAD -- src/components src/routes`
 > If a file in this plan's scope changed since `6e3d7e5`, re-run that file's PALETTE
-> COUNT-DROP grep to get the live count before editing; the *recipe* is grep-anchored
+> COUNT-DROP grep to get the live count before editing; the _recipe_ is grep-anchored
 > so line drift is fine, but a content change (e.g. a status map rewritten) is a STOP.
 
 ## Status
@@ -67,6 +67,7 @@ expected RAW-HEX residual.
 `reports/report-table.tsx`.
 
 File-specific notes:
+
 - **`report-table.tsx` — GD-DISTINCT split (verified at `6e3d7e5`).** The status map has
   a green/emerald/teal triplet AND a source inconsistency. Apply:
   - "Viewed" (`bg-green-100 text-green-700`, ~L74-75 and ~L101) → `bg-lime-3 text-lime-11 hover:bg-lime-3`
@@ -95,6 +96,7 @@ Expected residual after Phase 1: PALETTE → 0 across all 13; RAW-HEX → only a
 `reports/secondary-subject-detail.tsx`, `students/profile-criteria-details-card.tsx`.
 
 Notes:
+
 - Shared pattern: info-banner `blue-*` → `twblue` (`bg-twblue-3` / `text-twblue-11`),
   and the **report-orange `#f26c47` active-tab/CTA** accent. The active-tab pattern
   `data-active:text-[#f26c47] data-active:after:bg-[#f26c47]` repeats ~3× per file —
@@ -114,6 +116,7 @@ Notes:
 `comms/rich-text-editor.tsx` (shared across compose flows), `forms/form-response-table.tsx`.
 
 Notes:
+
 - MED risk because `entity-selector` and `rich-text-editor` are consumed by both
   Announcements and Forms — a regression shows on many screens. Do **color only**; do
   NOT fold in the flagged primitive-reuse rewrites (Checkbox/Badge/DropdownMenu) — that
@@ -130,6 +133,7 @@ Notes:
 `components/insight-buddy.tsx`.
 
 Notes:
+
 - `_guest.login`: mostly `slate-*` → semantic + `red-*` → `destructive`.
 - `flags.tsx` / `student-analytics.tsx`: share the purple **"Experiment" badge** →
   `violet`. Drop any `dark:` override on those badges — Radix `violet` auto-flips, so a
@@ -144,6 +148,7 @@ Notes:
 `routes/groups.structured.$groupId.tsx`, `routes/groups.upload.tsx`.
 
 Notes:
+
 - Cohesive vocabulary: blue info-banners/badges → `twblue`; slate surfaces → semantic;
   green success → `lime`; amber undo-banner → `amber`; red upload-error → `destructive`.
 - `groups.index.tsx`: radio-dot `bg-white` sitting on `bg-primary`/`bg-destructive` fills
@@ -159,13 +164,14 @@ Notes:
 `components/agency-logo.tsx`, `components/app-card.tsx`.
 
 Notes:
+
 - `announcements.$id.tsx` is the densest non-giant route (~38 palette) — status badges
   `green→lime`, `slate→muted`, `amber→amber`; radio dots → `*-foreground`.
 - **`agency-logo.tsx` (verified at `6e3d7e5`)**: the 6 swatch hexes in `agencyTint()`
   (`#0064ff`, `#7c3aed`, `#16a34a`, `#ea580c`, `#db2777`, `#0891b2`) are applied via
   inline `style={{ backgroundColor }}` and are **per-agency brand identity** (decision
-  CYAN). Convert each to a `var(--color-*)` literal *without forcing a hue change beyond
-  the nearest token*: `#0064ff→var(--color-twblue-9)`, `#7c3aed→var(--color-violet-9)`,
+  CYAN). Convert each to a `var(--color-*)` literal _without forcing a hue change beyond
+  the nearest token_: `#0064ff→var(--color-twblue-9)`, `#7c3aed→var(--color-violet-9)`,
   `#16a34a→var(--color-lime-9)`, `#ea580c→var(--color-orange-9)`,
   `#db2777→var(--color-crimson-9)` (pink→crimson), `#0891b2→var(--color-twblue-9)`
   (cyan→twblue — note this collides with the `#0064ff` swatch; **flag to design** that

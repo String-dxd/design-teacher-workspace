@@ -15,7 +15,7 @@
 - **Priority**: P3
 - **Effort**: S
 - **Risk**: LOW (adds one new route file; touches no existing surface)
-- **Depends on**: none. Best viewed *after* plan 007 (so the gallery shows the
+- **Depends on**: none. Best viewed _after_ plan 007 (so the gallery shows the
   fixed disabled-button state) and plan 008 (neutral HeyTalia colors), but not
   required to execute.
 - **Category**: dx / direction
@@ -79,12 +79,12 @@ It is self-contained — no required props.
 
 ## Commands you will need
 
-| Purpose   | Command            | Expected on success |
-|-----------|--------------------|---------------------|
-| Install   | `bun install`      | exit 0 |
-| Build     | `bun run build`    | exit 0 (regenerates `src/routeTree.gen.ts`) |
-| Typecheck | `npx tsc --noEmit 2>&1 \| grep -c "error TS"` | ≤ 113 (baseline at `9eb7dee`); must NOT increase |
-| Dev smoke | `bun run dev` then `curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3000/ds` | 200 |
+| Purpose   | Command                                                                              | Expected on success                              |
+| --------- | ------------------------------------------------------------------------------------ | ------------------------------------------------ |
+| Install   | `bun install`                                                                        | exit 0                                           |
+| Build     | `bun run build`                                                                      | exit 0 (regenerates `src/routeTree.gen.ts`)      |
+| Typecheck | `npx tsc --noEmit 2>&1 \| grep -c "error TS"`                                        | ≤ 113 (baseline at `9eb7dee`); must NOT increase |
+| Dev smoke | `bun run dev` then `curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3000/ds` | 200                                              |
 
 > The 16 pre-existing test failures (`draft-storage`, `imported-columns`) are
 > unrelated; this plan adds no tests/logic. Gate: count unchanged (37/16).
@@ -137,6 +137,7 @@ export const Route = createFileRoute('/ds')({
 Run `bun run build` (regenerates `src/routeTree.gen.ts` to include `/ds`).
 
 **Verify**:
+
 - `grep -c "'/ds'" src/routeTree.gen.ts` → ≥ 1 (route registered).
 - `npx tsc --noEmit 2>&1 | grep -c "error TS"` → ≤ 113.
 - `bun run dev`, then `curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3000/ds` → `200`.

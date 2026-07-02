@@ -8,6 +8,9 @@ export type FeatureFlagKey =
   | 'student-analytics-basic'
   | 'lta-intervention'
   | 'student-groups'
+  | 'reports'
+  | 'calendar'
+  | 'meetings'
   | 'import-data'
   | 'agency-reports'
   | 'report-generation'
@@ -19,6 +22,8 @@ export type FeatureFlagKey =
   | 'social-links'
   | 'export'
   | 'primary-contact'
+  | 'posts-admin-view'
+  | 'reports-admin-view'
 
 export type FeatureFlags = {
   [K in FeatureFlagKey]: boolean

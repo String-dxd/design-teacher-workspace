@@ -2,6 +2,12 @@ import { useMemo, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import {
   AlertTriangle,
+  ArrowDown,
+  ArrowUp,
+  Check,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Copy,
   Lock,
   MoreHorizontal,
@@ -14,9 +20,13 @@ import { toast } from 'sonner'
 import type { PGAnnouncement, PGStatus } from '@/types/pg-announcement'
 import type { FormStatus } from '@/types/form'
 import type { AnnouncementFilters } from '@/components/comms/announcement-filter-bar'
+import { usePagination } from '@/hooks/use-pagination'
 import { clearDraft, loadDraft } from '@/lib/draft-storage'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
-import { mockPGAnnouncements } from '@/data/mock-pg-announcements'
+import {
+  mockPGAnnouncements,
+  mockSchoolWidePosts,
+} from '@/data/mock-pg-announcements'
 import { mockForms } from '@/data/mock-forms'
 import { StatusBadge } from '@/components/comms/status-badge'
 import { ReadRate } from '@/components/comms/read-rate'
@@ -52,15 +62,39 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+
+import { cn, stripSalutation } from '@/lib/utils'
 import { useFeatureFlag } from '@/hooks/use-feature-flag'
 
 export const Route = createFileRoute('/announcements/')({
   validateSearch: (search) => ({
-    tab: (search.tab as PostTab) ?? 'view-only',
+    tab: (search.tab as PostTab) ?? 'with-responses',
+    scope: (search.scope as 'my' | 'school') ?? 'my',
+    view: (search.view as 'admin' | undefined) ?? undefined,
   }),
-  component: ParentsGatewayPage,
+  component: PostsRouteComponent,
 })
+
+function PostsRouteComponent() {
+  const { view } = Route.useSearch()
+  if (view === 'admin') return <AdminPostsPage />
+  return <RegularPostsPage />
+}
+
+// AdminPostsPage — admin handover view (do not amend)
+function AdminPostsPage() {
+  return <ParentsGatewayPage />
+}
+
+// RegularPostsPage — regular teacher view (amend this for regular users)
+function RegularPostsPage() {
+  return <ParentsGatewayPage />
+}
 
 function formatDate(iso: string | undefined): string {
   if (!iso) return '—'
@@ -90,6 +124,87 @@ function getRelevantDate(
   if (status === 'posted') return postedAt
   if (status === 'scheduled') return scheduledAt
   return createdAt
+}
+
+type SortState = { column: string; direction: 'asc' | 'desc' } | null
+
+function SortableHeader({
+  label,
+  column,
+  sort,
+  onSort,
+}: {
+  label: string
+  column: string
+  sort: SortState
+  onSort: (col: string, dir: 'asc' | 'desc') => void
+}) {
+  const [open, setOpen] = useState(false)
+  const isSortedBy = sort?.column === column
+  const sortDir = isSortedBy ? sort.direction : null
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger
+        render={
+          <button
+            type="button"
+            className={cn(
+              '-ml-2 flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 transition-colors whitespace-nowrap',
+              'hover:bg-accent hover:text-accent-foreground',
+              isSortedBy && 'text-primary',
+            )}
+          >
+            <span>{label}</span>
+            <span className="shrink-0">
+              {sortDir === 'asc' ? (
+                <ArrowUp className="h-3 w-3" />
+              ) : sortDir === 'desc' ? (
+                <ArrowDown className="h-3 w-3" />
+              ) : (
+                <ChevronDown className="h-3 w-3" />
+              )}
+            </span>
+          </button>
+        }
+      />
+      <PopoverContent align="start" className="w-52 gap-1 p-3">
+        <button
+          type="button"
+          onClick={() => {
+            onSort(column, 'asc')
+            setOpen(false)
+          }}
+          className={cn(
+            'flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-[var(--slate-5)]',
+            isSortedBy && sortDir === 'asc' && 'bg-[var(--slate-5)]',
+          )}
+        >
+          <ArrowUp className="h-4 w-4 text-[var(--slate-11)]" />
+          Sort ascending
+          {isSortedBy && sortDir === 'asc' && (
+            <Check className="ml-auto h-4 w-4 text-[var(--slate-11)]" />
+          )}
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            onSort(column, 'desc')
+            setOpen(false)
+          }}
+          className={cn(
+            'flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-[var(--slate-5)]',
+            isSortedBy && sortDir === 'desc' && 'bg-[var(--slate-5)]',
+          )}
+        >
+          <ArrowDown className="h-4 w-4 text-[var(--slate-11)]" />
+          Sort descending
+          {isSortedBy && sortDir === 'desc' && (
+            <Check className="ml-auto h-4 w-4 text-[var(--slate-11)]" />
+          )}
+        </button>
+      </PopoverContent>
+    </Popover>
+  )
 }
 
 function SegmentedTab({
@@ -137,10 +252,14 @@ function getFormStatusBadge(status: FormStatus) {
 
 type PostTab = 'view-only' | 'with-responses' | 'custom-forms'
 
+// Prototype: hardcoded as admin. In production this comes from the session.
+const IS_ADMIN = true
+
 function ParentsGatewayPage() {
-  const { tab: initialTab } = Route.useSearch()
+  const { tab, scope } = Route.useSearch()
+  const isSchoolWide = IS_ADMIN && scope === 'school'
   const [searchQuery, setSearchQuery] = useState('')
-  const [tab, setTab] = useState<PostTab>(initialTab)
+  const [sort, setSort] = useState<SortState>(null)
   const [filters, setFilters] = useState<AnnouncementFilters>(
     EMPTY_ANNOUNCEMENT_FILTERS,
   )
@@ -249,6 +368,35 @@ function ParentsGatewayPage() {
       })
   }, [searchQuery, filters, tab, allAnnouncements])
 
+  const sortedAnnouncements = useMemo(() => {
+    if (!sort) return filtered
+    const dir = sort.direction === 'asc' ? 1 : -1
+    return [...filtered].sort((a, b) => {
+      switch (sort.column) {
+        case 'title':
+          return a.title.localeCompare(b.title) * dir
+        case 'date': {
+          const da =
+            getRelevantDate(a.status, a.postedAt, a.scheduledAt, a.createdAt) ??
+            ''
+          const db =
+            getRelevantDate(b.status, b.postedAt, b.scheduledAt, b.createdAt) ??
+            ''
+          return (new Date(da).getTime() - new Date(db).getTime()) * dir
+        }
+        case 'status':
+          return a.status.localeCompare(b.status) * dir
+        case 'created-by': {
+          const na = a.staffInCharge?.[0]?.name ?? ''
+          const nb = b.staffInCharge?.[0]?.name ?? ''
+          return na.localeCompare(nb) * dir
+        }
+        default:
+          return 0
+      }
+    })
+  }, [filtered, sort])
+
   const filteredForms = useMemo(() => {
     return mockForms
       .filter((form) => {
@@ -268,15 +416,69 @@ function ParentsGatewayPage() {
       )
   }, [searchQuery])
 
+  // School-wide: all posted posts (my own + other teachers'), sorted by postedAt desc
+  const allSchoolPosts = useMemo(() => {
+    const myPosted = mockPGAnnouncements.filter((a) => a.status === 'posted')
+    return [...myPosted, ...mockSchoolWidePosts].sort((a, b) => {
+      const dateA = a.postedAt ?? a.createdAt ?? ''
+      const dateB = b.postedAt ?? b.createdAt ?? ''
+      return new Date(dateB).getTime() - new Date(dateA).getTime()
+    })
+  }, [refreshKey])
+
+  const schoolFiltered = useMemo(() => {
+    return allSchoolPosts.filter((a) => {
+      const hasResponse =
+        a.responseType === 'acknowledge' || a.responseType === 'yes-no'
+      if (tab === 'view-only' && hasResponse) return false
+      if (tab === 'with-responses' && !hasResponse) return false
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase()
+        return (
+          a.title.toLowerCase().includes(q) ||
+          a.description.toLowerCase().includes(q)
+        )
+      }
+      return true
+    })
+  }, [allSchoolPosts, tab, searchQuery])
+
+  const PAGE_SIZE = 20
+  const myPostsPagination = usePagination({
+    totalItems: sortedAnnouncements.length,
+    pageSize: PAGE_SIZE,
+  })
+  const schoolPostsPagination = usePagination({
+    totalItems: schoolFiltered.length,
+    pageSize: PAGE_SIZE,
+  })
+  const formsPagination = usePagination({
+    totalItems: filteredForms.length,
+    pageSize: PAGE_SIZE,
+  })
+
+  const pagedAnnouncements = sortedAnnouncements.slice(
+    myPostsPagination.startIndex,
+    myPostsPagination.startIndex + PAGE_SIZE,
+  )
+  const pagedSchoolPosts = schoolFiltered.slice(
+    schoolPostsPagination.startIndex,
+    schoolPostsPagination.startIndex + PAGE_SIZE,
+  )
+  const pagedForms = filteredForms.slice(
+    formsPagination.startIndex,
+    formsPagination.startIndex + PAGE_SIZE,
+  )
+
   const tabs: Array<{ value: PostTab; label: string; hidden?: boolean }> = [
-    { value: 'view-only', label: 'Posts' },
-    { value: 'with-responses', label: 'Posts with responses' },
+    { value: 'with-responses', label: 'With responses' },
+    { value: 'view-only', label: 'Read only' },
     { value: 'custom-forms', label: 'Custom forms', hidden: !formsEnabled },
   ]
   const visibleTabs = tabs.filter((t) => !t.hidden)
 
   // Selection helpers
-  const filteredIds = filtered.map((a) => a.id)
+  const filteredIds = sortedAnnouncements.map((a) => a.id)
   const selectedInView = filteredIds.filter((id) => selectedIds.has(id))
   const allSelectedInView =
     filteredIds.length > 0 && selectedInView.length === filteredIds.length
@@ -337,20 +539,30 @@ function ParentsGatewayPage() {
 
   return (
     <div className="flex flex-col">
-      {/* Segmented tabs, Search & Filter */}
-      <div className="mt-4 space-y-4">
-        <div className="flex items-center justify-between gap-4 px-6 pb-0">
-          <div className="flex shrink-0 rounded-full bg-muted p-1 gap-1">
-            {visibleTabs.map((t) => (
-              <SegmentedTab
-                key={t.value}
-                active={tab === t.value}
-                onClick={() => setTab(t.value)}
-              >
-                {t.label}
-              </SegmentedTab>
-            ))}
+      {/* Tabs + search/filter — single row */}
+      <div className="mt-4">
+        <div className="flex items-center justify-between gap-4 border-b px-6 pb-4">
+          <div className="flex items-center gap-3">
+            {/* Content type tabs */}
+            <div className="flex shrink-0 rounded-full bg-muted p-1 gap-1">
+              {visibleTabs.map((t) => (
+                <SegmentedTab
+                  key={t.value}
+                  active={tab === t.value}
+                  onClick={() =>
+                    navigate({
+                      to: '/announcements',
+                      search: (prev) => ({ ...prev, tab: t.value }),
+                      replace: true,
+                    })
+                  }
+                >
+                  {t.label}
+                </SegmentedTab>
+              ))}
+            </div>
           </div>
+
           <div className="flex items-center gap-2">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -371,8 +583,226 @@ function ParentsGatewayPage() {
           </div>
         </div>
 
+        {/* School-wide mode indicator */}
+        {isSchoolWide && (
+          <div className="mx-6 mt-4 rounded-lg border border-twblue-6 bg-twblue-3/60 px-4 py-2.5">
+            <p className="text-sm text-twblue-11">
+              Viewing all sent posts across the school. Posts cannot be created
+              in this view.
+            </p>
+          </div>
+        )}
+
         {/* Table */}
-        {tab === 'custom-forms' ? (
+        {isSchoolWide ? (
+          /* ── School-wide table ── */
+          <div className="max-w-full overflow-x-auto bg-background">
+            {schoolFiltered.length === 0 ? (
+              <div className="flex flex-col items-center py-16">
+                <EmptyState
+                  title="No posts found"
+                  description="Try adjusting your search or teacher filter."
+                />
+              </div>
+            ) : (
+              <Table tableClassName="table-fixed w-full">
+                <TableHeader className="border-b bg-background">
+                  <TableRow className="border-0 hover:bg-transparent">
+                    <TableHead className="w-[420px] pl-6 sticky left-0 z-10 bg-background">
+                      Title
+                    </TableHead>
+                    <TableHead className="w-[110px]">Date sent</TableHead>
+                    <TableHead className="w-[160px]">Teacher</TableHead>
+                    <TableHead className="w-[150px]">Read</TableHead>
+                    <TableHead className="w-[80px] pr-4 text-right">
+                      Actions
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {pagedSchoolPosts.map((a) => {
+                    const totalCount = a.recipients.length
+                    const readCount = a.recipients.filter(
+                      (r) => r.readStatus === 'read',
+                    ).length
+                    const responseCount = a.recipients.filter(
+                      (r) => r.respondedAt != null,
+                    ).length
+                    const hasResponseType =
+                      a.responseType === 'acknowledge' ||
+                      a.responseType === 'yes-no'
+                    const teacherLabel =
+                      a.ownership === 'mine'
+                        ? 'Me (Daniel Tan)'
+                        : (a.postedBy ?? 'Unknown')
+                    const isOwnPost = a.ownership === 'mine'
+                    return (
+                      <TableRow
+                        key={a.id}
+                        className="cursor-pointer"
+                        onClick={() =>
+                          navigate({
+                            to: '/announcements/$id',
+                            params: { id: a.id },
+                          })
+                        }
+                      >
+                        <TableCell className="overflow-hidden whitespace-normal pl-6 sticky left-0 z-10 bg-background">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className="truncate font-medium">
+                                {a.title}
+                              </span>
+                              {a.responseType === 'acknowledge' && (
+                                <span className="shrink-0 rounded-full bg-blue-50 px-1.5 py-0.5 text-[10px] font-medium text-blue-600 ring-1 ring-inset ring-blue-200">
+                                  Acknowledge
+                                </span>
+                              )}
+                              {a.responseType === 'yes-no' && (
+                                <span className="shrink-0 rounded-full bg-violet-50 px-1.5 py-0.5 text-[10px] font-medium text-violet-600 ring-1 ring-inset ring-violet-200">
+                                  Yes/No
+                                </span>
+                              )}
+                            </div>
+                            <div className="mt-0.5 line-clamp-1 text-sm text-muted-foreground">
+                              {a.description.replace(/<[^>]*>/g, '')}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {formatDate(a.postedAt)}
+                        </TableCell>
+                        <TableCell>
+                          <span
+                            className={cn(
+                              'text-sm',
+                              isOwnPost
+                                ? 'font-medium text-foreground'
+                                : 'text-muted-foreground',
+                            )}
+                          >
+                            {teacherLabel}
+                          </span>
+                        </TableCell>
+                        <TableCell className="pr-6">
+                          <ReadRate
+                            readCount={
+                              hasResponseType ? responseCount : readCount
+                            }
+                            totalCount={totalCount}
+                          />
+                        </TableCell>
+                        <TableCell
+                          className="w-[80px] pr-4"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div className="flex justify-end">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                  aria-label="More actions"
+                                >
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    navigate({
+                                      to: '/announcements/new',
+                                      search: { edit: a.id },
+                                    })
+                                  }
+                                >
+                                  Edit post
+                                </DropdownMenuItem>
+                                {isOwnPost && (
+                                  <>
+                                    <DropdownMenuItem>
+                                      <Copy className="mr-2 h-4 w-4" />
+                                      Duplicate
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                      className="text-destructive focus:text-destructive"
+                                      onClick={() => openDeleteDialog(a.id)}
+                                    >
+                                      <Trash2 className="mr-2 h-4 w-4" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+            )}
+            <div className="flex shrink-0 items-center justify-between bg-card px-6 py-4">
+              <div className="text-sm text-muted-foreground">
+                {schoolPostsPagination.startIndex + 1}–
+                {Math.min(
+                  schoolPostsPagination.startIndex + PAGE_SIZE,
+                  schoolFiltered.length,
+                )}{' '}
+                of {schoolFiltered.length} records
+              </div>
+              {schoolPostsPagination.totalPages > 1 && (
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={schoolPostsPagination.goToPreviousPage}
+                    disabled={!schoolPostsPagination.canGoPrevious}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Previous
+                  </Button>
+                  {schoolPostsPagination.pageNumbers.map((page, index) =>
+                    page === 'ellipsis' ? (
+                      <span
+                        key={`ellipsis-${index}`}
+                        className="px-2 text-muted-foreground"
+                      >
+                        ...
+                      </span>
+                    ) : (
+                      <Button
+                        key={page}
+                        variant={
+                          schoolPostsPagination.currentPage === page
+                            ? 'outline'
+                            : 'ghost'
+                        }
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => schoolPostsPagination.goToPage(page)}
+                      >
+                        {page}
+                      </Button>
+                    ),
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={schoolPostsPagination.goToNextPage}
+                    disabled={!schoolPostsPagination.canGoNext}
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : tab === 'custom-forms' ? (
           <div className="max-w-full overflow-x-auto bg-background">
             {filteredForms.length === 0 ? (
               <div className="flex flex-col items-center py-16">
@@ -385,16 +815,20 @@ function ParentsGatewayPage() {
               <Table tableClassName="table-fixed w-full">
                 <TableHeader className="border-b bg-background">
                   <TableRow className="border-0 hover:bg-transparent">
-                    <TableHead className="w-[500px] pl-6">Title</TableHead>
+                    <TableHead className="w-[460px] pl-6 sticky left-0 z-10 bg-background">
+                      Title
+                    </TableHead>
                     <TableHead className="w-[110px]">Date</TableHead>
                     <TableHead className="w-[100px]">Status</TableHead>
-                    <TableHead className="w-[90px]">Created by</TableHead>
+                    <TableHead className="w-[130px]">Created by</TableHead>
                     <TableHead className="w-[150px]">Read / Response</TableHead>
-                    <TableHead className="w-[48px] pr-2" />
+                    <TableHead className="w-[80px] pr-4 text-right">
+                      Actions
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredForms.map((form) => {
+                  {pagedForms.map((form) => {
                     const isShared = form.ownership === 'shared'
                     return (
                       <TableRow
@@ -407,7 +841,7 @@ function ParentsGatewayPage() {
                           })
                         }
                       >
-                        <TableCell className="overflow-hidden whitespace-normal pl-6">
+                        <TableCell className="overflow-hidden whitespace-normal pl-6 sticky left-0 z-10 bg-background">
                           <div className="min-w-0">
                             <span className="truncate font-medium">
                               {form.title}
@@ -433,7 +867,9 @@ function ParentsGatewayPage() {
                             {isShared ? (
                               <>
                                 <Users className="h-3.5 w-3.5 shrink-0" />
-                                <span>Shared</span>
+                                <span>
+                                  {stripSalutation(form.postedBy ?? '')}
+                                </span>
                               </>
                             ) : (
                               <span>Me</span>
@@ -453,34 +889,36 @@ function ParentsGatewayPage() {
                           )}
                         </TableCell>
                         <TableCell
-                          className="w-[48px] pr-2 text-right"
+                          className="w-[80px] pr-4"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <DropdownMenu>
-                            <DropdownMenuTrigger
-                              render={
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                                  aria-label="More actions"
-                                />
-                              }
-                            >
-                              <MoreHorizontal className="h-4 w-4" />
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem>
-                                <Copy className="mr-2 h-4 w-4" />
-                                Duplicate
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem className="text-destructive focus:text-destructive">
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                          <div className="flex justify-end">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger
+                                render={
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                    aria-label="More actions"
+                                  />
+                                }
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem>
+                                  <Copy className="mr-2 h-4 w-4" />
+                                  Duplicate
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem className="text-destructive focus:text-destructive">
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
                         </TableCell>
                       </TableRow>
                     )
@@ -488,10 +926,66 @@ function ParentsGatewayPage() {
                 </TableBody>
               </Table>
             )}
+            <div className="flex shrink-0 items-center justify-between bg-card px-6 py-4">
+              <div className="text-sm text-muted-foreground">
+                {formsPagination.startIndex + 1}–
+                {Math.min(
+                  formsPagination.startIndex + PAGE_SIZE,
+                  filteredForms.length,
+                )}{' '}
+                of {filteredForms.length} records
+              </div>
+              {formsPagination.totalPages > 1 && (
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={formsPagination.goToPreviousPage}
+                    disabled={!formsPagination.canGoPrevious}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Previous
+                  </Button>
+                  {formsPagination.pageNumbers.map((page, index) =>
+                    page === 'ellipsis' ? (
+                      <span
+                        key={`ellipsis-${index}`}
+                        className="px-2 text-muted-foreground"
+                      >
+                        ...
+                      </span>
+                    ) : (
+                      <Button
+                        key={page}
+                        variant={
+                          formsPagination.currentPage === page
+                            ? 'outline'
+                            : 'ghost'
+                        }
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => formsPagination.goToPage(page)}
+                      >
+                        {page}
+                      </Button>
+                    ),
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={formsPagination.goToNextPage}
+                    disabled={!formsPagination.canGoNext}
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
         ) : (
           <div className="max-w-full overflow-x-auto bg-background">
-            {filtered.length === 0 ? (
+            {sortedAnnouncements.length === 0 ? (
               <div className="flex flex-col items-center py-16">
                 <EmptyState
                   title="No posts found"
@@ -502,7 +996,7 @@ function ParentsGatewayPage() {
               <Table tableClassName="table-fixed w-full">
                 <TableHeader className="border-b bg-background">
                   <TableRow className="border-0 hover:bg-transparent">
-                    <TableHead className="w-[44px] pl-5">
+                    <TableHead className="w-[44px] pl-5 sticky left-0 z-10 bg-background">
                       <Checkbox
                         checked={allSelectedInView}
                         indeterminate={someSelectedInView}
@@ -510,18 +1004,56 @@ function ParentsGatewayPage() {
                         aria-label="Select all"
                       />
                     </TableHead>
-                    <TableHead className="w-[456px] pl-2">Title</TableHead>
-                    <TableHead className="w-[110px]">Date</TableHead>
-                    <TableHead className="w-[100px]">Status</TableHead>
-                    <TableHead className="w-[90px]">Created by</TableHead>
+                    <TableHead className="w-[416px] pl-2 sticky left-[44px] z-10 bg-background">
+                      <SortableHeader
+                        label="Title"
+                        column="title"
+                        sort={sort}
+                        onSort={(col, dir) =>
+                          setSort({ column: col, direction: dir })
+                        }
+                      />
+                    </TableHead>
+                    <TableHead className="w-[110px]">
+                      <SortableHeader
+                        label="Date"
+                        column="date"
+                        sort={sort}
+                        onSort={(col, dir) =>
+                          setSort({ column: col, direction: dir })
+                        }
+                      />
+                    </TableHead>
+                    <TableHead className="w-[100px]">
+                      <SortableHeader
+                        label="Status"
+                        column="status"
+                        sort={sort}
+                        onSort={(col, dir) =>
+                          setSort({ column: col, direction: dir })
+                        }
+                      />
+                    </TableHead>
+                    <TableHead className="w-[130px]">
+                      <SortableHeader
+                        label="Created by"
+                        column="created-by"
+                        sort={sort}
+                        onSort={(col, dir) =>
+                          setSort({ column: col, direction: dir })
+                        }
+                      />
+                    </TableHead>
                     <TableHead className="w-[150px]">
                       {tab === 'with-responses' ? 'Response' : 'Read'}
                     </TableHead>
-                    <TableHead className="w-[48px] pr-2" />
+                    <TableHead className="w-[80px] pr-4 text-right">
+                      Actions
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filtered.map((announcement) => {
+                  {pagedAnnouncements.map((announcement) => {
                     const totalCount = announcement.recipients.length
                     const readCount = announcement.recipients.filter(
                       (r) => r.readStatus === 'read',
@@ -580,7 +1112,7 @@ function ParentsGatewayPage() {
                         }
                       >
                         <TableCell
-                          className="pl-5 w-[44px]"
+                          className="pl-5 w-[44px] sticky left-0 z-10 bg-background"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <Checkbox
@@ -591,7 +1123,7 @@ function ParentsGatewayPage() {
                             aria-label={`Select ${announcement.title}`}
                           />
                         </TableCell>
-                        <TableCell className="overflow-hidden whitespace-normal pl-2">
+                        <TableCell className="overflow-hidden whitespace-normal pl-2 sticky left-[44px] z-10 bg-background">
                           <div className="flex items-start gap-2">
                             <div className="min-w-0">
                               <div className="flex items-center gap-1.5">
@@ -627,17 +1159,8 @@ function ParentsGatewayPage() {
                           </div>
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
-                          {announcement.status !== 'draft' && (
-                            <span
-                              className={
-                                announcement.status === 'scheduled'
-                                  ? 'text-amber-11'
-                                  : undefined
-                              }
-                            >
-                              {formatDate(relevantDate)}
-                            </span>
-                          )}
+                          {announcement.status !== 'draft' &&
+                            formatDate(relevantDate)}
                         </TableCell>
                         <TableCell>
                           <StatusBadge status={announcement.status} />
@@ -675,39 +1198,41 @@ function ParentsGatewayPage() {
                           )}
                         </TableCell>
                         <TableCell
-                          className="w-[48px] pr-2 text-right"
+                          className="w-[80px] pr-4"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <DropdownMenu>
-                            <DropdownMenuTrigger
-                              render={
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                                  aria-label="More actions"
-                                />
-                              }
-                            >
-                              <MoreHorizontal className="h-4 w-4" />
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem>
-                                <Copy className="mr-2 h-4 w-4" />
-                                Duplicate
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                className="text-destructive focus:text-destructive"
-                                onClick={() =>
-                                  openDeleteDialog(announcement.id)
+                          <div className="flex justify-end">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger
+                                render={
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                    aria-label="More actions"
+                                  />
                                 }
                               >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                                <MoreHorizontal className="h-4 w-4" />
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem>
+                                  <Copy className="mr-2 h-4 w-4" />
+                                  Duplicate
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  className="text-destructive focus:text-destructive"
+                                  onClick={() =>
+                                    openDeleteDialog(announcement.id)
+                                  }
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
                         </TableCell>
                       </TableRow>
                     )
@@ -715,6 +1240,62 @@ function ParentsGatewayPage() {
                 </TableBody>
               </Table>
             )}
+            <div className="flex shrink-0 items-center justify-between bg-card px-6 py-4">
+              <div className="text-sm text-muted-foreground">
+                {myPostsPagination.startIndex + 1}–
+                {Math.min(
+                  myPostsPagination.startIndex + PAGE_SIZE,
+                  sortedAnnouncements.length,
+                )}{' '}
+                of {sortedAnnouncements.length} records
+              </div>
+              {myPostsPagination.totalPages > 1 && (
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={myPostsPagination.goToPreviousPage}
+                    disabled={!myPostsPagination.canGoPrevious}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Previous
+                  </Button>
+                  {myPostsPagination.pageNumbers.map((page, index) =>
+                    page === 'ellipsis' ? (
+                      <span
+                        key={`ellipsis-${index}`}
+                        className="px-2 text-muted-foreground"
+                      >
+                        ...
+                      </span>
+                    ) : (
+                      <Button
+                        key={page}
+                        variant={
+                          myPostsPagination.currentPage === page
+                            ? 'outline'
+                            : 'ghost'
+                        }
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => myPostsPagination.goToPage(page)}
+                      >
+                        {page}
+                      </Button>
+                    ),
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={myPostsPagination.goToNextPage}
+                    disabled={!myPostsPagination.canGoNext}
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
 
             {/* Floating bulk action bar — same pattern as Reports */}
             {selectedIds.size > 0 && tab !== 'custom-forms' && (

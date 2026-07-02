@@ -54,13 +54,13 @@ Three separate hygiene problems compound each other:
 
 ## Commands you will need
 
-| Purpose   | Command          | Expected on success |
-|-----------|------------------|---------------------|
-| Install   | `bun install`    | exit 0, only `bun.lock` updated |
-| Build     | `bun run build`  | exit 0 |
-| Tests     | `bun run test`   | exit 0 (if plan 001 landed; otherwise skip) |
-| Dev smoke | `bun run dev`    | serves on http://127.0.0.1:3000, home page renders |
-| Version check | `cat node_modules/<pkg>/package.json \| grep '"version"'` | see steps |
+| Purpose       | Command                                                   | Expected on success                                |
+| ------------- | --------------------------------------------------------- | -------------------------------------------------- |
+| Install       | `bun install`                                             | exit 0, only `bun.lock` updated                    |
+| Build         | `bun run build`                                           | exit 0                                             |
+| Tests         | `bun run test`                                            | exit 0 (if plan 001 landed; otherwise skip)        |
+| Dev smoke     | `bun run dev`                                             | serves on http://127.0.0.1:3000, home page renders |
+| Version check | `cat node_modules/<pkg>/package.json \| grep '"version"'` | see steps                                          |
 
 ## Scope
 
@@ -113,6 +113,7 @@ bun update vite vitest
 ```
 
 **Verify**:
+
 - `grep '"version"' node_modules/vite/package.json` → `7.4.0` or higher
 - `grep '"version"' node_modules/vitest/package.json` → `3.2.6` or higher
 - `bun run build` → exit 0
@@ -141,6 +142,7 @@ Add a line to `README.md` in the Prerequisites/Getting Started area:
 ### Step 4: Final verification
 
 **Verify**:
+
 - `bun install` → exit 0 and `git status` shows no unexpected lockfile churn
 - `bun run build` → exit 0
 - `bun run test` → exit 0 (if plan 001 landed)

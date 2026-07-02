@@ -830,9 +830,7 @@ export function StudentTable({
             </TableCell>
           )
         })()}
-      {isVisible('lateComing') && (
-        <TableCell>{student.lateComing}</TableCell>
-      )}
+      {isVisible('lateComing') && <TableCell>{student.lateComing}</TableCell>}
       {isVisible('absences') && <TableCell>{student.absences}</TableCell>}
       {isVisible('ccaMissed') && (
         <TableCell>{100 - student.ccaMissed * 5}%</TableCell>
@@ -915,7 +913,9 @@ export function StudentTable({
       )}
       {isVisible('housing') && (
         <TableCell>
-          {student.housing || <span className="text-muted-foreground">None</span>}
+          {student.housing || (
+            <span className="text-muted-foreground">None</span>
+          )}
         </TableCell>
       )}
       {isVisible('housingType') && (

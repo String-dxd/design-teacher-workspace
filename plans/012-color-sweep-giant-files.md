@@ -8,7 +8,7 @@
 >
 > **Drift check (run first)**, per file before you touch it:
 > `git diff --stat 6e3d7e5..HEAD -- <the one file>`. Because this plan fences off
-> specific line *ranges*, if the file changed you MUST re-locate the fence by content
+> specific line _ranges_, if the file changed you MUST re-locate the fence by content
 > (the markers below), not by line number, before editing.
 
 ## Status
@@ -26,7 +26,7 @@ Five files concentrate the highest-risk share of the sweep: `agency-report.new`
 (3,703 lines), `announcements.new` (2,759), `attendance-analytics` (2,314),
 `academic-analytics` (2,039), `student-profile` (1,951). They have **no behavioral
 tests**, and two of them contain **pixel-faithful document/preview renderers** whose
-`bg-white`/`text-black` are *correct as-is* — a naive "flip all white" pass would
+`bg-white`/`text-black` are _correct as-is_ — a naive "flip all white" pass would
 corrupt them. So each file is isolated to its own phase, **charts are deferred to plan
 013**, and document/preview regions are **hard-fenced**.
 
@@ -51,10 +51,11 @@ run 012 first, then 013; see 010 §"double-touch".)
 surfaces, the `text-white` count badge, the `bg-black/20` scrim.
 
 **Fenced / deferred — DO NOT touch in this phase:**
+
 - `BAR_COLORS` (~L124), `GRADE_FILL` (~L243), the `CATEGORICAL_6` import (~L26), every
   `<Bar fill=…>` / `<CartesianGrid stroke="#e9ecef">` (~L637+) / recharts color — **→ plan 013.**
 - `GRADE_BADGE_STYLE` (~L254) renders into a `<span style=…>` (NOT an SVG), so its
-  inline rgba/hex *may* be converted here to `var(--color-*)` — but only after
+  inline rgba/hex _may_ be converted here to `var(--color-*)` — but only after
   confirming each entry is a span style and not piped into a chart. If unsure, defer to 013.
 
 **Verify**: PALETTE grep → 0; DARK-HAZARD grep → 0; RAW-HEX residual = the count of
@@ -66,7 +67,7 @@ the grade modal — light + dark.
 ## Phase 8 — `students/attendance-analytics.tsx` (2,314) + `students/student-profile.tsx` (1,951)
 
 Paired because `student-profile.tsx` has **no chart literals** (fully grep-verifiable),
-and `attendance-analytics`'s *non-chart* drift is the same recipe.
+and `attendance-analytics`'s _non-chart_ drift is the same recipe.
 
 **`attendance-analytics.tsx` — in scope:** filter pills, status pill, profile-link,
 count badge, `bg-white` cards, and the `text-[var(--slate-N)]` arbitrary brackets →
@@ -88,6 +89,7 @@ charts page + a student profile, light + dark.
 
 **The `slate-*` scale here is ON-token — do not touch it.** Fix only the real
 composer-chrome drift:
+
 - scheduling-strip blues (~L1807–1837 region) → `twblue` / `primary`
 - Editor-role chip (~L1984 region) → `twblue`
 - required asterisk (~L657 region) → `text-destructive`
@@ -104,7 +106,7 @@ by design. `#c47565` is the FLAGGED report/PG terracotta — hold for sign-off.
 > Note: there is a pre-existing `new Date()` SSR pattern at ~L233/240 — **out of scope**,
 > do not touch (it is a separate known issue in the README).
 
-**Verify**: PALETTE grep → 0 *outside the fence*; DARK-HAZARD residual = the preview
+**Verify**: PALETTE grep → 0 _outside the fence_; DARK-HAZARD residual = the preview
 block's intentional whites (record the count and confirm each is inside the fence);
 `#c47565` remains (flagged). Visual: open `/announcements/new`, exercise the composer +
 the phone preview, light + dark — the composer chrome themes, the preview stays
@@ -122,18 +124,19 @@ is safe.
 
 **HARD FENCE — the paper-PDF facsimile (verified at `6e3d7e5`).** Two renderers
 reproduce the printed report pixel-for-pixel (document-ink fidelity):
+
 - the "faithful PDF replication" building blocks starting ~**L1761** (`bg-[#D9D9D9]`
   header at L1774; `border border-black` cells at L1783/L1793), and
 - the condensed PDF page renderers at ~**L2021–2616** (`mx-auto bg-white px-12 py-8
-  text-black` at **L2108 and L2556**; `border-black` rules throughout, e.g. L2128,
+text-black` at **L2108 and L2556**; `border-black` rules throughout, e.g. L2128,
   L2518, L2531–2539).
 
 **Inside this ~L1761–2616 range, do NOT flip any `bg-white`/`text-black`/`border-black`
-or retoken `#D9D9D9`** — it is document ink, correct in every theme. Only *catalog* the
+or retoken `#D9D9D9`** — it is document ink, correct in every theme. Only _catalog_ the
 `#D9D9D9` as an intentional residual. Defer any `Select`/`Textarea`/`Input` primitive
 rewrites (out of scope — PRIMITIVE-REUSE).
 
-**Verify**: PALETTE grep → 0 *outside the fence*; DARK-HAZARD residual = the facsimile's
+**Verify**: PALETTE grep → 0 _outside the fence_; DARK-HAZARD residual = the facsimile's
 whites/blacks (record and confirm each line is within L1761–2616); `#D9D9D9` remains.
 Visual: open the agency-report builder, switch templates, open the PDF preview modal —
 the builder chrome themes, the PDF facsimile stays black-on-white.

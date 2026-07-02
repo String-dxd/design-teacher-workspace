@@ -76,7 +76,39 @@ const featureFlagConfigs: Array<FeatureFlagConfig> = [
     label: 'Student Groups',
     description:
       'Show the Groups page in the sidebar for organising students into reusable groups',
-    stage: 'Experiment',
+    stage: 'Release 2',
+  },
+  {
+    key: 'reports',
+    label: 'Reports',
+    description: 'Show the Reports page in the sidebar under Manage',
+    stage: 'Release 2',
+  },
+  {
+    key: 'calendar',
+    label: 'Calendar',
+    description: 'Show the Calendar page in the sidebar under Manage',
+    stage: 'Release 2',
+  },
+  {
+    key: 'meetings',
+    label: 'Meetings',
+    description: 'Show the Meetings page in the sidebar under Manage',
+    stage: 'Release 2',
+  },
+  {
+    key: 'posts-admin-view',
+    label: 'Posts — Admin view',
+    description:
+      'Show a "Posts (Admin)" sidebar link that renders the Posts page with admin layout at /announcements?view=admin',
+    stage: 'Release 2',
+  },
+  {
+    key: 'reports-admin-view',
+    label: 'Reports — Admin view',
+    description:
+      'Show a "Reports (Admin)" sidebar link that renders the Reports page with admin layout at /reports?view=admin',
+    stage: 'Release 2',
   },
   {
     key: 'import-data',

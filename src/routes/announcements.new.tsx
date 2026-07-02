@@ -1,13 +1,13 @@
-import { useEffect, useRef, useState } from 'react'
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 import {
   ArrowDown,
+  ArrowLeft,
   ArrowUp,
   CalendarClock,
   CalendarDays,
   Check,
   CheckCircle2,
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
   ExternalLink,
@@ -30,14 +30,12 @@ import type { ChangeEvent } from 'react'
 import type {
   PGAnnouncement,
   PGRecipient,
-  PGRole,
   PGWebsiteLink,
   Shortcut,
 } from '@/types/pg-announcement'
 import type { FormQuestion, ReminderType, ResponseType } from '@/types/form'
 import type { SelectedEntity } from '@/components/comms/entity-selector'
 import type { FileMeta } from '@/lib/draft-storage'
-import { PageHeader } from '@/components/page-header'
 import { QuestionBuilder } from '@/components/comms/question-builder'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
 import { StudentRecipientSelector } from '@/components/comms/student-recipient-selector'
@@ -56,13 +54,20 @@ import { PG_SHORTCUT_PRESETS } from '@/data/pg-shortcuts'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Separator } from '@/components/ui/separator'
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Popover, PopoverContent } from '@/components/ui/popover'
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Calendar } from '@/components/ui/calendar'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import { cn, stripSalutation } from '@/lib/utils'
 import {
   clearDraft,
@@ -97,6 +102,54 @@ function linkifyHtml(html: string): string {
     },
   )
 }
+
+// ---------------------------------------------------------------------------
+// Event schedule helpers
+// ---------------------------------------------------------------------------
+
+/** Advance a HH:MM time by 30 minutes, capped at 23:30. */
+function nextSlot(time: string): string {
+  const [hStr, mStr] = time.split(':')
+  const totalMin = Number(hStr) * 60 + Number(mStr) + 30
+  if (totalMin >= 24 * 60) return '23:30'
+  const h = Math.floor(totalMin / 60)
+  const m = totalMin % 60
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+}
+
+/** Return true when both datetimes are fully set and start ≥ end. */
+function hasTimeConflict(
+  sDate: string,
+  sTime: string,
+  eDate: string,
+  eTime: string,
+): boolean {
+  if (!sDate || !eDate || !sTime || !eTime) return false
+  return `${sDate}T${sTime}` >= `${eDate}T${eTime}`
+}
+
+// ---------------------------------------------------------------------------
+// Schedule-picker helpers
+// ---------------------------------------------------------------------------
+
+function buildScheduleSlots(): Array<{ value: string; label: string }> {
+  const slots: Array<{ value: string; label: string }> = []
+  let min = 7 * 60
+  const endMin = 21 * 60 + 45
+  while (min <= endMin) {
+    const h = Math.floor(min / 60)
+    const m = min % 60
+    const value = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+    const period = h < 12 ? 'AM' : 'PM'
+    const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h
+    const label = `${h12}:${String(m).padStart(2, '0')} ${period}`
+    slots.push({ value, label })
+    min += 15
+  }
+  return slots
+}
+
+const SCHEDULE_SLOTS = buildScheduleSlots()
 
 // ---------------------------------------------------------------------------
 // Upload helpers
@@ -152,10 +205,10 @@ function YesNoMockup() {
       <div className="h-2 w-2/3 rounded-full bg-slate-300" />
       <div className="h-1.5 w-full rounded-full bg-slate-200" />
       <div className="mt-1 flex gap-2">
-        <div className="flex h-7 flex-1 items-center justify-center rounded-md bg-lime-3 text-[9px] font-semibold text-lime-11">
+        <div className="flex h-7 flex-1 items-center justify-center rounded-md bg-green-100 text-[9px] font-semibold text-green-700">
           Yes
         </div>
-        <div className="flex h-7 flex-1 items-center justify-center rounded-md bg-crimson-3 text-[9px] font-semibold text-crimson-11">
+        <div className="flex h-7 flex-1 items-center justify-center rounded-md bg-red-100 text-[9px] font-semibold text-red-700">
           No
         </div>
       </div>
@@ -350,8 +403,17 @@ function AnnouncementPreview({
     else setScreen('submitted')
   }
   function handleNavBack() {
-    if (isQuestionScreen || isSubmittedScreen || isPhotoScreen)
+    if (isPhotoScreen || isSubmittedScreen) {
       setScreen('main')
+    } else if (isQuestionScreen) {
+      if (currentQIndex > 0) {
+        const prev = relevantQuestions[currentQIndex - 1]
+        if (prev)
+          setScreen({ questionId: prev.id, responseChoice: screenChoice })
+      } else {
+        setScreen('main')
+      }
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -420,8 +482,8 @@ function AnnouncementPreview({
         )}
         {responseType !== 'view-only' && eventStart && (
           <div className="mt-1.5 flex items-center gap-1.5">
-            <CalendarDays className="h-3 w-3 shrink-0 text-twblue-11" />
-            <p className="text-[11px] font-medium text-twblue-11">
+            <CalendarDays className="h-3 w-3 shrink-0 text-blue-500" />
+            <p className="text-[11px] font-medium text-blue-600">
               {formattedEventDate}
             </p>
           </div>
@@ -654,7 +716,7 @@ function AnnouncementPreview({
       {/* Question body */}
       <div className="flex-1 overflow-y-auto px-4 py-4">
         <p className="mb-4 text-[11px] font-medium leading-snug text-slate-800">
-          {currentQ.required && <span className="text-destructive">* </span>}
+          {currentQ.required && <span className="text-red-500">* </span>}
           {currentQ.text || (
             <span className="text-slate-300">Question text</span>
           )}
@@ -713,8 +775,8 @@ function AnnouncementPreview({
         </div>
       </div>
       <div className="flex flex-1 flex-col items-center justify-center gap-3 px-4 py-8">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-lime-3">
-          <CheckCircle2 className="h-6 w-6 text-lime-11" />
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
+          <CheckCircle2 className="h-6 w-6 text-emerald-500" />
         </div>
         <p className="text-center text-sm font-semibold text-slate-800">
           Response submitted
@@ -890,13 +952,6 @@ function AnnouncementPreview({
             )}
           </div>
         </div>
-
-        {/* Recipient count */}
-        {totalCount > 0 && (
-          <p className="mt-3 text-center text-xs text-muted-foreground">
-            Sending to {totalCount} parent{totalCount !== 1 ? 's' : ''}
-          </p>
-        )}
       </div>
     </div>
   )
@@ -916,15 +971,12 @@ interface MissingField {
 }
 
 function getMissingFields(
-  sendOption: SendOption,
   title: string,
   description: string,
   recipients: Array<SelectedEntity>,
   enquiryEmail: string,
   responseType: string,
   dueDate: string,
-  scheduledDate: string,
-  scheduledTime: string,
 ): Array<MissingField> {
   const missing: Array<MissingField> = []
   if (!title.trim()) missing.push({ field: 'Title', hint: 'Add a title' })
@@ -936,11 +988,6 @@ function getMissingFields(
     missing.push({ field: 'Enquiry email', hint: 'Select an enquiry email' })
   if (responseType !== 'view-only' && !dueDate)
     missing.push({ field: 'Due date', hint: 'Set a due date for responses' })
-  if (sendOption === 'scheduled' && (!scheduledDate || !scheduledTime))
-    missing.push({
-      field: 'Send date & time',
-      hint: 'Choose when to send this post',
-    })
   return missing
 }
 
@@ -992,7 +1039,7 @@ function NewAnnouncementPage() {
   const [websiteLinks, setWebsiteLinks] = useState<Array<PGWebsiteLink>>([])
   const [recipients, setRecipients] = useState<Array<SelectedEntity>>([])
   const [staffInCharge, setStaffInCharge] = useState<Array<SelectedEntity>>([])
-  const [staffRoles, setStaffRoles] = useState<Record<string, PGRole>>({})
+
   const [enquiryEmail, setEnquiryEmail] = useState('')
 
   // Attachment state
@@ -1032,6 +1079,7 @@ function NewAnnouncementPage() {
   const [eventEnd, setEventEnd] = useState('')
   const [eventEndTime, setEventEndTime] = useState('')
   const [venue, setVenue] = useState('')
+  const [endTimeError, setEndTimeError] = useState(false)
 
   function handleResponseTypeChange(type: ResponseType) {
     setResponseType(type)
@@ -1046,6 +1094,7 @@ function NewAnnouncementPage() {
       setEventEnd('')
       setEventEndTime('')
       setVenue('')
+      setEndTimeError(false)
     }
   }
 
@@ -1108,7 +1157,6 @@ function NewAnnouncementPage() {
         filesMeta: [...draftFilesMeta, ...filesMeta],
         photosMeta: [...draftPhotosMeta, ...photosMeta],
         coverPhotoIndices: [...coverPhotoIndices],
-        staffRoles,
       })
       setTimeout(() => {
         setIsSaving(false)
@@ -1124,7 +1172,6 @@ function NewAnnouncementPage() {
     websiteLinks,
     recipients,
     staffInCharge,
-    staffRoles,
     enquiryEmail,
     responseType,
     dueDate,
@@ -1172,7 +1219,6 @@ function NewAnnouncementPage() {
         setScheduledDate(draft.scheduledDate ?? '')
         setScheduledTime(draft.scheduledTime ?? '08:00')
         setCoverPhotoIndices(new Set(draft.coverPhotoIndices ?? []))
-        setStaffRoles(draft.staffRoles ?? {})
         setDraftFilesMeta(draft.filesMeta ?? [])
         setDraftPhotosMeta(draft.photosMeta ?? [])
         setSavedAt(new Date(draft.savedAt))
@@ -1195,9 +1241,6 @@ function NewAnnouncementPage() {
           type: 'individual' as const,
         })),
       )
-      const roleMap: Record<string, PGRole> = {}
-      for (const m of existingAnnouncement.staffInCharge) roleMap[m.id] = m.role
-      setStaffRoles(roleMap)
     }
 
     // Re-hydrate recipients: group PGRecipients by classLabel
@@ -1443,33 +1486,104 @@ function NewAnnouncementPage() {
     canPost && scheduledDate.length > 0 && scheduledTime.length > 0
   const canSubmit = sendOption === 'scheduled' ? canSchedule : canPost
   const missingFields = getMissingFields(
-    sendOption,
     title,
     description,
     recipients,
     enquiryEmail,
     responseType,
     dueDate,
-    scheduledDate,
-    scheduledTime,
   )
 
   // Validation popover state
   const [showValidationPopover, setShowValidationPopover] = useState(false)
   const postBtnWrapRef = useRef<HTMLDivElement>(null)
 
-  // Auto-close validation popover once all required fields are filled
+  // Schedule popover state
+  const [showSchedulePopover, setShowSchedulePopover] = useState(false)
+  const [selectedScheduleDate, setSelectedScheduleDate] = useState<
+    Date | undefined
+  >(undefined)
+
+  const scheduleMaxDate = useMemo(() => {
+    const d = new Date()
+    d.setDate(d.getDate() + 21)
+    return d
+  }, [])
+
+  const filteredScheduleSlots = useMemo(() => {
+    const today = new Date()
+    const isToday =
+      selectedScheduleDate &&
+      selectedScheduleDate.toDateString() === today.toDateString()
+    if (!isToday) return SCHEDULE_SLOTS
+    const nowMin = today.getHours() * 60 + today.getMinutes()
+    return SCHEDULE_SLOTS.filter(({ value }) => {
+      const [h, m] = value.split(':').map(Number)
+      return h * 60 + m >= nowMin + 15
+    })
+  }, [selectedScheduleDate])
+
+  // Auto-advance time to first valid slot when today is selected
   useEffect(() => {
-    if (missingFields.length === 0) setShowValidationPopover(false)
+    if (!selectedScheduleDate) return
+    const today = new Date()
+    const isToday = selectedScheduleDate.toDateString() === today.toDateString()
+    if (!isToday) return
+    const nowMin = today.getHours() * 60 + today.getMinutes()
+    const valid = SCHEDULE_SLOTS.find(({ value }) => {
+      const [h, m] = value.split(':').map(Number)
+      return h * 60 + m >= nowMin + 15
+    })
+    if (valid && (!scheduledTime || scheduledTime < valid.value)) {
+      setScheduledTime(valid.value)
+    }
+  }, [selectedScheduleDate])
+
+  // Inline field error highlights — set on submit attempt, cleared when form becomes valid
+  const [showErrors, setShowErrors] = useState(false)
+
+  // Per-field error flags — only active after a submit attempt
+  const errTitle = showErrors && !title.trim()
+  const errDescription = showErrors && isDescriptionEmpty(description)
+  const errRecipients = showErrors && recipients.length === 0
+  const errEnquiryEmail = showErrors && !enquiryEmail.trim()
+  const errDueDate =
+    showErrors && responseType !== 'view-only' && !dueDate.length
+
+  // Auto-close validation popover + clear error highlights once all required fields are filled
+  useEffect(() => {
+    if (missingFields.length === 0) {
+      setShowValidationPopover(false)
+      setShowErrors(false)
+    }
   }, [missingFields.length])
 
   // Open validation popover when user clicks disabled Post button
   function handlePostClick() {
-    if (!canSubmit) {
+    if (!canPost) {
+      setShowErrors(true)
       setShowValidationPopover(true)
       return
     }
+    setSendOption('now')
     setShowValidationPopover(false)
+    setShowConfirmSheet(true)
+  }
+
+  // Confirm schedule: validate form, set scheduled date, open confirmation sheet
+  function handleScheduleConfirm() {
+    if (!selectedScheduleDate) return
+    if (!canPost) {
+      setShowErrors(true)
+      setShowSchedulePopover(false)
+      setShowValidationPopover(true)
+      return
+    }
+    const d = selectedScheduleDate
+    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    setScheduledDate(dateStr)
+    setSendOption('scheduled')
+    setShowSchedulePopover(false)
     setShowConfirmSheet(true)
   }
 
@@ -1528,7 +1642,7 @@ function NewAnnouncementPage() {
     // Expand entity selections → flat deduplicated StaffInChargeMember list
     const seen = new Set<string>()
     const staffInChargeList = staffInCharge.flatMap((entity) => {
-      const entityRole = staffRoles[entity.id] ?? 'viewer'
+      const entityRole = 'editor'
       if (entity.type === 'individual') {
         const m = MOCK_STAFF.find((s) => s.id === entity.id)
         if (!m || seen.has(m.id)) return []
@@ -1602,7 +1716,7 @@ function NewAnnouncementPage() {
     if (!editId) return
     const seen = new Set<string>()
     const staffInChargeList = staffInCharge.flatMap((entity) => {
-      const entityRole = staffRoles[entity.id] ?? 'viewer'
+      const entityRole = 'editor'
       if (entity.type === 'individual') {
         const m = MOCK_STAFF.find((s) => s.id === entity.id)
         if (!m || seen.has(m.id)) return []
@@ -1650,198 +1764,188 @@ function NewAnnouncementPage() {
     : null
 
   return (
-    <div className="flex min-h-screen flex-col bg-muted">
+    <div className="flex min-h-screen flex-col bg-slate-50">
       {/* Sticky header */}
-      <div className="sticky top-0 z-10 bg-background">
+      <div className="sticky top-0 z-10 bg-white">
         {/* Top bar */}
-        <PageHeader
-          title={isEditing ? 'Edit Post' : 'New Post'}
-          onClose={() =>
-            navigate({
-              to: '/announcements',
-              search: {
-                tab:
-                  responseType !== 'view-only' ? 'with-responses' : 'view-only',
-              },
-            })
-          }
-          actions={
-            <>
-              {/* Autosave status — replaces Save Draft button */}
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                {isSaving ? (
-                  <span>Saving…</span>
-                ) : savedAt ? (
-                  <>
-                    <CheckCircle2 className="h-3.5 w-3.5 text-lime-11" />
-                    <span>Saved · {savedTimeLabel}</span>
-                  </>
-                ) : title ? (
-                  <span className="text-muted-foreground">Draft</span>
-                ) : null}
-              </div>
+        <div className="flex items-center justify-between border-b px-6 py-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="shrink-0"
+            render={
+              <Link
+                to="/announcements"
+                search={{
+                  tab:
+                    responseType !== 'view-only'
+                      ? 'with-responses'
+                      : 'view-only',
+                }}
+              />
+            }
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <h1 className="flex-1 text-base font-semibold">
+            {isEditing ? 'Edit Post' : 'New Post'}
+          </h1>
 
-              {/* Preview toggle */}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowPreview((v) => !v)}
-                className="gap-1.5"
-              >
-                {showPreview ? (
-                  <>
-                    <EyeOff className="h-4 w-4" />
-                    Hide Preview
-                  </>
-                ) : (
-                  <>
-                    <Eye className="h-4 w-4" />
-                    Show Preview
-                  </>
-                )}
+          {/* Autosave status — replaces Save Draft button */}
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            {isSaving ? (
+              <span>Saving…</span>
+            ) : savedAt ? (
+              <>
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                <span>Saved · {savedTimeLabel}</span>
+              </>
+            ) : title ? (
+              <span className="text-slate-400">Draft</span>
+            ) : null}
+          </div>
+
+          {/* Preview toggle */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowPreview((v) => !v)}
+            className="gap-1.5"
+          >
+            {showPreview ? (
+              <>
+                <EyeOff className="h-4 w-4" />
+                Hide Preview
+              </>
+            ) : (
+              <>
+                <Eye className="h-4 w-4" />
+                Show Preview
+              </>
+            )}
+          </Button>
+
+          {/* Action buttons */}
+          <div ref={postBtnWrapRef} className="flex items-center gap-2">
+            {isEditingPosted ? (
+              /* Posted edit: single "Save changes" button, no schedule option */
+              <Button size="sm" onClick={handleSavePostedEdit}>
+                <Check className="mr-2 h-3.5 w-3.5" />
+                Save changes
               </Button>
-
-              {/* Split button + validation hint */}
-              <div className="flex flex-col items-end gap-1">
-                {isEditingPosted ? (
-                  /* Posted edit: single "Save changes" button, no schedule option */
-                  <Button size="sm" onClick={handleSavePostedEdit}>
-                    <Check className="mr-2 h-3.5 w-3.5" />
-                    Save changes
-                  </Button>
-                ) : (
-                  <Popover
-                    open={showValidationPopover}
-                    onOpenChange={setShowValidationPopover}
+            ) : (
+              <>
+                {/* Post button with validation popover */}
+                <Popover
+                  open={showValidationPopover}
+                  onOpenChange={setShowValidationPopover}
+                >
+                  <Button
+                    size="sm"
+                    onClick={handlePostClick}
+                    className={cn(!canPost && 'opacity-50')}
                   >
-                    <div
-                      ref={postBtnWrapRef}
-                      className="flex overflow-hidden rounded-md"
-                    >
+                    <Send className="mr-2 h-3.5 w-3.5" />
+                    Post now
+                  </Button>
+                  {/* Validation popover — shown when Post is clicked but form is incomplete */}
+                  <PopoverContent
+                    anchor={postBtnWrapRef}
+                    side="bottom"
+                    align="end"
+                    className="w-64 gap-2 p-3"
+                  >
+                    <p className="text-sm font-medium text-slate-800">
+                      Complete these fields before posting
+                    </p>
+                    <ul className="mt-1.5 space-y-1">
+                      {missingFields.map((f) => (
+                        <li
+                          key={f.field}
+                          className="flex items-start gap-1.5 text-xs text-slate-600"
+                        >
+                          <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-destructive" />
+                          {f.hint}
+                        </li>
+                      ))}
+                    </ul>
+                  </PopoverContent>
+                </Popover>
+
+                {/* Schedule button with calendar popover */}
+                <Popover
+                  open={showSchedulePopover}
+                  onOpenChange={(open) => {
+                    if (open && !canPost) {
+                      setShowErrors(true)
+                      setShowValidationPopover(true)
+                      return
+                    }
+                    setShowSchedulePopover(open)
+                  }}
+                >
+                  <PopoverTrigger
+                    render={
                       <Button
                         size="sm"
-                        className={cn(
-                          'rounded-r-none',
-                          !canSubmit && 'cursor-not-allowed opacity-50',
-                        )}
-                        onClick={handlePostClick}
+                        variant="outline"
+                        className={cn(!canPost && 'opacity-50')}
                       >
-                        {sendOption === 'scheduled' ? (
-                          <>
-                            <CalendarClock className="mr-2 h-3.5 w-3.5" />
-                            Schedule
-                          </>
-                        ) : (
-                          <>
-                            <Send className="mr-2 h-3.5 w-3.5" />
-                            Post
-                          </>
-                        )}
+                        <CalendarClock className="mr-2 h-3.5 w-3.5" />
+                        Schedule
                       </Button>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger
-                          render={
-                            <Button
-                              size="sm"
-                              className={cn(
-                                'rounded-l-none border-l border-primary-foreground/25 px-2',
-                                !canSubmit && 'cursor-not-allowed opacity-50',
-                              )}
-                              aria-label="Choose send option"
-                            />
-                          }
+                    }
+                  />
+                  <PopoverContent
+                    side="bottom"
+                    align="end"
+                    className="w-auto overflow-hidden p-0"
+                  >
+                    <Calendar
+                      mode="single"
+                      selected={selectedScheduleDate}
+                      onSelect={setSelectedScheduleDate}
+                      disabled={{ before: new Date(), after: scheduleMaxDate }}
+                      initialFocus
+                    />
+                    <div className="flex items-center gap-3 border-t px-4 py-3">
+                      <div className="flex flex-1 items-center gap-2">
+                        <span className="shrink-0 text-xs text-muted-foreground">
+                          Time
+                        </span>
+                        <Select
+                          value={scheduledTime}
+                          onValueChange={setScheduledTime}
                         >
-                          <ChevronDown className="h-3.5 w-3.5" />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48">
-                          <DropdownMenuItem onClick={() => setSendOption('now')}>
-                            <Send className="h-4 w-4" />
-                            Post now
-                            {sendOption === 'now' && (
-                              <Check className="ml-auto h-3.5 w-3.5 text-primary" />
-                            )}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => setSendOption('scheduled')}
-                          >
-                            <CalendarClock className="h-4 w-4" />
-                            Schedule for later
-                            {sendOption === 'scheduled' && (
-                              <Check className="ml-auto h-3.5 w-3.5 text-primary" />
-                            )}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                          <SelectTrigger size="sm" className="flex-1">
+                            <SelectValue placeholder="Select time" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {filteredScheduleSlots.map((slot) => (
+                              <SelectItem key={slot.value} value={slot.value}>
+                                {slot.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={handleScheduleConfirm}
+                        disabled={
+                          !selectedScheduleDate ||
+                          filteredScheduleSlots.length === 0
+                        }
+                      >
+                        Confirm
+                      </Button>
                     </div>
-                    {/* Validation popover — shown when Post is clicked but form is incomplete */}
-                    <PopoverContent
-                      anchor={postBtnWrapRef}
-                      side="bottom"
-                      align="end"
-                      className="w-64 gap-2 p-3"
-                    >
-                      <p className="text-sm font-medium text-foreground">
-                        Complete these fields before posting
-                      </p>
-                      <ul className="mt-1.5 space-y-1">
-                        {missingFields.map((f) => (
-                          <li
-                            key={f.field}
-                            className="flex items-start gap-1.5 text-xs text-muted-foreground"
-                          >
-                            <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-destructive" />
-                            {f.hint}
-                          </li>
-                        ))}
-                      </ul>
-                    </PopoverContent>
-                  </Popover>
-                )}
-              </div>
-            </>
-          }
-        />
-
-        {/* Scheduling strip — hidden when editing a posted post */}
-        {!isEditingPosted && sendOption === 'scheduled' && (
-          <div className="flex items-center gap-3 border-b bg-twblue-3 px-6 py-2">
-            <CalendarClock className="h-4 w-4 shrink-0 text-twblue-11" />
-            <span className="text-sm font-medium text-twblue-12">Send on</span>
-            <input
-              type="date"
-              value={scheduledDate}
-              min={new Date().toISOString().split('T')[0]}
-              onChange={(e) => setScheduledDate(e.target.value)}
-              className="rounded-md border border-twblue-6 bg-background px-2.5 py-1 text-sm text-foreground outline-none focus:ring-2 focus:ring-twblue-7"
-            />
-            <span className="text-sm text-twblue-11">at</span>
-            <input
-              type="time"
-              value={scheduledTime}
-              onChange={(e) => setScheduledTime(e.target.value)}
-              className="rounded-md border border-twblue-6 bg-background px-2.5 py-1 text-sm text-foreground outline-none focus:ring-2 focus:ring-twblue-7"
-            />
-            <div className="ml-auto flex items-center gap-3">
-              <Button
-                size="sm"
-                onClick={() => setShowConfirmSheet(true)}
-                disabled={!canSchedule}
-                className="bg-primary hover:bg-primary/90 disabled:opacity-50"
-              >
-                <CalendarClock className="mr-1.5 h-3.5 w-3.5" />
-                Schedule
-              </Button>
-              <button
-                type="button"
-                onClick={() => setSendOption('now')}
-                className="flex items-center gap-1 text-xs text-twblue-11 hover:text-twblue-12"
-              >
-                <X className="h-3 w-3" />
-                Cancel
-              </button>
-            </div>
+                  </PopoverContent>
+                </Popover>
+              </>
+            )}
           </div>
-        )}
+        </div>
       </div>
 
       {/* Form body */}
@@ -1862,13 +1966,13 @@ function NewAnnouncementPage() {
           <div className="space-y-6">
             {/* Locked-fields notice — shown when editing a posted post */}
             {isEditingPosted && (
-              <div className="flex items-start gap-3 rounded-xl border border-border bg-muted px-4 py-3 text-xs">
-                <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+              <div className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs">
+                <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-500" />
                 <div>
-                  <p className="font-semibold text-foreground">
+                  <p className="font-semibold text-slate-700">
                     Some fields are locked
                   </p>
-                  <p className="mt-0.5 text-muted-foreground">
+                  <p className="mt-0.5 text-slate-500">
                     Title, description, recipients, shortcuts, links, and
                     attachments cannot be changed for a posted post. You can
                     still update staff-in-charge and enquiry email.
@@ -1899,16 +2003,16 @@ function NewAnnouncementPage() {
                   .filter(Boolean)
                   .join(' and ')
                 return (
-                  <div className="flex items-start gap-3 rounded-xl border border-amber-6 bg-amber-3 px-4 py-3 text-xs">
-                    <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-11" />
+                  <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs">
+                    <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600" />
                     <div className="flex-1">
-                      <p className="font-semibold text-amber-12">
+                      <p className="font-semibold text-amber-900">
                         {mediaLabel} from this draft{' '}
                         {minDays === 0
                           ? 'have expired'
                           : `expire${minDays === 1 ? 's' : ''} in ${minDays} day${minDays > 1 ? 's' : ''}`}
                       </p>
-                      <p className="mt-0.5 text-amber-11">
+                      <p className="mt-0.5 text-amber-700">
                         Files and photos are retained for 30 days from upload.
                         Re-upload them before posting to avoid losing them.
                       </p>
@@ -1916,7 +2020,7 @@ function NewAnnouncementPage() {
                     <button
                       type="button"
                       onClick={() => setFileBannerDismissed(true)}
-                      className="shrink-0 rounded p-0.5 text-amber-11 hover:bg-amber-4 hover:text-amber-12"
+                      className="shrink-0 rounded p-0.5 text-amber-500 hover:bg-amber-100 hover:text-amber-700"
                       aria-label="Dismiss"
                     >
                       <X className="h-3.5 w-3.5" />
@@ -1926,7 +2030,7 @@ function NewAnnouncementPage() {
               })()}
 
             {/* RECIPIENTS — first section */}
-            <section className="rounded-xl border bg-card p-6">
+            <section className="rounded-xl border bg-white p-6">
               <h2 className="mb-5 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                 Recipients
               </h2>
@@ -1945,53 +2049,36 @@ function NewAnnouncementPage() {
                     Parents of the selected students will receive this post via
                     Parents Gateway.
                   </p>
-                  <StudentRecipientSelector
-                    value={recipients}
-                    onChange={setRecipients}
-                  />
+                  <div
+                    className={cn(
+                      errRecipients &&
+                        'rounded-lg ring-[3px] ring-destructive/20',
+                    )}
+                  >
+                    <StudentRecipientSelector
+                      value={recipients}
+                      onChange={setRecipients}
+                    />
+                  </div>
+                  {errRecipients && (
+                    <p className="text-xs text-destructive">
+                      Select at least one recipient.
+                    </p>
+                  )}
                 </div>
+
+                <Separator />
 
                 {/* Staff in charge */}
                 <div className="space-y-1.5">
                   <Label>Staff-in-charge</Label>
-                  <p className="text-xs text-muted-foreground">
-                    Editors can edit and delete the post. Viewers can only view
-                    read status.
-                  </p>
                   <StaffSelector
                     value={staffInCharge}
                     onChange={setStaffInCharge}
-                    renderChipExtra={(entity) => {
-                      const isEditor =
-                        (staffRoles[entity.id] ?? 'viewer') === 'editor'
-                      return (
-                        <button
-                          type="button"
-                          title={
-                            isEditor ? 'Switch to Viewer' : 'Switch to Editor'
-                          }
-                          onMouseDown={(e) => e.preventDefault()}
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            setStaffRoles((prev) => ({
-                              ...prev,
-                              [entity.id]: isEditor ? 'viewer' : 'editor',
-                            }))
-                          }}
-                          className={cn(
-                            'flex items-center gap-0.5 rounded border px-1.5 py-0.5 text-[10px] font-semibold transition-colors',
-                            isEditor
-                              ? 'border-twblue-6 bg-twblue-3 text-twblue-11 hover:bg-twblue-4'
-                              : 'border-border bg-card text-muted-foreground hover:bg-muted',
-                          )}
-                        >
-                          {isEditor ? 'Editor' : 'Viewer'}
-                          <ChevronDown className="h-2.5 w-2.5 opacity-50" />
-                        </button>
-                      )
-                    }}
                   />
                 </div>
+
+                <Separator />
 
                 {/* Enquiry email */}
                 <div className="space-y-1.5">
@@ -2002,16 +2089,28 @@ function NewAnnouncementPage() {
                     Select the preferred email address to receive enquiries from
                     parents.
                   </p>
-                  <EnquiryEmailSelector
-                    value={enquiryEmail}
-                    onChange={setEnquiryEmail}
-                  />
+                  <div
+                    className={cn(
+                      errEnquiryEmail &&
+                        'rounded-lg ring-[3px] ring-destructive/20',
+                    )}
+                  >
+                    <EnquiryEmailSelector
+                      value={enquiryEmail}
+                      onChange={setEnquiryEmail}
+                    />
+                  </div>
+                  {errEnquiryEmail && (
+                    <p className="text-xs text-destructive">
+                      Select an enquiry email.
+                    </p>
+                  )}
                 </div>
               </div>
             </section>
 
             {/* CONTENT */}
-            <section className="rounded-xl border bg-card p-6">
+            <section className="rounded-xl border bg-white p-6">
               <h2 className="mb-5 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                 Content
               </h2>
@@ -2046,7 +2145,13 @@ function NewAnnouncementPage() {
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     maxLength={120}
+                    aria-invalid={errTitle}
                   />
+                  {errTitle && (
+                    <p className="text-xs text-destructive">
+                      Title is required.
+                    </p>
+                  )}
                 </div>
 
                 {/* Description — Tiptap rich text */}
@@ -2066,27 +2171,197 @@ function NewAnnouncementPage() {
                       {descriptionCharCount}/2000
                     </span>
                   </div>
-                  <RichTextArea
-                    value={description}
-                    onChange={setDescription}
-                    placeholder="Write your post here. Use the toolbar to format text and insert inline links."
-                    minHeight="160px"
-                    toolbar="simple"
-                  />
+                  <div
+                    className={cn(
+                      errDescription &&
+                        'rounded-lg ring-[3px] ring-destructive/20',
+                    )}
+                  >
+                    <RichTextArea
+                      value={description}
+                      onChange={setDescription}
+                      placeholder="Write your post here. Use the toolbar to format text and insert inline links."
+                      minHeight="160px"
+                      toolbar="simple"
+                    />
+                  </div>
+                  {errDescription && (
+                    <p className="text-xs text-destructive">
+                      Post details are required.
+                    </p>
+                  )}
                 </div>
               </div>
+
+              {/* Event Details — inline, only for acknowledge + yes/no */}
+              {responseType !== 'view-only' && (
+                <div className="mt-5 border-t pt-5 space-y-4">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Event Details
+                  </p>
+                  <div className="space-y-3">
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-semibold text-slate-700">
+                          Event start
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          Optional
+                        </span>
+                      </div>
+                      <div className="flex gap-2">
+                        <input
+                          type="date"
+                          value={eventStart}
+                          onChange={(e) => {
+                            const newStart = e.target.value
+                            setEventStart(newStart)
+                            if (eventEnd && newStart > eventEnd) {
+                              setEventEnd('')
+                              setEventEndTime('')
+                              setEndTimeError(false)
+                            } else if (
+                              eventEnd &&
+                              newStart === eventEnd &&
+                              eventStartTime &&
+                              eventEndTime &&
+                              eventStartTime >= eventEndTime
+                            ) {
+                              setEventEndTime(nextSlot(eventStartTime))
+                              setEndTimeError(false)
+                            }
+                          }}
+                          className="flex-1 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
+                        />
+                        <Select
+                          value={eventStartTime}
+                          onValueChange={(newTime) => {
+                            setEventStartTime(newTime)
+                            if (
+                              eventEnd &&
+                              eventStart === eventEnd &&
+                              eventEndTime &&
+                              newTime >= eventEndTime
+                            ) {
+                              setEventEndTime(nextSlot(newTime))
+                              setEndTimeError(false)
+                            }
+                          }}
+                        >
+                          <SelectTrigger size="sm" className="w-36">
+                            <SelectValue placeholder="Time" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {SCHEDULE_SLOTS.map((slot) => (
+                              <SelectItem key={slot.value} value={slot.value}>
+                                {slot.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-semibold text-slate-700">
+                          Event end
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          Optional
+                        </span>
+                      </div>
+                      <div className="flex gap-2">
+                        <input
+                          type="date"
+                          value={eventEnd}
+                          onChange={(e) => {
+                            setEventEnd(e.target.value)
+                            setEndTimeError(false)
+                          }}
+                          className="flex-1 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
+                        />
+                        <Select
+                          value={eventEndTime}
+                          onValueChange={(newTime) => {
+                            setEventEndTime(newTime)
+                            setEndTimeError(
+                              hasTimeConflict(
+                                eventStart,
+                                eventStartTime,
+                                eventEnd,
+                                newTime,
+                              ),
+                            )
+                          }}
+                        >
+                          <SelectTrigger
+                            size="sm"
+                            className={cn(
+                              'w-36',
+                              (endTimeError ||
+                                hasTimeConflict(
+                                  eventStart,
+                                  eventStartTime,
+                                  eventEnd,
+                                  eventEndTime,
+                                )) &&
+                                'border-destructive ring-[3px] ring-destructive/20',
+                            )}
+                          >
+                            <SelectValue placeholder="Time" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {SCHEDULE_SLOTS.map((slot) => (
+                              <SelectItem key={slot.value} value={slot.value}>
+                                {slot.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      {(endTimeError ||
+                        hasTimeConflict(
+                          eventStart,
+                          eventStartTime,
+                          eventEnd,
+                          eventEndTime,
+                        )) && (
+                        <p role="alert" className="text-xs text-destructive">
+                          End time must be after the start.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold text-slate-700">
+                        Venue
+                      </span>
+                      <span className="text-xs tabular-nums text-muted-foreground">
+                        Optional · {venue.length}/100
+                      </span>
+                    </div>
+                    <Input
+                      placeholder="e.g. School hall, Pasir Ris Park"
+                      value={venue}
+                      onChange={(e) => setVenue(e.target.value)}
+                      maxLength={100}
+                    />
+                  </div>
+                </div>
+              )}
 
               {/* Zone B — optional extras (locked for posted posts) */}
               <div
                 className={cn(
-                  'mt-5 border-t pt-5 space-y-5',
+                  'mt-5 border-t pt-5 space-y-4',
                   isEditingPosted && 'pointer-events-none opacity-50',
                 )}
               >
                 {/* Shortcuts */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-foreground">
+                    <span className="text-xs font-semibold text-slate-700">
                       Shortcuts
                     </span>
                     <span className="text-xs text-muted-foreground">
@@ -2099,10 +2374,12 @@ function NewAnnouncementPage() {
                   />
                 </div>
 
+                <Separator />
+
                 {/* Links */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-foreground">
+                    <span className="text-xs font-semibold text-slate-700">
                       Links
                     </span>
                     <span className="text-xs text-muted-foreground">
@@ -2114,10 +2391,10 @@ function NewAnnouncementPage() {
                     <div className="space-y-1.5">
                       {/* Column labels */}
                       <div className="flex items-center gap-1.5">
-                        <span className="flex-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                        <span className="flex-1 text-[10px] font-medium uppercase tracking-wide text-slate-400">
                           URL
                         </span>
-                        <span className="w-48 shrink-0 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                        <span className="w-48 shrink-0 text-[10px] font-medium uppercase tracking-wide text-slate-400">
                           Description{' '}
                           <span className="text-destructive">*</span>
                         </span>
@@ -2154,7 +2431,7 @@ function NewAnnouncementPage() {
                               type="button"
                               aria-label="Remove link"
                               onClick={() => removeWebsiteLink(i)}
-                              className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+                              className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-slate-400 hover:bg-slate-100 hover:text-slate-600"
                             >
                               <X className="h-3.5 w-3.5" />
                             </button>
@@ -2168,7 +2445,7 @@ function NewAnnouncementPage() {
                     <button
                       type="button"
                       onClick={addWebsiteLink}
-                      className="flex items-center gap-2 rounded-lg border border-dashed border-border px-3 py-2 text-xs text-muted-foreground transition-colors hover:border-input hover:bg-muted hover:text-foreground"
+                      className="flex items-center gap-2 rounded-lg border border-dashed border-slate-300 px-3 py-2 text-xs text-muted-foreground transition-colors hover:border-slate-400 hover:bg-slate-50 hover:text-foreground"
                     >
                       <Plus className="h-3.5 w-3.5" />
                       {websiteLinks.length > 0
@@ -2178,14 +2455,16 @@ function NewAnnouncementPage() {
                   )}
                 </div>
 
+                <Separator />
+
                 {/* Files */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-foreground">
+                    <span className="text-xs font-semibold text-slate-700">
                       Files
                     </span>
                     <span className="text-xs text-muted-foreground">
-                      {uploadedFiles.length}/3 · Max 5 MB each
+                      Optional · {uploadedFiles.length}/3 · Max 5 MB each
                     </span>
                   </div>
 
@@ -2194,11 +2473,11 @@ function NewAnnouncementPage() {
                       {uploadedFiles.map((file, i) => (
                         <div
                           key={i}
-                          className="flex items-center gap-2.5 rounded-lg border border-border bg-muted px-3 py-2"
+                          className="flex items-center gap-2.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2"
                         >
-                          <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                          <FileText className="h-4 w-4 shrink-0 text-slate-400" />
                           <div className="min-w-0 flex-1">
-                            <p className="truncate text-xs font-medium text-foreground">
+                            <p className="truncate text-xs font-medium text-slate-700">
                               {file.name}
                             </p>
                             <p className="text-[10px] text-muted-foreground">
@@ -2209,7 +2488,7 @@ function NewAnnouncementPage() {
                             type="button"
                             aria-label={`Remove ${file.name}`}
                             onClick={() => removeFile(i)}
-                            className="shrink-0 rounded p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                            className="shrink-0 rounded p-0.5 text-slate-400 transition-colors hover:bg-slate-200 hover:text-slate-600"
                           >
                             <X className="h-3 w-3" />
                           </button>
@@ -2224,11 +2503,11 @@ function NewAnnouncementPage() {
                       {draftFilesMeta.map((meta, i) => (
                         <div
                           key={`draft-file-${i}`}
-                          className="flex items-center gap-2.5 rounded-lg border border-border bg-muted px-3 py-2"
+                          className="flex items-center gap-2.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2"
                         >
-                          <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                          <FileText className="h-4 w-4 shrink-0 text-slate-400" />
                           <div className="min-w-0 flex-1">
-                            <p className="truncate text-xs font-medium text-foreground">
+                            <p className="truncate text-xs font-medium text-slate-700">
                               {meta.name}
                             </p>
                             <p className="text-[10px] text-muted-foreground">
@@ -2243,7 +2522,7 @@ function NewAnnouncementPage() {
                                 prev.filter((_, j) => j !== i),
                               )
                             }
-                            className="shrink-0 rounded p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                            className="shrink-0 rounded p-0.5 text-slate-400 transition-colors hover:bg-slate-200 hover:text-slate-600"
                           >
                             <X className="h-3 w-3" />
                           </button>
@@ -2269,7 +2548,7 @@ function NewAnnouncementPage() {
                         'flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed px-4 py-4 text-center transition-colors',
                         fileDragOver
                           ? 'border-primary bg-primary/5 text-primary'
-                          : 'border-border text-muted-foreground hover:border-input hover:bg-muted hover:text-foreground',
+                          : 'border-slate-300 text-muted-foreground hover:border-slate-400 hover:bg-slate-50 hover:text-foreground',
                       )}
                     >
                       <Paperclip className="h-4 w-4" />
@@ -2292,14 +2571,16 @@ function NewAnnouncementPage() {
                   />
                 </div>
 
+                <Separator />
+
                 {/* Photos */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-foreground">
+                    <span className="text-xs font-semibold text-slate-700">
                       Photos
                     </span>
                     <span className="text-xs text-muted-foreground">
-                      {uploadedPhotos.length}/12 · Max 5 MB each
+                      Optional · {uploadedPhotos.length}/12 · Max 5 MB each
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -2338,14 +2619,14 @@ function NewAnnouncementPage() {
                             'relative cursor-grab overflow-hidden rounded-md border transition-all active:cursor-grabbing',
                             coverPhotoIndices.has(i)
                               ? 'border-primary ring-2 ring-primary ring-offset-1'
-                              : 'border-border',
+                              : 'border-slate-200',
                             dragOverIndex === i && dragSourceIndex.current !== i
                               ? 'scale-95 ring-2 ring-primary/50 ring-offset-1'
                               : '',
                           )}
                         >
                           {/* Top toolbar — cover toggle + delete */}
-                          <div className="absolute inset-x-0 top-0 z-10 flex items-center gap-0.5 bg-[oklch(0_0_0/0.75)] px-1.5 py-1">
+                          <div className="absolute inset-x-0 top-0 z-10 flex items-center gap-0.5 bg-slate-900/75 px-1.5 py-1">
                             <button
                               type="button"
                               onClick={() => toggleCoverPhoto(i)}
@@ -2381,7 +2662,7 @@ function NewAnnouncementPage() {
                             draggable={false}
                           />
 
-                          <div className="flex items-center gap-1 bg-card px-1.5 py-0.5">
+                          <div className="flex items-center gap-1 bg-white px-1.5 py-0.5">
                             {coverPhotoIndices.has(i) && (
                               <span className="shrink-0 rounded bg-primary/10 px-1 py-px text-[8px] font-semibold uppercase tracking-wide text-primary">
                                 Cover
@@ -2402,7 +2683,7 @@ function NewAnnouncementPage() {
                       {draftPhotosMeta.map((meta, i) => (
                         <div
                           key={`draft-photo-${i}`}
-                          className="relative overflow-hidden rounded-md border border-border"
+                          className="relative overflow-hidden rounded-md border border-slate-200"
                         >
                           {meta.thumbnailUrl ? (
                             <img
@@ -2412,9 +2693,9 @@ function NewAnnouncementPage() {
                               draggable={false}
                             />
                           ) : (
-                            <div className="flex aspect-square w-full flex-col items-center justify-center gap-1 bg-muted p-2">
-                              <ImagePlus className="h-5 w-5 text-muted-foreground" />
-                              <p className="line-clamp-2 text-center text-[9px] leading-tight text-muted-foreground">
+                            <div className="flex aspect-square w-full flex-col items-center justify-center gap-1 bg-slate-100 p-2">
+                              <ImagePlus className="h-5 w-5 text-slate-400" />
+                              <p className="line-clamp-2 text-center text-[9px] leading-tight text-slate-500">
                                 {meta.name}
                               </p>
                             </div>
@@ -2427,7 +2708,7 @@ function NewAnnouncementPage() {
                                 prev.filter((_, j) => j !== i),
                               )
                             }
-                            className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[oklch(0_0_0/0.5)] text-white hover:bg-[oklch(0_0_0/0.7)]"
+                            className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-slate-900/50 text-white hover:bg-slate-900/70"
                           >
                             <X className="h-2.5 w-2.5" />
                           </button>
@@ -2453,7 +2734,7 @@ function NewAnnouncementPage() {
                         'flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed px-4 py-4 text-center transition-colors',
                         photoDragOver
                           ? 'border-primary bg-primary/5 text-primary'
-                          : 'border-border text-muted-foreground hover:border-input hover:bg-muted hover:text-foreground',
+                          : 'border-slate-300 text-muted-foreground hover:border-slate-400 hover:bg-slate-50 hover:text-foreground',
                       )}
                     >
                       <ImagePlus className="h-4 w-4" />
@@ -2480,7 +2761,7 @@ function NewAnnouncementPage() {
 
             {/* RESPONSE TYPE */}
             {showResponseSection && (
-              <section className="rounded-xl border bg-card p-6">
+              <section className="rounded-xl border bg-white p-6">
                 <h2 className="mb-1 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                   Response Type
                 </h2>
@@ -2512,15 +2793,15 @@ function NewAnnouncementPage() {
                         'flex flex-col gap-3 rounded-xl border-2 p-4 text-left transition-all',
                         responseType === opt.value
                           ? 'border-primary bg-primary/[0.04] ring-1 ring-primary/20'
-                          : 'border-border bg-card hover:border-input hover:bg-muted',
+                          : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50',
                       )}
                     >
                       <div
                         className={cn(
                           'flex h-[100px] w-full items-center justify-center overflow-hidden rounded-lg border',
                           responseType === opt.value
-                            ? 'border-primary/15 bg-card'
-                            : 'border-border bg-muted/50',
+                            ? 'border-primary/15 bg-white'
+                            : 'border-slate-100 bg-slate-50/50',
                         )}
                       >
                         <div className="w-full">{opt.mockup}</div>
@@ -2535,7 +2816,7 @@ function NewAnnouncementPage() {
                           </p>
                         </div>
                         {responseType === opt.value && (
-                          <div className="mt-0.5 shrink-0 rounded-full bg-primary p-0.5 text-primary-foreground">
+                          <div className="mt-0.5 shrink-0 rounded-full bg-primary p-0.5 text-white">
                             <Check className="h-3 w-3" />
                           </div>
                         )}
@@ -2545,9 +2826,9 @@ function NewAnnouncementPage() {
                 </div>
 
                 {/* Attach a Form — coming soon */}
-                <div className="mt-4 flex cursor-not-allowed items-center gap-3 rounded-lg border border-dashed border-border px-4 py-3 opacity-50">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted">
-                    <FileText className="h-4 w-4 text-muted-foreground" />
+                <div className="mt-4 flex cursor-not-allowed items-center gap-3 rounded-lg border border-dashed border-slate-200 px-4 py-3 opacity-50">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100">
+                    <FileText className="h-4 w-4 text-slate-400" />
                   </div>
                   <div className="flex-1">
                     <p className="text-sm font-medium text-foreground">
@@ -2571,70 +2852,9 @@ function NewAnnouncementPage() {
               />
             )}
 
-            {/* EVENT DETAILS — acknowledge + yes/no */}
-            {responseType !== 'view-only' && (
-              <section className="rounded-xl border bg-card p-6">
-                <h2 className="mb-5 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                  Event Details
-                </h2>
-                <div className="space-y-4">
-                  <div className="space-y-3">
-                    <div className="space-y-1.5">
-                      <Label>Event start (optional)</Label>
-                      <div className="flex gap-2">
-                        <input
-                          type="date"
-                          value={eventStart}
-                          onChange={(e) => setEventStart(e.target.value)}
-                          className="flex-1 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
-                        />
-                        <input
-                          type="time"
-                          value={eventStartTime}
-                          onChange={(e) => setEventStartTime(e.target.value)}
-                          className="w-32 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label>Event end (optional)</Label>
-                      <div className="flex gap-2">
-                        <input
-                          type="date"
-                          value={eventEnd}
-                          onChange={(e) => setEventEnd(e.target.value)}
-                          className="flex-1 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
-                        />
-                        <input
-                          type="time"
-                          value={eventEndTime}
-                          onChange={(e) => setEventEndTime(e.target.value)}
-                          className="w-32 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="space-y-1.5">
-                    <div className="flex items-baseline justify-between">
-                      <Label>Venue (optional)</Label>
-                      <span className="text-xs tabular-nums text-muted-foreground">
-                        {venue.length}/100
-                      </span>
-                    </div>
-                    <Input
-                      placeholder="e.g. School hall, Pasir Ris Park"
-                      value={venue}
-                      onChange={(e) => setVenue(e.target.value)}
-                      maxLength={100}
-                    />
-                  </div>
-                </div>
-              </section>
-            )}
-
             {/* SETTINGS (due date + reminders) — acknowledge + yes/no */}
             {responseType !== 'view-only' && (
-              <section className="rounded-xl border bg-card p-6">
+              <section className="rounded-xl border bg-white p-6">
                 <h2 className="mb-5 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                   Settings
                 </h2>
@@ -2650,8 +2870,18 @@ function NewAnnouncementPage() {
                       value={dueDate}
                       min={new Date().toISOString().split('T')[0]}
                       onChange={(e) => setDueDate(e.target.value)}
-                      className="rounded-md border border-input bg-background px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
+                      className={cn(
+                        'rounded-md border bg-background px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring',
+                        errDueDate
+                          ? 'border-destructive ring-[3px] ring-destructive/20'
+                          : 'border-input',
+                      )}
                     />
+                    {errDueDate && (
+                      <p className="text-xs text-destructive">
+                        Due date is required.
+                      </p>
+                    )}
                     {dueDate && (
                       <p className="text-xs text-muted-foreground">
                         Default reminder will be sent on:{' '}

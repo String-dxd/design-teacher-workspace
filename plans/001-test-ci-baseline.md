@@ -58,7 +58,7 @@ blocking as later plans fix the errors.
 - There is **no** `vitest.config.ts`. Running `bun run test` today loads the
   app's `vite.config.ts` (which includes the `nitro()` and `tanstackStart()`
   plugins), prints `close timed out after 10000ms ... something prevents Vite
-  server from exiting`, and exits 1. The vitest config you create must NOT
+server from exiting`, and exits 1. The vitest config you create must NOT
   import or reuse `vite.config.ts`.
 
 - `eslint.config.js` is currently:
@@ -102,13 +102,13 @@ blocking as later plans fix the errors.
 
 ## Commands you will need
 
-| Purpose   | Command              | Expected on success |
-|-----------|----------------------|---------------------|
-| Install   | `bun install`        | exit 0 |
-| Tests     | `bun run test`       | exit 0 after this plan (currently exits 1) |
-| Build     | `bun run build`      | exit 0 (verified working at planning time, ~10s) |
-| Typecheck | `npx tsc --noEmit`   | currently 139 errors — expected to KEEP failing after this plan |
-| Lint      | `npx eslint src/`    | currently 71 errors — expected to KEEP failing after this plan |
+| Purpose   | Command            | Expected on success                                             |
+| --------- | ------------------ | --------------------------------------------------------------- |
+| Install   | `bun install`      | exit 0                                                          |
+| Tests     | `bun run test`     | exit 0 after this plan (currently exits 1)                      |
+| Build     | `bun run build`    | exit 0 (verified working at planning time, ~10s)                |
+| Typecheck | `npx tsc --noEmit` | currently 139 errors — expected to KEEP failing after this plan |
+| Lint      | `npx eslint src/`  | currently 71 errors — expected to KEEP failing after this plan  |
 
 ## Scope
 
@@ -135,7 +135,7 @@ blocking as later plans fix the errors.
 
 - Branch: `advisor/001-test-ci-baseline`
 - Conventional commits, one per step (e.g. `chore(test): add vitest config and
-  first unit tests`, `chore(ci): add GitHub Actions workflow`).
+first unit tests`, `chore(ci): add GitHub Actions workflow`).
 - Do NOT push or open a PR unless the operator instructed it.
 
 ## Steps
@@ -210,7 +210,12 @@ after (these are the repo's first tests); use standard vitest style:
 
 ```ts
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { clearDraft, daysRemaining, loadDraft, saveDraft } from './draft-storage'
+import {
+  clearDraft,
+  daysRemaining,
+  loadDraft,
+  saveDraft,
+} from './draft-storage'
 ```
 
 Cases to cover (jsdom provides a working `localStorage`):

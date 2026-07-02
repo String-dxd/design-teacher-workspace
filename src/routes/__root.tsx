@@ -15,13 +15,47 @@ import { AppHeader } from '@/components/app-header'
 import { AppSidebar } from '@/components/app-sidebar'
 import { WelcomeModal } from '@/components/welcome-modal'
 import { ErrorBoundary } from '@/components/ui/error-boundary'
-import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
+import {
+  SidebarInset,
+  SidebarProvider,
+  useSidebar,
+} from '@/components/ui/sidebar'
 import { Toaster } from '@/components/ui/sonner'
 import { FeatureFlagProvider } from '@/lib/feature-flags'
 import { AuthProvider } from '@/lib/auth'
 import { BreadcrumbProvider } from '@/hooks/use-breadcrumbs'
 import { HeyTaliaPanel } from '@/components/heytalia/heytalia-panel'
 import { HeyTaliaProvider } from '@/components/heytalia/heytalia-context'
+
+const AUTO_COLLAPSE_ROUTES = [
+  '/announcements',
+  '/meetings',
+  '/groups',
+  '/reports',
+  '/calendar',
+]
+
+function SidebarAutoCollapse() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname })
+  const { collapseSidebar } = useSidebar()
+  const prevPathnameRef = React.useRef<string | null>(null)
+
+  React.useEffect(() => {
+    const prev = prevPathnameRef.current
+    prevPathnameRef.current = pathname
+
+    const inSection = AUTO_COLLAPSE_ROUTES.some((r) => pathname.startsWith(r))
+    const wasInSection =
+      prev !== null && AUTO_COLLAPSE_ROUTES.some((r) => prev.startsWith(r))
+
+    // Only collapse when crossing into a section from outside
+    if (inSection && !wasInSection) {
+      collapseSidebar()
+    }
+  }, [pathname, collapseSidebar])
+
+  return null
+}
 
 export const Route = createRootRoute({
   notFoundComponent: NotFoundPage,
@@ -139,6 +173,7 @@ function RootComponent() {
             <BreadcrumbProvider>
               <HeyTaliaProvider>
                 <SidebarProvider>
+                  <SidebarAutoCollapse />
                   <AppSidebar />
                   <SidebarInset className="h-screen overflow-hidden">
                     <div

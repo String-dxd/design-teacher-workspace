@@ -2,30 +2,35 @@ import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 import {
+  ArrowDown,
+  ArrowUp,
+  Check,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Copy,
   Edit2,
-  Filter,
   Info,
   MoreHorizontal,
   Plus,
-  RotateCcw,
   Search,
   Share2,
   Trash2,
   Users,
 } from 'lucide-react'
 
-import type {
-  GroupTypeFilterOption,
-  StructuredGroup,
-  StudentGroup,
-} from '@/types/student-group'
-import { getStructuredTypeLabel } from '@/types/student-group'
+import type { StructuredGroup, StudentGroup } from '@/types/student-group'
+import { usePagination } from '@/hooks/use-pagination'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
-import { MOCK_GROUPS, MOCK_SHARED_GROUPS } from '@/data/mock-groups'
+import { MOCK_GROUPS } from '@/data/mock-groups'
 import { TEACHER_STRUCTURED_GROUPS } from '@/data/mock-structured-groups'
 import { cn, stripSalutation } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -36,11 +41,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
 import {
   Dialog,
   DialogContent,
@@ -88,6 +88,89 @@ function formatRelativeDate(dateStr: string): string {
   return `${Math.floor(diffDays / 365)}y ago`
 }
 
+// ─── Sortable column header ───────────────────────────────────────────────────
+
+type SortState = { column: string; direction: 'asc' | 'desc' } | null
+
+function SortableHeader({
+  label,
+  column,
+  sort,
+  onSort,
+}: {
+  label: string
+  column: string
+  sort: SortState
+  onSort: (col: string, dir: 'asc' | 'desc') => void
+}) {
+  const [open, setOpen] = useState(false)
+  const isSortedBy = sort?.column === column
+  const sortDir = isSortedBy ? sort.direction : null
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger
+        render={
+          <button
+            type="button"
+            className={cn(
+              '-ml-2 flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 transition-colors whitespace-nowrap',
+              'hover:bg-accent hover:text-accent-foreground',
+              isSortedBy && 'text-primary',
+            )}
+          >
+            <span>{label}</span>
+            <span className="shrink-0">
+              {sortDir === 'asc' ? (
+                <ArrowUp className="h-3 w-3" />
+              ) : sortDir === 'desc' ? (
+                <ArrowDown className="h-3 w-3" />
+              ) : (
+                <ChevronDown className="h-3 w-3" />
+              )}
+            </span>
+          </button>
+        }
+      />
+      <PopoverContent align="start" className="w-52 gap-1 p-3">
+        <button
+          type="button"
+          onClick={() => {
+            onSort(column, 'asc')
+            setOpen(false)
+          }}
+          className={cn(
+            'flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-[var(--slate-5)]',
+            isSortedBy && sortDir === 'asc' && 'bg-[var(--slate-5)]',
+          )}
+        >
+          <ArrowUp className="h-4 w-4 text-[var(--slate-11)]" />
+          Sort ascending
+          {isSortedBy && sortDir === 'asc' && (
+            <Check className="ml-auto h-4 w-4 text-[var(--slate-11)]" />
+          )}
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            onSort(column, 'desc')
+            setOpen(false)
+          }}
+          className={cn(
+            'flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-[var(--slate-5)]',
+            isSortedBy && sortDir === 'desc' && 'bg-[var(--slate-5)]',
+          )}
+        >
+          <ArrowDown className="h-4 w-4 text-[var(--slate-11)]" />
+          Sort descending
+          {isSortedBy && sortDir === 'desc' && (
+            <Check className="ml-auto h-4 w-4 text-[var(--slate-11)]" />
+          )}
+        </button>
+      </PopoverContent>
+    </Popover>
+  )
+}
+
 // ─── SegmentedTab (matches Posts page) ────────────────────────────────────────
 
 function SegmentedTab({
@@ -111,168 +194,6 @@ function SegmentedTab({
     >
       {children}
     </button>
-  )
-}
-
-// ─── Type filter popover (Assigned Groups tab) ─────────────────────────────────
-
-const STRUCTURED_FILTER_OPTIONS: Array<{
-  value: Exclude<GroupTypeFilterOption, 'regular'>
-  label: string
-}> = [
-  { value: 'class', label: 'Class' },
-  { value: 'level', label: 'Level' },
-  { value: 'cca', label: 'CCA' },
-  { value: 'teaching', label: 'Teaching Group' },
-]
-
-interface TypeFilterPopoverProps {
-  value: Set<Exclude<GroupTypeFilterOption, 'regular'>>
-  onChange: (v: Set<Exclude<GroupTypeFilterOption, 'regular'>>) => void
-}
-
-function TypeFilterPopover({ value, onChange }: TypeFilterPopoverProps) {
-  function toggle(opt: Exclude<GroupTypeFilterOption, 'regular'>) {
-    const next = new Set(value)
-    if (next.has(opt)) next.delete(opt)
-    else next.add(opt)
-    onChange(next)
-  }
-
-  return (
-    <Popover>
-      <PopoverTrigger
-        render={
-          <Button variant="outline" size="sm" className="gap-2">
-            <Filter className="h-4 w-4" />
-            Filter
-            {value.size > 0 && (
-              <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
-                {value.size}
-              </span>
-            )}
-          </Button>
-        }
-      />
-      <PopoverContent align="start" className="w-[360px] p-0">
-        <div className="px-5 pb-3 pt-4">
-          <h3 className="text-sm font-semibold">Show records</h3>
-        </div>
-        <div className="px-5 pb-4">
-          <div className="flex items-center gap-3">
-            <span className="w-16 shrink-0 text-sm font-medium">Type</span>
-            <div className="flex flex-1 flex-wrap gap-1.5">
-              {STRUCTURED_FILTER_OPTIONS.map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => toggle(opt.value)}
-                  className={cn(
-                    'rounded-md border px-2.5 py-1 text-xs font-medium transition-colors',
-                    value.has(opt.value)
-                      ? 'border-primary bg-primary/10 text-primary'
-                      : 'border-border bg-card text-foreground hover:border-primary hover:text-primary',
-                  )}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center justify-end border-t px-5 py-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onChange(new Set())}
-            disabled={value.size === 0}
-            className="gap-2 text-sm font-medium"
-          >
-            <RotateCcw className="h-4 w-4" />
-            Reset
-          </Button>
-        </div>
-      </PopoverContent>
-    </Popover>
-  )
-}
-
-// ─── Ownership filter popover (My Groups tab) ──────────────────────────────────
-
-const OWNERSHIP_OPTIONS = [
-  { value: 'mine' as const, label: 'Created by me' },
-  { value: 'shared' as const, label: 'Shared with me' },
-]
-
-function OwnershipFilterPopover({
-  value,
-  onChange,
-}: {
-  value: Set<'mine' | 'shared'>
-  onChange: (v: Set<'mine' | 'shared'>) => void
-}) {
-  function toggle(opt: 'mine' | 'shared') {
-    const next = new Set(value)
-    if (next.has(opt)) next.delete(opt)
-    else next.add(opt)
-    onChange(next)
-  }
-
-  return (
-    <Popover>
-      <PopoverTrigger
-        render={
-          <Button variant="outline" size="sm" className="gap-2">
-            <Filter className="h-4 w-4" />
-            Filter
-            {value.size > 0 && (
-              <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
-                {value.size}
-              </span>
-            )}
-          </Button>
-        }
-      />
-      <PopoverContent align="start" className="w-[320px] p-0">
-        <div className="px-5 pb-3 pt-4">
-          <h3 className="text-sm font-semibold">Show records</h3>
-        </div>
-        <div className="px-5 pb-4">
-          <div className="flex items-center gap-3">
-            <span className="w-16 shrink-0 text-sm font-medium">Owner</span>
-            <div className="flex flex-1 flex-wrap gap-1.5">
-              {OWNERSHIP_OPTIONS.map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => toggle(opt.value)}
-                  className={cn(
-                    'rounded-md border px-2.5 py-1 text-xs font-medium transition-colors',
-                    value.has(opt.value)
-                      ? 'border-primary bg-primary/10 text-primary'
-                      : 'border-border bg-card text-foreground hover:border-primary hover:text-primary',
-                  )}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center justify-end border-t px-5 py-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onChange(new Set())}
-            disabled={value.size === 0}
-            className="gap-2 text-sm font-medium"
-          >
-            <RotateCcw className="h-4 w-4" />
-            Reset
-          </Button>
-        </div>
-      </PopoverContent>
-    </Popover>
   )
 }
 
@@ -305,82 +226,116 @@ function ClassPills({
 
 // ─── Main component ────────────────────────────────────────────────────────────
 
-type GroupTab = 'my-groups' | 'assigned'
+type GroupTab = 'my-groups' | 'shared' | 'assigned'
 
 function GroupsIndex() {
   useSetBreadcrumbs([{ label: 'Student Groups', href: '/groups' }])
   const navigate = useNavigate()
 
   const [tab, setTab] = useState<GroupTab>('my-groups')
+  const [sort, setSort] = useState<SortState>(null)
   const [groups, setGroups] = useState<Array<StudentGroup>>(MOCK_GROUPS)
   const [mySearch, setMySearch] = useState('')
-  const [ownershipFilter, setOwnershipFilter] = useState<
-    Set<'mine' | 'shared'>
-  >(new Set())
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [deleteMode, setDeleteMode] = useState<
     'delete-for-self' | 'delete-for-everyone'
   >('delete-for-self')
   const [assignedSearch, setAssignedSearch] = useState('')
-  const [typeFilter, setTypeFilter] = useState<
-    Set<Exclude<GroupTypeFilterOption, 'regular'>>
-  >(new Set())
-
+  const [sharedSearch, setSharedSearch] = useState('')
   const filteredCombinedGroups = useMemo(() => {
     const mine = groups
       .filter((g) => g.createdBy.email === CURRENT_USER_EMAIL)
       .map((g) => ({ ...g, _source: 'mine' as const }))
-    const shared = MOCK_SHARED_GROUPS.map((g) => ({
-      ...g,
-      _source: 'shared' as const,
-    }))
-    const combined =
-      ownershipFilter.size === 1 && ownershipFilter.has('mine')
-        ? mine
-        : ownershipFilter.size === 1 && ownershipFilter.has('shared')
-          ? shared
-          : [...mine, ...shared]
-    const sorted = [...combined].sort(
+    const sorted = [...mine].sort(
       (a, b) =>
         new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
     )
     if (!mySearch) return sorted
     const q = mySearch.toLowerCase()
     return sorted.filter((g) => g.name.toLowerCase().includes(q))
-  }, [groups, mySearch, ownershipFilter])
+  }, [groups, mySearch])
 
   const filteredAssignedGroups = useMemo(
     () =>
-      TEACHER_STRUCTURED_GROUPS.filter((g) => {
-        const matchesSearch =
+      TEACHER_STRUCTURED_GROUPS.filter(
+        (g) =>
           !assignedSearch ||
-          g.name.toLowerCase().includes(assignedSearch.toLowerCase())
-        const matchesType =
-          typeFilter.size === 0 || typeFilter.has(g.structuredType)
-        return matchesSearch && matchesType
-      }),
-    [assignedSearch, typeFilter],
+          g.name.toLowerCase().includes(assignedSearch.toLowerCase()),
+      ),
+    [assignedSearch],
   )
 
-  const filteredGroupIds = filteredCombinedGroups.map((g) => g.id)
+  const filteredSharedGroups = useMemo(() => {
+    const shared = groups.filter(
+      (g) =>
+        g.createdBy.email !== CURRENT_USER_EMAIL &&
+        g.sharedWith.some((s) => s.email === CURRENT_USER_EMAIL),
+    )
+    if (!sharedSearch) return shared
+    const q = sharedSearch.toLowerCase()
+    return shared.filter((g) => g.name.toLowerCase().includes(q))
+  }, [groups, sharedSearch])
+
+  const sortedGroups = useMemo(() => {
+    if (!sort) return filteredCombinedGroups
+    const dir = sort.direction === 'asc' ? 1 : -1
+    return [...filteredCombinedGroups].sort((a, b) => {
+      switch (sort.column) {
+        case 'name':
+          return a.name.localeCompare(b.name) * dir
+        case 'students':
+          return (a.members.length - b.members.length) * dir
+        case 'last-updated':
+          return (
+            (new Date(a.updatedAt).getTime() -
+              new Date(b.updatedAt).getTime()) *
+            dir
+          )
+        case 'created-by':
+          return a.createdBy.name.localeCompare(b.createdBy.name) * dir
+        default:
+          return 0
+      }
+    })
+  }, [filteredCombinedGroups, sort])
+
+  const GROUPS_PAGE_SIZE = 20
+  const myGroupsPagination = usePagination({
+    totalItems: sortedGroups.length,
+    pageSize: GROUPS_PAGE_SIZE,
+  })
+  const sharedGroupsPagination = usePagination({
+    totalItems: filteredSharedGroups.length,
+    pageSize: GROUPS_PAGE_SIZE,
+  })
+  const assignedGroupsPagination = usePagination({
+    totalItems: filteredAssignedGroups.length,
+    pageSize: GROUPS_PAGE_SIZE,
+  })
+
+  const pagedMyGroups = sortedGroups.slice(
+    myGroupsPagination.startIndex,
+    myGroupsPagination.startIndex + GROUPS_PAGE_SIZE,
+  )
+  const pagedSharedGroups = filteredSharedGroups.slice(
+    sharedGroupsPagination.startIndex,
+    sharedGroupsPagination.startIndex + GROUPS_PAGE_SIZE,
+  )
+  const pagedAssignedGroups = filteredAssignedGroups.slice(
+    assignedGroupsPagination.startIndex,
+    assignedGroupsPagination.startIndex + GROUPS_PAGE_SIZE,
+  )
+
+  const filteredGroupIds = sortedGroups.map((g) => g.id)
   const allSelectedInView =
     filteredGroupIds.length > 0 &&
     filteredGroupIds.every((id) => selectedIds.has(id))
   const someSelectedInView =
     filteredGroupIds.some((id) => selectedIds.has(id)) && !allSelectedInView
-  const selectedGroups = filteredCombinedGroups.filter((g) =>
-    selectedIds.has(g.id),
-  )
+  const selectedGroups = sortedGroups.filter((g) => selectedIds.has(g.id))
   // Two-option dialog when user is owner or editor of any selected group
-  const hasElevatedAccess = selectedGroups.some(
-    (g) =>
-      g._source === 'mine' ||
-      (
-        g as typeof g & { sharedWith?: Array<{ email: string; role: string }> }
-      ).sharedWith?.find((s) => s.email === CURRENT_USER_EMAIL)?.role ===
-        'editor',
-  )
+  const hasElevatedAccess = selectedGroups.length > 0
 
   function toggleSelect(id: string) {
     setSelectedIds((prev) => {
@@ -432,13 +387,10 @@ function GroupsIndex() {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-2xl font-semibold">Groups</h1>
-              <span className="rounded-full bg-twblue-3 px-2 py-0.5 text-xs font-medium text-twblue-11">
-                Concept
-              </span>
             </div>
             <p className="mt-1 text-sm text-muted-foreground">
-              Organise students into reusable groups for announcements, forms,
-              and reports.
+              Organise students into reusable groups for posts, forms, and
+              reports.
             </p>
           </div>
           {tab === 'my-groups' && (
@@ -450,67 +402,71 @@ function GroupsIndex() {
         </div>
       </div>
 
-      {/* ── Toolbar: segmented tabs + search + filter (matches Posts) ─────── */}
+      {/* ── Toolbar: segmented tabs + school-wide toggle + search + filter ── */}
       <div className="mt-4 space-y-4">
         <div className="flex items-center justify-between gap-4 px-6 pb-0">
-          <div className="flex shrink-0 rounded-full bg-muted p-1 gap-1">
-            <SegmentedTab
-              active={tab === 'my-groups'}
-              onClick={() => setTab('my-groups')}
-            >
-              My Groups
-            </SegmentedTab>
-            <SegmentedTab
-              active={tab === 'assigned'}
-              onClick={() => setTab('assigned')}
-            >
-              Assigned Groups
-            </SegmentedTab>
+          <div className="flex items-center gap-3">
+            <div className="flex shrink-0 rounded-full bg-muted p-1 gap-1">
+              <SegmentedTab
+                active={tab === 'my-groups'}
+                onClick={() => setTab('my-groups')}
+              >
+                Created by me
+              </SegmentedTab>
+              <SegmentedTab
+                active={tab === 'shared'}
+                onClick={() => setTab('shared')}
+              >
+                Shared with me
+              </SegmentedTab>
+              <SegmentedTab
+                active={tab === 'assigned'}
+                onClick={() => setTab('assigned')}
+              >
+                Assigned to me
+              </SegmentedTab>
+            </div>
           </div>
+
           <div className="flex items-center gap-2">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Search groups…"
-                value={tab === 'my-groups' ? mySearch : assignedSearch}
+                value={
+                  tab === 'my-groups'
+                    ? mySearch
+                    : tab === 'shared'
+                      ? sharedSearch
+                      : assignedSearch
+                }
                 onChange={(e) =>
                   tab === 'my-groups'
                     ? setMySearch(e.target.value)
-                    : setAssignedSearch(e.target.value)
+                    : tab === 'shared'
+                      ? setSharedSearch(e.target.value)
+                      : setAssignedSearch(e.target.value)
                 }
                 className="w-[240px] pl-9"
               />
             </div>
-            {tab === 'my-groups' && (
-              <OwnershipFilterPopover
-                value={ownershipFilter}
-                onChange={setOwnershipFilter}
-              />
-            )}
-            {tab === 'assigned' && (
-              <TypeFilterPopover value={typeFilter} onChange={setTypeFilter} />
-            )}
           </div>
         </div>
 
         {/* ── My Groups table ─────────────────────────────────────────────── */}
         {tab === 'my-groups' && (
           <div className="max-w-full overflow-x-auto bg-background">
-            {filteredCombinedGroups.length === 0 ? (
+            {sortedGroups.length === 0 ? (
               <div className="flex flex-col items-center py-16">
                 <EmptyState
-                  title={
-                    mySearch || ownershipFilter.size > 0
-                      ? 'No groups found'
-                      : 'No groups yet'
-                  }
+                  title={mySearch ? 'No groups found' : 'No groups yet'}
                   description={
-                    mySearch || ownershipFilter.size > 0
-                      ? 'Try adjusting your search or filter.'
+                    mySearch
+                      ? 'Try adjusting your search.'
                       : 'Create a group to reuse student lists across announcements, forms, and reports.'
                   }
                 />
-                {!mySearch && ownershipFilter.size === 0 && (
+                {!mySearch && (
                   <Button
                     size="sm"
                     className="mt-4"
@@ -525,7 +481,7 @@ function GroupsIndex() {
               <Table tableClassName="table-fixed w-full">
                 <TableHeader className="border-b bg-background">
                   <TableRow className="border-0 hover:bg-transparent">
-                    <TableHead className="pl-5 w-[44px]">
+                    <TableHead className="pl-5 w-[44px] sticky left-0 z-10 bg-background">
                       <Checkbox
                         checked={
                           allSelectedInView
@@ -538,22 +494,53 @@ function GroupsIndex() {
                         aria-label="Select all"
                       />
                     </TableHead>
-                    <TableHead className="pl-2">Name</TableHead>
-                    <TableHead className="w-24">Students</TableHead>
-                    <TableHead className="w-24">Type</TableHead>
-                    <TableHead className="w-32">Last updated</TableHead>
-                    <TableHead className="w-36">Created by</TableHead>
-                    <TableHead className="w-[48px] pr-2" />
+                    <TableHead className="pl-2 sticky left-[44px] z-10 bg-background">
+                      <SortableHeader
+                        label="Name"
+                        column="name"
+                        sort={sort}
+                        onSort={(col, dir) =>
+                          setSort({ column: col, direction: dir })
+                        }
+                      />
+                    </TableHead>
+                    <TableHead className="w-24">
+                      <SortableHeader
+                        label="Students"
+                        column="students"
+                        sort={sort}
+                        onSort={(col, dir) =>
+                          setSort({ column: col, direction: dir })
+                        }
+                      />
+                    </TableHead>
+                    <TableHead className="w-32">
+                      <SortableHeader
+                        label="Last updated"
+                        column="last-updated"
+                        sort={sort}
+                        onSort={(col, dir) =>
+                          setSort({ column: col, direction: dir })
+                        }
+                      />
+                    </TableHead>
+                    <TableHead className="w-36">
+                      <SortableHeader
+                        label="Created by"
+                        column="created-by"
+                        sort={sort}
+                        onSort={(col, dir) =>
+                          setSort({ column: col, direction: dir })
+                        }
+                      />
+                    </TableHead>
+                    <TableHead className="w-[80px] pr-4 text-right">
+                      Actions
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredCombinedGroups.map((group) => {
-                    const isShared = group._source === 'shared'
-                    const sharedRole = isShared
-                      ? group.sharedWith.find(
-                          (s) => s.email === CURRENT_USER_EMAIL,
-                        )?.role
-                      : undefined
+                  {pagedMyGroups.map((group) => {
                     const isSelected = selectedIds.has(group.id)
                     return (
                       <TableRow
@@ -571,7 +558,7 @@ function GroupsIndex() {
                         }
                       >
                         <TableCell
-                          className="pl-5 w-[44px]"
+                          className="pl-5 w-[44px] sticky left-0 z-10 bg-background"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <Checkbox
@@ -580,23 +567,13 @@ function GroupsIndex() {
                             aria-label={`Select ${group.name}`}
                           />
                         </TableCell>
-                        <TableCell className="overflow-hidden whitespace-normal pl-2">
+                        <TableCell className="overflow-hidden whitespace-normal pl-2 sticky left-[44px] z-10 bg-background">
                           <div className="min-w-0">
                             <div className="flex items-center gap-1.5">
                               <span className="truncate font-medium">
                                 {group.name}
                               </span>
-                              {isShared && (
-                                <Badge
-                                  variant="outline"
-                                  className="shrink-0 py-0 text-xs text-muted-foreground"
-                                >
-                                  {sharedRole === 'editor'
-                                    ? 'Editor'
-                                    : 'Viewer'}
-                                </Badge>
-                              )}
-                              {!isShared && group.visibility === 'school' && (
+                              {group.visibility === 'school' && (
                                 <Badge
                                   variant="outline"
                                   className="shrink-0 py-0 text-xs"
@@ -605,11 +582,6 @@ function GroupsIndex() {
                                 </Badge>
                               )}
                             </div>
-                            {group.listType === 'live' && group.criteria && (
-                              <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
-                                {group.criteria}
-                              </p>
-                            )}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -618,15 +590,8 @@ function GroupsIndex() {
                             {group.members.length}
                           </div>
                         </TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="py-0 text-xs">
-                            {group.listType === 'live' ? 'Criteria' : 'Custom'}
-                          </Badge>
-                        </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
-                          {group.listType === 'live'
-                            ? 'Auto'
-                            : formatRelativeDate(group.updatedAt)}
+                          {formatRelativeDate(group.updatedAt)}
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
                           {group.createdBy.email === CURRENT_USER_EMAIL
@@ -634,11 +599,10 @@ function GroupsIndex() {
                             : stripSalutation(group.createdBy.name)}
                         </TableCell>
                         <TableCell
-                          className="w-[48px] pr-2 text-right"
+                          className="w-[48px] pr-2"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          {!isShared ? (
-                            // Owner: full dropdown
+                          <div className="flex justify-end">
                             <DropdownMenu>
                               <DropdownMenuTrigger
                                 render={
@@ -708,60 +672,7 @@ function GroupsIndex() {
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
-                          ) : sharedRole === 'editor' ? (
-                            // Shared editor: Edit + Make a copy
-                            <DropdownMenu>
-                              <DropdownMenuTrigger
-                                render={
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                                    aria-label="More actions"
-                                  />
-                                }
-                              >
-                                <MoreHorizontal className="h-4 w-4" />
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem
-                                  render={
-                                    <Link
-                                      to="/groups/$groupId"
-                                      params={{ groupId: group.id }}
-                                    />
-                                  }
-                                >
-                                  <Edit2 className="mr-2 h-4 w-4" />
-                                  Edit group
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => {
-                                    const { _source: _, ...groupData } = group
-                                    const copy = {
-                                      ...groupData,
-                                      id: `cg-${Date.now()}`,
-                                      name: `${group.name} (copy)`,
-                                      createdBy: {
-                                        name: 'Mrs Tan Mei Lin',
-                                        email: CURRENT_USER_EMAIL,
-                                      },
-                                      sharedWith: [],
-                                      createdAt: new Date().toISOString(),
-                                      updatedAt: new Date().toISOString(),
-                                      lastUsedAt: undefined,
-                                    }
-                                    MOCK_GROUPS.push(copy)
-                                    setGroups([...MOCK_GROUPS])
-                                    toast.success('Copy created')
-                                  }}
-                                >
-                                  <Copy className="mr-2 h-4 w-4" />
-                                  Make a copy
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          ) : null}
+                          </div>
                         </TableCell>
                       </TableRow>
                     )
@@ -769,6 +680,62 @@ function GroupsIndex() {
                 </TableBody>
               </Table>
             )}
+            <div className="flex shrink-0 items-center justify-between bg-card px-6 py-4">
+              <div className="text-sm text-muted-foreground">
+                {myGroupsPagination.startIndex + 1}–
+                {Math.min(
+                  myGroupsPagination.startIndex + GROUPS_PAGE_SIZE,
+                  sortedGroups.length,
+                )}{' '}
+                of {sortedGroups.length} records
+              </div>
+              {myGroupsPagination.totalPages > 1 && (
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={myGroupsPagination.goToPreviousPage}
+                    disabled={!myGroupsPagination.canGoPrevious}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Previous
+                  </Button>
+                  {myGroupsPagination.pageNumbers.map((page, index) =>
+                    page === 'ellipsis' ? (
+                      <span
+                        key={`ellipsis-${index}`}
+                        className="px-2 text-muted-foreground"
+                      >
+                        ...
+                      </span>
+                    ) : (
+                      <Button
+                        key={page}
+                        variant={
+                          myGroupsPagination.currentPage === page
+                            ? 'outline'
+                            : 'ghost'
+                        }
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => myGroupsPagination.goToPage(page)}
+                      >
+                        {page}
+                      </Button>
+                    ),
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={myGroupsPagination.goToNextPage}
+                    disabled={!myGroupsPagination.canGoNext}
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
 
             {/* Selection action bar */}
             {selectedIds.size > 0 && (
@@ -804,16 +771,133 @@ function GroupsIndex() {
         )}
 
         {/* ── Assigned Groups table ────────────────────────────────────────── */}
+        {tab === 'shared' && (
+          <div className="max-w-full overflow-x-auto bg-background">
+            {filteredSharedGroups.length === 0 ? (
+              <div className="flex flex-col items-center py-16">
+                <EmptyState
+                  title={sharedSearch ? 'No groups found' : 'No shared groups'}
+                  description={
+                    sharedSearch
+                      ? 'Try adjusting your search.'
+                      : 'Groups shared with you by other teachers will appear here.'
+                  }
+                />
+              </div>
+            ) : (
+              <Table tableClassName="table-fixed w-full">
+                <TableHeader className="border-b bg-background">
+                  <TableRow className="border-0 hover:bg-transparent">
+                    <TableHead className="pl-6">Name</TableHead>
+                    <TableHead className="w-24">Students</TableHead>
+                    <TableHead className="w-32">Shared by</TableHead>
+                    <TableHead className="w-36">Last updated</TableHead>
+                    <TableHead className="w-[48px] pr-2" />
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {pagedSharedGroups.map((group) => (
+                    <TableRow
+                      key={group.id}
+                      className="cursor-pointer"
+                      onClick={() =>
+                        navigate({
+                          to: '/groups/$groupId',
+                          params: { groupId: group.id },
+                        })
+                      }
+                    >
+                      <TableCell className="overflow-hidden whitespace-normal pl-6">
+                        <span className="truncate font-medium">
+                          {group.name}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                          <Users className="h-3.5 w-3.5 shrink-0" />
+                          {group.members.length}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {stripSalutation(group.createdBy.name)}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {formatRelativeDate(group.updatedAt)}
+                      </TableCell>
+                      <TableCell className="w-[48px] pr-2" />
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+            <div className="flex shrink-0 items-center justify-between bg-card px-6 py-4">
+              <div className="text-sm text-muted-foreground">
+                {sharedGroupsPagination.startIndex + 1}–
+                {Math.min(
+                  sharedGroupsPagination.startIndex + GROUPS_PAGE_SIZE,
+                  filteredSharedGroups.length,
+                )}{' '}
+                of {filteredSharedGroups.length} records
+              </div>
+              {sharedGroupsPagination.totalPages > 1 && (
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={sharedGroupsPagination.goToPreviousPage}
+                    disabled={!sharedGroupsPagination.canGoPrevious}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Previous
+                  </Button>
+                  {sharedGroupsPagination.pageNumbers.map((page, index) =>
+                    page === 'ellipsis' ? (
+                      <span
+                        key={`ellipsis-${index}`}
+                        className="px-2 text-muted-foreground"
+                      >
+                        ...
+                      </span>
+                    ) : (
+                      <Button
+                        key={page}
+                        variant={
+                          sharedGroupsPagination.currentPage === page
+                            ? 'outline'
+                            : 'ghost'
+                        }
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => sharedGroupsPagination.goToPage(page)}
+                      >
+                        {page}
+                      </Button>
+                    ),
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={sharedGroupsPagination.goToNextPage}
+                    disabled={!sharedGroupsPagination.canGoNext}
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {tab === 'assigned' && (
           <>
             <div className="px-6">
-              <Alert className="border-twblue-6 bg-twblue-3/60 text-twblue-12">
-                <Info className="h-4 w-4 text-twblue-9" />
-                <AlertDescription className="text-twblue-11">
+              <div className="rounded-lg border border-twblue-6 bg-twblue-3/60 px-4 py-2.5">
+                <p className="text-sm text-twblue-11">
                   Membership updates automatically based on selected criteria.
                   Contact your school administrator to make changes.
-                </AlertDescription>
-              </Alert>
+                </p>
+              </div>
             </div>
 
             <div className="max-w-full overflow-x-auto bg-background">
@@ -821,13 +905,11 @@ function GroupsIndex() {
                 <div className="flex flex-col items-center py-16">
                   <EmptyState
                     title={
-                      assignedSearch || typeFilter.size > 0
-                        ? 'No groups found'
-                        : 'No groups assigned'
+                      assignedSearch ? 'No groups found' : 'No groups assigned'
                     }
                     description={
-                      assignedSearch || typeFilter.size > 0
-                        ? 'Try adjusting your search or filters.'
+                      assignedSearch
+                        ? 'Try adjusting your search.'
                         : 'Your school administrator assigns groups in School Cockpit.'
                     }
                   />
@@ -838,12 +920,11 @@ function GroupsIndex() {
                     <TableRow className="border-0 hover:bg-transparent">
                       <TableHead className="pl-6">Name</TableHead>
                       <TableHead className="w-24">Students</TableHead>
-                      <TableHead className="w-28">Type</TableHead>
                       <TableHead className="w-[48px] pr-2" />
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredAssignedGroups.map((group) => (
+                    {pagedAssignedGroups.map((group) => (
                       <TableRow
                         key={group.id}
                         className="cursor-pointer"
@@ -865,11 +946,6 @@ function GroupsIndex() {
                             {group.members.length}
                           </div>
                         </TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="py-0 text-xs">
-                            {getStructuredTypeLabel(group.structuredType)}
-                          </Badge>
-                        </TableCell>
                         <TableCell
                           className="w-[48px] pr-2"
                           onClick={(e) => e.stopPropagation()}
@@ -879,6 +955,64 @@ function GroupsIndex() {
                   </TableBody>
                 </Table>
               )}
+              <div className="flex shrink-0 items-center justify-between bg-card px-6 py-4">
+                <div className="text-sm text-muted-foreground">
+                  {assignedGroupsPagination.startIndex + 1}–
+                  {Math.min(
+                    assignedGroupsPagination.startIndex + GROUPS_PAGE_SIZE,
+                    filteredAssignedGroups.length,
+                  )}{' '}
+                  of {filteredAssignedGroups.length} records
+                </div>
+                {assignedGroupsPagination.totalPages > 1 && (
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={assignedGroupsPagination.goToPreviousPage}
+                      disabled={!assignedGroupsPagination.canGoPrevious}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      Previous
+                    </Button>
+                    {assignedGroupsPagination.pageNumbers.map((page, index) =>
+                      page === 'ellipsis' ? (
+                        <span
+                          key={`ellipsis-${index}`}
+                          className="px-2 text-muted-foreground"
+                        >
+                          ...
+                        </span>
+                      ) : (
+                        <Button
+                          key={page}
+                          variant={
+                            assignedGroupsPagination.currentPage === page
+                              ? 'outline'
+                              : 'ghost'
+                          }
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() =>
+                            assignedGroupsPagination.goToPage(page)
+                          }
+                        >
+                          {page}
+                        </Button>
+                      ),
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={assignedGroupsPagination.goToNextPage}
+                      disabled={!assignedGroupsPagination.canGoNext}
+                    >
+                      Next
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
           </>
         )}

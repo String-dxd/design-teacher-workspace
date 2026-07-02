@@ -140,9 +140,7 @@ export function EnquiryEmailSelector({
                   <span
                     className={cn(
                       'flex h-4 w-4 shrink-0 items-center justify-center rounded-full border',
-                      isSelected
-                        ? 'border-primary bg-primary'
-                        : 'border-input',
+                      isSelected ? 'border-primary bg-primary' : 'border-input',
                     )}
                   >
                     {isSelected && (
