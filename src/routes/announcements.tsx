@@ -61,7 +61,7 @@ function AnnouncementsLayout() {
             <h1 className="flex items-center gap-2 text-2xl font-semibold">
               Posts
               {isAdmin && (
-                <Badge className="gap-1 bg-amber-100 text-amber-800 border border-amber-300 text-xs font-semibold">
+                <Badge className="gap-1 bg-amber-100 text-amber-800 border border-amber-300 h-6 text-sm px-2.5 font-semibold">
                   <Crown className="h-3 w-3" />
                   Admin
                 </Badge>
