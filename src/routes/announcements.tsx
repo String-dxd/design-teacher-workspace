@@ -7,7 +7,7 @@ import {
   useNavigate,
   useSearch,
 } from '@tanstack/react-router'
-import { Check, ChevronDown, Plus, ShieldCheck } from 'lucide-react'
+import { Check, ChevronDown, Crown, Plus } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -62,7 +62,7 @@ function AnnouncementsLayout() {
               Posts
               {isAdmin && (
                 <Badge className="gap-1 bg-amber-100 text-amber-800 border border-amber-300 text-xs font-semibold">
-                  <ShieldCheck className="h-3 w-3" />
+                  <Crown className="h-3 w-3" />
                   Admin
                 </Badge>
               )}
