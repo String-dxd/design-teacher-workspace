@@ -20,6 +20,12 @@ import {
 import { useHeyTalia } from './heytalia-context'
 import { cn } from '@/lib/utils'
 import { useIsMobile } from '@/hooks/use-mobile'
+import { Input } from '@/components/ui/input'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 
 // ---------------------------------------------------------------------------
 // Colour constants
@@ -349,35 +355,59 @@ export function HeyTaliaPanel() {
 
         {/* ── Header ── */}
         <div className="relative flex h-14 shrink-0 items-center gap-3 border-b bg-background px-3">
-          <button
-            type="button"
-            onClick={() => setAgentDropdownOpen((v) => !v)}
-            className="flex min-w-0 flex-1 items-center gap-3 rounded-lg px-1 py-1 transition-colors hover:bg-muted"
-          >
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border">
-              <img
-                src="/logos/heytalia-logo.svg"
-                alt="HeyTalia"
-                className="h-5 w-5"
-              />
-            </div>
-            <div className="min-w-0 flex-1 text-left">
-              <div className="flex items-center gap-1.5">
-                <span className="text-sm font-semibold text-foreground">
-                  HeyTalia
-                </span>
-                <span className="rounded-full bg-twblue-3 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-twblue-9">
-                  Beta
-                </span>
+          <Popover open={agentDropdownOpen} onOpenChange={setAgentDropdownOpen}>
+            <PopoverTrigger
+              render={
+                <button
+                  type="button"
+                  className="flex min-w-0 flex-1 items-center gap-3 rounded-lg px-1 py-1 transition-colors hover:bg-muted"
+                />
+              }
+            >
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border">
+                <img
+                  src="/logos/heytalia-logo.svg"
+                  alt="HeyTalia"
+                  className="h-5 w-5"
+                />
               </div>
-            </div>
-            <ChevronDown
-              className={cn(
-                'h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform',
-                agentDropdownOpen && 'rotate-180',
-              )}
-            />
-          </button>
+              <div className="min-w-0 flex-1 text-left">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm font-semibold text-foreground">
+                    HeyTalia
+                  </span>
+                  <span className="rounded-full bg-twblue-3 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-twblue-9">
+                    Beta
+                  </span>
+                </div>
+              </div>
+              <ChevronDown
+                className={cn(
+                  'h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform',
+                  agentDropdownOpen && 'rotate-180',
+                )}
+              />
+            </PopoverTrigger>
+            <PopoverContent
+              align="start"
+              sideOffset={4}
+              className="gap-0 overflow-hidden p-0"
+              style={{
+                width:
+                  typeof effectiveWidth === 'number'
+                    ? effectiveWidth - 24
+                    : 'calc(100vw - 24px)',
+              }}
+            >
+              <AgentPickerContent
+                onSelect={(id) => {
+                  setAgentDropdownOpen(false)
+                  handleSelectAgent(id)
+                }}
+                onClose={() => setAgentDropdownOpen(false)}
+              />
+            </PopoverContent>
+          </Popover>
 
           {/* 2 icons only: expand toggle + close */}
           <div className="flex items-center">
@@ -404,23 +434,6 @@ export function HeyTaliaPanel() {
               <Minus className="h-3.5 w-3.5" />
             </button>
           </div>
-
-          {/* ── Agent Picker Dropdown ── */}
-          {agentDropdownOpen && (
-            <>
-              <div
-                className="fixed inset-0 z-40"
-                onClick={() => setAgentDropdownOpen(false)}
-              />
-              <AgentPickerDropdown
-                onSelect={(id) => {
-                  setAgentDropdownOpen(false)
-                  handleSelectAgent(id)
-                }}
-                onClose={() => setAgentDropdownOpen(false)}
-              />
-            </>
-          )}
         </div>
 
         {/* ── Messages ── */}
@@ -444,7 +457,7 @@ export function HeyTaliaPanel() {
         {/* ── Input footer ── */}
         <div className="shrink-0 border-t bg-white px-3 pb-3 pt-2.5">
           <div className="relative flex h-9 items-center">
-            <input
+            <Input
               ref={inputRef}
               type="text"
               value={input}
@@ -456,7 +469,7 @@ export function HeyTaliaPanel() {
                 }
               }}
               placeholder="Ask HeyTalia…"
-              className="h-9 w-full rounded-[var(--radius-input)] border border-input bg-white pr-10 pl-3 text-sm shadow-xs outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+              className="pr-10 pl-3 text-sm shadow-xs"
             />
             <button
               type="button"
@@ -487,9 +500,9 @@ export function HeyTaliaPanel() {
 }
 
 // ---------------------------------------------------------------------------
-// Agent picker dropdown
+// Agent picker dropdown content
 // ---------------------------------------------------------------------------
-function AgentPickerDropdown({
+function AgentPickerContent({
   onSelect,
   onClose,
 }: {
@@ -497,7 +510,7 @@ function AgentPickerDropdown({
   onClose: () => void
 }) {
   return (
-    <div className="absolute left-3 right-3 top-[calc(100%+4px)] z-50 overflow-hidden rounded-xl border bg-white shadow-lg">
+    <>
       {/* Header */}
       <div className="px-4 pt-3.5 pb-2.5">
         <p className="text-sm font-semibold text-foreground">
@@ -565,7 +578,7 @@ function AgentPickerDropdown({
           </p>
         </div>
       </button>
-    </div>
+    </>
   )
 }
 
