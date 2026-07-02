@@ -210,16 +210,10 @@ function ReportsPage({ isAdmin = false }: { isAdmin?: boolean }) {
 
           {/* Onboarding */}
           {tab === 'onboarding' && (
-            <div className="space-y-1.5">
-              <Button onClick={handleExport}>
-                <FileDown className="mr-2 h-4 w-4" />
-                {exportButtonLabel}
-              </Button>
-              <p className="text-xs text-muted-foreground">
-                To allow or remove PG access for custodians, please do so in
-                School Cockpit.
-              </p>
-            </div>
+            <Button onClick={handleExport}>
+              <FileDown className="mr-2 h-4 w-4" />
+              {exportButtonLabel}
+            </Button>
           )}
 
           {/* Travel Declaration */}
@@ -312,6 +306,13 @@ function ReportsPage({ isAdmin = false }: { isAdmin?: boolean }) {
               </div>
             </div>
           )}
+
+          <div className="mt-6 border-t pt-5">
+            <p className="text-xs text-muted-foreground">
+              To allow or remove PG access for custodians, please do so in
+              School Cockpit.
+            </p>
+          </div>
         </section>
       </div>
     </div>
