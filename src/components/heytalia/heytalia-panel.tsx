@@ -442,7 +442,7 @@ export function HeyTaliaPanel() {
         </div>
 
         {/* ── Input footer ── */}
-        <div className="shrink-0 border-t bg-white px-3 pb-3 pt-2.5">
+        <div className="shrink-0 border-t bg-card px-3 pb-3 pt-2.5">
           <div className="relative flex h-9 items-center">
             <input
               ref={inputRef}
