@@ -230,21 +230,24 @@ function AnnouncementPreview({
     setScreen({ questionId: editingQuestionId, responseChoice: 'yes' })
   }, [editingQuestionId])
 
-  const previewDate = new Date()
-    .toLocaleDateString('en-SG', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    })
-    .toUpperCase()
-  const previewTime = new Date()
-    .toLocaleTimeString('en-SG', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-    })
-    .toUpperCase()
-  const timestamp = `${previewDate}, ${previewTime}`
+  const [timestamp, setTimestamp] = useState('')
+  useEffect(() => {
+    const previewDate = new Date()
+      .toLocaleDateString('en-SG', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      })
+      .toUpperCase()
+    const previewTime = new Date()
+      .toLocaleTimeString('en-SG', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      })
+      .toUpperCase()
+    setTimestamp(`${previewDate}, ${previewTime}`)
+  }, [])
 
   const formattedDueDate = dueDate
     ? new Date(dueDate).toLocaleDateString('en-SG', {
