@@ -88,7 +88,7 @@ function AnnouncementsLayout() {
         <div className="px-6">
           {isAdmin ? (
             <Popover open={open} onOpenChange={setOpen}>
-              <PopoverTrigger className="inline-flex cursor-pointer items-center gap-1.5 bg-transparent p-0 text-lg font-semibold outline-none">
+              <PopoverTrigger className="inline-flex cursor-pointer items-center gap-1.5 bg-transparent p-0 text-2xl font-semibold outline-none">
                 {isSchoolWide ? 'School' : 'My Posts'}
                 <ChevronDown className="h-5 w-5 text-muted-foreground" />
               </PopoverTrigger>
@@ -130,7 +130,7 @@ function AnnouncementsLayout() {
               </PopoverContent>
             </Popover>
           ) : (
-            <span className="text-lg font-semibold">My Posts</span>
+            <span className="text-2xl font-semibold">My Posts</span>
           )}
         </div>
       </div>
