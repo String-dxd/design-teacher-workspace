@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/table'
 
 // Page content for /ds — a living reference of the design tokens defined in
-// src/styles.css. Like component-example.tsx, this is a showcase module composed
+// src/styles.css. Like component-gallery.tsx, this is a showcase module composed
 // from existing primitives, not a reusable component.
 
 // Semantic Shadcn tokens grouped by role, with the Radix/brand scale each maps

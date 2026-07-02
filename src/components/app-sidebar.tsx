@@ -53,7 +53,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { FeedbackDialog } from '@/components/feedback-dialog'
-import { cn } from '@/lib/utils'
+
 import { useFeatureFlag } from '@/hooks/use-feature-flag'
 import { useAuth } from '@/lib/auth'
 

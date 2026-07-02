@@ -156,13 +156,6 @@ export interface AiSourceItem {
   href: string
 }
 
-export interface DataSource {
-  id: string
-  name: string
-  desc: string
-  lastUpdated: string
-  checked: boolean
-}
 
 export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
   {
@@ -3007,37 +3000,6 @@ export const AI_DRAFTS: Record<string, string> = {
     "Jun Kai is not previously known to MSF, the Singapore Police Force, or any other community agency; this Children's Home referral is his first agency-level engagement¹. The school has been the consistent stable touchpoint across Secondary 1 to 3 and intends to remain so regardless of placement outcome — he has positive working relationships with his Year Head Mr Daniel Tan (3 years known), his Form Teacher Mr Ahmad Rizal, and the School Counsellor². The school's view is that any placement decision should preserve continuity of school attendance and counselling where possible; existing trust relationships are likely to be the most stabilising factor in any intervention plan put in place³.",
 }
 
-export const DATA_SOURCES: Array<DataSource> = [
-  {
-    id: 'sc',
-    name: 'School Cockpit',
-    desc: 'Attendance, academics, family details, offences',
-    lastUpdated: '19 Apr 2026',
-    checked: true,
-  },
-  {
-    id: 'eduhub',
-    name: 'EduHub',
-    desc: 'Student biodata, enrolment info',
-    lastUpdated: '19 Apr 2026',
-    checked: true,
-  },
-  {
-    id: 'casesync',
-    name: 'Case Sync',
-    desc: 'Counselling case notes, intervention plans',
-    lastUpdated: '17 Apr 2026',
-    checked: true,
-  },
-  {
-    id: 'tci',
-    name: 'TCI',
-    desc: 'Termly Check-In wellbeing data',
-    lastUpdated: '15 Apr 2026',
-    checked: true,
-  },
-]
-
 // Mutable: empty by default (clean state for demo). The agency-report wizard
 // pushes a freshly-submitted report into this array so the student profile
 // reflects the new "In Review" card without round-tripping a backend.
@@ -3129,13 +3091,6 @@ export function getAgencyLogo(agency: string): string | undefined {
   return undefined
 }
 
-// Legacy export retained for any direct lookups. Prefer getAgencyLogo().
-export const AGENCY_LOGOS: Record<string, string | undefined> = new Proxy(
-  {},
-  {
-    get: (_t, prop: string) => getAgencyLogo(prop),
-  },
-) as Record<string, string | undefined>
 
 // Push a freshly-submitted report onto the mock store and return it. Used by
 // the wizard's "Submit for Principal review" flow.
@@ -3530,7 +3485,7 @@ export function getAgencyReportsByStudent(
 // field-level `source` string already present on `ReportField` plus an
 // optional per-field excerpt override.
 
-export interface SourceExcerpt {
+interface SourceExcerpt {
   system: string
   excerpt: string
   lastUpdated: string

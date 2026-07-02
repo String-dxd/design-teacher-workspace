@@ -19,7 +19,12 @@ import {
   Users,
 } from 'lucide-react'
 
-import type { StructuredGroup, StudentGroup } from '@/types/student-group'
+import type {
+  GroupTypeFilterOption,
+  StructuredGroup,
+  StudentGroup,
+} from '@/types/student-group'
+import { getStructuredTypeLabel } from '@/types/student-group'
 import { usePagination } from '@/hooks/use-pagination'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
 import { MOCK_GROUPS } from '@/data/mock-groups'
@@ -67,12 +72,6 @@ export const Route = createFileRoute('/groups/')({
 const CURRENT_USER_EMAIL = 'tanml@school.edu.sg'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function getUniqueClasses(members: StudentGroup['members']): Array<string> {
-  const seen = new Set<string>()
-  for (const m of members) seen.add(m.class)
-  return [...seen].sort()
-}
 
 function formatRelativeDate(dateStr: string): string {
   const date = new Date(dateStr)
@@ -221,6 +220,168 @@ function ClassPills({
         <span className="text-xs text-muted-foreground">+{hidden}</span>
       )}
     </div>
+  )
+}
+
+// ─── Type filter popover (Assigned Groups tab) ─────────────────────────────────
+
+const STRUCTURED_FILTER_OPTIONS: Array<{
+  value: Exclude<GroupTypeFilterOption, 'regular'>
+  label: string
+}> = [
+  { value: 'class', label: 'Class' },
+  { value: 'level', label: 'Level' },
+  { value: 'cca', label: 'CCA' },
+  { value: 'teaching', label: 'Teaching Group' },
+]
+
+interface TypeFilterPopoverProps {
+  value: Set<Exclude<GroupTypeFilterOption, 'regular'>>
+  onChange: (v: Set<Exclude<GroupTypeFilterOption, 'regular'>>) => void
+}
+
+function TypeFilterPopover({ value, onChange }: TypeFilterPopoverProps) {
+  function toggle(opt: Exclude<GroupTypeFilterOption, 'regular'>) {
+    const next = new Set(value)
+    if (next.has(opt)) next.delete(opt)
+    else next.add(opt)
+    onChange(next)
+  }
+
+  return (
+    <Popover>
+      <PopoverTrigger
+        render={
+          <Button variant="outline" size="sm" className="gap-2">
+            <Filter className="h-4 w-4" />
+            Filter
+            {value.size > 0 && (
+              <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
+                {value.size}
+              </span>
+            )}
+          </Button>
+        }
+      />
+      <PopoverContent align="start" className="w-[360px] p-0">
+        <div className="px-5 pb-3 pt-4">
+          <h3 className="text-sm font-semibold">Show records</h3>
+        </div>
+        <div className="px-5 pb-4">
+          <div className="flex items-center gap-3">
+            <span className="w-16 shrink-0 text-sm font-medium">Type</span>
+            <div className="flex flex-1 flex-wrap gap-1.5">
+              {STRUCTURED_FILTER_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => toggle(opt.value)}
+                  className={cn(
+                    'rounded-md border px-2.5 py-1 text-xs font-medium transition-colors',
+                    value.has(opt.value)
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'border-border bg-card text-foreground hover:border-primary hover:text-primary',
+                  )}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center justify-end border-t px-5 py-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onChange(new Set())}
+            disabled={value.size === 0}
+            className="gap-2 text-sm font-medium"
+          >
+            <RotateCcw className="h-4 w-4" />
+            Reset
+          </Button>
+        </div>
+      </PopoverContent>
+    </Popover>
+  )
+}
+
+// ─── Ownership filter popover (My Groups tab) ──────────────────────────────────
+
+const OWNERSHIP_OPTIONS = [
+  { value: 'mine' as const, label: 'Created by me' },
+  { value: 'shared' as const, label: 'Shared with me' },
+]
+
+function OwnershipFilterPopover({
+  value,
+  onChange,
+}: {
+  value: Set<'mine' | 'shared'>
+  onChange: (v: Set<'mine' | 'shared'>) => void
+}) {
+  function toggle(opt: 'mine' | 'shared') {
+    const next = new Set(value)
+    if (next.has(opt)) next.delete(opt)
+    else next.add(opt)
+    onChange(next)
+  }
+
+  return (
+    <Popover>
+      <PopoverTrigger
+        render={
+          <Button variant="outline" size="sm" className="gap-2">
+            <Filter className="h-4 w-4" />
+            Filter
+            {value.size > 0 && (
+              <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
+                {value.size}
+              </span>
+            )}
+          </Button>
+        }
+      />
+      <PopoverContent align="start" className="w-[320px] p-0">
+        <div className="px-5 pb-3 pt-4">
+          <h3 className="text-sm font-semibold">Show records</h3>
+        </div>
+        <div className="px-5 pb-4">
+          <div className="flex items-center gap-3">
+            <span className="w-16 shrink-0 text-sm font-medium">Owner</span>
+            <div className="flex flex-1 flex-wrap gap-1.5">
+              {OWNERSHIP_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => toggle(opt.value)}
+                  className={cn(
+                    'rounded-md border px-2.5 py-1 text-xs font-medium transition-colors',
+                    value.has(opt.value)
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'border-border bg-card text-foreground hover:border-primary hover:text-primary',
+                  )}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center justify-end border-t px-5 py-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onChange(new Set())}
+            disabled={value.size === 0}
+            className="gap-2 text-sm font-medium"
+          >
+            <RotateCcw className="h-4 w-4" />
+            Reset
+          </Button>
+        </div>
+      </PopoverContent>
+    </Popover>
   )
 }
 

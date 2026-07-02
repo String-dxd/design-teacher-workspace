@@ -1,7 +1,7 @@
 import type { FormRecipient } from '@/types/form'
 
 // Maps form.id → FormRecipient[]
-export const FORM_RESPONSES: Record<string, Array<FormRecipient>> = {
+const FORM_RESPONSES: Record<string, Array<FormRecipient>> = {
   'form-1': [
     {
       studentId: 's001',

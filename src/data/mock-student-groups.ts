@@ -135,23 +135,6 @@ function toClassGroup(
   }
 }
 
-function toCcaGroup(
-  id: string,
-  label: string,
-  names: Array<string>,
-): EntityItem {
-  const details = names.map((name, i) => memberDetail(name, i + 1))
-  return {
-    id,
-    label,
-    type: 'group',
-    count: names.length,
-    groupType: 'cca',
-    memberNames: names,
-    memberDetails: details,
-  }
-}
-
 // ─── Sec 1 & 2 classes (hardcoded) ───────────────────────────────────────────
 
 const SEC1_CLASSES: Array<EntityItem> = [
@@ -318,7 +301,7 @@ export const LEVEL_GROUPS: Array<EntityItem> = [
   },
 ]
 
-export const SCHOOL_GROUP: EntityItem = {
+const SCHOOL_GROUP: EntityItem = {
   id: 'school:bandung',
   label: 'Bandung Secondary School',
   type: 'group',
@@ -438,18 +421,6 @@ export const TEACHING_GROUPS: Array<EntityItem> = [
   ),
 ]
 
-// ─── Custom groups ────────────────────────────────────────────────────────────
-
-const lsStudents = bandungStudents
-  .filter((s) => s.learningSupport !== null)
-  .sort((a, b) => a.indexNumber - b.indexNumber)
-const dramaNames = [
-  'Jordan Tan Jia Le',
-  'Natasha Lee Wei Ling',
-  'Jayden Wong Zhi Hao',
-  'Priya Sundaram',
-]
-
 // Derived from MOCK_GROUPS so the student selector always reflects the Groups page
 function groupToEntityItem(g: (typeof MOCK_GROUPS)[number]): EntityItem {
   return {
@@ -471,7 +442,7 @@ function groupToEntityItem(g: (typeof MOCK_GROUPS)[number]): EntityItem {
 }
 
 /** @deprecated Use getStudentScopes() for live MOCK_GROUPS data */
-export const CUSTOM_GROUPS: Array<EntityItem> =
+const CUSTOM_GROUPS: Array<EntityItem> =
   MOCK_GROUPS.map(groupToEntityItem)
 
 // ─── Flat array ───────────────────────────────────────────────────────────────
@@ -565,8 +536,6 @@ export function getStudentScopes(): Array<EntityScope> {
   ]
 }
 
-/** @deprecated Use getStudentScopes() */
-export const STUDENT_SCOPES: Array<EntityScope> = getStudentScopes()
 
 // ─── Overlap map ──────────────────────────────────────────────────────────────
 

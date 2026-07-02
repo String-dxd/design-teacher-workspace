@@ -653,15 +653,6 @@ export function GlowStudentSupportPage({
 
 // ── Sub-components ──────────────────────────────────────────
 
-function MetaField({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <p className="text-[10px] font-semibold text-muted-foreground">{label}</p>
-      <p className="mt-1 text-sm text-foreground">{value}</p>
-    </div>
-  )
-}
-
 function TabButton({
   active,
   onClick,

@@ -61,8 +61,6 @@ export interface StructuredGroup {
   syncedAt: string
 }
 
-export type UnifiedGroup = StudentGroup | StructuredGroup
-
 export function getStructuredTypeLabel(type: StructuredGroupType): string {
   return {
     class: 'Class',

@@ -3,7 +3,6 @@ import { ChevronDown, Search, X } from 'lucide-react'
 
 import type {
   FilterCriterion,
-  FilterField,
   FilterOperator,
 } from '@/types/student'
 import {

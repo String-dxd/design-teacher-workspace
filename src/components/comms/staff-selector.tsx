@@ -10,8 +10,6 @@ import type {
 import { MOCK_STAFF, MOCK_STAFF_GROUPS } from '@/data/mock-staff'
 import { stripSalutation } from '@/lib/utils'
 
-// Backward-compatible type alias
-export type { SelectedEntity as SelectedStaff }
 
 interface StaffSelectorProps {
   value: Array<SelectedEntity>

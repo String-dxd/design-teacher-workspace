@@ -12,7 +12,7 @@ import {
 
 import { toast } from 'sonner'
 
-import type { SchoolLevel } from '@/types/report'
+
 import { AcademicTab } from '@/components/reports/academic-tab'
 import { EmailPreviewDialog } from '@/components/reports/email-preview-dialog'
 import { PgPreviewDialog } from '@/components/reports/pg-preview-dialog'

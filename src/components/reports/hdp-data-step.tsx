@@ -9,7 +9,6 @@ import {
   Trophy,
   User,
 } from 'lucide-react'
-import { TEMPLATES } from './hdp-template-step'
 import type { TemplateId } from './hdp-template-step'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
@@ -93,10 +92,8 @@ interface HdpDataStepProps {
 export function HdpDataStep({
   selectedSections,
   onToggleSection,
-  templateId,
+  templateId: _templateId,
 }: HdpDataStepProps) {
-  const templateName =
-    TEMPLATES.find((t) => t.id === templateId)?.name ?? 'Custom'
   const enabledCount = Object.values(selectedSections).filter(Boolean).length
 
   return (

@@ -6,7 +6,6 @@ import {
   Check,
   ChevronDown,
   ChevronsDown,
-  ExternalLink,
   Plus,
   Settings2,
   ShieldCheck,
@@ -198,23 +197,6 @@ const CATEGORY_DESCRIPTIONS: Record<string, string> = {
   Wellbeing: 'Social links, Low mood...',
   Family: 'Housing, FAS...',
   Personal: 'Health alerts, Citizenship...',
-}
-
-const EXISTING_FIELDS_MAP: Record<string, Array<string>> = {
-  Academics: [
-    'Overall % across selected subjects',
-    'No. of subjects',
-    'Learning support',
-  ],
-  Attendance: [
-    'Attendance (%)',
-    'Late-coming (days)',
-    'Non-VR absences (days)',
-  ],
-  Behaviour: ['Offences', 'Counselling cases', 'Conduct grade'],
-  Wellbeing: ['Social links', 'Risk indicators', 'Low mood flagged 2+ terms'],
-  Family: ['FAS', 'Housing', 'Custody'],
-  Personal: ['Health alerts', 'Citizenship', 'Language spoken'],
 }
 
 const STEP1_UPLOAD_ERRORS = [
@@ -450,8 +432,6 @@ function Step2({
   onBack: () => void
   onNext: () => void
 }) {
-  const issueRows = new Set(REVIEW_ISSUES.flatMap((i) => i.highlightRows))
-
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       {/* Scrollable content */}

@@ -9,7 +9,6 @@ import TaskItem from '@tiptap/extension-task-item'
 import Highlight from '@tiptap/extension-highlight'
 import {
   AlignCenter,
-  AlignJustify,
   AlignLeft,
   AlignRight,
   Bold,

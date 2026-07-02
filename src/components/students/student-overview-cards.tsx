@@ -1,7 +1,6 @@
 import { Minus, TrendingDown, TrendingUp } from 'lucide-react'
 import type { Student } from '@/types/student'
 import { Card, CardContent } from '@/components/ui/card'
-import { cn } from '@/lib/utils'
 
 interface StudentOverviewCardsProps {
   student: Student

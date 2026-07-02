@@ -16,7 +16,7 @@ type Message = {
   content: string
 }
 
-export interface InsightBuddyProps {
+interface InsightBuddyProps {
   examplePrompts?: Array<string>
   /** When true, renders as a FAB + fixed overlay (analytics page).
    *  When false (default), renders as a sticky in-flow panel (profile page). */

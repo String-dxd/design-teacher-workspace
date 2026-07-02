@@ -78,7 +78,7 @@ export interface SearchResults {
   individuals: Array<EntityItem>
 }
 
-export interface EntitySelectorProps {
+interface EntitySelectorProps {
   value: Array<SelectedEntity>
   onChange: (entities: Array<SelectedEntity>) => void
   scopes?: Array<EntityScope>
@@ -124,63 +124,6 @@ function getCountUnit(groupType: GroupType | undefined, count: number): string {
   return count === 1 ? 'member' : 'members'
 }
 
-export function computeSummary(
-  entities: Array<SelectedEntity>,
-  summaryLabel: string,
-  summaryLabelPlural: string,
-): string {
-  if (entities.length === 0) return ''
-
-  const groups = entities.filter((e) => e.type === 'group')
-  const individuals = entities.filter((e) => e.type === 'individual')
-  const totalCount = entities.reduce((sum, e) => sum + e.count, 0)
-  const hasGroups = groups.length > 0
-
-  const byType = new Map<string, number>()
-  for (const g of groups) {
-    const key = g.groupType ?? 'staff-group'
-    byType.set(key, (byType.get(key) ?? 0) + 1)
-  }
-
-  const typeOrder: Array<GroupType> = [
-    'school',
-    'level',
-    'class',
-    'cca',
-    'teaching',
-    'custom',
-    'department',
-    'staff-group',
-  ]
-  const typeLabels: Record<string, [string, string]> = {
-    school: ['school', 'schools'],
-    level: ['level', 'levels'],
-    class: ['class', 'classes'],
-    cca: ['CCA', 'CCAs'],
-    teaching: ['teaching group', 'teaching groups'],
-    custom: ['custom group', 'custom groups'],
-    department: ['dept', 'depts'],
-    'staff-group': ['group', 'groups'],
-  }
-
-  const parts: Array<string> = []
-
-  for (const type of typeOrder) {
-    const count = byType.get(type) ?? 0
-    if (count === 0) continue
-    const pair = typeLabels[type] ?? [type, `${type}s`]
-    parts.push(`${count} ${count === 1 ? pair[0] : pair[1]}`)
-  }
-
-  if (individuals.length > 0) {
-    parts.push(
-      `${individuals.length} individual${individuals.length !== 1 ? 's' : ''}`,
-    )
-  }
-
-  const countStr = `${hasGroups ? '~' : ''}${totalCount} ${totalCount === 1 ? summaryLabel : summaryLabelPlural}`
-  return [...parts, countStr].join(' · ')
-}
 
 export function detectOverlaps(
   entities: Array<SelectedEntity>,
@@ -236,7 +179,7 @@ function ResultRow({
   onToggle,
   isExpanded = false,
   onToggleExpand,
-  selectedIndividualNames = new Set<string>(),
+  selectedIndividualNames: _selectedIndividualNames = new Set<string>(),
   excludedMemberNames = new Set(),
   onMemberToggle,
 }: ResultRowProps) {

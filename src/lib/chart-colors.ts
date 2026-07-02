@@ -46,33 +46,6 @@
  * | 5 | Orange | #cf7330   | 25°       | 62% | 50% | T5 / high-stakes / warm   |
  * | 6 | Amber  | #d0a639   | 43°       | 62% | 52% | T6 / lightest / end       |
  */
-export const CATEGORICAL_6 = [
-  '#457cd3', // 1  Blue   — H=217°, S=62%, L=55%
-  '#7852d1', // 2  Violet — H=258°, S=58%, L=57%
-  '#cc4287', // 3  Pink   — H=330°, S=58%, L=53%
-  '#35a699', // 4  Teal   — H=173°, S=52%, L=43%
-  '#cf7330', // 5  Orange — H=25°,  S=62%, L=50%
-  '#d0a639', // 6  Amber  — H=43°,  S=62%, L=52%
-] as const
-
-export type Categorical6Color = (typeof CATEGORICAL_6)[number]
-
-export const CATEGORICAL_COLORS = [
-  '#0064FF', // 1  Blue    — brand primary
-  '#0B9470', // 2  Jade    — teal-green, max hue distance from Blue
-  '#7048E8', // 3  Violet  — brand accent
-  '#D07C06', // 4  Amber   — first warm; warm/cool balance for multi-series
-  '#0B8FAD', // 5  Cyan    — fills Blue–Jade gap
-  '#C82868', // 6  Rose    — warm-pink; contrasts all 5 above
-  '#3B5BDB', // 7  Indigo  — Blue–Violet gap
-  '#5C9C1C', // 8  Fern    — yellow-green, earthy
-  '#237A42', // 9  Forest  — mid-green
-  '#A832B8', // 10 Plum    — purple-magenta
-  '#D44422', // 11 Coral   — orange-red
-  '#5A78A8', // 12 Steel   — muted; visual cue that chart exceeds ideal category count
-] as const
-
-export type CategoricalColor = (typeof CATEGORICAL_COLORS)[number]
 
 /**
  * ===========================================================================
@@ -98,7 +71,6 @@ export type CategoricalColor = (typeof CATEGORICAL_COLORS)[number]
  * (tooltip surface + white on-bar text), #adb5bd/#d0d5dd (see notes below).
  */
 export const CHART_GRID = 'var(--color-slate-4)' // gridlines (#e9ecef, #e5e7eb)
-export const CHART_AXIS = 'var(--color-slate-6)' // axis lines / tooltip border (#dee2e6)
 export const CHART_TICK = 'var(--color-slate-11)' // axis tick text (#868e96)
 export const CHART_TOOLTIP_BORDER = 'var(--color-slate-6)' // tooltip border (#dee2e6)
 export const CHART_LABEL = 'var(--color-slate-12)' // on-bar / total value labels (#495057, #ffffff, var(--slate-12))

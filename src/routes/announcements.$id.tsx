@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import {
   Link,
   createFileRoute,
@@ -12,37 +12,28 @@ import {
   ChevronDown,
   Clock,
   Lock,
-  Mail,
   MessageSquare,
   Paperclip,
-  Plus,
   Trash2,
   User,
   Users,
-  X,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { SelectedEntity } from '@/components/comms/entity-selector'
 import type { PGRole } from '@/types/pg-announcement'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
 import { getPGAnnouncementById } from '@/data/mock-pg-announcements'
-import { getStudentById } from '@/data/mock-students'
-import { CLASS_GROUPS } from '@/data/mock-student-groups'
 import { PG_SHORTCUT_PRESETS } from '@/data/pg-shortcuts'
 import { StatusBadge } from '@/components/comms/status-badge'
 import { ReadRate } from '@/components/comms/read-rate'
 import { RecipientReadTable } from '@/components/comms/recipient-read-table'
 import { StaffSelector } from '@/components/comms/staff-selector'
 import { EnquiryEmailSelector } from '@/components/comms/enquiry-email-selector'
-import { MOCK_STAFF } from '@/data/mock-staff'
+
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
+
 import {
   Dialog,
   DialogContent,
@@ -50,7 +41,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog'
 import { cn, stripSalutation } from '@/lib/utils'
 
@@ -109,7 +99,7 @@ function AnnouncementDetailPage() {
     {},
   )
   const [editEnquiryEmail, setEditEnquiryEmail] = useState('')
-  const [editClasses, setEditClasses] = useState<Array<string>>([])
+  const [editClasses, _setEditClasses] = useState<Array<string>>([])
 
   // ---------------------------------------------------------------------------
   // Schedule edit state
@@ -151,19 +141,6 @@ function AnnouncementDetailPage() {
   const noCount = savedData.recipients.filter(
     (r) => r.formResponse === 'no',
   ).length
-  const pendingResponseCount = totalCount - respondedCount
-
-  const uniqueClasses = useMemo(
-    () => [...new Set(savedData.recipients.map((r) => r.classLabel))].sort(),
-    [savedData.recipients],
-  )
-
-  // Class labels available to add (not already in current edit selection)
-  const addableClasses = useMemo(
-    () =>
-      CLASS_GROUPS.map((g) => g.label).filter((l) => !editClasses.includes(l)),
-    [editClasses],
-  )
 
   const postedDate = announcement.postedAt
     ? formatDateTime(announcement.postedAt)
@@ -203,25 +180,6 @@ function AnnouncementDetailPage() {
   // ---------------------------------------------------------------------------
   // Edit handlers
   // ---------------------------------------------------------------------------
-  function startEditing() {
-    setEditTitle(savedData.title)
-    setEditDescription(stripHtml(savedData.description))
-    setEditStaffInCharge(
-      savedData.staffInCharge.map((m) => ({
-        id: m.id,
-        label: m.name,
-        type: 'individual' as const,
-        count: 1,
-      })),
-    )
-    const roleMap: Record<string, PGRole> = {}
-    for (const m of savedData.staffInCharge) roleMap[m.id] = m.role
-    setEditStaffRoles(roleMap)
-    setEditEnquiryEmail(savedData.enquiryEmail)
-    setEditClasses([...uniqueClasses])
-    setIsEditing(true)
-  }
-
   function cancelEditing() {
     setIsEditing(false)
   }
@@ -281,14 +239,6 @@ function AnnouncementDetailPage() {
     }))
     toast.success('Changes saved')
     setIsEditing(false)
-  }
-
-  function removeClass(cls: string) {
-    setEditClasses((prev) => prev.filter((c) => c !== cls))
-  }
-
-  function addClass(cls: string) {
-    setEditClasses((prev) => [...prev, cls].sort())
   }
 
   return (
