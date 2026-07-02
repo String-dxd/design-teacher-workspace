@@ -91,7 +91,7 @@ function AdminBanner({ scope }: { scope: 'my' | 'school' }) {
               isSchool ? 'text-twblue-11' : 'text-amber-800',
             )}
           >
-            {isSchool ? 'School-wide view' : 'Admin access'}
+            You have admin access.
           </p>
           <p
             className={cn(
@@ -100,8 +100,8 @@ function AdminBanner({ scope }: { scope: 'my' | 'school' }) {
             )}
           >
             {isSchool
-              ? 'You are viewing and managing all posts across the school.'
-              : 'You can view and manage posts school-wide. Switch to see all school posts.'}
+              ? 'Viewing all posts across your school.'
+              : 'Switch to see and manage posts from all teachers.'}
           </p>
         </div>
       </div>
@@ -122,7 +122,7 @@ function AdminBanner({ scope }: { scope: 'my' | 'school' }) {
             : 'border-amber-300 text-amber-800 hover:bg-amber-100',
         )}
       >
-        {isSchool ? '← My Posts' : 'View school posts →'}
+        {isSchool ? '← Back to my posts' : 'See all school posts →'}
       </Button>
     </div>
   )
@@ -192,12 +192,7 @@ function AdminPostsExperiment() {
   }
 
   return (
-    <div
-      className={cn(
-        'flex min-h-screen flex-col transition-colors duration-300',
-        isSchoolWide && 'bg-twblue-3/40',
-      )}
-    >
+    <div className="flex min-h-screen flex-col">
       <div className="shrink-0 space-y-4 pt-6">
         {/* Admin banner — top of page, above title */}
         <AdminBanner scope={scope} />
@@ -240,7 +235,7 @@ function AdminPostsExperiment() {
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto">
+      <div className={cn('overflow-x-auto transition-colors duration-300', isSchoolWide && 'bg-twblue-3/40')}>
         {paged.length === 0 ? (
           <div className="flex flex-col items-center py-16">
             <p className="text-sm text-muted-foreground">No posts found.</p>
