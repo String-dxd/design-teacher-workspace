@@ -83,6 +83,10 @@ export const Route = createFileRoute('/announcements/new')({
 
 type SendOption = 'now' | 'scheduled'
 
+// Local-only wrapper so React has a stable key without touching the shared
+// PGWebsiteLink type used by drafts/preview/submit payloads.
+type WebsiteLinkRow = PGWebsiteLink & { _key: string }
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -992,7 +996,7 @@ function NewAnnouncementPage() {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [shortcuts, setShortcuts] = useState<Array<Shortcut>>([])
-  const [websiteLinks, setWebsiteLinks] = useState<Array<PGWebsiteLink>>([])
+  const [websiteLinks, setWebsiteLinks] = useState<Array<WebsiteLinkRow>>([])
   const [recipients, setRecipients] = useState<Array<SelectedEntity>>([])
   const [staffInCharge, setStaffInCharge] = useState<Array<SelectedEntity>>([])
   const [staffRoles, setStaffRoles] = useState<Record<string, PGRole>>({})
@@ -1157,7 +1161,12 @@ function NewAnnouncementPage() {
         setTitle(draft.title)
         setDescription(draft.description)
         setShortcuts(draft.shortcuts ?? [])
-        setWebsiteLinks(draft.websiteLinks ?? [])
+        setWebsiteLinks(
+          (draft.websiteLinks ?? []).map((l) => ({
+            ...l,
+            _key: crypto.randomUUID(),
+          })),
+        )
         setRecipients(draft.recipients ?? [])
         setStaffInCharge(draft.staffInCharge ?? [])
         setEnquiryEmail(draft.enquiryEmail ?? '')
@@ -1348,7 +1357,10 @@ function NewAnnouncementPage() {
   // Website link handlers
   function addWebsiteLink() {
     if (websiteLinks.length >= 3) return
-    setWebsiteLinks((prev) => [...prev, { url: '', label: '' }])
+    setWebsiteLinks((prev) => [
+      ...prev,
+      { url: '', label: '', _key: crypto.randomUUID() },
+    ])
   }
   function updateWebsiteLink(
     index: number,
@@ -2131,7 +2143,10 @@ function NewAnnouncementPage() {
                         const missingDescription =
                           link.url.trim() && !link.label.trim()
                         return (
-                          <div key={i} className="flex items-center gap-1.5">
+                          <div
+                            key={link._key}
+                            className="flex items-center gap-1.5"
+                          >
                             <Input
                               type="url"
                               placeholder="https://…"
@@ -2196,7 +2211,7 @@ function NewAnnouncementPage() {
                     <div className="space-y-1.5">
                       {uploadedFiles.map((file, i) => (
                         <div
-                          key={i}
+                          key={`${file.name}-${file.size}-${file.lastModified}`}
                           className="flex items-center gap-2.5 rounded-lg border border-border bg-muted px-3 py-2"
                         >
                           <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -2256,7 +2271,9 @@ function NewAnnouncementPage() {
                   )}
 
                   {uploadedFiles.length < 3 && (
-                    <div
+                    <button
+                      type="button"
+                      aria-label="Add attachments"
                       onClick={() => fileInputRef.current?.click()}
                       onDragOver={(e) => {
                         e.preventDefault()
@@ -2269,7 +2286,7 @@ function NewAnnouncementPage() {
                         processFiles(Array.from(e.dataTransfer.files))
                       }}
                       className={cn(
-                        'flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed px-4 py-4 text-center transition-colors',
+                        'flex w-full cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed px-4 py-4 text-center transition-colors',
                         fileDragOver
                           ? 'border-primary bg-primary/5 text-primary'
                           : 'border-border text-muted-foreground hover:border-input hover:bg-muted hover:text-foreground',
@@ -2283,7 +2300,7 @@ function NewAnnouncementPage() {
                             ? 'Drop files or click to add more'
                             : 'Drop files here or click to browse'}
                       </p>
-                    </div>
+                    </button>
                   )}
                   <input
                     ref={fileInputRef}
@@ -2291,6 +2308,8 @@ function NewAnnouncementPage() {
                     multiple
                     accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
                     className="hidden"
+                    aria-hidden="true"
+                    tabIndex={-1}
                     onChange={handleFileChange}
                   />
                 </div>
@@ -2313,7 +2332,7 @@ function NewAnnouncementPage() {
                     <div className="grid grid-cols-3 gap-2">
                       {uploadedPhotos.map((photo, i) => (
                         <div
-                          key={i}
+                          key={`${photo.file.name}-${photo.file.size}-${photo.file.lastModified}`}
                           draggable
                           onDragStart={(e) => {
                             dragSourceIndex.current = i
