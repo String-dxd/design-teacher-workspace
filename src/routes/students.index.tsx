@@ -308,7 +308,10 @@ function StudentsPage() {
 
   const [sort, setSort] = useState<SortConfig | null>(null)
   const [selectedSubjects, setSelectedSubjects] =
-    useState<Array<string> | null>(() => loadSelectedSubjects())
+    useState<Array<string> | null>(null)
+  useEffect(() => {
+    setSelectedSubjects(loadSelectedSubjects())
+  }, [])
   const [subjectDialogOpen, setSubjectDialogOpen] = useState(false)
   const [isRecalculating, setIsRecalculating] = useState(false)
 
