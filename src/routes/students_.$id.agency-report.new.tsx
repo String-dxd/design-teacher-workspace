@@ -1255,7 +1255,7 @@ function FieldRow({
 
       {field.type === 'narrative' ? (
         <div>
-          <textarea
+          <Textarea
             value={value}
             onChange={(e) => onValueChange(e.target.value)}
             placeholder={
@@ -1264,9 +1264,7 @@ function FieldRow({
                 : 'Enter details…'
             }
             className={cn(
-              'w-full resize-y rounded-lg border px-3.5 py-2.5 text-sm leading-relaxed outline-none transition-colors',
-              'focus:border-primary focus:ring-1 focus:ring-primary',
-              'min-h-[120px]',
+              'resize-y min-h-[120px] px-3.5 py-2.5 leading-relaxed',
               emptyInputBorder,
             )}
           />
@@ -3191,12 +3189,12 @@ function ReportForm({
                   (optional)
                 </span>
               </label>
-              <textarea
+              <Textarea
                 id="note-to-principal"
                 value={noteToPrincipal}
                 onChange={(e) => setNoteToPrincipal(e.target.value)}
                 placeholder="e.g. Counselling details needed in Section 5. Housing info may be outdated."
-                className="min-h-[100px] w-full resize-none rounded-lg border px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary"
+                className="min-h-[100px] resize-none px-3 py-2"
               />
             </div>
             <DialogFooter>
