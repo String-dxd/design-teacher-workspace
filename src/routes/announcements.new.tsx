@@ -2268,7 +2268,9 @@ function NewAnnouncementPage() {
                   )}
 
                   {uploadedFiles.length < 3 && (
-                    <div
+                    <button
+                      type="button"
+                      aria-label="Add attachments"
                       onClick={() => fileInputRef.current?.click()}
                       onDragOver={(e) => {
                         e.preventDefault()
@@ -2281,7 +2283,7 @@ function NewAnnouncementPage() {
                         processFiles(Array.from(e.dataTransfer.files))
                       }}
                       className={cn(
-                        'flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed px-4 py-4 text-center transition-colors',
+                        'flex w-full cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed px-4 py-4 text-center transition-colors',
                         fileDragOver
                           ? 'border-primary bg-primary/5 text-primary'
                           : 'border-border text-muted-foreground hover:border-input hover:bg-muted hover:text-foreground',
@@ -2295,7 +2297,7 @@ function NewAnnouncementPage() {
                             ? 'Drop files or click to add more'
                             : 'Drop files here or click to browse'}
                       </p>
-                    </div>
+                    </button>
                   )}
                   <input
                     ref={fileInputRef}
@@ -2303,6 +2305,8 @@ function NewAnnouncementPage() {
                     multiple
                     accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
                     className="hidden"
+                    aria-hidden="true"
+                    tabIndex={-1}
                     onChange={handleFileChange}
                   />
                 </div>
