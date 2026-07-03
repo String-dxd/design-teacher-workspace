@@ -55,7 +55,15 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Tooltip,
   TooltipContent,
@@ -432,18 +440,21 @@ function AddCollaboratorsModal({
               placeholder="Or add by name or email"
               className="flex-1"
             />
-            <select
+            <Select
               value={permission}
-              onChange={(e) =>
-                setPermission(e.target.value as Collaborator['permission'])
+              onValueChange={(value) =>
+                setPermission(value as Collaborator['permission'])
               }
-              className="rounded-md border bg-background px-2 text-sm outline-none focus:border-primary"
-              aria-label="Permission"
             >
-              <option value="edit">Can edit</option>
-              <option value="comment">Can comment</option>
-              <option value="view">Can view</option>
-            </select>
+              <SelectTrigger aria-label="Permission">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="edit">Can edit</SelectItem>
+                <SelectItem value="comment">Can comment</SelectItem>
+                <SelectItem value="view">Can view</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <label
@@ -452,12 +463,12 @@ function AddCollaboratorsModal({
             >
               Message <span className="font-normal">(optional)</span>
             </label>
-            <textarea
+            <Textarea
               id="collab-message"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="What do you want them to do?"
-              className="min-h-[90px] w-full resize-none rounded-lg border px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary"
+              className="min-h-[90px] resize-none"
             />
           </div>
         </div>
@@ -1244,7 +1255,7 @@ function FieldRow({
 
       {field.type === 'narrative' ? (
         <div>
-          <textarea
+          <Textarea
             value={value}
             onChange={(e) => onValueChange(e.target.value)}
             placeholder={
@@ -1253,9 +1264,7 @@ function FieldRow({
                 : 'Enter details…'
             }
             className={cn(
-              'w-full resize-y rounded-lg border px-3.5 py-2.5 text-sm leading-relaxed outline-none transition-colors',
-              'focus:border-primary focus:ring-1 focus:ring-primary',
-              'min-h-[120px]',
+              'resize-y min-h-[120px] px-3.5 py-2.5 leading-relaxed',
               emptyInputBorder,
             )}
           />
@@ -2540,6 +2549,7 @@ function ChildrenHomeFilledRendering({
         <div>
           {approved ? (
             <p
+              /* fence exception (plan 019): blue-ink signature in the printed-report facsimile — intentionally Tailwind blue-900, permanent light-mode region */
               className="mb-1 text-[20px] leading-none text-blue-900"
               style={{
                 fontFamily:
@@ -3180,12 +3190,12 @@ function ReportForm({
                   (optional)
                 </span>
               </label>
-              <textarea
+              <Textarea
                 id="note-to-principal"
                 value={noteToPrincipal}
                 onChange={(e) => setNoteToPrincipal(e.target.value)}
                 placeholder="e.g. Counselling details needed in Section 5. Housing info may be outdated."
-                className="min-h-[100px] w-full resize-none rounded-lg border px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary"
+                className="min-h-[100px] resize-none px-3 py-2"
               />
             </div>
             <DialogFooter>

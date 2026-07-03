@@ -9,6 +9,7 @@ import type {
   Student,
 } from '@/types/student'
 import type { ColumnConfig } from '@/components/students/column-visibility-popover'
+import type { FlagColumnSpec } from '@/lib/apply-flag-columns'
 import { useFeatureFlag } from '@/hooks/use-feature-flag'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
 import {
@@ -33,6 +34,7 @@ import {
 
 import { getMetrics, mockStudents } from '@/data/mock-students'
 import { getImportedColumns, saveImportedColumns } from '@/lib/imported-columns'
+import { applyFlagColumns } from '@/lib/apply-flag-columns'
 import { useProfileGroups } from '@/lib/profile-group-storage'
 import {
   computeStudentOverall,
@@ -174,102 +176,50 @@ function StudentsPage() {
   })
   const importedColumns = columns.filter((c) => c.imported)
 
-  // Sync MSF via Uplift Office columns when the feature flag toggles at runtime
+  // Sync flag-gated columns when their feature flags toggle at runtime.
+  // One table-driven pass: each spec inserts its columns at an anchor when
+  // enabled, or removes them when disabled. Spec order matters — the
+  // overallPercentage spec anchors on 'socialLinks', which the socialLinks
+  // spec may insert earlier in the same pass.
   useEffect(() => {
-    const MSF_IDS = [
-      'supportedByComLink',
-      'supportedByFsc',
-      'parentsConsideringDivorce',
-      'nonIntactFamily',
+    const specs: Array<FlagColumnSpec> = [
+      {
+        enabled: msfUpliftEnabled,
+        ids: [
+          'supportedByComLink',
+          'supportedByFsc',
+          'parentsConsideringDivorce',
+          'nonIntactFamily',
+        ],
+        anchorId: 'fas',
+        position: 'before',
+      },
+      {
+        enabled: attentionTagEnabled,
+        ids: ['attentionTags'],
+        anchorId: 'cca',
+        position: 'after',
+      },
+      {
+        enabled: socialLinksEnabled,
+        ids: ['socialLinks'],
+        anchorId: 'lowMoodFlagged',
+        position: 'after',
+      },
+      {
+        enabled: overallPercentageEnabled,
+        ids: ['overallPercentage'],
+        anchorId: 'socialLinks',
+        position: 'after',
+      },
     ]
-    setColumns((prev) => {
-      const hasMsf = prev.some((c) => MSF_IDS.includes(c.id))
-      if (msfUpliftEnabled && !hasMsf) {
-        const msfColumns = defaultColumns.filter((c) => MSF_IDS.includes(c.id))
-        const fasIndex = prev.findIndex((c) => c.id === 'fas')
-        const insertAt = fasIndex >= 0 ? fasIndex : prev.length
-        return [
-          ...prev.slice(0, insertAt),
-          ...msfColumns,
-          ...prev.slice(insertAt),
-        ]
-      }
-      if (!msfUpliftEnabled && hasMsf) {
-        return prev.filter((c) => !MSF_IDS.includes(c.id))
-      }
-      return prev
-    })
-  }, [msfUpliftEnabled])
-
-  // Sync the Attention tag column when the feature flag toggles at runtime
-  useEffect(() => {
-    setColumns((prev) => {
-      const hasAttentionTag = prev.some((c) => c.id === 'attentionTags')
-      if (attentionTagEnabled && !hasAttentionTag) {
-        const attentionColumn = defaultColumns.find(
-          (c) => c.id === 'attentionTags',
-        )
-        if (!attentionColumn) return prev
-        const ccaIndex = prev.findIndex((c) => c.id === 'cca')
-        const insertAt = ccaIndex >= 0 ? ccaIndex + 1 : prev.length
-        return [
-          ...prev.slice(0, insertAt),
-          attentionColumn,
-          ...prev.slice(insertAt),
-        ]
-      }
-      if (!attentionTagEnabled && hasAttentionTag) {
-        return prev.filter((c) => c.id !== 'attentionTags')
-      }
-      return prev
-    })
-  }, [attentionTagEnabled])
-
-  // Sync the Social links column when the feature flag toggles at runtime
-  useEffect(() => {
-    setColumns((prev) => {
-      const hasSocial = prev.some((c) => c.id === 'socialLinks')
-      if (socialLinksEnabled && !hasSocial) {
-        const socialColumn = defaultColumns.find((c) => c.id === 'socialLinks')
-        if (!socialColumn) return prev
-        const lowMoodIndex = prev.findIndex((c) => c.id === 'lowMoodFlagged')
-        const insertAt = lowMoodIndex >= 0 ? lowMoodIndex + 1 : prev.length
-        return [
-          ...prev.slice(0, insertAt),
-          socialColumn,
-          ...prev.slice(insertAt),
-        ]
-      }
-      if (!socialLinksEnabled && hasSocial) {
-        return prev.filter((c) => c.id !== 'socialLinks')
-      }
-      return prev
-    })
-  }, [socialLinksEnabled])
-
-  // Sync the Overall % column when the feature flag toggles at runtime
-  useEffect(() => {
-    setColumns((prev) => {
-      const hasOverall = prev.some((c) => c.id === 'overallPercentage')
-      if (overallPercentageEnabled && !hasOverall) {
-        const overallColumn = defaultColumns.find(
-          (c) => c.id === 'overallPercentage',
-        )
-        if (!overallColumn) return prev
-        const socialIndex = prev.findIndex((c) => c.id === 'socialLinks')
-        const insertAt = socialIndex >= 0 ? socialIndex + 1 : prev.length
-        return [
-          ...prev.slice(0, insertAt),
-          overallColumn,
-          ...prev.slice(insertAt),
-        ]
-      }
-      if (!overallPercentageEnabled && hasOverall) {
-        return prev.filter((c) => c.id !== 'overallPercentage')
-      }
-      return prev
-    })
-  }, [overallPercentageEnabled])
+    setColumns((prev) => applyFlagColumns(prev, specs, defaultColumns))
+  }, [
+    msfUpliftEnabled,
+    attentionTagEnabled,
+    socialLinksEnabled,
+    overallPercentageEnabled,
+  ])
 
   // Sync imported columns when the Import Data flag toggles at runtime.
   // When off, hide previously-imported columns; when on, restore them from
@@ -308,7 +258,10 @@ function StudentsPage() {
 
   const [sort, setSort] = useState<SortConfig | null>(null)
   const [selectedSubjects, setSelectedSubjects] =
-    useState<Array<string> | null>(() => loadSelectedSubjects())
+    useState<Array<string> | null>(null)
+  useEffect(() => {
+    setSelectedSubjects(loadSelectedSubjects())
+  }, [])
   const [subjectDialogOpen, setSubjectDialogOpen] = useState(false)
   const [isRecalculating, setIsRecalculating] = useState(false)
 

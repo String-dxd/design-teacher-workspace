@@ -1,12 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { X } from 'lucide-react'
 
-import type { FeatureFlags } from '@/lib/feature-flags/types'
 import { Button } from '@/components/ui/button'
-import {
-  DEFAULT_FEATURE_FLAGS,
-  FEATURE_FLAGS_STORAGE_KEY,
-} from '@/lib/feature-flags/constants'
+import { useFeatureFlags } from '@/lib/feature-flags'
 
 export const Route = createFileRoute('/_guest/create')({
   component: CreatePage,
@@ -117,21 +113,9 @@ function CreateCard({ option }: { option: CreateOption }) {
   )
 }
 
-function getFormsEnabled(): boolean {
-  try {
-    const stored = localStorage.getItem(FEATURE_FLAGS_STORAGE_KEY)
-    if (stored) {
-      const flags = JSON.parse(stored) as Partial<FeatureFlags>
-      return flags.forms ?? DEFAULT_FEATURE_FLAGS.forms
-    }
-  } catch {
-    // ignore
-  }
-  return DEFAULT_FEATURE_FLAGS.forms
-}
-
 function CreatePage() {
-  const formsEnabled = getFormsEnabled()
+  const { flags } = useFeatureFlags()
+  const formsEnabled = flags.forms
 
   const options = formsEnabled
     ? CREATE_OPTIONS
