@@ -96,7 +96,7 @@ const featureFlagConfigs: Array<FeatureFlagConfig> = [
     key: 'report-generation',
     label: 'Report Generation',
     description:
-      "Allow new agency reports to be generated. When off, existing reports stay visible on the student profile but the '+ New Agency Report' button and the wizard entry point are hidden",
+      "Agency reports only. Allow new agency reports to be generated. When off, existing reports stay visible on the student profile but the '+ New Agency Report' button and the wizard entry point are hidden",
     stage: 'Experiment',
   },
   {
@@ -159,7 +159,7 @@ const featureFlagConfigs: Array<FeatureFlagConfig> = [
     key: 'hdp-report-builder',
     label: 'HDP Report Builder',
     description:
-      'Enable the HDP report builder — Reports-page entry, the split-view section builder (toggle, reorder, choose visualisation), inline Smart Compose, and the P1 parents-first share flow',
+      'Enable the P1–P2 reporting-cycle hub — class + term picker, a two-stage layout/write builder (section toggle + reorder, inline Smart Compose), and the parents-first share flow',
     stage: 'Experiment',
   },
   {

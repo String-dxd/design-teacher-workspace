@@ -3,10 +3,11 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import {
   ClipboardCheck,
   Columns3,
+  FileText,
   ListFilter,
   Search,
   Send,
-  Wand2,
+  Settings2,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -20,7 +21,12 @@ import type {
 } from '@/types/report'
 import { TermSelector } from '@/components/reports/term-selector'
 import { ReportTable } from '@/components/reports/report-table'
+import {
+  CycleStudentTable,
+  statusFor,
+} from '@/components/reports/cycle-student-table'
 import { ClassSelector } from '@/components/students/class-selector'
+import { EmptyState } from '@/components/empty-state'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,7 +47,7 @@ import {
   SelectTrigger,
 } from '@/components/ui/select'
 import { CURRENT_ACADEMIC_YEAR, mockReports } from '@/data/mock-reports'
-import { getSchoolLevel } from '@/data/mock-students'
+import { getSchoolLevel, mockStudents } from '@/data/mock-students'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
 import { useFeatureFlag } from '@/hooks/use-feature-flag'
 import {
@@ -59,11 +65,15 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { loadCycle, patchStudent } from '@/lib/hdp-cycle-store'
+import { commitCycleReport } from '@/lib/hdp-report-commit'
+import { saveShareMessage } from '@/lib/hdp-template-store'
 
 type GroupBy = 'none' | 'student' | 'term'
 
 interface ReportsSearchParams {
   studentId?: string
+  classId?: string
   term?: Term
   groupBy?: GroupBy
 }
@@ -73,6 +83,7 @@ export const Route = createFileRoute('/reports/')({
   validateSearch: (search: Record<string, unknown>): ReportsSearchParams => {
     return {
       studentId: search.studentId as string | undefined,
+      classId: search.classId as string | undefined,
       term: search.term as Term | undefined,
       groupBy: search.groupBy as GroupBy | undefined,
     }
@@ -82,11 +93,16 @@ export const Route = createFileRoute('/reports/')({
 function ReportsPage() {
   const {
     studentId: initialStudentId,
+    classId: initialClassId,
     term: initialTerm,
     groupBy: initialGroupBy,
   } = Route.useSearch()
-  const [schoolLevel, setSchoolLevel] = useState<SchoolLevel>('secondary')
-  const [selectedClass, setSelectedClass] = useState('Secondary 3')
+  const [schoolLevel, setSchoolLevel] = useState<SchoolLevel>(
+    initialClassId?.startsWith('P') ? 'primary' : 'secondary',
+  )
+  const [selectedClass, setSelectedClass] = useState(
+    initialClassId ?? 'Secondary 3',
+  )
   const [selectedTerm, setSelectedTerm] = useState<Term | ''>(initialTerm || '')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedReviewStatus, setSelectedReviewStatus] = useState<
@@ -106,18 +122,14 @@ function ReportsPage() {
 
   useSetBreadcrumbs([{ label: 'Reports', href: '/reports' }])
 
-  const navigate = useNavigate()
   const builderEnabled = useFeatureFlag('hdp-report-builder')
 
-  const handleOpenInBuilder = () => {
-    const first = reports.find((r) => selectedIds.has(r.id))
-    navigate({
-      to: '/reports/build',
-      search: first
-        ? { studentId: first.studentId, term: first.term }
-        : {},
-    })
-  }
+  // Cycle hub scope: P1–P2 only, flag on. Everything else (secondary, P3–P6,
+  // flag off) keeps the existing table view untouched.
+  const isLowerPrimaryClass =
+    selectedClass.startsWith('P1') || selectedClass.startsWith('P2')
+  const showCycleHub =
+    schoolLevel === 'primary' && isLowerPrimaryClass && builderEnabled
 
   // Filter by school level first
   const levelFilteredReports = useMemo(() => {
@@ -200,17 +212,6 @@ function ReportsPage() {
 
     return { totalReports, uniqueStudents, pendingReview, notSentCount }
   }, [filteredReports])
-
-  const sendableCount = useMemo(() => {
-    if (schoolLevel === 'secondary') {
-      return reports.filter(
-        (r) => selectedIds.has(r.id) && r.studentStatus === 'not_sent',
-      ).length
-    }
-    return reports.filter(
-      (r) => selectedIds.has(r.id) && r.parentStatus === 'not_sent',
-    ).length
-  }, [reports, selectedIds, schoolLevel])
 
   const reviewableCount = useMemo(() => {
     return reports.filter(
@@ -320,12 +321,6 @@ function ReportsPage() {
               View student progress across academic and character development
             </p>
           </div>
-          {builderEnabled && (
-            <Button onClick={() => navigate({ to: '/reports/build', search: {} })}>
-              <Wand2 className="mr-2 size-4" />
-              Build report
-            </Button>
-          )}
         </div>
 
         {/* Class Selector */}
@@ -337,7 +332,111 @@ function ReportsPage() {
             onSchoolLevelChange={handleLevelChange}
           />
         </div>
+      </div>
 
+      {showCycleHub ? (
+        <CycleHub classId={selectedClass} />
+      ) : (
+        <LegacyReportsView
+          metrics={metrics}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          activeFilterCount={activeFilterCount}
+          selectedTerm={selectedTerm}
+          setSelectedTerm={setSelectedTerm}
+          selectedReviewStatus={selectedReviewStatus}
+          setSelectedReviewStatus={setSelectedReviewStatus}
+          selectedParentStatus={selectedParentStatus}
+          setSelectedParentStatus={setSelectedParentStatus}
+          schoolLevel={schoolLevel}
+          selectedStudentStatus={selectedStudentStatus}
+          setSelectedStudentStatus={setSelectedStudentStatus}
+          groupBy={groupBy}
+          setGroupBy={setGroupBy}
+          filteredReports={filteredReports}
+          selectedIds={selectedIds}
+          setSelectedIds={setSelectedIds}
+          onQuickSendStudent={handleQuickSendStudent}
+          onQuickSendParent={handleQuickSendParent}
+          sendLabel={sendLabel}
+          handleSend={handleSend}
+          pgSendableCount={pgSendableCount}
+          handleBulkSendParentsPg={handleBulkSendParentsPg}
+          reviewableCount={reviewableCount}
+          handleRequestReview={handleRequestReview}
+        />
+      )}
+    </div>
+  )
+}
+
+// ── Legacy view: secondary + P3–P6 primary + flag off. Unchanged behaviour. ──
+
+interface LegacyReportsViewProps {
+  metrics: {
+    totalReports: number
+    uniqueStudents: number
+    pendingReview: number
+    notSentCount: number
+  }
+  searchQuery: string
+  setSearchQuery: (v: string) => void
+  activeFilterCount: number
+  selectedTerm: Term | ''
+  setSelectedTerm: (v: Term | '') => void
+  selectedReviewStatus: ReviewStatus | ''
+  setSelectedReviewStatus: (v: ReviewStatus | '') => void
+  selectedParentStatus: ParentStatus | ''
+  setSelectedParentStatus: (v: ParentStatus | '') => void
+  schoolLevel: SchoolLevel
+  selectedStudentStatus: StudentStatus | ''
+  setSelectedStudentStatus: (v: StudentStatus | '') => void
+  groupBy: GroupBy
+  setGroupBy: (v: GroupBy) => void
+  filteredReports: Array<HolisticReport>
+  selectedIds: Set<string>
+  setSelectedIds: (v: Set<string>) => void
+  onQuickSendStudent: (id: string) => void
+  onQuickSendParent: (id: string) => void
+  sendLabel: string
+  handleSend: () => void
+  pgSendableCount: number
+  handleBulkSendParentsPg: () => void
+  reviewableCount: number
+  handleRequestReview: () => void
+}
+
+function LegacyReportsView({
+  metrics,
+  searchQuery,
+  setSearchQuery,
+  activeFilterCount,
+  selectedTerm,
+  setSelectedTerm,
+  selectedReviewStatus,
+  setSelectedReviewStatus,
+  selectedParentStatus,
+  setSelectedParentStatus,
+  schoolLevel,
+  selectedStudentStatus,
+  setSelectedStudentStatus,
+  groupBy,
+  setGroupBy,
+  filteredReports,
+  selectedIds,
+  setSelectedIds,
+  onQuickSendStudent,
+  onQuickSendParent,
+  sendLabel,
+  handleSend,
+  pgSendableCount,
+  handleBulkSendParentsPg,
+  reviewableCount,
+  handleRequestReview,
+}: LegacyReportsViewProps) {
+  return (
+    <>
+      <div className="shrink-0 space-y-6">
         {/* Metrics Cards */}
         <div className="grid grid-cols-1 gap-4 px-6 md:grid-cols-4">
           <div className="rounded-lg border bg-card p-4">
@@ -530,8 +629,8 @@ function ReportsPage() {
         onSelectionChange={setSelectedIds}
         schoolLevel={schoolLevel}
         groupBy={groupBy}
-        onQuickSendStudent={handleQuickSendStudent}
-        onQuickSendParent={handleQuickSendParent}
+        onQuickSendStudent={onQuickSendStudent}
+        onQuickSendParent={onQuickSendParent}
       />
 
       {/* Floating Bulk Action Bar */}
@@ -541,16 +640,6 @@ function ReportsPage() {
             <span className="text-sm font-medium text-muted-foreground">
               {selectedIds.size} selected
             </span>
-            {builderEnabled && (
-              <Button
-                size="sm"
-                className="rounded-full"
-                onClick={handleOpenInBuilder}
-              >
-                <Wand2 className="mr-2 h-4 w-4" />
-                Open in builder
-              </Button>
-            )}
             <AlertDialog>
               <AlertDialogTrigger
                 render={
@@ -635,6 +724,176 @@ function ReportsPage() {
           </div>
         </div>
       )}
+    </>
+  )
+}
+
+// ── Cycle hub: P1–P2 + flag on. Reporting-cycle for "~30 reports due this week". ──
+
+function CycleHub({ classId }: { classId: string }) {
+  const navigate = useNavigate()
+  const [term, setTerm] = useState<Term>('Term 2')
+  const [shareOpen, setShareOpen] = useState(false)
+  const [shareState, setShareState] = useState<'idle' | 'loading'>('idle')
+  const [announcement, setAnnouncement] = useState('')
+  // Bump this to force re-reads from localStorage after a mutation.
+  const [refreshKey, setRefreshKey] = useState(0)
+
+  const classStudents = useMemo(
+    () => mockStudents.filter((s) => s.class === classId),
+    [classId],
+  )
+
+  // refreshKey is a deliberate extra dependency: it forces a re-read from
+  // localStorage after a mutation (loadCycle itself doesn't change identity).
+  const cycle = useMemo(
+    () => loadCycle(classId, term),
+    [classId, term, refreshKey],
+  )
+
+  const summary = useMemo(() => {
+    let ready = 0
+    let drafts = 0
+    let sent = 0
+    for (const student of classStudents) {
+      const status = statusFor(cycle, student.id)
+      if (status === 'ready') ready += 1
+      else if (status === 'draft') drafts += 1
+      else if (status === 'sent') sent += 1
+    }
+    return { ready, drafts, sent, total: classStudents.length }
+  }, [classStudents, cycle])
+
+  const readyStudents = useMemo(
+    () => classStudents.filter((s) => statusFor(cycle, s.id) === 'ready'),
+    [classStudents, cycle],
+  )
+
+  if (classStudents.length === 0) {
+    return (
+      <EmptyState
+        title="No students in this class"
+        description="Pick a different class to start a reporting cycle."
+        icon={<FileText className="text-muted-foreground size-8" />}
+      />
+    )
+  }
+
+  function handleShareConfirm() {
+    setShareState('loading')
+    window.setTimeout(() => {
+      if (!cycle) return
+      for (const student of readyStudents) {
+        const built = commitCycleReport(student, term, cycle)
+        const hasDraft = Object.prototype.hasOwnProperty.call(
+          cycle.perStudent,
+          student.id,
+        )
+        const parentMessage = hasDraft
+          ? cycle.perStudent[student.id].parentMessage
+          : ''
+        saveShareMessage(built.id, parentMessage)
+        patchStudent(classId, term, student.id, {
+          sentAt: new Date().toISOString(),
+        })
+      }
+      setShareState('idle')
+      setShareOpen(false)
+      setRefreshKey((k) => k + 1)
+      const message = `Shared ${readyStudents.length} report${readyStudents.length !== 1 ? 's' : ''} with parents`
+      toast.success(message)
+      setAnnouncement(message)
+    }, 600)
+  }
+
+  return (
+    <div className="flex flex-col gap-6 px-6 pb-10">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="space-y-1">
+          <Label htmlFor="cycle-term">Term</Label>
+          <TermSelector value={term} onValueChange={(v) => v && setTerm(v)} />
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() =>
+              navigate({
+                to: '/reports/cycle/layout',
+                search: { classId, term },
+              })
+            }
+          >
+            <Settings2 className="mr-2 size-4" />
+            {cycle ? 'Edit layout' : 'Set up layout'}
+          </Button>
+          <AlertDialog open={shareOpen} onOpenChange={setShareOpen}>
+            <AlertDialogTrigger
+              render={
+                <Button disabled={!cycle || summary.ready === 0}>
+                  <Send className="mr-2 size-4" />
+                  Share with parents ({summary.ready})
+                </Button>
+              }
+            />
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Share with parents</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Send {summary.ready} ready report
+                  {summary.ready !== 1 ? 's' : ''} to parents via Parents
+                  Gateway? Each parent will see the note you wrote for their
+                  child, if any.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleShareConfirm}
+                  disabled={shareState === 'loading'}
+                >
+                  {shareState === 'loading' ? 'Sharing…' : 'Share'}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      </div>
+
+      {/* Cycle summary strip */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+        <div className="rounded-lg border bg-card p-4">
+          <div className="text-sm text-muted-foreground">Ready</div>
+          <div className="text-2xl font-semibold">
+            {summary.ready} of {summary.total}
+          </div>
+        </div>
+        <div className="rounded-lg border bg-card p-4">
+          <div className="text-sm text-muted-foreground">Drafts</div>
+          <div className="text-2xl font-semibold">{summary.drafts}</div>
+        </div>
+        <div className="rounded-lg border bg-card p-4">
+          <div className="text-sm text-muted-foreground">Sent</div>
+          <div className="text-2xl font-semibold">{summary.sent}</div>
+        </div>
+        <div className="rounded-lg border bg-card p-4">
+          <div className="text-sm text-muted-foreground">Not started</div>
+          <div className="text-2xl font-semibold">
+            {summary.total - summary.ready - summary.drafts - summary.sent}
+          </div>
+        </div>
+      </div>
+
+      <CycleStudentTable
+        students={classStudents}
+        cycle={cycle}
+        classId={classId}
+        term={term}
+      />
+
+      {/* Polite live region for the async share action. */}
+      <div role="status" aria-live="polite" className="sr-only">
+        {announcement}
+      </div>
     </div>
   )
 }

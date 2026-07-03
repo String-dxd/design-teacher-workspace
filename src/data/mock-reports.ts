@@ -914,6 +914,20 @@ export function addReport(report: HolisticReport): void {
   }
 }
 
+/**
+ * Insert or replace a report by id. `generateAllReports` pre-generates deterministic
+ * ids for most students/terms, so `addReport`'s "push if absent" no-ops for them —
+ * this is the function committing a built report must use.
+ */
+export function upsertReport(report: HolisticReport): void {
+  const index = mockReports.findIndex((r) => r.id === report.id)
+  if (index === -1) {
+    mockReports.push(report)
+  } else {
+    mockReports[index] = report
+  }
+}
+
 export function getReportById(id: string): HolisticReport | undefined {
   return mockReports.find((report) => report.id === id)
 }

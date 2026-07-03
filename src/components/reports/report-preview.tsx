@@ -9,40 +9,93 @@ import type {
 import { RichTextEditor } from '@/components/comms/rich-text-editor'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
+import { AttendanceRing } from '@/components/reports/attendance-ring'
+import { cn } from '@/lib/utils'
 
 // Shared P1 report renderer — used by the builder's live preview (editable) and the
 // parent-facing guest view (read-only). Renders the ordered, enabled blocks of a
 // ReportLayout. P1 shows Learning Outcomes + qualitative descriptors — never marks,
 // percentages, or A1–F9 grades.
+//
+// Design: one hero visual ("Term at a glance") right after pupil particulars; the
+// rest of the document is typographic — each learning outcome / personal quality
+// renders its descriptor as a subtle text chip, no repeated bars.
 
-const LO_FRACTION: Record<LearningOutcomeStatus, number> = {
-  Accomplished: 1,
-  Competent: 0.75,
-  Developing: 0.5,
-  Beginning: 0.25,
+// Chip text uses step 12 (lime/amber) and twblue-11 — step 11 on step 3 sits just
+// below the 4.5:1 AA floor for these hues at 12px (measured 4.25–4.29).
+const LO_CHIP_CLASS: Record<LearningOutcomeStatus, string> = {
+  Accomplished: 'bg-twblue-3 text-twblue-11',
+  Competent: 'bg-lime-3 text-lime-12',
+  Developing: 'bg-amber-3 text-amber-12',
+  Beginning: 'bg-muted text-muted-foreground',
 }
 
-const QUALITY_FRACTION: Record<CoreValueLevel, number> = {
-  'Demonstrates Very Strongly': 1,
-  'Demonstrates Strongly': 0.8,
-  Demonstrates: 0.6,
-  'Regularly Shows': 0.4,
-  Beginning: 0.2,
+const QUALITY_CHIP_CLASS: Record<CoreValueLevel, string> = {
+  'Demonstrates Very Strongly': 'bg-twblue-3 text-twblue-11',
+  'Demonstrates Strongly': 'bg-lime-3 text-lime-12',
+  Demonstrates: 'bg-lime-3 text-lime-12',
+  'Regularly Shows': 'bg-amber-3 text-amber-12',
+  Beginning: 'bg-muted text-muted-foreground',
 }
 
-function StatusBar({ fraction }: { fraction: number }) {
+function DescriptorChip({
+  label,
+  className,
+}: {
+  label: string
+  className: string
+}) {
   return (
-    <div className="bg-muted h-2 w-24 shrink-0 overflow-hidden rounded-full">
-      <div
-        className="bg-primary h-full rounded-full"
-        style={{ width: `${Math.round(fraction * 100)}%` }}
-      />
-    </div>
+    <span
+      className={cn(
+        'shrink-0 rounded-full px-2 py-0.5 text-xs font-medium',
+        className,
+      )}
+    >
+      {label}
+    </span>
   )
 }
 
 function firstName(name: string): string {
   return name.split(' ').filter(Boolean)[0] ?? name
+}
+
+/** "Term at a glance" — the document's single designed visual moment. */
+function TermAtAGlance({ report }: { report: HolisticReport }) {
+  const attendancePct = Math.round(
+    (report.attendance.daysPresent / report.attendance.totalSchoolDays) * 100,
+  )
+
+  return (
+    <div className="bg-card flex flex-col gap-4 rounded-xl border p-4 sm:flex-row sm:items-center sm:gap-6">
+      <div className="flex items-center gap-3">
+        <div aria-hidden className="text-primary">
+          <AttendanceRing
+            percentage={attendancePct}
+            size={88}
+            strokeWidth={8}
+            color="currentColor"
+          />
+        </div>
+        <div className="text-sm">
+          <p className="font-medium">Attendance</p>
+          <p className="text-muted-foreground">
+            {attendancePct}% · present {report.attendance.daysPresent} of{' '}
+            {report.attendance.totalSchoolDays} days
+          </p>
+        </div>
+      </div>
+      <div className="hidden h-12 w-px bg-border sm:block" aria-hidden />
+      <div className="text-sm">
+        <p className="font-medium">Conduct: {report.character.conduct}</p>
+        <p className="text-muted-foreground">
+          {firstName(report.studentName)} had a{' '}
+          {report.character.conduct.toLowerCase()} term overall.
+        </p>
+      </div>
+    </div>
+  )
 }
 
 export interface ReportPreviewProps {
@@ -64,10 +117,23 @@ export function ReportPreview({
   const ordered = [...blocks]
     .filter((b) => b.enabled)
     .sort((a, b) => a.order - b.order)
+  const pupilInfoBlock = ordered.find((b) => b.key === 'pupilInfo')
+  const restBlocks = ordered.filter((b) => b.key !== 'pupilInfo')
 
   return (
     <div className="mx-auto flex max-w-[66ch] flex-col gap-6">
-      {ordered.map((block) => (
+      {pupilInfoBlock && (
+        <PreviewBlock
+          key={pupilInfoBlock.key}
+          block={pupilInfoBlock}
+          report={report}
+          editable={editable}
+          comments={comments}
+          onCommentsChange={onCommentsChange}
+        />
+      )}
+      {pupilInfoBlock && <TermAtAGlance report={report} />}
+      {restBlocks.map((block) => (
         <PreviewBlock
           key={block.key}
           block={block}
@@ -144,13 +210,10 @@ function PreviewBlock({
                     <span className="text-muted-foreground min-w-0 flex-1 truncate">
                       {lo.name}
                     </span>
-                    {block.viz === 'table' ? (
-                      <span className="text-foreground shrink-0 text-xs font-medium">
-                        {lo.status}
-                      </span>
-                    ) : (
-                      <StatusBar fraction={LO_FRACTION[lo.status]} />
-                    )}
+                    <DescriptorChip
+                      label={lo.status}
+                      className={LO_CHIP_CLASS[lo.status]}
+                    />
                   </div>
                 ))}
               </div>
@@ -227,13 +290,10 @@ function PreviewBlock({
                 className="flex items-center justify-between gap-3 text-sm"
               >
                 <span className="min-w-0 flex-1 truncate">{cv.name}</span>
-                {block.viz === 'table' ? (
-                  <span className="text-muted-foreground shrink-0 text-xs">
-                    {cv.level}
-                  </span>
-                ) : (
-                  <StatusBar fraction={QUALITY_FRACTION[cv.level]} />
-                )}
+                <DescriptorChip
+                  label={cv.level}
+                  className={QUALITY_CHIP_CLASS[cv.level]}
+                />
               </div>
             ))}
           </div>

@@ -3,7 +3,6 @@ import { Link } from '@tanstack/react-router'
 import {
   BookOpen,
   Calendar,
-  Check,
   ChevronRight,
   Clock,
   Eye,
@@ -46,7 +45,6 @@ import { AgencyLogo } from '@/components/agency-logo'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { GenerateHdpWizard } from '@/components/reports/generate-hdp-wizard'
 import { InterventionBanner } from '@/components/students/intervention-banner'
 import { useFeatureFlags } from '@/lib/feature-flags'
 import {
@@ -714,7 +712,6 @@ export function StudentProfile({
   student,
   headerControls,
 }: StudentProfileProps) {
-  const [wizardOpen, setWizardOpen] = useState(false)
   const [analyticsOpen, setAnalyticsOpen] = useState(false)
   const [academicAnalyticsOpen, setAcademicAnalyticsOpen] = useState(false)
   const [primaryContactOpen, setPrimaryContactOpen] = useState(false)
@@ -1845,12 +1842,12 @@ export function StudentProfile({
                     </div>
                   )}
 
-                  {missingTerms.length > 0 && !reportBuilderEnabled && (
+                  {missingTerms.length > 0 && reportBuilderEnabled && (
                     <div className="mt-4 flex items-center gap-2 border-t pt-4">
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setWizardOpen(true)}
+                        render={<Link to="/reports" />}
                       >
                         <Plus className="mr-1 h-4 w-4" />
                         Generate HDP
@@ -1939,13 +1936,6 @@ export function StudentProfile({
           </nav>
         </div>
       </aside>
-
-      <GenerateHdpWizard
-        student={student}
-        missingTerms={missingTerms}
-        open={wizardOpen}
-        onOpenChange={setWizardOpen}
-      />
     </div>
   )
 }

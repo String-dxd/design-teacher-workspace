@@ -263,6 +263,16 @@
       "category": "enhancement",
       "createdAt": "2026-06-29T12:10:00.000Z",
       "completedAt": "2026-06-29T12:25:00.000Z"
+    },
+    {
+      "id": "tw-029",
+      "title": "HDP reports redesign: cycle hub + two-stage builder + report document redesign",
+      "description": "Replace the one-student-at-a-time HDP wizard/split-view builder with a reporting-cycle hub (P1-P2 + hdp-report-builder flag) and a two-stage builder (Stage 1 Layout, Stage 2 Write). Redesign the report document with a single hero 'Term at a glance' visual and typographic descriptor chips, removing the per-section viz system entirely. New src/lib/hdp-cycle-store.ts and src/lib/hdp-report-commit.ts; new routes reports.cycle.layout.tsx and reports.cycle.write.$studentId.tsx; reworked reports.index.tsx (cycle hub) and reports.$id.tsx (layout-aware detail); deleted the old wizard (generate-hdp-wizard + steps) and reports.build.tsx. Per plan at redesign-this-flow-and-snuggly-platypus.md.",
+      "status": "completed",
+      "priority": "high",
+      "category": "feature",
+      "createdAt": "2026-07-03T00:00:00.000Z",
+      "completedAt": "2026-07-03T00:00:00.000Z"
     }
   ]
 }

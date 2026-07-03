@@ -11,7 +11,7 @@
 //
 // The exact per-subject P1 LO statements are representative pending HOD sign-off.
 
-import type { ReportBlock, ReportBlockViz, ReportLayout } from '@/types/report'
+import type { ReportBlock, ReportLayout } from '@/types/report'
 
 export interface SectionDef {
   key: string
@@ -24,8 +24,6 @@ export interface SectionDef {
    * "Not applicable at P1" in the builder.
    */
   applicableAtP1?: boolean
-  /** Visualisation choices for chartable sections; omit for text-only sections. */
-  vizOptions?: Array<ReportBlockViz>
 }
 
 /** The authentic HDP section set, scoped to P1. Order is the default report order. */
@@ -40,9 +38,9 @@ export const P1_SECTION_DEFS: Array<SectionDef> = [
   {
     key: 'subjects',
     label: 'Subjects',
-    description: 'Learning outcomes and qualitative descriptors for each subject',
+    description:
+      'Learning outcomes and qualitative descriptors for each subject',
     applicableAtP1: true,
-    vizOptions: ['bar', 'table', 'progress'],
   },
   {
     key: 'conduct',
@@ -61,7 +59,6 @@ export const P1_SECTION_DEFS: Array<SectionDef> = [
     label: 'Personal qualities',
     description: 'School-set qualities with descriptors',
     applicableAtP1: true,
-    vizOptions: ['bar', 'table', 'progress'],
   },
   {
     key: 'cca',
@@ -129,8 +126,8 @@ export const SECTION_FIELD_DEFS: Record<
   ],
 }
 
-function block(key: string, order: number, viz?: ReportBlockViz): ReportBlock {
-  return { key, enabled: true, order, viz }
+function block(key: string, order: number): ReportBlock {
+  return { key, enabled: true, order }
 }
 
 /**
@@ -140,10 +137,10 @@ function block(key: string, order: number, viz?: ReportBlockViz): ReportBlock {
 export const P1_DEFAULT_LAYOUT: ReportLayout = {
   blocks: [
     block('pupilInfo', 0),
-    block('subjects', 1, 'bar'),
+    block('subjects', 1),
     block('conduct', 2),
     block('attendance', 3),
-    block('personalQualities', 4, 'bar'),
+    block('personalQualities', 4),
     // "Where applicable" sections — present but OFF by default at P1, so a teacher
     // can turn one on if it applies, and sees it's not typical at this level.
     { key: 'cca', enabled: false, order: 5 },
