@@ -26,9 +26,65 @@ your row when done.
 | 015 | Dead code: strip 68 unused imports/locals (TS6133); unblocks a blocking typecheck CI gate | P2 | S–M | 014 | DONE — PR #156 merged to main, reviewer-verified 2026-07-01: 27 files, tsc 110→42 (all TS6133 gone, no new codes), build 0 / vitest 37-16. NOTE: 5 unused `useId`/`useMemo` kept as bare calls (hook-ordering) — tidy candidate. |
 | 016 | Dead code: remove ~10 dead public assets + untrack committed `.DS_Store` | P3 | S | — | DONE — PR #155 merged to main, reviewer-verified 2026-07-01: 10 dead assets removed, build 0. (`.DS_Store` were already untracked/gitignored.) |
 | 017 | Dead code: prune ~40 dead non-UI exports (unexport→tsc→delete); keeps shadcn ui/ primitive API | P3 | M | 014 | DONE — PR #157 merged to main, reviewer-verified 2026-07-01: 24 deleted + 27 unexported across 29 files; knip 0 non-ui dead exports; tsc 42 / no new codes / build 0 / vitest 37-16. Kept 4 knip false-positives (real importers). |
+| 018 | Eliminate the five SSR hydration-mismatch sources (`new Date()`/localStorage in render on `/`, `/create`, `/students`, `/announcements`, announcement preview) | P1 | M | — | DONE — executor-run in worktree, commit `71b492f` branch `advisor/018-ssr-hydration`, reviewer-verified 2026-07-02 (tsc 41 baseline / vitest 40-16 incl. 3 new greeting tests / build 0 / scope clean / browser hydration smoke incl. stash-baseline comparison). NOT merged — awaiting operator. |
+| 019 | Retoken residual theme-blind colors: `bg-white` in the Button primitive, oklch scrims, `aria-expanded:bg-white`, date-input twblue drift, dead mock `color` field | P1 | S | — (soft: before 021/022 — shared files) | DONE — executor-run in worktree, commits `d5ddc92`+`8dbf94e` branch `advisor/019-retoken-residuals`, reviewer-verified 2026-07-02 (tsc 41 / vitest 37-16 / build 0 / ui-dir greps 0 bg-white + 0 bg-black / backdrop alpha computed-style-identical). Scope amended mid-run (+`ui/input.tsx`, `ui/sheet.tsx`, `ui/dialog.tsx` — see plan items 11–13). NOT merged — awaiting operator. Known residuals for a future sweep: `heytalia-panel.tsx` still has 6 `bg-white` sites (lines ~459/500/617/677/752/855; the ~500 one disappears with plan 021's Popover conversion) and `announcements.new.tsx:2371` `bg-white/20` white-alpha on a dark scrim (likely intentional). |
+| 020 | Dependency refresh: `@base-ui/react` 1.2→1.6, `shadcn` CLI 3.8→4.x, Tailwind 4.3, `lucide-react` 0.562→1.x incl. 10 legacy icon renames | P2 | M | — (land after 018/019 for easy rebases) | DONE — executor-run in worktree, 4 commits (`839237c`→`4cb1050`) branch `advisor/020-deps-refresh`, reviewer-verified 2026-07-02 (versions confirmed: base-ui 1.6.0 / tailwind 4.3.2 / shadcn 4.12.0 / lucide 1.23.0; tsc 41 / vitest 37-16 / build 0; scope = package.json+bun.lock only). NOTE: lucide 1.23 still ships the 10 legacy alias names — zero source renames were needed (plan's rename table unused). shadcn v4 syntax is `add <c> --diff --dry-run` (deprecated `diff` subcommand lacks `--dry-run`). NOT merged — awaiting operator. Pre-existing warnings surfaced during smoke (confirmed present on baseline): Base UI nativeButton warning from `app-header.tsx` Button `render={<Link>}`, and nested-`<li>` from `BreadcrumbSeparator` inside `BreadcrumbItem` in app-header — future cleanup candidates. |
+| 021 | Compose bypassed UI onto primitives: raw select/textarea → Select/Textarea, 4 hand-rolled tables → ui/table, 3 pseudo-modals → Dialog, HeyTalia dropdown → Popover, chat inputs → Input | P2 | L | 019 | DONE — executor-run in worktree, 6 commits (`f1db928`→`281dfe0`) branch `advisor/021-compose-primitives`, reviewer-verified 2026-07-03 (greps 0 raw select/table/textarea outside ui/, 0 role="dialog" in students/; tsc 41 / vitest 37-16 / build 0; scope = the 6 in-scope files; live browser checks on all five packages incl. chart-in-Dialog fill + Escape/focus-return). Scope amended mid-run: +2 agency-report textareas (FieldRow narrative, Note-to-Principal) — the final amendment commit `281dfe0` was executor-authored but reviewer-committed (executor session died between edit and commit); its browser spot-check (narrative empty-border state) was NOT re-run — worth an eyeball during merge QA. NOT merged — awaiting operator. |
+| 022 | React correctness quickies: stable keys on editable lists, keyboard-accessible file dropzone, consolidate 5 column-flag-sync effects into 1 | P2 | M | 018 | DONE — executor-run in worktree, 3 commits (`ab1b0f9`, `13260be`, `01c4845`) branch `advisor/022-react-quickies`, reviewer-verified 2026-07-03 (tsc 41 / vitest 44-16 incl. 7 new `apply-flag-columns` tests / build 0 / scope clean / A/B parity proof: old-vs-new rendered column headers byte-identical). Step 3 was reviewer-amended after a correct executor STOP: spec gained `position: before\|after` (3 of 4 effects insert AFTER their anchor) and the imported-columns effect stays separate (different shape) — file now has exactly 2 column-sync effects. NOT merged — awaiting operator. Pre-existing issues found & left alone: (a) `announcements.new.tsx` ~1568 hardcodes `websiteLinks: []` on submit instead of using state — likely real bug, worth a fix; (b) the PHOTO dropzone (~2460) has the same mouse-only a11y gap the file dropzone had — natural follow-up; (c) dev-server-only 307 on plain `/announcements/new` URL (`?resume=false` works) — vite dev middleware quirk; (d) initializer-vs-effect placement discrepancy for `overallPercentage` when `socialLinks` is off (pre-existing, preserved for parity) — noted for plan 023. NOTE: `_key` now serializes into saved drafts (harmless, backward-compatible both directions) — relevant to 023's characterization tests. |
+| 023 | SPIKE (tests + design doc only): characterize draft save/restore, decomposition design for `announcements.new.tsx` (2.7k lines / 41 useState) + `agency-report.new.tsx` (3.7k / 35) | P3 | L | 018, 019, 022 | DONE — executor-run in worktree, 2 commits (`11f3e68`, `411c2d3`) branch `advisor/023-god-component-spike`, reviewer-verified 2026-07-03 (15 draft-storage characterization tests incl. 25-field autosave tripwire verified against the live payload; vitest deterministic 52-6 across 3 runs; tsc 41; zero route-file changes). Deliverable: `docs/plans/2026-07-03-024-announcements-new-decomposition.md` — 7 risk-ordered migration slices for `announcements.new.tsx`, NO-GO on whole-file agency-report decomposition (already reasonably split; scoped `useReportAnswers()` only when ReportForm next grows). **Major test-baseline finding**: the long-standing "37 pass / 16 fail" baseline was 6 real `imported-columns.test.ts` failures + 10 `draft-storage.test.ts` failures caused by a pre-existing vitest/jsdom/Node race (`globalThis.localStorage` intermittently undefined per worker). A test-local MemoryStorage stub (scoped to draft-storage.test.ts only) makes that file deterministic — post-023 baseline is **52 pass / 6 fail**. Follow-ups: fix the 6 real imported-columns failures; consider the same stub (or a vitest setup file) for imported-columns.test.ts. NOT merged — awaiting operator. |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) |
 REJECTED (with one-line rationale).
+
+## Round 5 — design-system re-audit: composition, tokens, React practices, deps (2026-07-02)
+
+Audit at commit `b01d78d` (baseline re-verified this run: `bunx tsc --noEmit` **41**
+errors — 23×TS2322, 9×TS2345, 3×TS2353, 6 singles; `bunx vitest run` 37 pass / 16 fail;
+`bun run build` exit 0). Three parallel auditors (DS composition, color tokens, React
+best practices) + a direct dependency-freshness check; every table finding re-verified
+against the code by the advisor. Produced plans 018–023.
+
+- **Suggested order: 018 → 019 → 020 → 021 → 022 → 023.** 018/019/022 all touch
+  `announcements.new.tsx` and 019/021 both touch `heytalia-panel.tsx` +
+  `attendance-analytics.tsx` — run sequentially on rebased branches.
+- **Headline confirmations**: `src/components/ui/` is structurally clean Base UI (no
+  `asChild`, no Radix imports, correct `render={}` triggers) — BUT `button.tsx` hardcodes
+  `bg-white` in the `outline`/`secondary` variants, so Round 3's "ui/ primitives are 100%
+  token-driven" claim was stale (fixed by 019). Chart-hex centralization (013) held: no
+  raw `fill=`/`stroke=` hex remains in chart components.
+- **Doc drift noted**: plan 012's fence line-ranges for `announcements.new.tsx` are stale —
+  the preview-mockup fence actually spans ~L136–907 (the README Round-3 note "~84 inside
+  the fenced PG phone-preview" remains the accurate record).
+- **Sweep-gate gap found**: `bg-[oklch(0_0_0/…)]` arbitrary values evade the Round-3 grep
+  gates (they match `#…`/`rgba(`/`bg-black` only). 019 fixes the two sites; future color
+  gates must also grep `oklch(`.
+- **Versions at audit**: `@base-ui/react` 1.2.0 (latest 1.6.0 — only breaking change in
+  range, `sanitizeValue`→`normalizeValue`, is unused here), `shadcn` 3.8.5 (latest 4.x,
+  dev-only), `tailwindcss` 4.2.1 (4.3.x), `lucide-react` 0.562.0 (1.x — breaking; 147
+  distinct icons across ~88 files, 10 legacy alias names in use), `tw-animate-css` and
+  `@radix-ui/colors` current.
+
+### Considered and rejected (Round 5)
+
+- **Consolidating the three filter bars** (`forms-filter-bar`, `announcement-filter-bar`,
+  `student-filters` — ~245–295 lines each) — LOW confidence it's past the rule-of-three
+  threshold; behavior differs per entity and over-abstraction would couple unrelated
+  features. Investigate only if a fourth appears.
+- **`useSetBreadcrumbs` `JSON.stringify` effect** (`src/hooks/use-breadcrumbs.tsx:55`) —
+  real smell, small arrays, no measured cost; measure before changing.
+- **Ad-hoc empty states** (~15 hand-built "No … found" blocks vs `EmptyState`) — needs
+  per-site design judgment (page-level vs inline list messages); not mechanical enough
+  for an executor plan this round.
+- **`bg-white` logo plates and radio dots** (`app-card.tsx:34,48`, `agency-logo.tsx:88`,
+  `groups.index.tsx:896,930`) — judged intentional contrast treatments; documented as
+  out-of-scope keeps in plan 019.
+- **`entity-selector.tsx` raw typeahead inputs** — load-bearing for its combobox logic;
+  sanctioned bypass, explicitly out of scope in plan 021 (future candidate: compose on
+  `ui/combobox` with its own interaction-test pass).
+- **Regenerating ui/ components via shadcn v4 `diff`** — deliberate customizations exist;
+  reconciliation is a separate future task after plan 020 installs the v4 CLI.
+- **Date-input `min={new Date()…}` attributes** — midnight-boundary-only mismatch;
+  deferred (noted in plan 018).
 
 ## Round 4 — dead-code audit (2026-07-01)
 
