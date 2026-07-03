@@ -1,10 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ChevronDown, Search, X } from 'lucide-react'
 
-import type {
-  FilterCriterion,
-  FilterOperator,
-} from '@/types/student'
+import type { FilterCriterion, FilterOperator } from '@/types/student'
 import {
   filterFieldConfigs,
   groupLabels,

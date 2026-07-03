@@ -22,6 +22,7 @@ import { Route as FlagsRouteImport } from './routes/flags'
 import { Route as DsRouteImport } from './routes/ds'
 import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as AttendanceRouteImport } from './routes/attendance'
+import { Route as AnnouncementsAdminRouteImport } from './routes/announcements-admin'
 import { Route as AnnouncementsRouteImport } from './routes/announcements'
 import { Route as GuestRouteImport } from './routes/_guest'
 import { Route as SplatRouteImport } from './routes/$'
@@ -117,6 +118,11 @@ const CalendarRoute = CalendarRouteImport.update({
 const AttendanceRoute = AttendanceRouteImport.update({
   id: '/attendance',
   path: '/attendance',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AnnouncementsAdminRoute = AnnouncementsAdminRouteImport.update({
+  id: '/announcements-admin',
+  path: '/announcements-admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AnnouncementsRoute = AnnouncementsRouteImport.update({
@@ -279,6 +285,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
   '/announcements': typeof AnnouncementsRouteWithChildren
+  '/announcements-admin': typeof AnnouncementsAdminRoute
   '/attendance': typeof AttendanceRoute
   '/calendar': typeof CalendarRouteWithChildren
   '/ds': typeof DsRoute
@@ -323,6 +330,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
+  '/announcements-admin': typeof AnnouncementsAdminRoute
   '/attendance': typeof AttendanceRoute
   '/ds': typeof DsRoute
   '/flags': typeof FlagsRoute
@@ -363,6 +371,7 @@ export interface FileRoutesById {
   '/$': typeof SplatRoute
   '/_guest': typeof GuestRouteWithChildren
   '/announcements': typeof AnnouncementsRouteWithChildren
+  '/announcements-admin': typeof AnnouncementsAdminRoute
   '/attendance': typeof AttendanceRoute
   '/calendar': typeof CalendarRouteWithChildren
   '/ds': typeof DsRoute
@@ -410,6 +419,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$'
     | '/announcements'
+    | '/announcements-admin'
     | '/attendance'
     | '/calendar'
     | '/ds'
@@ -454,6 +464,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/$'
+    | '/announcements-admin'
     | '/attendance'
     | '/ds'
     | '/flags'
@@ -493,6 +504,7 @@ export interface FileRouteTypes {
     | '/$'
     | '/_guest'
     | '/announcements'
+    | '/announcements-admin'
     | '/attendance'
     | '/calendar'
     | '/ds'
@@ -540,6 +552,7 @@ export interface RootRouteChildren {
   SplatRoute: typeof SplatRoute
   GuestRoute: typeof GuestRouteWithChildren
   AnnouncementsRoute: typeof AnnouncementsRouteWithChildren
+  AnnouncementsAdminRoute: typeof AnnouncementsAdminRoute
   AttendanceRoute: typeof AttendanceRoute
   CalendarRoute: typeof CalendarRouteWithChildren
   DsRoute: typeof DsRoute
@@ -648,6 +661,13 @@ declare module '@tanstack/react-router' {
       path: '/attendance'
       fullPath: '/attendance'
       preLoaderRoute: typeof AttendanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/announcements-admin': {
+      id: '/announcements-admin'
+      path: '/announcements-admin'
+      fullPath: '/announcements-admin'
+      preLoaderRoute: typeof AnnouncementsAdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/announcements': {
@@ -1009,6 +1029,7 @@ const rootRouteChildren: RootRouteChildren = {
   SplatRoute: SplatRoute,
   GuestRoute: GuestRouteWithChildren,
   AnnouncementsRoute: AnnouncementsRouteWithChildren,
+  AnnouncementsAdminRoute: AnnouncementsAdminRoute,
   AttendanceRoute: AttendanceRoute,
   CalendarRoute: CalendarRouteWithChildren,
   DsRoute: DsRoute,

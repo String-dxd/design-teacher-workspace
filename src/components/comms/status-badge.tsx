@@ -21,7 +21,7 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
     return (
       <Badge
         className={cn(
-          'bg-twblue-3 text-twblue-11 hover:bg-twblue-3',
+          'bg-amber-100 text-amber-800 hover:bg-amber-100',
           className,
         )}
       >

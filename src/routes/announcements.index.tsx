@@ -432,6 +432,27 @@ function ParentsGatewayPage() {
         a.responseType === 'acknowledge' || a.responseType === 'yes-no'
       if (tab === 'view-only' && hasResponse) return false
       if (tab === 'with-responses' && !hasResponse) return false
+
+      if (filters.responseTypes.length > 0) {
+        const effectiveType = a.responseType ?? 'view-only'
+        if (!filters.responseTypes.includes(effectiveType)) return false
+      }
+      if (filters.statuses.length > 0 && !filters.statuses.includes(a.status))
+        return false
+      if (
+        filters.ownerships.length > 0 &&
+        !filters.ownerships.includes(a.ownership)
+      )
+        return false
+      if (filters.dateFrom && a.postedAt) {
+        if (new Date(a.postedAt) < new Date(filters.dateFrom)) return false
+      }
+      if (filters.dateTo && a.postedAt) {
+        const toEnd = new Date(filters.dateTo)
+        toEnd.setHours(23, 59, 59, 999)
+        if (new Date(a.postedAt) > toEnd) return false
+      }
+
       if (searchQuery) {
         const q = searchQuery.toLowerCase()
         return (
@@ -441,15 +462,40 @@ function ParentsGatewayPage() {
       }
       return true
     })
-  }, [allSchoolPosts, tab, searchQuery])
+  }, [allSchoolPosts, tab, searchQuery, filters])
 
-  const PAGE_SIZE = 20
+  const schoolSorted = useMemo(() => {
+    if (!sort) return schoolFiltered
+    const dir = sort.direction === 'asc' ? 1 : -1
+    return [...schoolFiltered].sort((a, b) => {
+      switch (sort.column) {
+        case 'title':
+          return a.title.localeCompare(b.title) * dir
+        case 'date': {
+          const da = a.postedAt ?? a.createdAt ?? ''
+          const db = b.postedAt ?? b.createdAt ?? ''
+          return (new Date(da).getTime() - new Date(db).getTime()) * dir
+        }
+        case 'created-by': {
+          const na =
+            a.ownership === 'mine' ? 'Me' : stripSalutation(a.postedBy ?? '')
+          const nb =
+            b.ownership === 'mine' ? 'Me' : stripSalutation(b.postedBy ?? '')
+          return na.localeCompare(nb) * dir
+        }
+        default:
+          return 0
+      }
+    })
+  }, [schoolFiltered, sort])
+
+  const PAGE_SIZE = 10
   const myPostsPagination = usePagination({
     totalItems: sortedAnnouncements.length,
     pageSize: PAGE_SIZE,
   })
   const schoolPostsPagination = usePagination({
-    totalItems: schoolFiltered.length,
+    totalItems: schoolSorted.length,
     pageSize: PAGE_SIZE,
   })
   const formsPagination = usePagination({
@@ -461,7 +507,7 @@ function ParentsGatewayPage() {
     myPostsPagination.startIndex,
     myPostsPagination.startIndex + PAGE_SIZE,
   )
-  const pagedSchoolPosts = schoolFiltered.slice(
+  const pagedSchoolPosts = schoolSorted.slice(
     schoolPostsPagination.startIndex,
     schoolPostsPagination.startIndex + PAGE_SIZE,
   )
@@ -471,18 +517,41 @@ function ParentsGatewayPage() {
   )
 
   const tabs: Array<{ value: PostTab; label: string; hidden?: boolean }> = [
-    { value: 'with-responses', label: 'With responses' },
-    { value: 'view-only', label: 'Read only' },
+    { value: 'with-responses', label: 'Collect responses' },
+    { value: 'view-only', label: 'No response needed' },
     { value: 'custom-forms', label: 'Custom forms', hidden: !formsEnabled },
   ]
   const visibleTabs = tabs.filter((t) => !t.hidden)
 
-  // Selection helpers
+  // Selection helpers — My Posts
   const filteredIds = sortedAnnouncements.map((a) => a.id)
   const selectedInView = filteredIds.filter((id) => selectedIds.has(id))
   const allSelectedInView =
     filteredIds.length > 0 && selectedInView.length === filteredIds.length
   const someSelectedInView = selectedInView.length > 0 && !allSelectedInView
+
+  // Selection helpers — School-wide
+  const schoolFilteredIds = schoolSorted.map((a) => a.id)
+  const schoolSelectedInView = schoolFilteredIds.filter((id) =>
+    selectedIds.has(id),
+  )
+  const schoolAllSelectedInView =
+    schoolFilteredIds.length > 0 &&
+    schoolSelectedInView.length === schoolFilteredIds.length
+  const schoolSomeSelectedInView =
+    schoolSelectedInView.length > 0 && !schoolAllSelectedInView
+
+  function toggleSelectAllSchool() {
+    if (schoolAllSelectedInView) {
+      setSelectedIds((prev) => {
+        const next = new Set(prev)
+        schoolFilteredIds.forEach((id) => next.delete(id))
+        return next
+      })
+    } else {
+      setSelectedIds((prev) => new Set([...prev, ...schoolFilteredIds]))
+    }
+  }
 
   const selectedItems = allAnnouncements.filter((a) => selectedIds.has(a.id))
   const postedSelected = selectedItems.filter((a) => a.status === 'posted')
@@ -583,16 +652,6 @@ function ParentsGatewayPage() {
           </div>
         </div>
 
-        {/* School-wide mode indicator */}
-        {isSchoolWide && (
-          <div className="mx-6 mt-4 rounded-lg border border-twblue-6 bg-twblue-3/60 px-4 py-2.5">
-            <p className="text-sm text-twblue-11">
-              Viewing all sent posts across the school. Posts cannot be created
-              in this view.
-            </p>
-          </div>
-        )}
-
         {/* Table */}
         {isSchoolWide ? (
           /* ── School-wide table ── */
@@ -608,11 +667,45 @@ function ParentsGatewayPage() {
               <Table tableClassName="table-fixed w-full">
                 <TableHeader className="border-b bg-background">
                   <TableRow className="border-0 hover:bg-transparent">
-                    <TableHead className="w-[420px] pl-6 sticky left-0 z-10 bg-background">
-                      Title
+                    <TableHead className="w-[44px] pl-5 sticky left-0 z-10 bg-background">
+                      <Checkbox
+                        checked={schoolAllSelectedInView}
+                        indeterminate={schoolSomeSelectedInView}
+                        onCheckedChange={toggleSelectAllSchool}
+                        aria-label="Select all"
+                      />
                     </TableHead>
-                    <TableHead className="w-[110px]">Date sent</TableHead>
-                    <TableHead className="w-[160px]">Teacher</TableHead>
+                    <TableHead className="w-[376px] pl-2 sticky left-[44px] z-10 bg-background">
+                      <SortableHeader
+                        label="Title"
+                        column="title"
+                        sort={sort}
+                        onSort={(col, dir) =>
+                          setSort({ column: col, direction: dir })
+                        }
+                      />
+                    </TableHead>
+                    <TableHead className="w-[110px]">
+                      <SortableHeader
+                        label="Posted on"
+                        column="date"
+                        sort={sort}
+                        onSort={(col, dir) =>
+                          setSort({ column: col, direction: dir })
+                        }
+                      />
+                    </TableHead>
+                    <TableHead className="w-[160px]">
+                      <SortableHeader
+                        label="Created by"
+                        column="created-by"
+                        sort={sort}
+                        onSort={(col, dir) =>
+                          setSort({ column: col, direction: dir })
+                        }
+                      />
+                    </TableHead>
+                    <TableHead className="w-[180px]">To parents of</TableHead>
                     <TableHead className="w-[150px]">Read</TableHead>
                     <TableHead className="w-[80px] pr-4 text-right">
                       Actions
@@ -633,13 +726,18 @@ function ParentsGatewayPage() {
                       a.responseType === 'yes-no'
                     const teacherLabel =
                       a.ownership === 'mine'
-                        ? 'Me (Daniel Tan)'
-                        : (a.postedBy ?? 'Unknown')
+                        ? 'Me'
+                        : stripSalutation(a.postedBy ?? 'Unknown')
                     const isOwnPost = a.ownership === 'mine'
+                    const isSelected = selectedIds.has(a.id)
                     return (
                       <TableRow
                         key={a.id}
-                        className="cursor-pointer"
+                        className={cn(
+                          'cursor-pointer',
+                          isSelected &&
+                            'bg-primary/[0.04] hover:bg-primary/[0.06]',
+                        )}
                         onClick={() =>
                           navigate({
                             to: '/announcements/$id',
@@ -647,7 +745,17 @@ function ParentsGatewayPage() {
                           })
                         }
                       >
-                        <TableCell className="overflow-hidden whitespace-normal pl-6 sticky left-0 z-10 bg-background">
+                        <TableCell
+                          className="pl-5 w-[44px] sticky left-0 z-10 bg-background"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => toggleSelect(a.id)}
+                            aria-label={`Select ${a.title}`}
+                          />
+                        </TableCell>
+                        <TableCell className="overflow-hidden whitespace-normal pl-2 sticky left-[44px] z-10 bg-background">
                           <div className="min-w-0">
                             <div className="flex items-center gap-1.5">
                               <span className="truncate font-medium">
@@ -663,9 +771,6 @@ function ParentsGatewayPage() {
                                   Yes/No
                                 </span>
                               )}
-                            </div>
-                            <div className="mt-0.5 line-clamp-1 text-sm text-muted-foreground">
-                              {a.description.replace(/<[^>]*>/g, '')}
                             </div>
                           </div>
                         </TableCell>
@@ -683,6 +788,21 @@ function ParentsGatewayPage() {
                           >
                             {teacherLabel}
                           </span>
+                        </TableCell>
+                        <TableCell>
+                          {a.recipients.length > 0 ? (
+                            <span className="line-clamp-2 text-sm text-muted-foreground">
+                              {[
+                                ...new Set(
+                                  a.recipients.map((r) => r.classLabel),
+                                ),
+                              ].join(', ')}
+                            </span>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">
+                              —
+                            </span>
+                          )}
                         </TableCell>
                         <TableCell className="pr-6">
                           <ReadRate
@@ -719,22 +839,18 @@ function ParentsGatewayPage() {
                                 >
                                   Edit post
                                 </DropdownMenuItem>
-                                {isOwnPost && (
-                                  <>
-                                    <DropdownMenuItem>
-                                      <Copy className="mr-2 h-4 w-4" />
-                                      Duplicate
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem
-                                      className="text-destructive focus:text-destructive"
-                                      onClick={() => openDeleteDialog(a.id)}
-                                    >
-                                      <Trash2 className="mr-2 h-4 w-4" />
-                                      Delete
-                                    </DropdownMenuItem>
-                                  </>
-                                )}
+                                <DropdownMenuItem>
+                                  <Copy className="mr-2 h-4 w-4" />
+                                  Duplicate
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  className="text-destructive focus:text-destructive"
+                                  onClick={() => openDeleteDialog(a.id)}
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Delete
+                                </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </div>
@@ -750,10 +866,11 @@ function ParentsGatewayPage() {
                 {schoolPostsPagination.startIndex + 1}–
                 {Math.min(
                   schoolPostsPagination.startIndex + PAGE_SIZE,
-                  schoolFiltered.length,
+                  schoolSorted.length,
                 )}{' '}
-                of {schoolFiltered.length} records
+                of {schoolSorted.length} records
               </div>
+
               {schoolPostsPagination.totalPages > 1 && (
                 <div className="flex items-center gap-1">
                   <Button
@@ -1014,7 +1131,7 @@ function ParentsGatewayPage() {
                         }
                       />
                     </TableHead>
-                    <TableHead className="w-[110px]">
+                    <TableHead className="w-[140px]">
                       <SortableHeader
                         label="Date"
                         column="date"
@@ -1034,6 +1151,10 @@ function ParentsGatewayPage() {
                         }
                       />
                     </TableHead>
+                    <TableHead className="w-[150px]">
+                      {tab === 'with-responses' ? 'Response' : 'Read'}
+                    </TableHead>
+                    <TableHead className="w-[180px]">To parents of</TableHead>
                     <TableHead className="w-[130px]">
                       <SortableHeader
                         label="Created by"
@@ -1043,9 +1164,6 @@ function ParentsGatewayPage() {
                           setSort({ column: col, direction: dir })
                         }
                       />
-                    </TableHead>
-                    <TableHead className="w-[150px]">
-                      {tab === 'with-responses' ? 'Response' : 'Read'}
                     </TableHead>
                     <TableHead className="w-[80px] pr-4 text-right">
                       Actions
@@ -1124,10 +1242,6 @@ function ParentsGatewayPage() {
                                 <span className="truncate font-medium">
                                   {announcement.title}
                                 </span>
-                                {(announcement.attachments?.length ?? 0) >
-                                  0 && (
-                                  <Paperclip className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                                )}
                                 {announcement.responseType ===
                                   'acknowledge' && (
                                   <span className="shrink-0 rounded-full bg-twblue-3 px-1.5 py-0.5 text-[10px] font-medium text-twblue-11 ring-1 ring-inset ring-twblue-6">
@@ -1143,36 +1257,31 @@ function ParentsGatewayPage() {
                                   <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-9" />
                                 )}
                               </div>
-                              <div className="mt-0.5 line-clamp-1 text-sm text-muted-foreground">
-                                {announcement.description.replace(
-                                  /<[^>]*>/g,
-                                  '',
-                                )}
-                              </div>
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {announcement.status !== 'draft' &&
-                            formatDate(relevantDate)}
+                        <TableCell>
+                          {relevantDate ? (
+                            <div className="flex flex-col">
+                              <span className="text-xs text-muted-foreground">
+                                {announcement.status === 'posted'
+                                  ? 'Posted on'
+                                  : announcement.status === 'scheduled'
+                                    ? 'Scheduled for'
+                                    : 'Edited on'}
+                              </span>
+                              <span className="text-sm text-foreground">
+                                {formatDate(relevantDate)}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">
+                              —
+                            </span>
+                          )}
                         </TableCell>
                         <TableCell>
                           <StatusBadge status={announcement.status} />
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                            {isShared ? (
-                              <>
-                                <Users className="h-3.5 w-3.5 shrink-0" />
-                                <span>Shared</span>
-                                {isViewer && (
-                                  <Lock className="h-3 w-3 shrink-0 text-muted-foreground" />
-                                )}
-                              </>
-                            ) : (
-                              <span>Me</span>
-                            )}
-                          </div>
                         </TableCell>
                         <TableCell className="pr-6">
                           {announcement.status !== 'posted' ? (
@@ -1190,6 +1299,32 @@ function ParentsGatewayPage() {
                               totalCount={totalCount}
                             />
                           )}
+                        </TableCell>
+                        <TableCell>
+                          {announcement.recipients.length > 0 ? (
+                            <span className="line-clamp-2 text-sm text-muted-foreground">
+                              {[
+                                ...new Set(
+                                  announcement.recipients.map(
+                                    (r) => r.classLabel,
+                                  ),
+                                ),
+                              ].join(', ')}
+                            </span>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">
+                              —
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm text-muted-foreground">
+                            {isShared
+                              ? stripSalutation(
+                                  announcement.postedBy ?? 'Unknown',
+                                )
+                              : 'Me'}
+                          </span>
                         </TableCell>
                         <TableCell
                           className="w-[80px] pr-4"
@@ -1290,42 +1425,40 @@ function ParentsGatewayPage() {
                 </div>
               )}
             </div>
-
-            {/* Floating bulk action bar — same pattern as Reports */}
-            {selectedIds.size > 0 && tab !== 'custom-forms' && (
-              <div className="fixed inset-x-0 bottom-6 z-50 flex justify-center">
-                <div className="flex items-center gap-3 rounded-full border bg-popover px-5 py-2.5 shadow-lg">
-                  <span className="text-sm font-medium text-muted-foreground">
-                    {selectedIds.size} selected
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedIds(new Set())}
-                    className="text-xs text-muted-foreground hover:text-foreground"
-                  >
-                    Clear
-                  </button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="rounded-full text-destructive hover:text-destructive"
-                    onClick={() => {
-                      setDeleteMode('remove-from-list')
-                      setShowDeleteDialog(true)
-                    }}
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Delete{' '}
-                    {selectedIds.size > 1
-                      ? `${selectedIds.size} posts`
-                      : 'post'}
-                  </Button>
-                </div>
-              </div>
-            )}
           </div>
         )}
       </div>
+
+      {/* Floating bulk action bar */}
+      {selectedIds.size > 0 && tab !== 'custom-forms' && (
+        <div className="fixed inset-x-0 bottom-6 z-50 flex justify-center">
+          <div className="flex items-center gap-3 rounded-full border bg-popover px-5 py-2.5 shadow-lg">
+            <span className="text-sm font-medium text-muted-foreground">
+              {selectedIds.size} selected
+            </span>
+            <button
+              type="button"
+              onClick={() => setSelectedIds(new Set())}
+              className="text-xs text-muted-foreground hover:text-foreground"
+            >
+              Clear
+            </button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="rounded-full text-destructive hover:text-destructive"
+              onClick={() => {
+                setDeleteMode('remove-from-list')
+                setShowDeleteDialog(true)
+              }}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete{' '}
+              {selectedIds.size > 1 ? `${selectedIds.size} posts` : 'post'}
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Delete confirmation dialog */}
       <Dialog

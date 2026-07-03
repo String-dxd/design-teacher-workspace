@@ -40,9 +40,9 @@ function countActiveFilters(filters: AnnouncementFilters): number {
 }
 
 const RESPONSE_TYPE_OPTIONS: Array<{ value: ResponseType; label: string }> = [
-  { value: 'view-only', label: 'Read only' },
+  { value: 'view-only', label: 'Read-only' },
   { value: 'acknowledge', label: 'Acknowledge' },
-  { value: 'yes-no', label: 'Yes / No' },
+  { value: 'yes-no', label: 'Yes / no' },
 ]
 
 interface AnnouncementFilterBarProps {
@@ -115,7 +115,7 @@ export function AnnouncementFilterBar({
       <PopoverContent className="w-[460px] gap-0 p-0" align="start">
         {/* Header */}
         <div className="px-5 pb-3 pt-4">
-          <h3 className="text-sm font-semibold">Show records</h3>
+          <h3 className="text-sm font-semibold">Show posts</h3>
         </div>
 
         {/* Filter rows */}

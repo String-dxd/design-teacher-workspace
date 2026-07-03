@@ -5423,7 +5423,6 @@ mockStudents.forEach((s) => {
   }
 })
 
-
 interface ClassGroup {
   level: string
   classes: Array<{ value: string; label: string }>

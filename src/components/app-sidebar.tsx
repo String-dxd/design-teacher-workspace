@@ -66,9 +66,9 @@ interface MenuItem {
   stage?: string
   transparent?: boolean
   alsoActiveFor?: Array<string>
-  search?: Record<string, string>        // extra search params for the Link
-  excludeSearchView?: string             // not active when currentView === this
-  requiredSearchView?: string            // only active when currentView === this
+  search?: Record<string, string> // extra search params for the Link
+  excludeSearchView?: string // not active when currentView === this
+  requiredSearchView?: string // only active when currentView === this
 }
 
 const mainNavItems: Array<MenuItem> = [
@@ -295,7 +295,9 @@ export function AppSidebar() {
   const meetingsEnabled = useFeatureFlag('meetings')
   const postsAdminViewEnabled = useFeatureFlag('posts-admin-view')
   const reportsAdminViewEnabled = useFeatureFlag('reports-admin-view')
-  const currentView = (location.search as Record<string, unknown>).view as string | undefined
+  const currentView = (location.search as Record<string, unknown>).view as
+    | string
+    | undefined
 
   const hideAttendanceAndReports =
     msfUpliftEnabled ||
@@ -342,7 +344,8 @@ export function AppSidebar() {
       if (item.featureFlag === 'calendar') return calendarEnabled
       if (item.featureFlag === 'meetings') return meetingsEnabled
       if (item.featureFlag === 'posts-admin-view') return postsAdminViewEnabled
-      if (item.featureFlag === 'reports-admin-view') return reportsAdminViewEnabled
+      if (item.featureFlag === 'reports-admin-view')
+        return reportsAdminViewEnabled
       return true
     })
 

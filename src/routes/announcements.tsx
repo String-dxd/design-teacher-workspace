@@ -7,7 +7,7 @@ import {
   useNavigate,
   useSearch,
 } from '@tanstack/react-router'
-import { Check, ChevronDown, Plus } from 'lucide-react'
+import { Check, ChevronDown, Crown, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Popover,
@@ -19,13 +19,13 @@ import { cn } from '@/lib/utils'
 const SCOPE_OPTIONS = [
   {
     value: 'my',
-    label: 'My Posts',
-    description: 'Posts you have created',
+    label: 'My posts',
+    description: 'Posts you created',
   },
   {
     value: 'school',
-    label: 'School',
-    description: 'All posts across the school',
+    label: 'School posts',
+    description: 'Posts across your school',
   },
 ] as const
 
@@ -54,77 +54,85 @@ function AnnouncementsLayout() {
 
   return (
     <div className="flex flex-col">
-      <div className="shrink-0 space-y-4 pt-6">
+      {isAdmin && (
+        <div className="flex items-center justify-center gap-2 border-y border-amber-200 bg-amber-50 px-6 py-2 text-sm text-amber-800">
+          <Crown className="h-3.5 w-3.5 shrink-0 text-amber-600" />
+          <span>
+            <span className="font-semibold">You have admin access.</span>{' '}
+            {isSchoolWide
+              ? 'To view your own posts, use the dropdown next to School Posts.'
+              : 'To view school posts, use the dropdown next to My Posts.'}
+            <img src="/arrow-down-left-ink.svg" alt="" className="ml-1 inline-block h-5 w-5 -translate-y-0.5" aria-hidden="true" />
+          </span>
+        </div>
+      )}
+      <div className="shrink-0 pt-6">
         <div className="flex items-start justify-between px-6">
           <div>
-            <h1 className="text-2xl font-semibold">Posts</h1>
-            <p className="mt-1 hidden text-sm text-muted-foreground lg:block">
-              Send a read only post or collect responses from parents via
-              Parents Gateway.
-              {isAdmin && (
-                <>
-                  <br />
-                  Switch between your posts and a school-wide view below.
-                </>
+            <div className="flex items-center gap-2">
+              {isAdmin ? (
+                <Popover open={open} onOpenChange={setOpen}>
+                  <PopoverTrigger className="inline-flex cursor-pointer items-center gap-1.5 bg-transparent p-0 text-2xl font-semibold outline-none">
+                    {isSchoolWide ? 'School Posts' : 'My Posts'}
+                    <ChevronDown className="h-5 w-5 text-muted-foreground" />
+                  </PopoverTrigger>
+                  <PopoverContent
+                    className="w-56 gap-0 overflow-hidden rounded-2xl p-1"
+                    align="start"
+                  >
+                    {SCOPE_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => {
+                          navigate({
+                            to: '/announcements',
+                            search: (prev) => ({
+                              ...prev,
+                              scope: opt.value,
+                            }),
+                            replace: true,
+                          })
+                          setOpen(false)
+                        }}
+                        className={cn(
+                          'flex w-full flex-col rounded-xl px-3 py-2 text-left transition-colors hover:bg-accent',
+                          scope === opt.value && 'bg-accent',
+                        )}
+                      >
+                        <span className="flex items-center justify-between">
+                          <span className="text-sm font-medium">
+                            {opt.label}
+                          </span>
+                          {scope === opt.value && (
+                            <Check className="h-4 w-4 text-primary" />
+                          )}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {opt.description}
+                        </span>
+                      </button>
+                    ))}
+                  </PopoverContent>
+                </Popover>
+              ) : (
+                <h1 className="text-2xl font-semibold">My Posts</h1>
               )}
+            </div>
+            <p className="mt-1 hidden text-sm text-muted-foreground lg:block">
+              Send posts to parents via Parents Gateway. Choose whether parents
+              need to respond.
             </p>
           </div>
-          {!isSchoolWide && (
+          {(!isSchoolWide || isAdmin) && (
             <Button size="sm" render={<Link to="/create" />}>
               <Plus className="mr-1.5 h-4 w-4" />
               Create
             </Button>
           )}
         </div>
-        <div className="px-6">
-          {isAdmin ? (
-            <Popover open={open} onOpenChange={setOpen}>
-              <PopoverTrigger className="inline-flex cursor-pointer items-center gap-1.5 bg-transparent p-0 text-lg font-semibold outline-none">
-                {isSchoolWide ? 'School' : 'My Posts'}
-                <ChevronDown className="h-5 w-5 text-muted-foreground" />
-              </PopoverTrigger>
-              <PopoverContent
-                className="w-56 gap-0 overflow-hidden rounded-2xl p-1"
-                align="start"
-              >
-                {SCOPE_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => {
-                      navigate({
-                        to: '/announcements',
-                        search: (prev) => ({
-                          ...prev,
-                          scope: opt.value,
-                        }),
-                        replace: true,
-                      })
-                      setOpen(false)
-                    }}
-                    className={cn(
-                      'flex w-full flex-col rounded-xl px-3 py-2 text-left transition-colors hover:bg-accent',
-                      scope === opt.value && 'bg-accent',
-                    )}
-                  >
-                    <span className="flex items-center justify-between">
-                      <span className="text-sm font-medium">{opt.label}</span>
-                      {scope === opt.value && (
-                        <Check className="h-4 w-4 text-primary" />
-                      )}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {opt.description}
-                    </span>
-                  </button>
-                ))}
-              </PopoverContent>
-            </Popover>
-          ) : (
-            <span className="text-lg font-semibold">My Posts</span>
-          )}
-        </div>
       </div>
+
       <Outlet />
     </div>
   )

@@ -40,24 +40,28 @@ blocking typecheck.
  3  each: mock-student-groups.ts, import-wizard.tsx, column-header-menu.tsx, academic-analytics.tsx
  …1–2 each across ~20 more files
 ```
+
 Each error is either `'X' is declared but its value is never read` (an unused import
 specifier or local `const`/destructure) or an unused function parameter.
 
 ### Repo conventions
+
 - `bun` runtime. `bun run check` = `prettier --write . && eslint --fix`. ESLint uses
   `@tanstack/eslint-config` (`eslint.config.js`). Conventional commits.
 
 ## Commands you will need
-| Purpose | Command | Expected |
-|---|---|---|
-| List the errors | `npx tsc --noEmit 2>&1 \| grep "TS6133"` | file:line + symbol for each |
-| Count them | `npx tsc --noEmit 2>&1 \| grep -c "TS6133"` | target **0** when done |
-| Total tsc | `npx tsc --noEmit 2>&1 \| grep -c "error TS"` | drops by the number of TS6133 fixed; must not gain NON-TS6133 errors |
-| Build | `bun run build` | exit 0 |
-| Tests | `bunx vitest run 2>&1 \| grep "Tests "` | 37 passed / 16 failed (unchanged) |
-| Format/lint | `bun run check` | clean; keep formatting in a separate commit if it reflows |
+
+| Purpose         | Command                                       | Expected                                                             |
+| --------------- | --------------------------------------------- | -------------------------------------------------------------------- |
+| List the errors | `npx tsc --noEmit 2>&1 \| grep "TS6133"`      | file:line + symbol for each                                          |
+| Count them      | `npx tsc --noEmit 2>&1 \| grep -c "TS6133"`   | target **0** when done                                               |
+| Total tsc       | `npx tsc --noEmit 2>&1 \| grep -c "error TS"` | drops by the number of TS6133 fixed; must not gain NON-TS6133 errors |
+| Build           | `bun run build`                               | exit 0                                                               |
+| Tests           | `bunx vitest run 2>&1 \| grep "Tests "`       | 37 passed / 16 failed (unchanged)                                    |
+| Format/lint     | `bun run check`                               | clean; keep formatting in a separate commit if it reflows            |
 
 ## Scope
+
 **In scope**: removing unused imports/locals/params flagged by TS6133, in whatever files
 `tsc` reports them. **Out of scope**: the other ~43 tsc errors (they are real type issues,
 NOT dead code — do not "fix" them here); any behavior change; the CI-gate flip itself
@@ -66,11 +70,14 @@ NOT dead code — do not "fix" them here); any behavior change; the CI-gate flip
 ## Steps
 
 ### Step 0: Baseline
+
 `npx tsc --noEmit 2>&1 | grep -c "TS6133"` (record N — 68 at `8a71db6`, fewer if plan 014
 landed), and `grep -c "error TS"` (record total). `bun run build` exit 0; `bunx vitest run` 37/16.
 
 ### Step 1: Remove each TS6133 site
+
 Work file by file from the `grep "TS6133"` list. For each:
+
 - **Unused import specifier** → delete just that specifier (or the whole `import` line if it
   becomes empty). Do NOT remove a side-effect import (`import './x.css'`) — TS6133 won't
   flag those anyway.
@@ -85,6 +92,7 @@ Work file by file from the `grep "TS6133"` list. For each:
 Re-run `npx tsc --noEmit 2>&1 | grep -c "TS6133"` periodically; it should trend to 0.
 
 ### Step 2: Verify
+
 - `npx tsc --noEmit 2>&1 | grep -c "TS6133"` → **0**.
 - `npx tsc --noEmit 2>&1 | grep -c "error TS"` → equals (baseline total − baseline TS6133);
   **no NEW error codes** introduced.
@@ -92,20 +100,24 @@ Re-run `npx tsc --noEmit 2>&1 | grep -c "TS6133"` periodically; it should trend 
 - `bun run check` → clean (commit any prettier reflow separately).
 
 ## Test plan
+
 No new tests. Gate is `TS6133 → 0` with no new tsc errors, build green, tests unchanged.
 
 ## Done criteria
+
 - [ ] `npx tsc --noEmit | grep -c "TS6133"` → 0
 - [ ] Total tsc errors dropped by exactly the fixed count; no new error codes
 - [ ] `bun run build` exit 0; `bunx vitest run` 37/16
 - [ ] `plans/README.md` updated (note the new total tsc count — enables the CI-gate flip)
 
 ## STOP conditions
+
 - Removing a local would drop a call with possible side effects and you can't tell — list it, skip it, report.
 - Total tsc errors would rise or a new (non-TS6133) error appears after a removal — revert that edit and report.
 - A TS6133 sits inside a file plan 014 is deleting — skip it (plan 014 removes the file).
 
 ## Maintenance notes
+
 - Once this is 0, the **follow-up** is flipping the GitHub Actions typecheck step from
   `continue-on-error: true` to blocking (the ~43 remaining real errors must be triaged
   first — a separate plan). Note that in the CI workflow file.
