@@ -118,7 +118,6 @@ export interface TermlyAccumulatingData {
   ccaMissed: number
 }
 
-
 export type FilterField =
   // General
   | 'dateRange'

@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { Check, ChevronDown, FileDown } from 'lucide-react'
+import { CalendarIcon, Check, ChevronDown, FileDown } from 'lucide-react'
+import { format, parse } from 'date-fns'
 import { toast } from 'sonner'
 
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { Calendar } from '@/components/ui/calendar'
 import {
   Popover,
   PopoverContent,
@@ -47,12 +48,12 @@ function RegularReportsPage() {
 const SCOPE_OPTIONS = [
   {
     value: 'my',
-    label: 'My Class',
+    label: 'My reports',
     description: `Reports for your class (${MY_CLASS})`,
   },
   {
     value: 'school',
-    label: 'School',
+    label: 'School reports',
     description: 'Reports across your school',
   },
 ] as const
@@ -82,10 +83,7 @@ function ReportsPage({ isAdmin = false }: { isAdmin?: boolean }) {
   }
 
   const scopeLabel = isSchoolWide ? SCHOOL_NAME : MY_CLASS
-
-  const exportButtonLabel = isSchoolWide
-    ? 'Export all records to Excel'
-    : `Export ${scopeLabel} to Excel`
+  const exportButtonLabel = 'Download report'
 
   const canExport =
     tab === 'onboarding' ||
@@ -101,66 +99,56 @@ function ReportsPage({ isAdmin = false }: { isAdmin?: boolean }) {
 
   return (
     <div className="flex flex-col">
-      <div className="shrink-0 space-y-4 pt-6">
-        {/* ── Page header ─────────────────────────────────────────────────────── */}
+      <div className="shrink-0 pt-6">
         <div className="px-6">
-          <h1 className="text-2xl font-semibold">Reports</h1>
-          <p className="mt-1 hidden text-sm text-muted-foreground lg:block">
-            Download onboarding and travel declaration records as Excel files.
-            {isAdmin && (
-              <>
-                <br />
-                Switch between your class and a school-wide view below.
-              </>
-            )}
-          </p>
-        </div>
-
-        {/* ── Scope selector ──────────────────────────────────────────────────── */}
-        <div className="px-6">
-          {isAdmin ? (
-          <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger className="inline-flex cursor-pointer items-center gap-1.5 bg-transparent p-0 text-lg font-semibold outline-none">
-              {isSchoolWide ? 'School' : 'My Class'}
-              <ChevronDown className="h-5 w-5 text-muted-foreground" />
-            </PopoverTrigger>
-            <PopoverContent
-              className="w-56 gap-0 overflow-hidden rounded-2xl p-1"
-              align="start"
-            >
-              {SCOPE_OPTIONS.map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => {
-                    navigate({
-                      to: '/reports/',
-                      search: (prev) => ({ ...prev, scope: opt.value }),
-                      replace: true,
-                    })
-                    setOpen(false)
-                  }}
-                  className={cn(
-                    'flex w-full flex-col rounded-xl px-3 py-2 text-left transition-colors hover:bg-accent',
-                    scope === opt.value && 'bg-accent',
-                  )}
+          <div className="flex items-center gap-2">
+            {isAdmin ? (
+              <Popover open={open} onOpenChange={setOpen}>
+                <PopoverTrigger className="inline-flex cursor-pointer items-center gap-1.5 bg-transparent p-0 text-2xl font-semibold outline-none">
+                  {isSchoolWide ? 'School Reports' : 'My Reports'}
+                  <ChevronDown className="h-5 w-5 text-muted-foreground" />
+                </PopoverTrigger>
+                <PopoverContent
+                  className="w-56 gap-0 overflow-hidden rounded-2xl p-1"
+                  align="start"
                 >
-                  <span className="flex items-center justify-between">
-                    <span className="text-sm font-medium">{opt.label}</span>
-                    {scope === opt.value && (
-                      <Check className="h-4 w-4 text-primary" />
-                    )}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {opt.description}
-                  </span>
-                </button>
-              ))}
-            </PopoverContent>
-          </Popover>
-          ) : (
-            <span className="text-lg font-semibold">My Class</span>
-          )}
+                  {SCOPE_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => {
+                        navigate({
+                          to: '/reports/',
+                          search: (prev) => ({ ...prev, scope: opt.value }),
+                          replace: true,
+                        })
+                        setOpen(false)
+                      }}
+                      className={cn(
+                        'flex w-full flex-col rounded-xl px-3 py-2 text-left transition-colors hover:bg-accent',
+                        scope === opt.value && 'bg-accent',
+                      )}
+                    >
+                      <span className="flex items-center justify-between">
+                        <span className="text-sm font-medium">{opt.label}</span>
+                        {scope === opt.value && (
+                          <Check className="h-4 w-4 text-primary" />
+                        )}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {opt.description}
+                      </span>
+                    </button>
+                  ))}
+                </PopoverContent>
+              </Popover>
+            ) : (
+              <h1 className="text-2xl font-semibold">My Reports</h1>
+            )}
+          </div>
+          <p className="mt-1 hidden text-sm text-muted-foreground lg:block">
+            Download records from Parents Gateway. Choose between onboarding and travel declaration reports.
+          </p>
         </div>
       </div>
 
@@ -189,7 +177,7 @@ function ReportsPage({ isAdmin = false }: { isAdmin?: boolean }) {
                 : 'text-muted-foreground hover:text-foreground',
             )}
           >
-            Travel Declaration
+            Travel declaration
           </button>
         </div>
       </div>
@@ -227,12 +215,12 @@ function ReportsPage({ isAdmin = false }: { isAdmin?: boolean }) {
                     [
                       {
                         value: 'not-declared' as const,
-                        label: 'Did Not Declare (No declarations made)',
+                        label: 'Did not declare (no declarations made)',
                       },
                       {
                         value: 'declared' as const,
                         label:
-                          'Declared (Include travelling and not travelling)',
+                          'Declared (include travelling and not travelling)',
                       },
                     ] satisfies Array<{
                       value: DeclarationStatus
@@ -280,20 +268,58 @@ function ReportsPage({ isAdmin = false }: { isAdmin?: boolean }) {
                   E.g. For the June 2025 School Holidays, enter Start Date (30
                   May) and End Date (28 Jun).
                 </p>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="flex-1 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
-                  />
-                  <span className="text-sm text-muted-foreground">→</span>
-                  <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className="flex-1 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
-                  />
+                <div className="flex items-center gap-1.5">
+                  <Popover>
+                    <PopoverTrigger
+                      render={
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            'h-9 flex-1 justify-start gap-2 text-sm font-normal',
+                            !startDate && 'text-muted-foreground',
+                          )}
+                        />
+                      }
+                    >
+                      <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+                      {startDate
+                        ? format(parse(startDate, 'yyyy-MM-dd', new Date()), 'dd MMM yyyy')
+                        : 'Start date'}
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={startDate ? parse(startDate, 'yyyy-MM-dd', new Date()) : undefined}
+                        onSelect={(date) => setStartDate(date ? format(date, 'yyyy-MM-dd') : '')}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <span className="shrink-0 text-sm text-muted-foreground">–</span>
+                  <Popover>
+                    <PopoverTrigger
+                      render={
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            'h-9 flex-1 justify-start gap-2 text-sm font-normal',
+                            !endDate && 'text-muted-foreground',
+                          )}
+                        />
+                      }
+                    >
+                      <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+                      {endDate
+                        ? format(parse(endDate, 'yyyy-MM-dd', new Date()), 'dd MMM yyyy')
+                        : 'End date'}
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={endDate ? parse(endDate, 'yyyy-MM-dd', new Date()) : undefined}
+                        onSelect={(date) => setEndDate(date ? format(date, 'yyyy-MM-dd') : '')}
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </div>
 
@@ -310,7 +336,7 @@ function ReportsPage({ isAdmin = false }: { isAdmin?: boolean }) {
           {tab === 'onboarding' && (
             <div className="mt-6 border-t pt-5">
               <p className="text-xs text-muted-foreground">
-                To allow or remove PG access for custodians, please do so in
+                To allow or remove Parents Gateway access for custodians, please do so in
                 School Cockpit.
               </p>
             </div>

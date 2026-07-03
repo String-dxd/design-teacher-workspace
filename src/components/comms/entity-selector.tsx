@@ -124,7 +124,6 @@ function getCountUnit(groupType: GroupType | undefined, count: number): string {
   return count === 1 ? 'member' : 'members'
 }
 
-
 export function detectOverlaps(
   entities: Array<SelectedEntity>,
   overlapMap: Record<string, Array<string>>,

@@ -14,7 +14,7 @@ export const Route = createFileRoute('/_guest/create')({
 
 function AnnouncementMockup() {
   return (
-    <div className="flex flex-col gap-2 p-4">
+    <div className="flex flex-col gap-2 p-4 pb-7">
       <div className="h-2.5 w-2/3 rounded-full bg-border" />
       <div className="h-2 w-full rounded-full bg-muted" />
       <div className="h-2 w-5/6 rounded-full bg-muted" />
@@ -66,21 +66,21 @@ interface CreateOption {
 
 const CREATE_OPTIONS: Array<CreateOption> = [
   {
-    title: 'Post',
-    description: 'Send a post to parents. They can read it on Parents Gateway.',
+    title: 'No response needed',
+    description:
+      'Parents read the post on Parents Gateway. No action required.',
     to: '/announcements/new',
     mockup: <AnnouncementMockup />,
   },
   {
-    title: 'Post with Response',
-    description:
-      'Send a post and collect responses from parents — acknowledge or yes/no.',
+    title: 'Collect responses',
+    description: 'Parents acknowledge or answer yes/no on Parents Gateway.',
     to: '/announcements/new',
     search: { responseType: 'acknowledge' },
     mockup: <ResponseMockup />,
   },
   {
-    title: 'Custom Form',
+    title: 'Custom form',
     description:
       'Create a form with custom questions to collect data from parents.',
     to: '/forms/new',
@@ -100,7 +100,9 @@ function CreateCard({ option }: { option: CreateOption }) {
       }}
       className="group flex flex-col overflow-hidden rounded-xl border-2 border-border bg-card text-left transition-all duration-150 ease-out hover:border-slate-8 hover:shadow-sm active:scale-[0.98]"
     >
-      <div className="border-b border-border bg-muted">{option.mockup}</div>
+      <div className="h-28 border-b border-border bg-muted">
+        {option.mockup}
+      </div>
       <div className="flex flex-1 flex-col justify-between p-4">
         <div>
           <p className="text-sm font-semibold text-foreground">
@@ -133,7 +135,7 @@ function CreatePage() {
 
   const options = formsEnabled
     ? CREATE_OPTIONS
-    : CREATE_OPTIONS.filter((o) => o.title !== 'Custom Form')
+    : CREATE_OPTIONS.filter((o) => o.title !== 'Custom form')
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -157,10 +159,10 @@ function CreatePage() {
         <div className="w-full max-w-3xl">
           <div className="mb-8 text-center">
             <h1 className="text-xl font-semibold text-foreground text-wrap-balance sm:text-2xl">
-              What would you like to create?
+              Create new post
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              Choose a type to get started.
+              Choose whether parents need to respond.
             </p>
           </div>
 

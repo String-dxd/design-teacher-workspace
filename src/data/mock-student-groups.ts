@@ -442,8 +442,7 @@ function groupToEntityItem(g: (typeof MOCK_GROUPS)[number]): EntityItem {
 }
 
 /** @deprecated Use getStudentScopes() for live MOCK_GROUPS data */
-const CUSTOM_GROUPS: Array<EntityItem> =
-  MOCK_GROUPS.map(groupToEntityItem)
+const CUSTOM_GROUPS: Array<EntityItem> = MOCK_GROUPS.map(groupToEntityItem)
 
 // ─── Flat array ───────────────────────────────────────────────────────────────
 
@@ -535,7 +534,6 @@ export function getStudentScopes(): Array<EntityScope> {
     },
   ]
 }
-
 
 // ─── Overlap map ──────────────────────────────────────────────────────────────
 

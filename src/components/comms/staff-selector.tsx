@@ -10,7 +10,6 @@ import type {
 import { MOCK_STAFF, MOCK_STAFF_GROUPS } from '@/data/mock-staff'
 import { stripSalutation } from '@/lib/utils'
 
-
 interface StaffSelectorProps {
   value: Array<SelectedEntity>
   onChange: (staff: Array<SelectedEntity>) => void

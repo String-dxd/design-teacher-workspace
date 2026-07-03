@@ -432,6 +432,27 @@ function ParentsGatewayPage() {
         a.responseType === 'acknowledge' || a.responseType === 'yes-no'
       if (tab === 'view-only' && hasResponse) return false
       if (tab === 'with-responses' && !hasResponse) return false
+
+      if (filters.responseTypes.length > 0) {
+        const effectiveType = a.responseType ?? 'view-only'
+        if (!filters.responseTypes.includes(effectiveType)) return false
+      }
+      if (filters.statuses.length > 0 && !filters.statuses.includes(a.status))
+        return false
+      if (
+        filters.ownerships.length > 0 &&
+        !filters.ownerships.includes(a.ownership)
+      )
+        return false
+      if (filters.dateFrom && a.postedAt) {
+        if (new Date(a.postedAt) < new Date(filters.dateFrom)) return false
+      }
+      if (filters.dateTo && a.postedAt) {
+        const toEnd = new Date(filters.dateTo)
+        toEnd.setHours(23, 59, 59, 999)
+        if (new Date(a.postedAt) > toEnd) return false
+      }
+
       if (searchQuery) {
         const q = searchQuery.toLowerCase()
         return (
@@ -441,15 +462,40 @@ function ParentsGatewayPage() {
       }
       return true
     })
-  }, [allSchoolPosts, tab, searchQuery])
+  }, [allSchoolPosts, tab, searchQuery, filters])
 
-  const PAGE_SIZE = 20
+  const schoolSorted = useMemo(() => {
+    if (!sort) return schoolFiltered
+    const dir = sort.direction === 'asc' ? 1 : -1
+    return [...schoolFiltered].sort((a, b) => {
+      switch (sort.column) {
+        case 'title':
+          return a.title.localeCompare(b.title) * dir
+        case 'date': {
+          const da = a.postedAt ?? a.createdAt ?? ''
+          const db = b.postedAt ?? b.createdAt ?? ''
+          return (new Date(da).getTime() - new Date(db).getTime()) * dir
+        }
+        case 'created-by': {
+          const na =
+            a.ownership === 'mine' ? 'Me' : stripSalutation(a.postedBy ?? '')
+          const nb =
+            b.ownership === 'mine' ? 'Me' : stripSalutation(b.postedBy ?? '')
+          return na.localeCompare(nb) * dir
+        }
+        default:
+          return 0
+      }
+    })
+  }, [schoolFiltered, sort])
+
+  const PAGE_SIZE = 10
   const myPostsPagination = usePagination({
     totalItems: sortedAnnouncements.length,
     pageSize: PAGE_SIZE,
   })
   const schoolPostsPagination = usePagination({
-    totalItems: schoolFiltered.length,
+    totalItems: schoolSorted.length,
     pageSize: PAGE_SIZE,
   })
   const formsPagination = usePagination({
@@ -461,7 +507,7 @@ function ParentsGatewayPage() {
     myPostsPagination.startIndex,
     myPostsPagination.startIndex + PAGE_SIZE,
   )
-  const pagedSchoolPosts = schoolFiltered.slice(
+  const pagedSchoolPosts = schoolSorted.slice(
     schoolPostsPagination.startIndex,
     schoolPostsPagination.startIndex + PAGE_SIZE,
   )
@@ -471,8 +517,8 @@ function ParentsGatewayPage() {
   )
 
   const tabs: Array<{ value: PostTab; label: string; hidden?: boolean }> = [
-    { value: 'with-responses', label: 'With responses' },
-    { value: 'view-only', label: 'Read only' },
+    { value: 'with-responses', label: 'Collect responses' },
+    { value: 'view-only', label: 'No response needed' },
     { value: 'custom-forms', label: 'Custom forms', hidden: !formsEnabled },
   ]
   const visibleTabs = tabs.filter((t) => !t.hidden)
@@ -485,11 +531,15 @@ function ParentsGatewayPage() {
   const someSelectedInView = selectedInView.length > 0 && !allSelectedInView
 
   // Selection helpers — School-wide
-  const schoolFilteredIds = schoolFiltered.map((a) => a.id)
-  const schoolSelectedInView = schoolFilteredIds.filter((id) => selectedIds.has(id))
+  const schoolFilteredIds = schoolSorted.map((a) => a.id)
+  const schoolSelectedInView = schoolFilteredIds.filter((id) =>
+    selectedIds.has(id),
+  )
   const schoolAllSelectedInView =
-    schoolFilteredIds.length > 0 && schoolSelectedInView.length === schoolFilteredIds.length
-  const schoolSomeSelectedInView = schoolSelectedInView.length > 0 && !schoolAllSelectedInView
+    schoolFilteredIds.length > 0 &&
+    schoolSelectedInView.length === schoolFilteredIds.length
+  const schoolSomeSelectedInView =
+    schoolSelectedInView.length > 0 && !schoolAllSelectedInView
 
   function toggleSelectAllSchool() {
     if (schoolAllSelectedInView) {
@@ -602,15 +652,6 @@ function ParentsGatewayPage() {
           </div>
         </div>
 
-        {/* School-wide mode indicator */}
-        {isSchoolWide && (
-          <div className="mx-6 mt-4 rounded-lg border border-twblue-6 bg-twblue-3/60 px-4 py-2.5">
-            <p className="text-sm text-twblue-11">
-              Viewing all sent posts across the school.
-            </p>
-          </div>
-        )}
-
         {/* Table */}
         {isSchoolWide ? (
           /* ── School-wide table ── */
@@ -635,10 +676,36 @@ function ParentsGatewayPage() {
                       />
                     </TableHead>
                     <TableHead className="w-[376px] pl-2 sticky left-[44px] z-10 bg-background">
-                      Title
+                      <SortableHeader
+                        label="Title"
+                        column="title"
+                        sort={sort}
+                        onSort={(col, dir) =>
+                          setSort({ column: col, direction: dir })
+                        }
+                      />
                     </TableHead>
-                    <TableHead className="w-[110px]">Date sent</TableHead>
-                    <TableHead className="w-[160px]">Teacher</TableHead>
+                    <TableHead className="w-[110px]">
+                      <SortableHeader
+                        label="Posted on"
+                        column="date"
+                        sort={sort}
+                        onSort={(col, dir) =>
+                          setSort({ column: col, direction: dir })
+                        }
+                      />
+                    </TableHead>
+                    <TableHead className="w-[160px]">
+                      <SortableHeader
+                        label="Created by"
+                        column="created-by"
+                        sort={sort}
+                        onSort={(col, dir) =>
+                          setSort({ column: col, direction: dir })
+                        }
+                      />
+                    </TableHead>
+                    <TableHead className="w-[180px]">To parents of</TableHead>
                     <TableHead className="w-[150px]">Read</TableHead>
                     <TableHead className="w-[80px] pr-4 text-right">
                       Actions
@@ -659,8 +726,8 @@ function ParentsGatewayPage() {
                       a.responseType === 'yes-no'
                     const teacherLabel =
                       a.ownership === 'mine'
-                        ? 'Me (Daniel Tan)'
-                        : (a.postedBy ?? 'Unknown')
+                        ? 'Me'
+                        : stripSalutation(a.postedBy ?? 'Unknown')
                     const isOwnPost = a.ownership === 'mine'
                     const isSelected = selectedIds.has(a.id)
                     return (
@@ -668,7 +735,8 @@ function ParentsGatewayPage() {
                         key={a.id}
                         className={cn(
                           'cursor-pointer',
-                          isSelected && 'bg-primary/[0.04] hover:bg-primary/[0.06]',
+                          isSelected &&
+                            'bg-primary/[0.04] hover:bg-primary/[0.06]',
                         )}
                         onClick={() =>
                           navigate({
@@ -704,9 +772,6 @@ function ParentsGatewayPage() {
                                 </span>
                               )}
                             </div>
-                            <div className="mt-0.5 line-clamp-1 text-sm text-muted-foreground">
-                              {a.description.replace(/<[^>]*>/g, '')}
-                            </div>
                           </div>
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
@@ -723,6 +788,21 @@ function ParentsGatewayPage() {
                           >
                             {teacherLabel}
                           </span>
+                        </TableCell>
+                        <TableCell>
+                          {a.recipients.length > 0 ? (
+                            <span className="line-clamp-2 text-sm text-muted-foreground">
+                              {[
+                                ...new Set(
+                                  a.recipients.map((r) => r.classLabel),
+                                ),
+                              ].join(', ')}
+                            </span>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">
+                              —
+                            </span>
+                          )}
                         </TableCell>
                         <TableCell className="pr-6">
                           <ReadRate
@@ -786,9 +866,9 @@ function ParentsGatewayPage() {
                 {schoolPostsPagination.startIndex + 1}–
                 {Math.min(
                   schoolPostsPagination.startIndex + PAGE_SIZE,
-                  schoolFiltered.length,
+                  schoolSorted.length,
                 )}{' '}
-                of {schoolFiltered.length} records
+                of {schoolSorted.length} records
               </div>
 
               {schoolPostsPagination.totalPages > 1 && (
@@ -840,7 +920,6 @@ function ParentsGatewayPage() {
             </div>
           </div>
         ) : tab === 'custom-forms' ? (
-
           <div className="max-w-full overflow-x-auto bg-background">
             {filteredForms.length === 0 ? (
               <div className="flex flex-col items-center py-16">
@@ -1052,7 +1131,7 @@ function ParentsGatewayPage() {
                         }
                       />
                     </TableHead>
-                    <TableHead className="w-[110px]">
+                    <TableHead className="w-[140px]">
                       <SortableHeader
                         label="Date"
                         column="date"
@@ -1072,6 +1151,10 @@ function ParentsGatewayPage() {
                         }
                       />
                     </TableHead>
+                    <TableHead className="w-[150px]">
+                      {tab === 'with-responses' ? 'Response' : 'Read'}
+                    </TableHead>
+                    <TableHead className="w-[180px]">To parents of</TableHead>
                     <TableHead className="w-[130px]">
                       <SortableHeader
                         label="Created by"
@@ -1081,9 +1164,6 @@ function ParentsGatewayPage() {
                           setSort({ column: col, direction: dir })
                         }
                       />
-                    </TableHead>
-                    <TableHead className="w-[150px]">
-                      {tab === 'with-responses' ? 'Response' : 'Read'}
                     </TableHead>
                     <TableHead className="w-[80px] pr-4 text-right">
                       Actions
@@ -1162,10 +1242,6 @@ function ParentsGatewayPage() {
                                 <span className="truncate font-medium">
                                   {announcement.title}
                                 </span>
-                                {(announcement.attachments?.length ?? 0) >
-                                  0 && (
-                                  <Paperclip className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                                )}
                                 {announcement.responseType ===
                                   'acknowledge' && (
                                   <span className="shrink-0 rounded-full bg-twblue-3 px-1.5 py-0.5 text-[10px] font-medium text-twblue-11 ring-1 ring-inset ring-twblue-6">
@@ -1181,36 +1257,31 @@ function ParentsGatewayPage() {
                                   <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-9" />
                                 )}
                               </div>
-                              <div className="mt-0.5 line-clamp-1 text-sm text-muted-foreground">
-                                {announcement.description.replace(
-                                  /<[^>]*>/g,
-                                  '',
-                                )}
-                              </div>
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {announcement.status !== 'draft' &&
-                            formatDate(relevantDate)}
+                        <TableCell>
+                          {relevantDate ? (
+                            <div className="flex flex-col">
+                              <span className="text-xs text-muted-foreground">
+                                {announcement.status === 'posted'
+                                  ? 'Posted on'
+                                  : announcement.status === 'scheduled'
+                                    ? 'Scheduled for'
+                                    : 'Edited on'}
+                              </span>
+                              <span className="text-sm text-foreground">
+                                {formatDate(relevantDate)}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">
+                              —
+                            </span>
+                          )}
                         </TableCell>
                         <TableCell>
                           <StatusBadge status={announcement.status} />
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                            {isShared ? (
-                              <>
-                                <Users className="h-3.5 w-3.5 shrink-0" />
-                                <span>Shared</span>
-                                {isViewer && (
-                                  <Lock className="h-3 w-3 shrink-0 text-muted-foreground" />
-                                )}
-                              </>
-                            ) : (
-                              <span>Me</span>
-                            )}
-                          </div>
                         </TableCell>
                         <TableCell className="pr-6">
                           {announcement.status !== 'posted' ? (
@@ -1228,6 +1299,32 @@ function ParentsGatewayPage() {
                               totalCount={totalCount}
                             />
                           )}
+                        </TableCell>
+                        <TableCell>
+                          {announcement.recipients.length > 0 ? (
+                            <span className="line-clamp-2 text-sm text-muted-foreground">
+                              {[
+                                ...new Set(
+                                  announcement.recipients.map(
+                                    (r) => r.classLabel,
+                                  ),
+                                ),
+                              ].join(', ')}
+                            </span>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">
+                              —
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm text-muted-foreground">
+                            {isShared
+                              ? stripSalutation(
+                                  announcement.postedBy ?? 'Unknown',
+                                )
+                              : 'Me'}
+                          </span>
                         </TableCell>
                         <TableCell
                           className="w-[80px] pr-4"
@@ -1328,7 +1425,6 @@ function ParentsGatewayPage() {
                 </div>
               )}
             </div>
-
           </div>
         )}
       </div>
@@ -1358,9 +1454,7 @@ function ParentsGatewayPage() {
             >
               <Trash2 className="mr-2 h-4 w-4" />
               Delete{' '}
-              {selectedIds.size > 1
-                ? `${selectedIds.size} posts`
-                : 'post'}
+              {selectedIds.size > 1 ? `${selectedIds.size} posts` : 'post'}
             </Button>
           </div>
         </div>

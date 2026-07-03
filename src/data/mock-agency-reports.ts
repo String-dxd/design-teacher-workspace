@@ -156,7 +156,6 @@ export interface AiSourceItem {
   href: string
 }
 
-
 export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
   {
     id: 'cps',
@@ -3090,7 +3089,6 @@ export function getAgencyLogo(agency: string): string | undefined {
   // deterministic acronym swatch fallback in <AgencyLogo />.
   return undefined
 }
-
 
 // Push a freshly-submitted report onto the mock store and return it. Used by
 // the wizard's "Submit for Principal review" flow.

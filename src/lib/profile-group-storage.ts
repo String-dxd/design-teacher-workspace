@@ -48,7 +48,6 @@ function writeApplied(id: string | null) {
   }
 }
 
-
 function saveProfileGroup(group: ProfileGroup) {
   const groups = readGroups()
   const idx = groups.findIndex((g) => g.id === group.id)
@@ -62,7 +61,6 @@ function deleteProfileGroup(id: string) {
   writeGroups(groups)
   if (readApplied() === id) writeApplied(null)
 }
-
 
 function setAppliedProfileGroupId(id: string | null) {
   writeApplied(id)

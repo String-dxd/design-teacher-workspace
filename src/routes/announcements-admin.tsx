@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 import {
+  ArrowLeftRight,
   ChevronLeft,
   ChevronRight,
   Copy,
@@ -12,12 +13,12 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 
+import type { PGAnnouncement } from '@/types/pg-announcement'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
 import {
   mockPGAnnouncements,
   mockSchoolWidePosts,
 } from '@/data/mock-pg-announcements'
-import type { PGAnnouncement } from '@/types/pg-announcement'
 import { StatusBadge } from '@/components/comms/status-badge'
 import { ReadRate } from '@/components/comms/read-rate'
 import { Button } from '@/components/ui/button'
@@ -62,13 +63,25 @@ function AdminBanner({ scope }: { scope: 'my' | 'school' }) {
   const navigate = useNavigate()
   const isSchool = scope === 'school'
 
+  function handleSwitch() {
+    navigate({
+      to: '/announcements-admin',
+      search: (prev) => ({ ...prev, scope: isSchool ? 'my' : 'school' }),
+      replace: true,
+    })
+  }
+
   return (
     <div
+      role="button"
+      tabIndex={0}
+      onClick={handleSwitch}
+      onKeyDown={(e) => e.key === 'Enter' && handleSwitch()}
       className={cn(
-        'mx-6 flex items-center justify-between rounded-xl border px-4 py-3 transition-all duration-300',
+        'mx-6 flex cursor-pointer items-center justify-between rounded-xl border px-4 py-3 transition-all duration-300',
         isSchool
-          ? 'border-twblue-6 bg-twblue-3'
-          : 'border-amber-200 bg-amber-50',
+          ? 'border-twblue-6 bg-twblue-3 hover:bg-twblue-4/60'
+          : 'border-amber-200 bg-amber-50 hover:bg-amber-100/60',
       )}
     >
       <div className="flex items-center gap-3">
@@ -88,7 +101,7 @@ function AdminBanner({ scope }: { scope: 'my' | 'school' }) {
           <p
             className={cn(
               'text-sm font-medium',
-              isSchool ? 'text-twblue-11' : 'text-amber-800',
+              isSchool ? 'text-twblue-12' : 'text-amber-800',
             )}
           >
             You have admin access.
@@ -96,34 +109,26 @@ function AdminBanner({ scope }: { scope: 'my' | 'school' }) {
           <p
             className={cn(
               'text-xs',
-              isSchool ? 'text-twblue-10' : 'text-amber-600',
+              isSchool ? 'text-twblue-11' : 'text-amber-700',
             )}
           >
             {isSchool
               ? 'Viewing all posts across your school.'
-              : 'Switch to see and manage posts from all teachers.'}
+              : "You're viewing your own posts. Switch to see all school posts."}
           </p>
         </div>
       </div>
-      <Button
-        size="sm"
-        variant="outline"
-        onClick={() =>
-          navigate({
-            to: '/announcements-admin',
-            search: (prev) => ({ ...prev, scope: isSchool ? 'my' : 'school' }),
-            replace: true,
-          })
-        }
+      <div
         className={cn(
-          'shrink-0',
+          'flex shrink-0 items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-sm font-medium transition-colors',
           isSchool
             ? 'border-twblue-6 text-twblue-11 hover:bg-twblue-4'
             : 'border-amber-300 text-amber-800 hover:bg-amber-100',
         )}
       >
-        {isSchool ? '← Back to my posts' : 'See all school posts →'}
-      </Button>
+        <ArrowLeftRight className="h-3.5 w-3.5" />
+        {isSchool ? 'Back to my posts' : 'See all school posts'}
+      </div>
     </div>
   )
 }
@@ -154,7 +159,10 @@ function AdminPostsExperiment() {
 
   const schoolPosts = useMemo(
     () =>
-      [...mockPGAnnouncements.filter((a) => a.status === 'posted'), ...mockSchoolWidePosts].sort(
+      [
+        ...mockPGAnnouncements.filter((a) => a.status === 'posted'),
+        ...mockSchoolWidePosts,
+      ].sort(
         (a, b) =>
           new Date(b.postedAt ?? b.createdAt ?? '').getTime() -
           new Date(a.postedAt ?? a.createdAt ?? '').getTime(),
@@ -200,9 +208,11 @@ function AdminPostsExperiment() {
         {/* Header */}
         <div className="flex items-start justify-between px-6">
           <div>
-            <h1 className="text-2xl font-semibold">Posts</h1>
+            <h1 className="text-2xl font-semibold">
+              {isSchoolWide ? 'School posts' : 'My posts'}
+            </h1>
             <p className="mt-1 hidden text-sm text-muted-foreground lg:block">
-              Send a read only post or collect responses from parents via
+              Send a read-only post or collect responses from parents via
               Parents Gateway.
             </p>
           </div>
@@ -228,14 +238,19 @@ function AdminPostsExperiment() {
                   : 'text-muted-foreground hover:text-foreground',
               )}
             >
-              {t === 'with-responses' ? 'With responses' : 'Read only'}
+              {t === 'with-responses' ? 'With responses' : 'Read-only'}
             </button>
           ))}
         </div>
       </div>
 
       {/* Table */}
-      <div className={cn('overflow-x-auto transition-colors duration-300', isSchoolWide && 'bg-twblue-3/40')}>
+      <div
+        className={cn(
+          'overflow-x-auto transition-colors duration-300',
+          isSchoolWide && 'bg-twblue-3/40',
+        )}
+      >
         {paged.length === 0 ? (
           <div className="flex flex-col items-center py-16">
             <p className="text-sm text-muted-foreground">No posts found.</p>
@@ -309,7 +324,9 @@ function AdminPostsExperiment() {
                       </div>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {formatDate(post.postedAt ?? post.scheduledAt ?? post.createdAt)}
+                      {formatDate(
+                        post.postedAt ?? post.scheduledAt ?? post.createdAt,
+                      )}
                     </TableCell>
                     {isSchoolWide && (
                       <TableCell>
@@ -335,7 +352,9 @@ function AdminPostsExperiment() {
                         <span className="text-sm text-muted-foreground">—</span>
                       ) : (
                         <ReadRate
-                          readCount={hasResponseType ? responseCount : readCount}
+                          readCount={
+                            hasResponseType ? responseCount : readCount
+                          }
                           totalCount={totalCount}
                         />
                       )}
