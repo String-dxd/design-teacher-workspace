@@ -599,7 +599,7 @@ function AbsenceBarChart({
       />
       <Tooltip
         content={<CustomBarTooltip clickable={!!onSegmentClick} />}
-        cursor={{ fill: 'rgba(0,0,0,0.04)' }}
+        cursor={{ fill: 'color-mix(in oklab, var(--color-slate-12) 4%, transparent)' }}
       />
       {reversedCategories.map((cat, i) => (
         <Bar

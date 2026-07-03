@@ -78,7 +78,7 @@ export function FormsFilterBar({ filters, onChange }: FormsFilterBarProps) {
         render={
           <Button
             variant="outline"
-            className="h-9 gap-2 aria-expanded:bg-white"
+            className="h-9 gap-2 aria-expanded:bg-card"
           />
         }
       >

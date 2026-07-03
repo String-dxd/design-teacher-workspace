@@ -2540,6 +2540,7 @@ function ChildrenHomeFilledRendering({
         <div>
           {approved ? (
             <p
+              /* fence exception (plan 019): blue-ink signature in the printed-report facsimile — intentionally Tailwind blue-900, permanent light-mode region */
               className="mb-1 text-[20px] leading-none text-blue-900"
               style={{
                 fontFamily:

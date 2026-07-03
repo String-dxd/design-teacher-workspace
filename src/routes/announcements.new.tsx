@@ -1815,14 +1815,14 @@ function NewAnnouncementPage() {
               value={scheduledDate}
               min={new Date().toISOString().split('T')[0]}
               onChange={(e) => setScheduledDate(e.target.value)}
-              className="rounded-md border border-twblue-6 bg-background px-2.5 py-1 text-sm text-foreground outline-none focus:ring-2 focus:ring-twblue-7"
+              className="rounded-md border border-input bg-background px-2.5 py-1 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring"
             />
             <span className="text-sm text-twblue-11">at</span>
             <input
               type="time"
               value={scheduledTime}
               onChange={(e) => setScheduledTime(e.target.value)}
-              className="rounded-md border border-twblue-6 bg-background px-2.5 py-1 text-sm text-foreground outline-none focus:ring-2 focus:ring-twblue-7"
+              className="rounded-md border border-input bg-background px-2.5 py-1 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring"
             />
             <div className="ml-auto flex items-center gap-3">
               <Button
@@ -2348,7 +2348,7 @@ function NewAnnouncementPage() {
                           )}
                         >
                           {/* Top toolbar — cover toggle + delete */}
-                          <div className="absolute inset-x-0 top-0 z-10 flex items-center gap-0.5 bg-[oklch(0_0_0/0.75)] px-1.5 py-1">
+                          <div className="absolute inset-x-0 top-0 z-10 flex items-center gap-0.5 bg-overlay px-1.5 py-1">
                             <button
                               type="button"
                               onClick={() => toggleCoverPhoto(i)}
@@ -2430,7 +2430,7 @@ function NewAnnouncementPage() {
                                 prev.filter((_, j) => j !== i),
                               )
                             }
-                            className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[oklch(0_0_0/0.5)] text-white hover:bg-[oklch(0_0_0/0.7)]"
+                            className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-overlay/60 text-white hover:bg-overlay/90"
                           >
                             <X className="h-2.5 w-2.5" />
                           </button>
