@@ -105,7 +105,12 @@ function ParentReportView({
           </div>
         )}
 
-        <ReportPreview report={report} blocks={blocks} comments={comments} />
+        <ReportPreview
+          report={report}
+          blocks={blocks}
+          comments={comments}
+          compactPupilInfo
+        />
       </div>
 
       <div className="bg-card fixed inset-x-0 bottom-0 mx-auto max-w-md border-t px-4 py-4">

@@ -105,6 +105,12 @@ export interface ReportPreviewProps {
   editable?: boolean
   comments: string
   onCommentsChange?: (value: string) => void
+  /**
+   * When true, the pupil-particulars block drops name/class/term and keeps only
+   * form teacher — for surfaces (guest view, detail page) whose own header already
+   * carries the student's identity.
+   */
+  compactPupilInfo?: boolean
 }
 
 export function ReportPreview({
@@ -113,6 +119,7 @@ export function ReportPreview({
   editable = false,
   comments,
   onCommentsChange,
+  compactPupilInfo = false,
 }: ReportPreviewProps) {
   const ordered = [...blocks]
     .filter((b) => b.enabled)
@@ -130,6 +137,7 @@ export function ReportPreview({
           editable={editable}
           comments={comments}
           onCommentsChange={onCommentsChange}
+          compactPupilInfo={compactPupilInfo}
         />
       )}
       {pupilInfoBlock && <TermAtAGlance report={report} />}
@@ -153,12 +161,14 @@ function PreviewBlock({
   editable,
   comments,
   onCommentsChange,
+  compactPupilInfo = false,
 }: {
   block: ReportBlock
   report: HolisticReport
   editable: boolean
   comments: string
   onCommentsChange?: (value: string) => void
+  compactPupilInfo?: boolean
 }) {
   const heading = (text: string) => (
     <h3 className="text-sm font-semibold tracking-tight">{text}</h3>
@@ -166,6 +176,16 @@ function PreviewBlock({
 
   switch (block.key) {
     case 'pupilInfo':
+      // Compact: the host surface's header already shows name/class/term, so keep
+      // only form teacher here to avoid repeating the student's identity.
+      if (compactPupilInfo) {
+        return (
+          <p className="text-muted-foreground text-sm">
+            <span className="text-foreground font-medium">Form teacher: </span>
+            {report.formTeacher}
+          </p>
+        )
+      }
       return (
         <div className="flex flex-col gap-1">
           <h2 className="text-lg font-semibold">{report.studentName}</h2>

@@ -202,6 +202,7 @@ function ReportDetailPage() {
             report={report}
             blocks={documentBlocks}
             comments={documentComments}
+            compactPupilInfo
           />
         </div>
       ) : (

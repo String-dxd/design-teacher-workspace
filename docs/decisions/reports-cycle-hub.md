@@ -131,8 +131,13 @@ Same set as `report-builder.md` §Controls in scope, minus the viz-related surfa
 
 The worktree directory was deleted while uncommitted (likely by worktree cleanup that also stopped the background dev server). Nothing was staged, so git held no copy. The redesign was reconstructed deterministically by replaying the implementing agent's transcript (Write/Edit ops in order) onto a fresh checkout of `5e59766`, then re-applying the two post-verdict fixes above and this record from session context. Gates re-run post-recovery confirm the reconstruction (tsc 109, tests 65/65, a11y-static clean). Lesson for the ratchet: commit at each verified milestone rather than holding a large redesign uncommitted in a worktree.
 
+## Follow-ups (2026-07-06)
+
+- **Guest-view identity duplication (advisory) — fixed.** Added a `compactPupilInfo` prop to `ReportPreview`: the pupil-particulars block now drops name/class/term (the host header already shows them) and keeps only form teacher. Applied to the parent guest view and the layout-aware detail page; the builder/write editing surfaces keep full particulars. Verified live — name renders once, "Class:"/"Term:" labels gone from the body, form teacher retained. Gates: tsc 107 unchanged, 65/65 tests, a11y-static clean.
+- **Ratchet items filed** to the standards repo (`transformteamsg/tfx-design-standard`): [#26](https://github.com/transformteamsg/tfx-design-standard/issues/26) (sanitise shared user-authored HTML) and [#27](https://github.com/transformteamsg/tfx-design-standard/issues/27) (domain-content authenticity). Logged in `docs/decisions/HARNESS-FEEDBACK.md`.
+
 ## Ratchet
 
-- Carried forward from `report-builder.md`: sanitise shared user-authored HTML before any non-prototype ship (`dangerouslySetInnerHTML` in `report-preview.tsx`); domain-content authenticity has no covering control (candidate standard).
+- Carried forward from `report-builder.md`: sanitise shared user-authored HTML before any non-prototype ship (`dangerouslySetInnerHTML` in `report-preview.tsx`); domain-content authenticity has no covering control (candidate standard). → **Filed as #26 and #27.**
 - New: review/approval workflow is a designed-out gap — if this flow graduates from prototype, the Ready → share hop needs an approval state.
 - Process: commit verified milestones; don't leave a multi-hour redesign uncommitted in a worktree (this record was recovered from an agent transcript after the worktree was deleted).
