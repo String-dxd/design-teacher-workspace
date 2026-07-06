@@ -1,5 +1,12 @@
-import { Sparkles } from 'lucide-react'
+import {
+  BookOpen,
+  Calculator,
+  FlaskConical,
+  Languages,
+  Sparkles,
+} from 'lucide-react'
 
+import type { LucideIcon } from 'lucide-react'
 import type {
   CoreValueLevel,
   HolisticReport,
@@ -9,9 +16,16 @@ import type {
 import { RichTextEditor } from '@/components/comms/rich-text-editor'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion'
 import { AttendanceRing } from '@/components/reports/attendance-ring'
 import {
-  getSubjectTeacher,
+  COCKPIT_LAST_SYNCED,
+  getCockpitSubmissions,
   isSubjectSubmitted,
 } from '@/data/mock-cockpit-submissions'
 import { cn } from '@/lib/utils'
@@ -25,39 +39,123 @@ import { cn } from '@/lib/utils'
 // rest of the document is typographic — each learning outcome / personal quality
 // renders its descriptor as a subtle text chip, no repeated bars.
 
-// Chip text uses step 12 (lime/amber) and twblue-11 — step 11 on step 3 sits just
-// below the 4.5:1 AA floor for these hues at 12px (measured 4.25–4.29).
-const LO_CHIP_CLASS: Record<LearningOutcomeStatus, string> = {
-  Accomplished: 'bg-twblue-3 text-twblue-11',
-  Competent: 'bg-lime-3 text-lime-12',
-  Developing: 'bg-amber-3 text-amber-12',
-  Beginning: 'bg-muted text-muted-foreground',
+// Growth-bar scales — every descriptor renders as a position on a development
+// ladder (filled segments up to the achieved stage) with the stage named on the
+// row, so the document reads as "a stage on the journey", never a grade. One
+// neutral colour throughout: no red flags in a parent-facing report.
+
+const LO_STAGE_ORDER: Array<LearningOutcomeStatus> = [
+  'Beginning',
+  'Developing',
+  'Competent',
+  'Accomplished',
+]
+
+const QUALITY_STAGE_ORDER: Array<CoreValueLevel> = [
+  'Beginning',
+  'Regularly Shows',
+  'Demonstrates',
+  'Demonstrates Strongly',
+  'Demonstrates Very Strongly',
+]
+
+const LO_STAGE_MEANINGS: Array<{ stage: string; meaning: string }> = [
+  { stage: 'Beginning', meaning: 'Starting out — learns with close support.' },
+  { stage: 'Developing', meaning: 'Making progress with some guidance.' },
+  { stage: 'Competent', meaning: 'Meets the learning outcome confidently.' },
+  {
+    stage: 'Accomplished',
+    meaning: 'Applies it independently and consistently.',
+  },
+]
+
+const SUBJECT_ICONS = new Map<string, LucideIcon>([
+  ['English Language', BookOpen],
+  ['Chinese Language', Languages],
+  ['Mathematics', Calculator],
+  ['Science', FlaskConical],
+])
+
+function formatDay(iso: string): string {
+  return new Date(iso).toLocaleDateString('en-SG', {
+    day: 'numeric',
+    month: 'short',
+  })
 }
 
-const QUALITY_CHIP_CLASS: Record<CoreValueLevel, string> = {
-  'Demonstrates Very Strongly': 'bg-twblue-3 text-twblue-11',
-  'Demonstrates Strongly': 'bg-lime-3 text-lime-12',
-  Demonstrates: 'bg-lime-3 text-lime-12',
-  'Regularly Shows': 'bg-amber-3 text-amber-12',
-  Beginning: 'bg-muted text-muted-foreground',
+function formatFullDay(iso: string): string {
+  return new Date(iso).toLocaleDateString('en-SG', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  })
 }
 
-function DescriptorChip({
-  label,
-  className,
+/** Filled segments up to the achieved stage. Decorative — the stage word on the
+ * row is the accessible text. */
+function GrowthScale({
+  stageIndex,
+  totalStages,
+  rowIndex,
 }: {
-  label: string
-  className: string
+  stageIndex: number
+  totalStages: number
+  rowIndex: number
 }) {
   return (
-    <span
-      className={cn(
-        'shrink-0 rounded-full px-2 py-0.5 text-xs font-medium',
-        className,
-      )}
-    >
-      {label}
-    </span>
+    <div aria-hidden className="flex w-24 shrink-0 items-center gap-1 sm:w-28">
+      {Array.from({ length: totalStages }, (_, i) => (
+        <div
+          key={i}
+          className={cn(
+            'h-1.5 flex-1 rounded-full',
+            i <= stageIndex
+              ? 'bg-primary animate-hdp-seg-grow'
+              : 'border-border bg-muted/40 border',
+          )}
+          style={
+            i <= stageIndex
+              ? { animationDelay: `${rowIndex * 60 + i * 45}ms` }
+              : undefined
+          }
+        />
+      ))}
+    </div>
+  )
+}
+
+function ScaleRow({
+  label,
+  sublabel,
+  stageIndex,
+  totalStages,
+  stageLabel,
+  rowIndex,
+}: {
+  label: string
+  sublabel?: string
+  stageIndex: number
+  totalStages: number
+  stageLabel: string
+  rowIndex: number
+}) {
+  return (
+    <div className="flex items-center gap-3 py-1">
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm">{label}</p>
+        {sublabel && (
+          <p className="text-muted-foreground truncate text-xs">{sublabel}</p>
+        )}
+      </div>
+      <GrowthScale
+        stageIndex={stageIndex}
+        totalStages={totalStages}
+        rowIndex={rowIndex}
+      />
+      <span className="text-twblue-11 w-24 shrink-0 text-right text-xs leading-tight font-medium sm:w-28">
+        {stageLabel}
+      </span>
+    </div>
   )
 }
 
@@ -197,10 +295,18 @@ function PreviewBlock({
       // only form teacher here to avoid repeating the student's identity.
       if (compactPupilInfo) {
         return (
-          <p className="text-muted-foreground text-sm">
-            <span className="text-foreground font-medium">Form teacher: </span>
-            {report.formTeacher}
-          </p>
+          <div className="flex flex-col gap-1">
+            <p className="text-muted-foreground text-sm">
+              <span className="text-foreground font-medium">
+                Form teacher:{' '}
+              </span>
+              {report.formTeacher}
+            </p>
+            <p className="text-muted-foreground text-xs">
+              Packaged from School Cockpit · data as at{' '}
+              {formatFullDay(COCKPIT_LAST_SYNCED)}
+            </p>
+          </div>
         )
       }
       return (
@@ -224,24 +330,58 @@ function PreviewBlock({
               <dd className="inline">{report.formTeacher}</dd>
             </div>
           </dl>
+          <p className="text-muted-foreground text-xs">
+            Packaged from School Cockpit · data as at{' '}
+            {formatFullDay(COCKPIT_LAST_SYNCED)}
+          </p>
         </div>
       )
 
-    case 'subjects':
+    case 'subjects': {
+      const submissions = getCockpitSubmissions(report.studentId)
       return (
         <div className="flex flex-col gap-2">
           {heading('Subjects')}
           <p className="text-muted-foreground text-xs">
-            Learning outcomes and how {firstName(report.studentName)} is
-            progressing.
+            Where {firstName(report.studentName)} is on each learning outcome —
+            a stage on the journey, not a grade.
           </p>
-          <div className="flex flex-col gap-3">
-            {report.academic.subjects.map((subj) => {
+          <Accordion className="rounded-lg border">
+            <AccordionItem value="how-to-read" className="border-b-0">
+              <AccordionTrigger className="px-3 py-2 text-xs font-medium">
+                How to read this report
+              </AccordionTrigger>
+              <AccordionContent className="px-3">
+                <ul className="flex flex-col gap-1.5">
+                  {LO_STAGE_MEANINGS.map((m, i) => (
+                    <li key={m.stage} className="flex items-center gap-3">
+                      <GrowthScale
+                        stageIndex={i}
+                        totalStages={4}
+                        rowIndex={i}
+                      />
+                      <span className="text-xs">
+                        <span className="font-medium">{m.stage}</span>{' '}
+                        <span className="text-muted-foreground">
+                          — {m.meaning}
+                        </span>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+          <div className="flex flex-col gap-4 pt-1">
+            {report.academic.subjects.map((subj, subjIdx) => {
               const awaiting =
                 showMissingData &&
                 !isSubjectSubmitted(report.studentId, subj.name)
+              const submission = submissions.find(
+                (s) => s.subject === subj.name,
+              )
+              const SubjectIcon = SUBJECT_ICONS.get(subj.name) ?? BookOpen
               if (awaiting) {
-                const teacher = getSubjectTeacher(subj.name)
                 return (
                   <div
                     key={subj.name}
@@ -250,27 +390,35 @@ function PreviewBlock({
                     <p className="text-sm font-medium">{subj.name}</p>
                     <p className="text-muted-foreground text-sm">
                       Awaiting data from School Cockpit
-                      {teacher ? ` — ${teacher}` : ''}
+                      {submission ? ` — ${submission.teacherName}` : ''}
                     </p>
                   </div>
                 )
               }
               return (
                 <div key={subj.name} className="flex flex-col gap-1">
-                  <p className="text-sm font-medium">{subj.name}</p>
-                  {subj.learningOutcomes.map((lo) => (
-                    <div
+                  <div className="flex items-baseline gap-2">
+                    <SubjectIcon
+                      aria-hidden
+                      className="text-primary size-4 shrink-0 self-center"
+                    />
+                    <p className="text-sm font-medium">{subj.name}</p>
+                    {submission?.submittedAt && (
+                      <p className="text-muted-foreground text-xs">
+                        {submission.teacherName} ·{' '}
+                        {formatDay(submission.submittedAt)}
+                      </p>
+                    )}
+                  </div>
+                  {subj.learningOutcomes.map((lo, loIdx) => (
+                    <ScaleRow
                       key={lo.name}
-                      className="flex items-center justify-between gap-3 text-sm"
-                    >
-                      <span className="text-muted-foreground min-w-0 flex-1 truncate">
-                        {lo.name}
-                      </span>
-                      <DescriptorChip
-                        label={lo.status}
-                        className={LO_CHIP_CLASS[lo.status]}
-                      />
-                    </div>
+                      label={lo.name}
+                      stageIndex={LO_STAGE_ORDER.indexOf(lo.status)}
+                      totalStages={LO_STAGE_ORDER.length}
+                      stageLabel={lo.status}
+                      rowIndex={subjIdx * 4 + loIdx}
+                    />
                   ))}
                 </div>
               )
@@ -278,6 +426,7 @@ function PreviewBlock({
           </div>
         </div>
       )
+    }
 
     case 'conduct':
       return (
@@ -311,11 +460,16 @@ function PreviewBlock({
               </Button>
             </div>
           ) : comments ? (
-            <div
-              className="text-sm leading-relaxed [&_p]:mb-2"
-              // Teacher's own schema-constrained Tiptap output (prototype).
-              dangerouslySetInnerHTML={{ __html: comments }}
-            />
+            <>
+              <div
+                className="text-sm leading-relaxed [&_p]:mb-2"
+                // Teacher's own schema-constrained Tiptap output (prototype).
+                dangerouslySetInnerHTML={{ __html: comments }}
+              />
+              <p className="text-muted-foreground text-xs">
+                — {report.formTeacher}, Form Teacher
+              </p>
+            </>
           ) : (
             <p className="text-muted-foreground text-sm italic">
               No comments yet.
@@ -324,34 +478,51 @@ function PreviewBlock({
         </div>
       )
 
-    case 'attendance':
+    case 'attendance': {
+      const pct = Math.round(
+        (report.attendance.daysPresent / report.attendance.totalSchoolDays) *
+          100,
+      )
       return (
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1.5">
           {heading('Attendance')}
-          <p className="text-muted-foreground text-sm">
-            Present {report.attendance.daysPresent} of{' '}
-            {report.attendance.totalSchoolDays} days ·{' '}
-            {report.attendance.daysLate} late
-          </p>
+          <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm">
+            <span className="text-muted-foreground">
+              <span className="text-foreground font-medium">
+                {report.attendance.daysPresent}
+              </span>{' '}
+              of {report.attendance.totalSchoolDays} days present
+            </span>
+            <span className="text-muted-foreground">
+              <span className="text-foreground font-medium">
+                {report.attendance.daysLate}
+              </span>{' '}
+              {report.attendance.daysLate === 1 ? 'day' : 'days'} late
+            </span>
+            <span className="text-muted-foreground">
+              <span className="text-foreground font-medium">{pct}%</span>{' '}
+              attendance
+            </span>
+          </div>
         </div>
       )
+    }
 
     case 'personalQualities':
       return (
         <div className="flex flex-col gap-2">
           {heading('Personal qualities')}
-          <div className="flex flex-col gap-2">
-            {report.holistic.coreValues.map((cv) => (
-              <div
+          <div className="flex flex-col gap-1">
+            {report.holistic.coreValues.map((cv, i) => (
+              <ScaleRow
                 key={cv.name}
-                className="flex items-center justify-between gap-3 text-sm"
-              >
-                <span className="min-w-0 flex-1 truncate">{cv.name}</span>
-                <DescriptorChip
-                  label={cv.level}
-                  className={QUALITY_CHIP_CLASS[cv.level]}
-                />
-              </div>
+                label={cv.name}
+                sublabel={cv.description}
+                stageIndex={QUALITY_STAGE_ORDER.indexOf(cv.level)}
+                totalStages={QUALITY_STAGE_ORDER.length}
+                stageLabel={cv.level}
+                rowIndex={i}
+              />
             ))}
           </div>
         </div>

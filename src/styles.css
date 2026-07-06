@@ -434,3 +434,26 @@
 [data-tanstack-devtools-panel-toggle]:focus {
   opacity: 1;
 }
+
+/* HDP report — growth-bar segments fill in left to right when the document opens */
+@keyframes hdp-seg-grow {
+  from {
+    opacity: 0;
+    transform: scaleX(0.4);
+  }
+  to {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+
+.animate-hdp-seg-grow {
+  transform-origin: left;
+  animation: hdp-seg-grow 0.35s ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-hdp-seg-grow {
+    animation: none;
+  }
+}

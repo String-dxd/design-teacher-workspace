@@ -1,6 +1,6 @@
 {
   "project": "moe-teacher-workspace",
-  "lastUpdated": "2026-07-06T13:50:00.000Z",
+  "lastUpdated": "2026-07-06T14:15:00.000Z",
   "todos": [
     {
       "id": "tw-001",
@@ -281,6 +281,14 @@
       "status": "completed",
       "createdAt": "2026-07-06T13:30:00.000Z",
       "completedAt": "2026-07-06T13:50:00.000Z"
+    },
+    {
+      "id": "tw-031",
+      "title": "Report document redesign: growth-bar descriptor scales",
+      "description": "ReportPreview redesign \u2014 LO and personal-quality descriptors render as growth bars (filled segments to the achieved stage, stage named per row, staggered fill animation), subject icons + per-teacher School Cockpit provenance captions, How to read this report accordion legend, Packaged from School Cockpit freshness line, signed form-teacher comment, attendance as three inline stats. Replaces descriptor chips.",
+      "status": "completed",
+      "createdAt": "2026-07-06T14:00:00.000Z",
+      "completedAt": "2026-07-06T14:15:00.000Z"
     }
   ]
 }
