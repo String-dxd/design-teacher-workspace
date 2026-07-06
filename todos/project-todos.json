@@ -1,6 +1,6 @@
 {
   "project": "moe-teacher-workspace",
-  "lastUpdated": "2026-07-06T14:55:00.000Z",
+  "lastUpdated": "2026-07-06T15:20:00.000Z",
   "todos": [
     {
       "id": "tw-001",
@@ -297,6 +297,14 @@
       "status": "completed",
       "createdAt": "2026-07-06T14:30:00.000Z",
       "completedAt": "2026-07-06T14:55:00.000Z"
+    },
+    {
+      "id": "tw-033",
+      "title": "Parent-readability pass on the report document",
+      "description": "ReportPreview: audience prop (teacher/parent) gates School Cockpit provenance to teacher surfaces; hero gains days-late and a Strongest in / Growing in highlights line derived from submitted subjects only; LO rows are tap-to-expand revealing the full learning-outcome statement; How to read this report legend removed; standalone Attendance section removed (hero is the single source); personal-quality definitions wrap fully.",
+      "status": "completed",
+      "createdAt": "2026-07-06T15:05:00.000Z",
+      "completedAt": "2026-07-06T15:20:00.000Z"
     }
   ]
 }

@@ -110,6 +110,7 @@ function ParentReportView({
           blocks={blocks}
           comments={comments}
           compactPupilInfo
+          audience="parent"
         />
       </div>
 

@@ -1,6 +1,8 @@
+import { useState } from 'react'
 import {
   BookOpen,
   Calculator,
+  ChevronDown,
   FlaskConical,
   Languages,
   Sparkles,
@@ -17,12 +19,6 @@ import type {
 import { RichTextEditor } from '@/components/comms/rich-text-editor'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion'
 import { AttendanceRing } from '@/components/reports/attendance-ring'
 import {
   COCKPIT_LAST_SYNCED,
@@ -58,16 +54,6 @@ const QUALITY_STAGE_ORDER: Array<CoreValueLevel> = [
   'Demonstrates',
   'Demonstrates Strongly',
   'Demonstrates Very Strongly',
-]
-
-const LO_STAGE_MEANINGS: Array<{ stage: string; meaning: string }> = [
-  { stage: 'Beginning', meaning: 'Starting out — learns with close support.' },
-  { stage: 'Developing', meaning: 'Making progress with some guidance.' },
-  { stage: 'Competent', meaning: 'Meets the learning outcome confidently.' },
-  {
-    stage: 'Accomplished',
-    meaning: 'Applies it independently and consistently.',
-  },
 ]
 
 const SUBJECT_ICONS = new Map<string, LucideIcon>([
@@ -128,6 +114,7 @@ function GrowthScale({
 function ScaleRow({
   label,
   sublabel,
+  expandableDescription,
   stageIndex,
   totalStages,
   stageLabel,
@@ -135,36 +122,67 @@ function ScaleRow({
   display = 'bars',
 }: {
   label: string
+  /** Always-visible supporting line; wraps in full (never truncated). */
   sublabel?: string
+  /** Tap-to-reveal detail under the row — the full learning-outcome statement. */
+  expandableDescription?: string
   stageIndex: number
   totalStages: number
   stageLabel: string
   rowIndex: number
   display?: BlockDisplay
 }) {
+  const [open, setOpen] = useState(false)
   return (
-    <div className="flex items-center gap-3 py-1">
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm">{label}</p>
-        {sublabel && (
-          <p className="text-muted-foreground truncate text-xs">{sublabel}</p>
+    <div className="py-1">
+      <div className="flex items-center gap-3">
+        <div className="min-w-0 flex-1">
+          {expandableDescription ? (
+            <button
+              type="button"
+              aria-expanded={open}
+              onClick={() => setOpen((v) => !v)}
+              className="group flex items-center gap-1 text-left"
+            >
+              <span className="truncate text-sm">{label}</span>
+              <ChevronDown
+                aria-hidden
+                className={cn(
+                  'text-muted-foreground/60 group-hover:text-muted-foreground size-3.5 shrink-0 transition-transform',
+                  open && 'rotate-180',
+                )}
+              />
+            </button>
+          ) : (
+            <p className="truncate text-sm">{label}</p>
+          )}
+          {sublabel && (
+            <p className="text-muted-foreground text-xs leading-snug">
+              {sublabel}
+            </p>
+          )}
+        </div>
+        {display === 'bars' && (
+          <GrowthScale
+            stageIndex={stageIndex}
+            totalStages={totalStages}
+            rowIndex={rowIndex}
+          />
         )}
+        <span
+          className={cn(
+            'text-twblue-11 shrink-0 text-right text-xs leading-tight font-medium',
+            display === 'bars' ? 'w-24 sm:w-28' : 'w-auto',
+          )}
+        >
+          {stageLabel}
+        </span>
       </div>
-      {display === 'bars' && (
-        <GrowthScale
-          stageIndex={stageIndex}
-          totalStages={totalStages}
-          rowIndex={rowIndex}
-        />
+      {expandableDescription && open && (
+        <p className="text-muted-foreground pt-0.5 pr-28 text-xs leading-snug">
+          {expandableDescription}
+        </p>
       )}
-      <span
-        className={cn(
-          'text-twblue-11 shrink-0 text-right text-xs leading-tight font-medium',
-          display === 'bars' ? 'w-24 sm:w-28' : 'w-auto',
-        )}
-      >
-        {stageLabel}
-      </span>
     </div>
   )
 }
@@ -173,15 +191,47 @@ function firstName(name: string): string {
   return name.split(' ').filter(Boolean)[0] ?? name
 }
 
+/** Learning highlights derived from the packaged LO stages: the areas at the
+ * highest stage, and (framed positively) the areas still climbing. */
+function deriveHighlights(report: HolisticReport): {
+  strongest: Array<string>
+  growing: Array<string>
+} {
+  // Only draw on subjects whose School Cockpit data has actually arrived —
+  // highlights must never cite an outcome the teacher can't see yet.
+  const staged = report.academic.subjects
+    .filter((subj) => isSubjectSubmitted(report.studentId, subj.name))
+    .flatMap((subj) =>
+      subj.learningOutcomes.map((lo) => ({
+        name: lo.name,
+        stage: LO_STAGE_ORDER.indexOf(lo.status),
+      })),
+    )
+  if (staged.length === 0) return { strongest: [], growing: [] }
+  const max = Math.max(...staged.map((s) => s.stage))
+  const min = Math.min(...staged.map((s) => s.stage))
+  if (max === min) return { strongest: [], growing: [] }
+  const dedupe = (names: Array<string>) => [...new Set(names)]
+  return {
+    strongest: dedupe(
+      staged.filter((s) => s.stage === max).map((s) => s.name),
+    ).slice(0, 3),
+    growing: dedupe(
+      staged.filter((s) => s.stage === min).map((s) => s.name),
+    ).slice(0, 2),
+  }
+}
+
 /** "Term at a glance" — the document's single designed visual moment. */
 function TermAtAGlance({ report }: { report: HolisticReport }) {
   const attendancePct = Math.round(
     (report.attendance.daysPresent / report.attendance.totalSchoolDays) * 100,
   )
+  const { strongest, growing } = deriveHighlights(report)
 
   return (
     <div className="bg-card flex flex-col gap-4 rounded-xl border p-4 sm:flex-row sm:items-center sm:gap-6">
-      <div className="flex items-center gap-3">
+      <div className="flex shrink-0 items-center gap-3">
         <div aria-hidden className="text-primary">
           <AttendanceRing
             percentage={attendancePct}
@@ -195,16 +245,42 @@ function TermAtAGlance({ report }: { report: HolisticReport }) {
           <p className="text-muted-foreground">
             {attendancePct}% · present {report.attendance.daysPresent} of{' '}
             {report.attendance.totalSchoolDays} days
+            {report.attendance.daysLate > 0 && (
+              <>
+                {' '}
+                ·{' '}
+                {report.attendance.daysLate === 1
+                  ? '1 day late'
+                  : `${report.attendance.daysLate} days late`}
+              </>
+            )}
           </p>
         </div>
       </div>
       <div className="hidden h-12 w-px bg-border sm:block" aria-hidden />
-      <div className="text-sm">
-        <p className="font-medium">Conduct: {report.character.conduct}</p>
-        <p className="text-muted-foreground">
-          {firstName(report.studentName)} had a{' '}
-          {report.character.conduct.toLowerCase()} term overall.
-        </p>
+      <div className="flex flex-col gap-2 text-sm">
+        <div>
+          <p className="font-medium">Conduct: {report.character.conduct}</p>
+          <p className="text-muted-foreground">
+            {firstName(report.studentName)} had a{' '}
+            {report.character.conduct.toLowerCase()} term overall.
+          </p>
+        </div>
+        {strongest.length > 0 && (
+          <p className="text-muted-foreground text-xs">
+            <span className="text-foreground font-medium">Strongest in: </span>
+            {strongest.join(', ')}
+            {growing.length > 0 && (
+              <>
+                {' '}
+                <span className="text-foreground font-medium">
+                  · Growing in:{' '}
+                </span>
+                {growing.join(', ')}
+              </>
+            )}
+          </p>
+        )}
       </div>
     </div>
   )
@@ -229,6 +305,12 @@ export interface ReportPreviewProps {
    * seeded filler. Parent-facing views leave it off.
    */
   showMissingData?: boolean
+  /**
+   * Teachers see operational provenance (School Cockpit freshness line);
+   * parents don't — for them it's simply the report their child's teachers
+   * prepared.
+   */
+  audience?: 'teacher' | 'parent'
 }
 
 export function ReportPreview({
@@ -239,6 +321,7 @@ export function ReportPreview({
   onCommentsChange,
   compactPupilInfo = false,
   showMissingData = false,
+  audience = 'teacher',
 }: ReportPreviewProps) {
   const ordered = [...blocks]
     .filter((b) => b.enabled)
@@ -258,6 +341,7 @@ export function ReportPreview({
             onCommentsChange={onCommentsChange}
             compactPupilInfo={compactPupilInfo}
             showMissingData={showMissingData}
+            audience={audience}
           />
         </div>
       )}
@@ -271,6 +355,7 @@ export function ReportPreview({
             comments={comments}
             onCommentsChange={onCommentsChange}
             showMissingData={showMissingData}
+            audience={audience}
           />
         </div>
       ))}
@@ -286,6 +371,7 @@ function PreviewBlock({
   onCommentsChange,
   compactPupilInfo = false,
   showMissingData = false,
+  audience = 'teacher',
 }: {
   block: ReportBlock
   report: HolisticReport
@@ -294,6 +380,7 @@ function PreviewBlock({
   onCommentsChange?: (value: string) => void
   compactPupilInfo?: boolean
   showMissingData?: boolean
+  audience?: 'teacher' | 'parent'
 }) {
   const heading = (text: string) => (
     <h3 className="text-sm font-semibold tracking-tight">{text}</h3>
@@ -312,10 +399,12 @@ function PreviewBlock({
               </span>
               {report.formTeacher}
             </p>
-            <p className="text-muted-foreground text-xs">
-              Packaged from School Cockpit · data as at{' '}
-              {formatFullDay(COCKPIT_LAST_SYNCED)}
-            </p>
+            {audience === 'teacher' && (
+              <p className="text-muted-foreground text-xs">
+                Packaged from School Cockpit · data as at{' '}
+                {formatFullDay(COCKPIT_LAST_SYNCED)}
+              </p>
+            )}
           </div>
         )
       }
@@ -340,10 +429,12 @@ function PreviewBlock({
               <dd className="inline">{report.formTeacher}</dd>
             </div>
           </dl>
-          <p className="text-muted-foreground text-xs">
-            Packaged from School Cockpit · data as at{' '}
-            {formatFullDay(COCKPIT_LAST_SYNCED)}
-          </p>
+          {audience === 'teacher' && (
+            <p className="text-muted-foreground text-xs">
+              Packaged from School Cockpit · data as at{' '}
+              {formatFullDay(COCKPIT_LAST_SYNCED)}
+            </p>
+          )}
         </div>
       )
 
@@ -356,32 +447,6 @@ function PreviewBlock({
             Where {firstName(report.studentName)} is on each learning outcome —
             a stage on the journey, not a grade.
           </p>
-          <Accordion className="rounded-lg border">
-            <AccordionItem value="how-to-read" className="border-b-0">
-              <AccordionTrigger className="px-3 py-2 text-xs font-medium">
-                How to read this report
-              </AccordionTrigger>
-              <AccordionContent className="px-3">
-                <ul className="flex flex-col gap-1.5">
-                  {LO_STAGE_MEANINGS.map((m, i) => (
-                    <li key={m.stage} className="flex items-center gap-3">
-                      <GrowthScale
-                        stageIndex={i}
-                        totalStages={4}
-                        rowIndex={i}
-                      />
-                      <span className="text-xs">
-                        <span className="font-medium">{m.stage}</span>{' '}
-                        <span className="text-muted-foreground">
-                          — {m.meaning}
-                        </span>
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
           <div className="flex flex-col gap-4 pt-1">
             {report.academic.subjects.map((subj, subjIdx) => {
               const awaiting =
@@ -415,8 +480,9 @@ function PreviewBlock({
                     <p className="text-sm font-medium">{subj.name}</p>
                     {submission?.submittedAt && (
                       <p className="text-muted-foreground text-xs">
-                        {submission.teacherName} ·{' '}
-                        {formatDay(submission.submittedAt)}
+                        {submission.teacherName}
+                        {audience === 'teacher' &&
+                          ` · ${formatDay(submission.submittedAt)}`}
                       </p>
                     )}
                   </div>
@@ -424,6 +490,7 @@ function PreviewBlock({
                     <ScaleRow
                       key={lo.name}
                       label={lo.name}
+                      expandableDescription={lo.description}
                       stageIndex={LO_STAGE_ORDER.indexOf(lo.status)}
                       totalStages={LO_STAGE_ORDER.length}
                       stageLabel={lo.status}
@@ -489,35 +556,8 @@ function PreviewBlock({
         </div>
       )
 
-    case 'attendance': {
-      const pct = Math.round(
-        (report.attendance.daysPresent / report.attendance.totalSchoolDays) *
-          100,
-      )
-      return (
-        <div className="flex flex-col gap-1.5">
-          {heading('Attendance')}
-          <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm">
-            <span className="text-muted-foreground">
-              <span className="text-foreground font-medium">
-                {report.attendance.daysPresent}
-              </span>{' '}
-              of {report.attendance.totalSchoolDays} days present
-            </span>
-            <span className="text-muted-foreground">
-              <span className="text-foreground font-medium">
-                {report.attendance.daysLate}
-              </span>{' '}
-              {report.attendance.daysLate === 1 ? 'day' : 'days'} late
-            </span>
-            <span className="text-muted-foreground">
-              <span className="text-foreground font-medium">{pct}%</span>{' '}
-              attendance
-            </span>
-          </div>
-        </div>
-      )
-    }
+    // Attendance renders once, in the "Term at a glance" hero — no standalone
+    // section, so the report never states it twice.
 
     case 'personalQualities':
       return (

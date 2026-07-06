@@ -52,12 +52,6 @@ export const P1_SECTION_DEFS: Array<SectionDef> = [
     applicableAtP1: true,
   },
   {
-    key: 'attendance',
-    label: 'Attendance',
-    description: 'Days present and days late',
-    applicableAtP1: true,
-  },
-  {
     key: 'personalQualities',
     label: 'Personal qualities',
     description: 'School-set qualities with descriptors',
@@ -97,13 +91,14 @@ export const P1_DEFAULT_LAYOUT: ReportLayout = {
     block('pupilInfo', 0),
     block('subjects', 1),
     block('conduct', 2),
-    block('attendance', 3),
-    block('personalQualities', 4),
+    // Attendance lives in the "Term at a glance" hero — no separate section,
+    // so the report never states attendance twice.
+    block('personalQualities', 3),
     // "Where applicable" sections — present but OFF by default at P1, so a teacher
     // can turn one on if it applies, and sees it's not typical at this level.
-    { key: 'cca', enabled: false, order: 5 },
-    { key: 'via', enabled: false, order: 6 },
-    { key: 'physicalFitness', enabled: false, order: 7 },
+    { key: 'cca', enabled: false, order: 4 },
+    { key: 'via', enabled: false, order: 5 },
+    { key: 'physicalFitness', enabled: false, order: 6 },
   ],
 }
 
