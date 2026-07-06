@@ -290,11 +290,21 @@ function ReportsPage() {
     ).length
   }, [reports, selectedIds])
 
-  const handleLevelChange = (level: SchoolLevel) => {
-    setSchoolLevel(level)
+  // The class selector no longer carries a Primary/Secondary toggle — derive the
+  // level from the picked class so the page's primary/secondary branch follows it.
+  // 'all' keeps the current level (it means "all classes in this level").
+  const handleClassChange = (nextClass: string) => {
+    setSelectedClass(nextClass)
     setSelectedIds(new Set())
-    setSelectedClass(level === 'primary' ? 'all' : 'Secondary 3')
-    setSelectedStudentStatus('')
+    if (nextClass === 'all') return
+    const nextLevel: SchoolLevel =
+      nextClass.startsWith('P') || nextClass.startsWith('Primary')
+        ? 'primary'
+        : 'secondary'
+    if (nextLevel !== schoolLevel) {
+      setSchoolLevel(nextLevel)
+      setSelectedStudentStatus('')
+    }
   }
 
   const activeFilterCount = [
@@ -327,9 +337,7 @@ function ReportsPage() {
         <div className="px-6">
           <ClassSelector
             value={selectedClass}
-            onValueChange={setSelectedClass}
-            schoolLevel={schoolLevel}
-            onSchoolLevelChange={handleLevelChange}
+            onValueChange={handleClassChange}
           />
         </div>
       </div>
