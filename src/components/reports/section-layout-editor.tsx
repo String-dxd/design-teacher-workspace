@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, GripVertical } from 'lucide-react'
+import { ArrowDown, ArrowUp } from 'lucide-react'
 
 import type { ReportBlock } from '@/types/report'
 import type { SectionDef } from '@/data/report-layouts'
@@ -42,10 +42,6 @@ export function SectionLayoutEditor({
             )}
           >
             <div className="flex items-center gap-2">
-              <GripVertical
-                aria-hidden
-                className="text-muted-foreground/60 size-4 shrink-0"
-              />
               <Checkbox
                 checked={def.required ? true : b.enabled}
                 disabled={def.required}

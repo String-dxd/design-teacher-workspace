@@ -294,6 +294,7 @@ function CycleWriteBody({ studentId }: { studentId: string }) {
             editable
             comments={comments}
             onCommentsChange={setComments}
+            showMissingData
           />
         </div>
 

@@ -132,9 +132,31 @@ function CycleLayoutPage() {
   }
 
   function toggle(key: string) {
+    const wasEnabled = blocks.find((b) => b.key === key)?.enabled ?? false
     setBlocks((prev) =>
       prev.map((b) => (b.key === key ? { ...b, enabled: !b.enabled } : b)),
     )
+    // When a section is turned ON, bring it into view in the preview and flash
+    // it — on narrow screens the preview sits below the fold, so a bare toggle
+    // otherwise gives no visible feedback. Double rAF waits for React to commit.
+    if (!wasEnabled) {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const el = document.querySelector(`[data-section-key="${key}"]`)
+          if (!(el instanceof HTMLElement)) return
+          el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+          el.classList.add(
+            'ring-2',
+            'ring-primary/40',
+            'rounded-lg',
+            'transition-shadow',
+          )
+          window.setTimeout(() => {
+            el.classList.remove('ring-2', 'ring-primary/40')
+          }, 1200)
+        })
+      })
+    }
   }
 
   function resetToTemplate() {
@@ -211,31 +233,41 @@ function CycleLayoutPage() {
           aria-label="Report sections"
           className="flex w-full flex-col gap-4 lg:max-w-sm"
         >
-          <div className="space-y-1.5">
-            <Label htmlFor="template-select">Template</Label>
-            <Select
-              value={templateId}
-              onValueChange={(v) => v && setTemplateId(v)}
-            >
-              <SelectTrigger id="template-select" className="w-full">
+          {isTemplateMode ? (
+            <div className="space-y-1.5">
+              <Label htmlFor="template-select">Template</Label>
+              <Select
+                value={templateId}
+                onValueChange={(v) => v && setTemplateId(v)}
+              >
+                <SelectTrigger id="template-select" className="w-full">
+                  {getTemplateById(templateId)?.name ??
+                    'Primary Holistic Development'}
+                </SelectTrigger>
+                <SelectContent>
+                  {BUILT_IN_TEMPLATES.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>
+                      {t.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-muted-foreground text-xs">
+                Built-in template. Changes here update the shared definition.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-0.5">
+              <p className="text-sm">
+                <span className="font-medium">Based on: </span>
                 {getTemplateById(templateId)?.name ??
                   'Primary Holistic Development'}
-              </SelectTrigger>
-              <SelectContent>
-                {BUILT_IN_TEMPLATES.map((t) => (
-                  <SelectItem key={t.id} value={t.id}>
-                    {t.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="text-muted-foreground text-xs">
-              Built-in template.{' '}
-              {isTemplateMode
-                ? 'Changes here update the shared definition.'
-                : 'You’re adjusting this class’s layout only — the template stays the same.'}
-            </p>
-          </div>
+              </p>
+              <p className="text-muted-foreground text-xs">
+                School template — you’re adjusting this class’s layout only.
+              </p>
+            </div>
+          )}
 
           <Separator />
 
@@ -253,8 +285,11 @@ function CycleLayoutPage() {
           />
         </section>
 
-        {/* Preview */}
-        <section aria-label="Live preview" className="w-full flex-1">
+        {/* Preview — sticky on wide screens so toggle feedback stays visible. */}
+        <section
+          aria-label="Live preview"
+          className="w-full flex-1 lg:sticky lg:top-4 lg:max-h-[calc(100vh-5rem)] lg:overflow-y-auto"
+        >
           <div className="p-6">
             <p className="text-muted-foreground mb-4 text-xs">
               {sampleStudent
@@ -266,6 +301,7 @@ function CycleLayoutPage() {
                 report={previewReport}
                 blocks={blocks}
                 comments={previewReport.teacherComments ?? ''}
+                showMissingData
               />
             )}
           </div>

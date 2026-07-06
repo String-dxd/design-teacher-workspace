@@ -10,6 +10,10 @@ import { RichTextEditor } from '@/components/comms/rich-text-editor'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { AttendanceRing } from '@/components/reports/attendance-ring'
+import {
+  getSubjectTeacher,
+  isSubjectSubmitted,
+} from '@/data/mock-cockpit-submissions'
 import { cn } from '@/lib/utils'
 
 // Shared P1 report renderer — used by the builder's live preview (editable) and the
@@ -111,6 +115,12 @@ export interface ReportPreviewProps {
    * carries the student's identity.
    */
   compactPupilInfo?: boolean
+  /**
+   * Teacher-facing surfaces set this so subjects whose School Cockpit data
+   * hasn't arrived render an honest "awaiting data" placeholder instead of
+   * seeded filler. Parent-facing views leave it off.
+   */
+  showMissingData?: boolean
 }
 
 export function ReportPreview({
@@ -120,6 +130,7 @@ export function ReportPreview({
   comments,
   onCommentsChange,
   compactPupilInfo = false,
+  showMissingData = false,
 }: ReportPreviewProps) {
   const ordered = [...blocks]
     .filter((b) => b.enabled)
@@ -130,26 +141,30 @@ export function ReportPreview({
   return (
     <div className="mx-auto flex max-w-[66ch] flex-col gap-6">
       {pupilInfoBlock && (
-        <PreviewBlock
-          key={pupilInfoBlock.key}
-          block={pupilInfoBlock}
-          report={report}
-          editable={editable}
-          comments={comments}
-          onCommentsChange={onCommentsChange}
-          compactPupilInfo={compactPupilInfo}
-        />
+        <div data-section-key={pupilInfoBlock.key}>
+          <PreviewBlock
+            block={pupilInfoBlock}
+            report={report}
+            editable={editable}
+            comments={comments}
+            onCommentsChange={onCommentsChange}
+            compactPupilInfo={compactPupilInfo}
+            showMissingData={showMissingData}
+          />
+        </div>
       )}
       {pupilInfoBlock && <TermAtAGlance report={report} />}
       {restBlocks.map((block) => (
-        <PreviewBlock
-          key={block.key}
-          block={block}
-          report={report}
-          editable={editable}
-          comments={comments}
-          onCommentsChange={onCommentsChange}
-        />
+        <div key={block.key} data-section-key={block.key}>
+          <PreviewBlock
+            block={block}
+            report={report}
+            editable={editable}
+            comments={comments}
+            onCommentsChange={onCommentsChange}
+            showMissingData={showMissingData}
+          />
+        </div>
       ))}
     </div>
   )
@@ -162,6 +177,7 @@ function PreviewBlock({
   comments,
   onCommentsChange,
   compactPupilInfo = false,
+  showMissingData = false,
 }: {
   block: ReportBlock
   report: HolisticReport
@@ -169,6 +185,7 @@ function PreviewBlock({
   comments: string
   onCommentsChange?: (value: string) => void
   compactPupilInfo?: boolean
+  showMissingData?: boolean
 }) {
   const heading = (text: string) => (
     <h3 className="text-sm font-semibold tracking-tight">{text}</h3>
@@ -219,25 +236,45 @@ function PreviewBlock({
             progressing.
           </p>
           <div className="flex flex-col gap-3">
-            {report.academic.subjects.map((subj) => (
-              <div key={subj.name} className="flex flex-col gap-1">
-                <p className="text-sm font-medium">{subj.name}</p>
-                {subj.learningOutcomes.map((lo) => (
+            {report.academic.subjects.map((subj) => {
+              const awaiting =
+                showMissingData &&
+                !isSubjectSubmitted(report.studentId, subj.name)
+              if (awaiting) {
+                const teacher = getSubjectTeacher(subj.name)
+                return (
                   <div
-                    key={lo.name}
-                    className="flex items-center justify-between gap-3 text-sm"
+                    key={subj.name}
+                    className="rounded-lg border border-dashed p-3"
                   >
-                    <span className="text-muted-foreground min-w-0 flex-1 truncate">
-                      {lo.name}
-                    </span>
-                    <DescriptorChip
-                      label={lo.status}
-                      className={LO_CHIP_CLASS[lo.status]}
-                    />
+                    <p className="text-sm font-medium">{subj.name}</p>
+                    <p className="text-muted-foreground text-sm">
+                      Awaiting data from School Cockpit
+                      {teacher ? ` — ${teacher}` : ''}
+                    </p>
                   </div>
-                ))}
-              </div>
-            ))}
+                )
+              }
+              return (
+                <div key={subj.name} className="flex flex-col gap-1">
+                  <p className="text-sm font-medium">{subj.name}</p>
+                  {subj.learningOutcomes.map((lo) => (
+                    <div
+                      key={lo.name}
+                      className="flex items-center justify-between gap-3 text-sm"
+                    >
+                      <span className="text-muted-foreground min-w-0 flex-1 truncate">
+                        {lo.name}
+                      </span>
+                      <DescriptorChip
+                        label={lo.status}
+                        className={LO_CHIP_CLASS[lo.status]}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )
+            })}
           </div>
         </div>
       )
