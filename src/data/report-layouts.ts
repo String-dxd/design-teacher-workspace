@@ -80,52 +80,6 @@ export const P1_SECTION_DEFS: Array<SectionDef> = [
   },
 ]
 
-/**
- * Fields each section contains. The builder is sections-only (no field toggles), so
- * this drives the preview rendering, not a control surface.
- */
-export const SECTION_FIELD_DEFS: Record<
-  string,
-  Array<{ key: string; label: string }>
-> = {
-  pupilInfo: [
-    { key: 'name', label: 'Name' },
-    { key: 'class', label: 'Class' },
-    { key: 'age', label: 'Age' },
-    { key: 'id', label: 'Identification No' },
-    { key: 'formTeacher', label: 'Form teacher' },
-  ],
-  subjects: [
-    { key: 'subject', label: 'Subject' },
-    { key: 'learningOutcome', label: 'Learning outcome' },
-    { key: 'descriptor', label: 'Qualitative descriptor' },
-  ],
-  conduct: [
-    { key: 'conduct', label: 'Conduct' },
-    { key: 'comments', label: 'Form-teacher comments' },
-  ],
-  attendance: [
-    { key: 'daysPresent', label: 'Days present' },
-    { key: 'daysLate', label: 'Days late' },
-  ],
-  personalQualities: [
-    { key: 'quality', label: 'Quality' },
-    { key: 'descriptor', label: 'Descriptor' },
-  ],
-  cca: [
-    { key: 'name', label: 'CCA' },
-    { key: 'role', label: 'Role' },
-  ],
-  via: [
-    { key: 'title', label: 'Activity' },
-    { key: 'hours', label: 'Hours' },
-  ],
-  physicalFitness: [
-    { key: 'bmi', label: 'BMI indicator' },
-    { key: 'napfa', label: 'NAPFA award' },
-  ],
-}
-
 function block(key: string, order: number): ReportBlock {
   return { key, enabled: true, order }
 }
@@ -165,7 +119,7 @@ export interface BuiltInTemplate {
 export const BUILT_IN_TEMPLATES: Array<BuiltInTemplate> = [
   {
     id: 'p1-default',
-    name: 'P1 Holistic Development',
+    name: 'Primary Holistic Development',
     description:
       'Lower-primary default — learning outcomes, conduct, attendance, and personal qualities',
     layout: P1_DEFAULT_LAYOUT,

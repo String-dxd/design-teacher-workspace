@@ -1,7 +1,6 @@
 import type { SchoolLevel } from '@/types/report'
 import type {
   AttentionTag,
-  ClassOption,
   Student,
   TermlyAccumulatingData,
 } from '@/types/student'
@@ -5423,19 +5422,6 @@ mockStudents.forEach((s) => {
     s.cca = sorted.map((d) => d.name).join(', ')
   }
 })
-
-export const classOptions: Array<ClassOption> = [
-  { value: 'all', label: 'All Classes' },
-  { value: '3A', label: 'Secondary 3A' },
-  { value: '3B', label: 'Secondary 3B' },
-  { value: '3C', label: 'Secondary 3C' },
-  { value: 'P1-A', label: 'Primary 1A' },
-  { value: 'P2-B', label: 'Primary 2B' },
-  { value: 'P3-A', label: 'Primary 3A' },
-  { value: 'P4-B', label: 'Primary 4B' },
-  { value: 'P5-A', label: 'Primary 5A' },
-  { value: 'P6-B', label: 'Primary 6B' },
-]
 
 export interface ClassGroup {
   level: string

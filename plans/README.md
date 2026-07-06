@@ -28,7 +28,7 @@ your row when done.
 
 | 020 | Associate labels with the term picker & comments editor (a11y, WCAG 1.3.1) | P2 | S | — | TODO — written at `077d669`; recommend a focused pass with browser AT verification (touches shared `TermSelector`/`RichTextEditor`). |
 | 021 | Characterization tests for `commitCycleReport` + `statusFor` | P2 | S | — | DONE (reviewer-verified) — `hdp-report-commit.test.ts` (3) + `cycle-student-table.test.ts` (7); advisor re-ran: 75/75 tests, 0 new tsc, eslint clean, tests read + assert real behavior. |
-| 022 | Remove dead exports (`classOptions`, `SECTION_FIELD_DEFS`) + rename template to primary-wide | P3 | S | — | TODO — written at `077d669`. |
+| 022 | Remove dead exports (`classOptions`, `SECTION_FIELD_DEFS`) + rename template to primary-wide | P3 | S | — | DONE (reviewer-verified) — both dead exports gone (grep 0), template → "Primary Holistic Development" (3 literals). tsc 107 (0 new), 75 tests, prettier clean; the one `mock-students.ts` eslint `no-unnecessary-condition` is pre-existing (verified at HEAD, line just shifted). Minor follow-up: the template `description` still says "Lower-primary default". |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) |
 REJECTED (with one-line rationale).

@@ -168,7 +168,7 @@ function CycleLayoutPage() {
   }
 
   const contextLine = isTemplateMode
-    ? 'P1 Holistic Development'
+    ? 'Primary Holistic Development'
     : `${classId} · ${term}`
 
   return (
@@ -218,7 +218,8 @@ function CycleLayoutPage() {
               onValueChange={(v) => v && setTemplateId(v)}
             >
               <SelectTrigger id="template-select" className="w-full">
-                {getTemplateById(templateId)?.name ?? 'P1 Holistic Development'}
+                {getTemplateById(templateId)?.name ??
+                  'Primary Holistic Development'}
               </SelectTrigger>
               <SelectContent>
                 {BUILT_IN_TEMPLATES.map((t) => (
