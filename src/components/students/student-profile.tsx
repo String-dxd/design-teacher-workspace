@@ -1126,13 +1126,23 @@ export function StudentProfile({
                 tooltip="School Cockpit • Term 2, 2026"
               />
               <Field
+                label="Non-VR absences (days)"
+                value={student.absences}
+                tooltip="School Cockpit • Term 2, 2026"
+              />
+              <Field
+                label="Private VR absences (days)"
+                value={student.privateVrAbsences}
+                tooltip="School Cockpit • Term 2, 2026"
+              />
+              <Field
                 label="Late-coming (days)"
                 value={student.lateComing}
                 tooltip="School Cockpit • Term 2, 2026"
               />
               <Field
-                label="Non-VR absences (days)"
-                value={student.absences}
+                label="MC absences (days)"
+                value={student.mcAbsences}
                 tooltip="School Cockpit • Term 2, 2026"
               />
               {ccaAttendanceField}
@@ -1181,13 +1191,23 @@ export function StudentProfile({
                   tooltip="School Cockpit • Term 2, 2026"
                 />
                 <Field
+                  label="Non-VR absences (days)"
+                  value={student.absences}
+                  tooltip="School Cockpit • Term 2, 2026"
+                />
+                <Field
+                  label="Private VR absences (days)"
+                  value={student.privateVrAbsences}
+                  tooltip="School Cockpit • Term 2, 2026"
+                />
+                <Field
                   label="Late-coming (days)"
                   value={student.lateComing}
                   tooltip="School Cockpit • Term 2, 2026"
                 />
                 <Field
-                  label="Non-VR absences (days)"
-                  value={student.absences}
+                  label="MC absences (days)"
+                  value={student.mcAbsences}
                   tooltip="School Cockpit • Term 2, 2026"
                 />
                 {ccaAttendanceField}

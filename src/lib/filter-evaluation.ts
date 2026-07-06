@@ -19,6 +19,8 @@ export const KNOWN_FILTER_FIELDS: Set<string> = new Set<string>([
   'postSecEligibility',
   'offences',
   'absences',
+  'privateVrAbsences',
+  'mcAbsences',
   'lateComing',
   'ccaMissed',
   'riskIndicators',

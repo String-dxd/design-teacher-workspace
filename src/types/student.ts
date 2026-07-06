@@ -41,6 +41,10 @@ export interface Student {
   offences: number
   offenceDetails?: Array<OffenceDetail>
   absences: number
+  /** Private VR (voluntary reasons) absences, shown as a day-count only. */
+  privateVrAbsences: number
+  /** Medical certificate (MC) absences, in days. */
+  mcAbsences: number
   lateComing: number
   ccaMissed: number
   // Wellbeing
@@ -137,6 +141,8 @@ export type FilterField =
   // Behaviour and Discipline
   | 'offences'
   | 'absences'
+  | 'privateVrAbsences'
+  | 'mcAbsences'
   | 'lateComing'
   | 'ccaMissed'
   // Wellbeing

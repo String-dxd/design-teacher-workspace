@@ -23,6 +23,8 @@ function makeStudent(overrides: Partial<Student> = {}): Student {
     postSecEligibility: 'Eligible',
     offences: 0,
     absences: 0,
+    privateVrAbsences: 0,
+    mcAbsences: 0,
     lateComing: 0,
     ccaMissed: 0,
     riskIndicators: 0,
