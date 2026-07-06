@@ -26,7 +26,6 @@ import { RichTextEditor } from '@/components/comms/rich-text-editor'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import {
-  COCKPIT_LAST_SYNCED,
   getCockpitSubmissions,
   isSubjectSubmitted,
 } from '@/data/mock-cockpit-submissions'
@@ -53,20 +52,22 @@ const LO_STAGE_ORDER: Array<LearningOutcomeStatus> = [
   'Accomplished',
 ]
 
-// Soft stage pills — one blue family, deeper tint = further along the ladder,
-// so the palette reads as depth on a journey rather than good/bad grading.
+// Stage pills — one blue family, deeper tint = further along the ladder, so
+// the palette reads as depth on a journey rather than good/bad grading. The
+// top stage earns the solid brand blue (the document's one vibrant moment per
+// row); the rest step down through the tints.
 const LO_PILL_CLASS: Record<LearningOutcomeStatus, string> = {
-  Accomplished: 'bg-twblue-5 text-twblue-12',
-  Competent: 'bg-twblue-3 text-twblue-11',
-  Developing: 'bg-twblue-2 text-twblue-11',
+  Accomplished: 'bg-twblue-9 text-white',
+  Competent: 'bg-twblue-5 text-twblue-12',
+  Developing: 'bg-twblue-3 text-twblue-11',
   Beginning: 'bg-muted text-muted-foreground',
 }
 
 const QUALITY_PILL_CLASS: Record<CoreValueLevel, string> = {
-  'Demonstrates Very Strongly': 'bg-twblue-5 text-twblue-12',
-  'Demonstrates Strongly': 'bg-twblue-4 text-twblue-12',
-  Demonstrates: 'bg-twblue-3 text-twblue-11',
-  'Regularly Shows': 'bg-twblue-2 text-twblue-11',
+  'Demonstrates Very Strongly': 'bg-twblue-9 text-white',
+  'Demonstrates Strongly': 'bg-twblue-5 text-twblue-12',
+  Demonstrates: 'bg-twblue-4 text-twblue-12',
+  'Regularly Shows': 'bg-twblue-3 text-twblue-11',
   Beginning: 'bg-muted text-muted-foreground',
 }
 
@@ -123,13 +124,11 @@ function SubjectCard({
   subj,
   studentFirstName,
   submission,
-  audience,
   display,
 }: {
   subj: SubjectPerformance
   studentFirstName: string
   submission?: CockpitSubjectSubmission
-  audience: 'teacher' | 'parent'
   display?: BlockDisplay
 }) {
   const SubjectIcon = SUBJECT_ICONS.get(subj.name) ?? BookOpen
@@ -137,18 +136,14 @@ function SubjectCard({
     <div className="rounded-xl border px-3.5 py-3">
       <div className="flex w-full items-center gap-2">
         <SubjectIcon aria-hidden className="text-primary size-4 shrink-0" />
-        <span className="min-w-0 flex-1">
-          <span className="block truncate text-sm font-medium">
-            {subj.name}
-          </span>
-          {submission?.submittedAt && (
-            <span className="text-muted-foreground block truncate text-xs">
-              {submission.teacherName}
-              {audience === 'teacher' &&
-                ` · ${formatDay(submission.submittedAt)}`}
-            </span>
-          )}
+        <span className="min-w-0 flex-1 truncate text-sm font-medium">
+          {subj.name}
         </span>
+        {submission?.submittedAt && (
+          <span className="text-muted-foreground shrink-0 text-xs whitespace-nowrap">
+            {submission.teacherName}
+          </span>
+        )}
       </div>
       <p className="pt-1.5 text-sm leading-relaxed">
         {summarizeSubject(studentFirstName, subj.learningOutcomes)}
@@ -167,21 +162,6 @@ function SubjectCard({
       </div>
     </div>
   )
-}
-
-function formatDay(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-SG', {
-    day: 'numeric',
-    month: 'short',
-  })
-}
-
-function formatFullDay(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-SG', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })
 }
 
 function ScaleRow({
@@ -396,12 +376,6 @@ export interface ReportPreviewProps {
    * seeded filler. Parent-facing views leave it off.
    */
   showMissingData?: boolean
-  /**
-   * Teachers see operational provenance (School Cockpit freshness line);
-   * parents don't — for them it's simply the report their child's teachers
-   * prepared.
-   */
-  audience?: 'teacher' | 'parent'
 }
 
 export function ReportPreview({
@@ -412,7 +386,6 @@ export function ReportPreview({
   onCommentsChange,
   compactPupilInfo = false,
   showMissingData = false,
-  audience = 'teacher',
 }: ReportPreviewProps) {
   const ordered = [...blocks]
     .filter((b) => b.enabled)
@@ -432,7 +405,6 @@ export function ReportPreview({
             onCommentsChange={onCommentsChange}
             compactPupilInfo={compactPupilInfo}
             showMissingData={showMissingData}
-            audience={audience}
           />
         </div>
       )}
@@ -446,7 +418,6 @@ export function ReportPreview({
             comments={comments}
             onCommentsChange={onCommentsChange}
             showMissingData={showMissingData}
-            audience={audience}
           />
         </div>
       ))}
@@ -462,7 +433,6 @@ function PreviewBlock({
   onCommentsChange,
   compactPupilInfo = false,
   showMissingData = false,
-  audience = 'teacher',
 }: {
   block: ReportBlock
   report: HolisticReport
@@ -471,7 +441,6 @@ function PreviewBlock({
   onCommentsChange?: (value: string) => void
   compactPupilInfo?: boolean
   showMissingData?: boolean
-  audience?: 'teacher' | 'parent'
 }) {
   const heading = (text: string) => (
     <h3 className="text-sm font-semibold tracking-tight">{text}</h3>
@@ -491,12 +460,6 @@ function PreviewBlock({
               </span>
               {report.formTeacher}
             </p>
-            {audience === 'teacher' && (
-              <p className="text-muted-foreground text-xs">
-                Packaged from School Cockpit · data as at{' '}
-                {formatFullDay(COCKPIT_LAST_SYNCED)}
-              </p>
-            )}
           </div>
         )
       }
@@ -527,12 +490,6 @@ function PreviewBlock({
                 {report.formTeacher}
               </span>
             </p>
-            {audience === 'teacher' && (
-              <p className="text-muted-foreground text-xs">
-                Packaged from School Cockpit · data as at{' '}
-                {formatFullDay(COCKPIT_LAST_SYNCED)}
-              </p>
-            )}
           </div>
         </div>
       )
@@ -574,7 +531,6 @@ function PreviewBlock({
                   subj={subj}
                   studentFirstName={firstName(report.studentName)}
                   submission={submission}
-                  audience={audience}
                   display={block.display}
                 />
               )

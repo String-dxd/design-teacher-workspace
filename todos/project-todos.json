@@ -1,6 +1,6 @@
 {
   "project": "moe-teacher-workspace",
-  "lastUpdated": "2026-07-06T17:10:00.000Z",
+  "lastUpdated": "2026-07-06T17:30:00.000Z",
   "todos": [
     {
       "id": "tw-001",
@@ -337,6 +337,14 @@
       "status": "completed",
       "createdAt": "2026-07-06T17:00:00.000Z",
       "completedAt": "2026-07-06T17:10:00.000Z"
+    },
+    {
+      "id": "tw-038",
+      "title": "Header cleanup + vibrant stage pills",
+      "description": "Removed the Packaged-from-School-Cockpit provenance line from the document; subject teacher now sits right-aligned in each subject card header (no date), matching the identity band placement; stage pills brightened \u2014 top stage (Accomplished / Demonstrates Very Strongly) is solid brand blue with white text, remaining stages step down through the tints. Dead audience prop plumbing removed.",
+      "status": "completed",
+      "createdAt": "2026-07-06T17:20:00.000Z",
+      "completedAt": "2026-07-06T17:30:00.000Z"
     }
   ]
 }
