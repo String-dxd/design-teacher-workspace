@@ -8,7 +8,7 @@ import type { FilterCriterion, Student } from '@/types/student'
  * getPeriodTermKey() in students.index.tsx and must fall through to the
  * unknown-field path everywhere else.
  */
-export const KNOWN_FILTER_FIELDS: Set<string> = new Set<string>([
+const KNOWN_FILTER_FIELDS: Set<string> = new Set<string>([
   'class',
   'cca',
   'attendance',
@@ -19,6 +19,8 @@ export const KNOWN_FILTER_FIELDS: Set<string> = new Set<string>([
   'postSecEligibility',
   'offences',
   'absences',
+  'privateVrAbsences',
+  'mcAbsences',
   'lateComing',
   'ccaMissed',
   'riskIndicators',
@@ -39,7 +41,7 @@ export const KNOWN_FILTER_FIELDS: Set<string> = new Set<string>([
   'nonIntactFamily',
 ])
 
-export interface EvaluateOptions {
+interface EvaluateOptions {
   /**
    * What an incomplete/unknown field means:
    * - 'match'  — the students page shows all (imported/custom fields have no data)

@@ -35,9 +35,6 @@ export interface ColumnConfig {
 }
 
 export const CURRENT_TERM_KEY = 'T1 2026'
-export const CURRENT_TERM_LABEL = 'Current term'
-export const PREV_TERM_KEY = 'T4 2025'
-export const PREV_TERM_LABEL = 'Previous term (Term 4, 2025)'
 
 export const defaultColumns: Array<ColumnConfig> = [
   {
@@ -105,12 +102,34 @@ export const defaultColumns: Array<ColumnConfig> = [
     temporalType: 'accumulating',
   },
   {
+    id: 'mcAbsences',
+    label: 'MC absences (days)',
+    visible: true,
+    sortable: true,
+    filterable: true,
+    filterField: 'mcAbsences',
+    source: 'School Cockpit, RE_AT_002, Term 2, 2026',
+    lastUpdated: '26 May 2026',
+    temporalType: 'accumulating',
+  },
+  {
     id: 'absences',
     label: 'Non-VR absences (days)',
     visible: true,
     sortable: true,
     filterable: true,
     filterField: 'absences',
+    source: 'School Cockpit, RE_AT_002, Term 2, 2026',
+    lastUpdated: '26 May 2026',
+    temporalType: 'accumulating',
+  },
+  {
+    id: 'privateVrAbsences',
+    label: 'Private VR absences (days)',
+    visible: true,
+    sortable: true,
+    filterable: true,
+    filterField: 'privateVrAbsences',
     source: 'School Cockpit, RE_AT_002, Term 2, 2026',
     lastUpdated: '26 May 2026',
     temporalType: 'accumulating',

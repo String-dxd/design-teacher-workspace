@@ -39,14 +39,14 @@ export const LATEST_PERIOD = 'latest'
 /** Display label for the "Latest available" period option */
 export const LATEST_LABEL = 'Latest available (Recommended)'
 
-export interface PeriodTerm {
+interface PeriodTerm {
   /** Stable value stored in the filter, e.g. "2026-T2" */
   value: string
   /** Short label shown in the picker, e.g. "T2" */
   label: string
 }
 
-export interface PeriodYear {
+interface PeriodYear {
   year: number
   terms: Array<PeriodTerm>
 }
@@ -137,7 +137,7 @@ export const textOperators: Array<OperatorOption> = [
 // rendered with React components, so they are defined in the component file
 // to avoid importing React components in this data file.
 
-export interface FilterFieldConfig {
+interface FilterFieldConfig {
   field: FilterField
   label: string
   type: FieldType
@@ -208,6 +208,22 @@ export const filterFieldConfigs: Array<FilterFieldConfig> = [
   {
     field: 'absences',
     label: 'Non-VR absences (days)',
+    type: 'numeric',
+    group: 'attendance',
+    defaultOperator: 'gte',
+    defaultValue: 5,
+  },
+  {
+    field: 'privateVrAbsences',
+    label: 'Private VR absences (days)',
+    type: 'numeric',
+    group: 'attendance',
+    defaultOperator: 'gte',
+    defaultValue: 5,
+  },
+  {
+    field: 'mcAbsences',
+    label: 'MC absences (days)',
     type: 'numeric',
     group: 'attendance',
     defaultOperator: 'gte',

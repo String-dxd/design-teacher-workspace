@@ -83,6 +83,10 @@ export const Route = createFileRoute('/announcements/new')({
 
 type SendOption = 'now' | 'scheduled'
 
+// Local-only wrapper so React has a stable key without touching the shared
+// PGWebsiteLink type used by drafts/preview/submit payloads.
+type WebsiteLinkRow = PGWebsiteLink & { _key: string }
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -199,7 +203,7 @@ function AnnouncementPreview({
   title,
   description,
   shortcuts,
-  staffInCharge,
+  staffInCharge: _staffInCharge,
   enquiryEmail,
   recipients,
   responseType,
@@ -230,21 +234,24 @@ function AnnouncementPreview({
     setScreen({ questionId: editingQuestionId, responseChoice: 'yes' })
   }, [editingQuestionId])
 
-  const previewDate = new Date()
-    .toLocaleDateString('en-SG', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    })
-    .toUpperCase()
-  const previewTime = new Date()
-    .toLocaleTimeString('en-SG', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-    })
-    .toUpperCase()
-  const timestamp = `${previewDate}, ${previewTime}`
+  const [timestamp, setTimestamp] = useState('')
+  useEffect(() => {
+    const previewDate = new Date()
+      .toLocaleDateString('en-SG', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      })
+      .toUpperCase()
+    const previewTime = new Date()
+      .toLocaleTimeString('en-SG', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      })
+      .toUpperCase()
+    setTimestamp(`${previewDate}, ${previewTime}`)
+  }, [])
 
   const formattedDueDate = dueDate
     ? new Date(dueDate).toLocaleDateString('en-SG', {
@@ -989,7 +996,7 @@ function NewAnnouncementPage() {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [shortcuts, setShortcuts] = useState<Array<Shortcut>>([])
-  const [websiteLinks, setWebsiteLinks] = useState<Array<PGWebsiteLink>>([])
+  const [websiteLinks, setWebsiteLinks] = useState<Array<WebsiteLinkRow>>([])
   const [recipients, setRecipients] = useState<Array<SelectedEntity>>([])
   const [staffInCharge, setStaffInCharge] = useState<Array<SelectedEntity>>([])
   const [staffRoles, setStaffRoles] = useState<Record<string, PGRole>>({})
@@ -1154,7 +1161,12 @@ function NewAnnouncementPage() {
         setTitle(draft.title)
         setDescription(draft.description)
         setShortcuts(draft.shortcuts ?? [])
-        setWebsiteLinks(draft.websiteLinks ?? [])
+        setWebsiteLinks(
+          (draft.websiteLinks ?? []).map((l) => ({
+            ...l,
+            _key: crypto.randomUUID(),
+          })),
+        )
         setRecipients(draft.recipients ?? [])
         setStaffInCharge(draft.staffInCharge ?? [])
         setEnquiryEmail(draft.enquiryEmail ?? '')
@@ -1345,7 +1357,10 @@ function NewAnnouncementPage() {
   // Website link handlers
   function addWebsiteLink() {
     if (websiteLinks.length >= 3) return
-    setWebsiteLinks((prev) => [...prev, { url: '', label: '' }])
+    setWebsiteLinks((prev) => [
+      ...prev,
+      { url: '', label: '', _key: crypto.randomUUID() },
+    ])
   }
   function updateWebsiteLink(
     index: number,
@@ -1812,14 +1827,14 @@ function NewAnnouncementPage() {
               value={scheduledDate}
               min={new Date().toISOString().split('T')[0]}
               onChange={(e) => setScheduledDate(e.target.value)}
-              className="rounded-md border border-twblue-6 bg-background px-2.5 py-1 text-sm text-foreground outline-none focus:ring-2 focus:ring-twblue-7"
+              className="rounded-md border border-input bg-background px-2.5 py-1 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring"
             />
             <span className="text-sm text-twblue-11">at</span>
             <input
               type="time"
               value={scheduledTime}
               onChange={(e) => setScheduledTime(e.target.value)}
-              className="rounded-md border border-twblue-6 bg-background px-2.5 py-1 text-sm text-foreground outline-none focus:ring-2 focus:ring-twblue-7"
+              className="rounded-md border border-input bg-background px-2.5 py-1 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring"
             />
             <div className="ml-auto flex items-center gap-3">
               <Button
@@ -2128,7 +2143,10 @@ function NewAnnouncementPage() {
                         const missingDescription =
                           link.url.trim() && !link.label.trim()
                         return (
-                          <div key={i} className="flex items-center gap-1.5">
+                          <div
+                            key={link._key}
+                            className="flex items-center gap-1.5"
+                          >
                             <Input
                               type="url"
                               placeholder="https://…"
@@ -2193,7 +2211,7 @@ function NewAnnouncementPage() {
                     <div className="space-y-1.5">
                       {uploadedFiles.map((file, i) => (
                         <div
-                          key={i}
+                          key={`${file.name}-${file.size}-${file.lastModified}`}
                           className="flex items-center gap-2.5 rounded-lg border border-border bg-muted px-3 py-2"
                         >
                           <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -2253,7 +2271,9 @@ function NewAnnouncementPage() {
                   )}
 
                   {uploadedFiles.length < 3 && (
-                    <div
+                    <button
+                      type="button"
+                      aria-label="Add attachments"
                       onClick={() => fileInputRef.current?.click()}
                       onDragOver={(e) => {
                         e.preventDefault()
@@ -2266,7 +2286,7 @@ function NewAnnouncementPage() {
                         processFiles(Array.from(e.dataTransfer.files))
                       }}
                       className={cn(
-                        'flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed px-4 py-4 text-center transition-colors',
+                        'flex w-full cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed px-4 py-4 text-center transition-colors',
                         fileDragOver
                           ? 'border-primary bg-primary/5 text-primary'
                           : 'border-border text-muted-foreground hover:border-input hover:bg-muted hover:text-foreground',
@@ -2280,7 +2300,7 @@ function NewAnnouncementPage() {
                             ? 'Drop files or click to add more'
                             : 'Drop files here or click to browse'}
                       </p>
-                    </div>
+                    </button>
                   )}
                   <input
                     ref={fileInputRef}
@@ -2288,6 +2308,8 @@ function NewAnnouncementPage() {
                     multiple
                     accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
                     className="hidden"
+                    aria-hidden="true"
+                    tabIndex={-1}
                     onChange={handleFileChange}
                   />
                 </div>
@@ -2310,7 +2332,7 @@ function NewAnnouncementPage() {
                     <div className="grid grid-cols-3 gap-2">
                       {uploadedPhotos.map((photo, i) => (
                         <div
-                          key={i}
+                          key={`${photo.file.name}-${photo.file.size}-${photo.file.lastModified}`}
                           draggable
                           onDragStart={(e) => {
                             dragSourceIndex.current = i
@@ -2345,7 +2367,7 @@ function NewAnnouncementPage() {
                           )}
                         >
                           {/* Top toolbar — cover toggle + delete */}
-                          <div className="absolute inset-x-0 top-0 z-10 flex items-center gap-0.5 bg-[oklch(0_0_0/0.75)] px-1.5 py-1">
+                          <div className="absolute inset-x-0 top-0 z-10 flex items-center gap-0.5 bg-overlay px-1.5 py-1">
                             <button
                               type="button"
                               onClick={() => toggleCoverPhoto(i)}
@@ -2427,7 +2449,7 @@ function NewAnnouncementPage() {
                                 prev.filter((_, j) => j !== i),
                               )
                             }
-                            className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[oklch(0_0_0/0.5)] text-white hover:bg-[oklch(0_0_0/0.7)]"
+                            className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-overlay/60 text-white hover:bg-overlay/90"
                           >
                             <X className="h-2.5 w-2.5" />
                           </button>

@@ -41,6 +41,7 @@ import {
   SERIES_BLUE_LIGHT,
 } from '@/lib/chart-colors'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import {
   Popover,
@@ -54,6 +55,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import {
   TooltipContent,
   TooltipTrigger,
@@ -599,7 +608,7 @@ function AbsenceBarChart({
       />
       <Tooltip
         content={<CustomBarTooltip clickable={!!onSegmentClick} />}
-        cursor={{ fill: 'rgba(0,0,0,0.04)' }}
+        cursor={{ fill: 'color-mix(in oklab, var(--color-slate-12) 4%, transparent)' }}
       />
       {reversedCategories.map((cat, i) => (
         <Bar
@@ -829,28 +838,6 @@ const LEVEL_MONTHLY: Record<string, typeof MONTHLY_DATA> = {
   'Primary 3': makeLevelMonthlyData(0.6),
 }
 
-// ─── Level ring helpers ───────────────────────────────────────────────────────
-
-function buildLevelRingSegments(att: LevelAttendance) {
-  const absent = att.total - att.present - att.lta
-  const segments = [
-    { name: 'Present', value: att.present, color: PRESENT_RING },
-    { name: 'LTA', value: att.lta, color: ATTENDANCE_SEVERITY.nonVRAbsence },
-    {
-      name: 'Absent',
-      value: Math.max(absent, 0),
-      color: ATTENDANCE_SEVERITY.pendingReason,
-    },
-  ]
-  let acc = 0
-  return segments.map((seg) => {
-    const len = (seg.value / att.total) * RING_C
-    const dashoffset = acc === 0 ? 0 : RING_C - acc
-    acc += len
-    return { ...seg, len, dashoffset }
-  })
-}
-
 // ─── Attendance Students Table ────────────────────────────────────────────────
 
 const ATT_PAGE_SIZE = 10
@@ -1021,9 +1008,9 @@ function AttSortableHeader({
   )
 
   return (
-    <th
+    <TableHead
       className={cn(
-        'h-12 px-4 align-middle font-medium text-muted-foreground overflow-hidden',
+        'overflow-hidden',
         align === 'right' ? 'text-right' : 'text-left',
         className,
       )}
@@ -1085,7 +1072,7 @@ function AttSortableHeader({
           </button>
         </PopoverContent>
       </Popover>
-    </th>
+    </TableHead>
   )
 }
 
@@ -1504,12 +1491,12 @@ function AttendanceStudentsTable({
 
       {/* Table */}
       <div className="overflow-x-auto rounded-lg border">
-        <table className="w-full table-fixed text-sm">
-          <thead>
-            <tr className="border-b bg-muted/40">
-              <th className="w-[96px] h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+        <Table tableClassName="table-fixed">
+          <TableHeader>
+            <TableRow className="bg-muted/40 hover:bg-muted/40">
+              <TableHead className="w-[96px] text-muted-foreground">
                 Profile
-              </th>
+              </TableHead>
               <AttSortableHeader
                 label="Name"
                 field="name"
@@ -1595,24 +1582,21 @@ function AttendanceStudentsTable({
                 className="w-[140px]"
                 truncate
               />
-            </tr>
-          </thead>
-          <tbody className="divide-y">
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {paged.map((s) => {
               const realId = studentIdByName.get(s.name)
               return (
-                <tr
+                <TableRow
                   key={s.id}
-                  className={cn(
-                    'transition-colors hover:bg-muted/50',
-                    realId && 'cursor-pointer',
-                  )}
+                  className={cn(realId && 'cursor-pointer')}
                   onClick={() => {
                     if (realId)
                       navigate({ to: '/students/$id', params: { id: realId } })
                   }}
                 >
-                  <td className="w-[96px] p-4 align-middle">
+                  <TableCell className="w-[96px]">
                     <TooltipUI>
                       <TooltipTrigger>
                         {realId ? (
@@ -1636,51 +1620,51 @@ function AttendanceStudentsTable({
                           : 'Profile not available'}
                       </TooltipContent>
                     </TooltipUI>
-                  </td>
-                  <td className="w-[192px] p-4 align-middle font-medium">
+                  </TableCell>
+                  <TableCell className="w-[192px] font-medium">
                     {s.name}
-                  </td>
-                  <td className="min-w-[140px] p-4 align-middle">{s.class}</td>
-                  <td className="min-w-[200px] p-4 align-middle tabular-nums">
+                  </TableCell>
+                  <TableCell className="min-w-[140px]">{s.class}</TableCell>
+                  <TableCell className="min-w-[200px] tabular-nums">
                     {s.nonVRAbsences +
                       s.absentPendingReason +
                       s.mc +
                       s.absentValidPrivate +
                       s.absentValidOfficial}
-                  </td>
-                  <td className="min-w-[140px] p-4 align-middle tabular-nums">
+                  </TableCell>
+                  <TableCell className="min-w-[140px] tabular-nums">
                     {s.late}
-                  </td>
-                  <td className="min-w-[140px] p-4 align-middle tabular-nums">
+                  </TableCell>
+                  <TableCell className="min-w-[140px] tabular-nums">
                     {s.nonVRAbsences}
-                  </td>
-                  <td className="min-w-[140px] p-4 align-middle tabular-nums">
+                  </TableCell>
+                  <TableCell className="min-w-[140px] tabular-nums">
                     {s.absentPendingReason}
-                  </td>
-                  <td className="min-w-[140px] p-4 align-middle tabular-nums">
+                  </TableCell>
+                  <TableCell className="min-w-[140px] tabular-nums">
                     {s.mc}
-                  </td>
-                  <td className="min-w-[140px] p-4 align-middle tabular-nums">
+                  </TableCell>
+                  <TableCell className="min-w-[140px] tabular-nums">
                     {s.absentValidPrivate}
-                  </td>
-                  <td className="min-w-[140px] p-4 align-middle tabular-nums">
+                  </TableCell>
+                  <TableCell className="min-w-[140px] tabular-nums">
                     {s.absentValidOfficial}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               )
             })}
             {paged.length === 0 && (
-              <tr>
-                <td
+              <TableRow className="hover:bg-transparent">
+                <TableCell
                   colSpan={10}
-                  className="px-4 py-8 text-center text-sm text-muted-foreground"
+                  className="py-8 text-center text-muted-foreground"
                 >
                   No students match your filters.
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
       {/* Pagination */}
@@ -1752,21 +1736,6 @@ interface SegmentSelection {
   count: number
 }
 
-function getStudentsForSegment(
-  categoryKey: string,
-  count: number,
-): typeof mockStudents {
-  // Deterministically pick students based on category key
-  const offset = BAR_CATEGORIES.findIndex((c) => c.key === categoryKey)
-  const pool = [...mockStudents]
-  // rotate the pool by offset to get different students per category
-  const rotated = [
-    ...pool.slice(offset % pool.length),
-    ...pool.slice(0, offset % pool.length),
-  ]
-  return rotated.slice(0, Math.min(count, rotated.length))
-}
-
 export function AttendanceLevelAnalytics() {
   const [level, setLevel] = useState('Secondary 4')
   const [chartExpanded, setChartExpanded] = useState(false)
@@ -1779,7 +1748,6 @@ export function AttendanceLevelAnalytics() {
     total: 105,
   }
   const monthlyData = LEVEL_MONTHLY[level] ?? MONTHLY_DATA
-  const ringSegments = buildLevelRingSegments(attendance)
   const presentPct = Math.round((attendance.present / attendance.total) * 100)
   const ltaPct = ((attendance.lta / attendance.total) * 100).toFixed(1)
 
@@ -1888,53 +1856,26 @@ export function AttendanceLevelAnalytics() {
       />
 
       {/* Expanded overlay */}
-      {chartExpanded && (
-        <>
-          <div
-            className="fixed inset-0 z-40 bg-foreground/20"
-            onClick={() => setChartExpanded(false)}
-            role="presentation"
-          />
-          <div
-            className="fixed inset-6 z-50 flex flex-col rounded-xl border bg-card p-6 shadow-2xl"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Absences / Late-coming by Month"
-            tabIndex={-1}
-            // eslint-disable-next-line jsx-a11y/no-autofocus
-            autoFocus
-            onKeyDown={(e) => {
-              if (e.key === 'Escape') setChartExpanded(false)
-            }}
-          >
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-foreground">
-                Absences / Late-coming by month
-              </h3>
-              <button
-                onClick={() => setChartExpanded(false)}
-                className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                aria-label="Close chart"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            <div className="min-h-0 flex-1">
-              <ResponsiveContainer width="100%" height="100%">
-                <AbsenceBarChart
-                  data={monthlyData}
-                  barSize={36}
-                  onSegmentClick={(month, categoryKey, count) => {
-                    setChartExpanded(false)
-                    setSelectedSegment({ month, categoryKey, count })
-                  }}
-                />
-              </ResponsiveContainer>
-            </div>
-            <AbsenceLegend />
+      <Dialog open={chartExpanded} onOpenChange={setChartExpanded}>
+        <DialogContent className="flex h-[calc(100vh-3rem)] w-[calc(100vw-3rem)] max-w-none flex-col p-6">
+          <DialogTitle className="text-sm font-semibold">
+            Absences / Late-coming by month
+          </DialogTitle>
+          <div className="min-h-0 flex-1">
+            <ResponsiveContainer width="100%" height="100%">
+              <AbsenceBarChart
+                data={monthlyData}
+                barSize={36}
+                onSegmentClick={(month, categoryKey, count) => {
+                  setChartExpanded(false)
+                  setSelectedSegment({ month, categoryKey, count })
+                }}
+              />
+            </ResponsiveContainer>
           </div>
-        </>
-      )}
+          <AbsenceLegend />
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
@@ -2136,46 +2077,19 @@ export function AttendanceAnalytics({ student }: AttendanceAnalyticsProps) {
       </div>
 
       {/* Expanded overlay */}
-      {chartExpanded && (
-        <>
-          <div
-            className="fixed inset-0 z-40 bg-foreground/20"
-            onClick={() => setChartExpanded(false)}
-            role="presentation"
-          />
-          <div
-            className="fixed inset-6 z-50 flex flex-col rounded-xl border bg-card p-6 shadow-2xl"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Absences / Late-coming by Month"
-            tabIndex={-1}
-            // eslint-disable-next-line jsx-a11y/no-autofocus
-            autoFocus
-            onKeyDown={(e) => {
-              if (e.key === 'Escape') setChartExpanded(false)
-            }}
-          >
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-foreground">
-                Absences / Late-coming by month
-              </h3>
-              <button
-                onClick={() => setChartExpanded(false)}
-                className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                aria-label="Close chart"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            <div className="min-h-0 flex-1">
-              <ResponsiveContainer width="100%" height="100%">
-                <AbsenceBarChart barSize={36} />
-              </ResponsiveContainer>
-            </div>
-            <AbsenceLegend />
+      <Dialog open={chartExpanded} onOpenChange={setChartExpanded}>
+        <DialogContent className="flex h-[calc(100vh-3rem)] w-[calc(100vw-3rem)] max-w-none flex-col p-6">
+          <DialogTitle className="text-sm font-semibold">
+            Absences / Late-coming by month
+          </DialogTitle>
+          <div className="min-h-0 flex-1">
+            <ResponsiveContainer width="100%" height="100%">
+              <AbsenceBarChart barSize={36} />
+            </ResponsiveContainer>
           </div>
-        </>
-      )}
+          <AbsenceLegend />
+        </DialogContent>
+      </Dialog>
 
       {/* 4. Absences / Late-coming details */}
       <div>
@@ -2241,42 +2155,42 @@ export function AttendanceAnalytics({ student }: AttendanceAnalyticsProps) {
           </div>
         </div>
         <div className="overflow-hidden rounded-lg border">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-muted/40">
-                <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/40 hover:bg-muted/40">
+                <TableHead className="h-auto px-4 py-2.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Date
-                </th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                </TableHead>
+                <TableHead className="h-auto px-4 py-2.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Absences / Latecoming
-                </th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                </TableHead>
+                <TableHead className="h-auto px-4 py-2.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Sub-reason
-                </th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                </TableHead>
+                <TableHead className="h-auto px-4 py-2.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Remarks
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {pagedDetails.map((row, i) => (
-                <tr key={i} className="bg-card">
-                  <td className="px-4 py-3 text-sm text-foreground">
+                <TableRow key={i} className="bg-card hover:bg-card">
+                  <TableCell className="px-4 py-3 text-sm whitespace-normal text-foreground">
                     {row.date}
-                  </td>
-                  <td className="px-4 py-3 text-sm font-medium text-foreground">
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-sm font-medium whitespace-normal text-foreground">
                     {row.type}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-muted-foreground">
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-sm whitespace-normal text-muted-foreground">
                     {row.subReason}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-sm whitespace-normal text-foreground">
                     {row.remarks}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
         {/* Pagination */}
         <div className="mt-3 flex items-center justify-between text-sm">

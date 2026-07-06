@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import {
   AlertTriangle,
@@ -155,13 +155,17 @@ function ParentsGatewayPage() {
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
   // Incrementing this key forces allAnnouncements to re-read mockPGAnnouncements after a deletion
   const [refreshKey, setRefreshKey] = useState(0)
+  const [draft, setDraft] = useState<ReturnType<typeof loadDraft>>(null)
+
+  useEffect(() => {
+    setDraft(loadDraft())
+  }, [])
 
   useSetBreadcrumbs([{ label: 'Posts', href: '/announcements' }])
   const navigate = useNavigate()
 
   // Include any in-progress localStorage draft as a synthetic row at the top
   const allAnnouncements = useMemo<Array<PGAnnouncement>>(() => {
-    const draft = loadDraft()
     if (!draft) return mockPGAnnouncements
     const draftRow: PGAnnouncement = {
       id: '__draft__',
@@ -179,7 +183,7 @@ function ParentsGatewayPage() {
       responseType: draft.responseType ?? 'view-only',
     }
     return [draftRow, ...mockPGAnnouncements]
-  }, [refreshKey])
+  }, [refreshKey, draft])
 
   const filtered = useMemo(() => {
     return allAnnouncements
@@ -528,12 +532,6 @@ function ParentsGatewayPage() {
                     ).length
                     const responseCount = announcement.recipients.filter(
                       (r) => r.respondedAt != null,
-                    ).length
-                    const yesCount = announcement.recipients.filter(
-                      (r) => r.formResponse === 'yes',
-                    ).length
-                    const noCount = announcement.recipients.filter(
-                      (r) => r.formResponse === 'no',
                     ).length
                     const hasResponseType =
                       announcement.responseType === 'acknowledge' ||

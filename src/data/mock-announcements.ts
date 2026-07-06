@@ -279,7 +279,3 @@ More details will be shared in April. Start thinking about your retreat buddy!`,
 export function getUnreadCount(): number {
   return mockAnnouncements.filter((a) => !a.isRead).length
 }
-
-export function getAnnouncementById(id: string): Announcement | undefined {
-  return mockAnnouncements.find((a) => a.id === id)
-}

@@ -40,7 +40,7 @@ export function WelcomeModal() {
     >
       <DialogContent
         showCloseButton={false}
-        className="max-w-xs p-0 overflow-hidden gap-0 bg-white"
+        className="max-w-xs p-0 overflow-hidden gap-0"
       >
         <div className="flex flex-col items-start gap-4 p-6">
           <div className="w-full flex justify-center">

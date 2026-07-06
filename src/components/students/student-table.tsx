@@ -109,8 +109,8 @@ export function StudentTable({
   columns,
   className,
   pageSize = 10,
-  matchedIds,
-  matchedCount = 0,
+  matchedIds: _matchedIds,
+  matchedCount: _matchedCount = 0,
   sort,
   activeFilterFields,
   onSort,
@@ -751,7 +751,7 @@ export function StudentTable({
       {isVisible('name') && (
         <TableCell
           className={cn(
-            'sticky z-10 bg-card font-medium shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] transition-colors group-hover:bg-[color-mix(in_oklab,var(--muted)_50%,white)]',
+            'sticky z-10 bg-card font-medium shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] transition-colors group-hover:bg-[color-mix(in_oklab,var(--muted)_50%,var(--background))]',
             isVisible('index') ? 'left-12' : 'left-0',
           )}
         >

@@ -25,6 +25,7 @@ import { EnquiryEmailSelector } from '@/components/comms/enquiry-email-selector'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -325,14 +326,14 @@ function NewFormPage() {
                     {instructions.length}/2000
                   </span>
                 </div>
-                <textarea
+                <Textarea
                   id="instructions"
                   placeholder="Write instructions or context for parents filling out this form."
                   value={instructions}
                   onChange={(e) => setInstructions(e.target.value)}
                   maxLength={2000}
                   rows={5}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-ring resize-none"
+                  className="resize-none"
                 />
               </div>
             </div>

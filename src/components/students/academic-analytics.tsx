@@ -20,7 +20,6 @@ import {
   RotateCcw,
   Search,
   SlidersHorizontal,
-  X,
 } from 'lucide-react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import {
@@ -40,6 +39,7 @@ import {
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import {
   Popover,
@@ -55,6 +55,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import {
   TooltipContent,
   TooltipTrigger,
@@ -128,10 +136,6 @@ const PERFORMANCE_DATA = [
     overall: 72,
   },
 ]
-
-const G2_COUNT = 2
-const G3_COUNT = 4
-const TOTAL_SUBJECTS = G2_COUNT + G3_COUNT
 
 const BAR_COLORS = {
   term1WA: SERIES_BLUE_COBALT, // cobalt blue — matches attendance chart
@@ -237,9 +241,6 @@ const ASSESSMENT_OPTIONS = [
 ]
 
 const INDICATOR_OPTIONS = ['Distinction', 'Pass'] as const
-
-// Mock results data — Secondary 4, EL-G3, Term 1 WA
-const QUICK_STATS = { total: 120, distinction: 42, pass: 68 }
 
 const GRADE_DATA = [
   { grade: 'A1', count: 15 },
@@ -958,7 +959,7 @@ function GradeDistTooltip({
 // Grade distribution bar chart
 function GradeDistChart({
   data,
-  selectedGrade,
+  selectedGrade: _selectedGrade,
   onGradeClick,
 }: {
   data: BreakdownData['gradeData']
@@ -1226,30 +1227,30 @@ export function AcademicAnalytics() {
           Subjects taken and current grades
         </h3>
         <div className="overflow-hidden rounded-lg border">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-muted/40">
-                <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/40 hover:bg-muted/40">
+                <TableHead className="h-auto px-4 py-2.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Subject
-                </th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                </TableHead>
+                <TableHead className="h-auto px-4 py-2.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Current grades
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {SUBJECTS_BANDING.map((row) => (
-                <tr key={row.subject} className="bg-card">
-                  <td className="px-4 py-3 text-sm text-foreground">
+                <TableRow key={row.subject} className="bg-card hover:bg-card">
+                  <TableCell className="px-4 py-3 text-sm whitespace-normal text-foreground">
                     {row.subject}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-sm whitespace-normal text-foreground">
                     {row.grade}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       </div>
 
@@ -1285,48 +1286,34 @@ export function AcademicAnalytics() {
       </div>
 
       {/* Expanded overlay */}
-      {chartExpanded && (
-        <>
-          <div
-            className="fixed inset-0 z-40 bg-foreground/20"
-            onClick={() => setChartExpanded(false)}
-          />
-          <div className="fixed inset-6 z-50 flex flex-col rounded-xl border bg-card p-6 shadow-2xl">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-foreground">
-                Results over time
-              </h3>
-              <button
-                onClick={() => setChartExpanded(false)}
-                className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            <div className="min-h-0 flex-1">
-              <ResponsiveContainer width="100%" height="100%">
-                <PerformanceBarChart barSize={16} />
-              </ResponsiveContainer>
-            </div>
-            <div
-              className="flex gap-2"
-              style={{ paddingLeft: 28, paddingRight: 8 }}
-            >
-              <div className="flex flex-1 items-center justify-center border-t border-muted-foreground/30 py-1.5">
-                <span className="text-xs font-semibold text-foreground">
-                  G2
-                </span>
-              </div>
-              <div className="flex flex-[2] items-center justify-center border-t border-muted-foreground/30 py-1.5">
-                <span className="text-xs font-semibold text-foreground">
-                  G3
-                </span>
-              </div>
-            </div>
-            <PerformanceLegend />
+      <Dialog open={chartExpanded} onOpenChange={setChartExpanded}>
+        <DialogContent className="flex h-[calc(100vh-3rem)] w-[calc(100vw-3rem)] max-w-none flex-col p-6">
+          <DialogTitle className="text-sm font-semibold">
+            Results over time
+          </DialogTitle>
+          <div className="min-h-0 flex-1">
+            <ResponsiveContainer width="100%" height="100%">
+              <PerformanceBarChart barSize={16} />
+            </ResponsiveContainer>
           </div>
-        </>
-      )}
+          <div
+            className="flex gap-2"
+            style={{ paddingLeft: 28, paddingRight: 8 }}
+          >
+            <div className="flex flex-1 items-center justify-center border-t border-muted-foreground/30 py-1.5">
+              <span className="text-xs font-semibold text-foreground">
+                G2
+              </span>
+            </div>
+            <div className="flex flex-[2] items-center justify-center border-t border-muted-foreground/30 py-1.5">
+              <span className="text-xs font-semibold text-foreground">
+                G3
+              </span>
+            </div>
+          </div>
+          <PerformanceLegend />
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
@@ -1797,36 +1784,33 @@ export function MonitoringAcademicAnalytics() {
 
           {/* Table */}
           <div className="overflow-x-auto rounded-lg border">
-            <table className="w-full table-fixed text-sm">
-              <thead>
-                <tr className="border-b bg-muted/40">
+            <Table tableClassName="table-fixed">
+              <TableHeader>
+                <TableRow className="bg-muted/40 hover:bg-muted/40">
                   {(
                     ['Profile', 'Name', 'Class', 'Score', 'Grade'] as const
                   ).map((label, i) => (
-                    <th
+                    <TableHead
                       key={label}
                       className={cn(
-                        'h-12 px-4 text-left align-middle font-medium text-muted-foreground',
+                        'text-muted-foreground',
                         i === 0 && 'w-[96px]',
                         i === 1 && 'w-[300px]',
                         (i === 2 || i === 3 || i === 4) && 'w-[140px]',
                       )}
                     >
                       {label}
-                    </th>
+                    </TableHead>
                   ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y">
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {pagedCandidates.map((c) => {
                   const realId = studentIdByName.get(c.name)
                   return (
-                    <tr
+                    <TableRow
                       key={c.id}
-                      className={cn(
-                        'transition-colors hover:bg-muted/50',
-                        realId && 'cursor-pointer',
-                      )}
+                      className={cn(realId && 'cursor-pointer')}
                       onClick={() => {
                         if (realId)
                           navigate({
@@ -1835,7 +1819,7 @@ export function MonitoringAcademicAnalytics() {
                           })
                       }}
                     >
-                      <td className="w-[96px] p-4 align-middle">
+                      <TableCell className="w-[96px]">
                         <TooltipUI>
                           <TooltipTrigger>
                             {realId ? (
@@ -1859,30 +1843,30 @@ export function MonitoringAcademicAnalytics() {
                               : 'Profile not available'}
                           </TooltipContent>
                         </TooltipUI>
-                      </td>
-                      <td className="w-[300px] p-4 align-middle font-medium">
+                      </TableCell>
+                      <TableCell className="w-[300px] font-medium">
                         {c.name}
-                      </td>
-                      <td className="w-[140px] p-4 align-middle">{c.class}</td>
-                      <td className="w-[140px] p-4 align-middle tabular-nums">
+                      </TableCell>
+                      <TableCell className="w-[140px]">{c.class}</TableCell>
+                      <TableCell className="w-[140px] tabular-nums">
                         {c.score}
-                      </td>
-                      <td className="w-[140px] p-4 align-middle">{c.grade}</td>
-                    </tr>
+                      </TableCell>
+                      <TableCell className="w-[140px]">{c.grade}</TableCell>
+                    </TableRow>
                   )
                 })}
                 {pagedCandidates.length === 0 && (
-                  <tr>
-                    <td
+                  <TableRow className="hover:bg-transparent">
+                    <TableCell
                       colSpan={5}
-                      className="px-4 py-8 text-center text-sm text-muted-foreground"
+                      className="py-8 text-center text-muted-foreground"
                     >
                       No students match your filters.
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
 
           {/* Pagination */}

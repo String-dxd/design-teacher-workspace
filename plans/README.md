@@ -22,14 +22,28 @@ your row when done.
 | 011 | Color sweep: mechanical batches (Phases 1–6, ~51 small/medium files; grep-anchored palette/hazard swaps) | P2 | L | 010 | DONE — branch `advisor/color-sweep`, 51 files, gates green (build 0 / tsc 113 / vitest 37-16), palette residual 0 in-scope, 2026-07-01 |
 | 012 | Color sweep: giant files (Phases 7–10; 5 files >1.5k lines, palette+dark-hazard ONLY; charts deferred; PDF-facsimile + phone-preview fenced) | P2 | L | 010, 011 | DONE — branch `advisor/color-sweep`, +corrective slate/amber pass (see note), gates green (build 0 / tsc 113 / vitest 37-16), fences intact, 2026-07-01 |
 | 013 | Color sweep: charts & SVG (Phase 11; centralize ~90 chart literals into `src/lib/chart-colors.ts`; visual-review gated) | P3 | M | 010, 011, 012 | DONE — branch `advisor/color-sweep`, chart hex centralized (chrome→slate vars, series→named consts), gates green (build 0 / tsc 111 / vitest 37-16), 2026-07-01. Light-mode verified; **dark-mode + Radix-ifying reserved series hues pending the dark-mode toggle (deferred)** |
+| 014 | Dead code: remove ~10 dead files (3 orphaned subtrees) + ~11 dead deps + declare transitive `@tanstack/react-query` | P2 | S | — | DONE — PR #154 merged to main, reviewer-verified 2026-07-01: 9 files + 12 deps removed, react-query@5.90.21 declared; build 0 / tsc 110 / vitest 37-16, scope clean. |
+| 015 | Dead code: strip 68 unused imports/locals (TS6133); unblocks a blocking typecheck CI gate | P2 | S–M | 014 | DONE — PR #156 merged to main, reviewer-verified 2026-07-01: 27 files, tsc 110→42 (all TS6133 gone, no new codes), build 0 / vitest 37-16. NOTE: 5 unused `useId`/`useMemo` kept as bare calls (hook-ordering) — tidy candidate. |
+| 016 | Dead code: remove ~10 dead public assets + untrack committed `.DS_Store` | P3 | S | — | DONE — PR #155 merged to main, reviewer-verified 2026-07-01: 10 dead assets removed, build 0. (`.DS_Store` were already untracked/gitignored.) |
+| 017 | Dead code: prune ~40 dead non-UI exports (unexport→tsc→delete); keeps shadcn ui/ primitive API | P3 | M | 014 | DONE — PR #157 merged to main, reviewer-verified 2026-07-01: 24 deleted + 27 unexported across 29 files; knip 0 non-ui dead exports; tsc 42 / no new codes / build 0 / vitest 37-16. Kept 4 knip false-positives (real importers). |
+| 018 | Eliminate the five SSR hydration-mismatch sources (`new Date()`/localStorage in render on `/`, `/create`, `/students`, `/announcements`, announcement preview) | P1 | M | — | DONE — executor-run in worktree, commit `71b492f` branch `advisor/018-ssr-hydration`, reviewer-verified 2026-07-02 (tsc 41 baseline / vitest 40-16 incl. 3 new greeting tests / build 0 / scope clean / browser hydration smoke incl. stash-baseline comparison). MERGED to main 2026-07-03 (merge-commit per plan; post-merge gates green: tsc 41 / vitest 62-6 / build 0). |
+| 019 | Retoken residual theme-blind colors: `bg-white` in the Button primitive, oklch scrims, `aria-expanded:bg-white`, date-input twblue drift, dead mock `color` field | P1 | S | — (soft: before 021/022 — shared files) | DONE — executor-run in worktree, commits `d5ddc92`+`8dbf94e` branch `advisor/019-retoken-residuals`, reviewer-verified 2026-07-02 (tsc 41 / vitest 37-16 / build 0 / ui-dir greps 0 bg-white + 0 bg-black / backdrop alpha computed-style-identical). Scope amended mid-run (+`ui/input.tsx`, `ui/sheet.tsx`, `ui/dialog.tsx` — see plan items 11–13). MERGED to main 2026-07-03 (merge-commit per plan; post-merge gates green: tsc 41 / vitest 62-6 / build 0). Known residuals for a future sweep: `heytalia-panel.tsx` still has 6 `bg-white` sites (lines ~459/500/617/677/752/855; the ~500 one disappears with plan 021's Popover conversion) and `announcements.new.tsx:2371` `bg-white/20` white-alpha on a dark scrim (likely intentional). |
+| 020 | Dependency refresh: `@base-ui/react` 1.2→1.6, `shadcn` CLI 3.8→4.x, Tailwind 4.3, `lucide-react` 0.562→1.x incl. 10 legacy icon renames | P2 | M | — (land after 018/019 for easy rebases) | DONE — executor-run in worktree, 4 commits (`839237c`→`4cb1050`) branch `advisor/020-deps-refresh`, reviewer-verified 2026-07-02 (versions confirmed: base-ui 1.6.0 / tailwind 4.3.2 / shadcn 4.12.0 / lucide 1.23.0; tsc 41 / vitest 37-16 / build 0; scope = package.json+bun.lock only). NOTE: lucide 1.23 still ships the 10 legacy alias names — zero source renames were needed (plan's rename table unused). shadcn v4 syntax is `add <c> --diff --dry-run` (deprecated `diff` subcommand lacks `--dry-run`). MERGED to main 2026-07-03 (merge-commit per plan; post-merge gates green: tsc 41 / vitest 62-6 / build 0). Pre-existing warnings surfaced during smoke (confirmed present on baseline): Base UI nativeButton warning from `app-header.tsx` Button `render={<Link>}`, and nested-`<li>` from `BreadcrumbSeparator` inside `BreadcrumbItem` in app-header — future cleanup candidates. |
+| 021 | Compose bypassed UI onto primitives: raw select/textarea → Select/Textarea, 4 hand-rolled tables → ui/table, 3 pseudo-modals → Dialog, HeyTalia dropdown → Popover, chat inputs → Input | P2 | L | 019 | DONE — executor-run in worktree, 6 commits (`f1db928`→`281dfe0`) branch `advisor/021-compose-primitives`, reviewer-verified 2026-07-03 (greps 0 raw select/table/textarea outside ui/, 0 role="dialog" in students/; tsc 41 / vitest 37-16 / build 0; scope = the 6 in-scope files; live browser checks on all five packages incl. chart-in-Dialog fill + Escape/focus-return). Scope amended mid-run: +2 agency-report textareas (FieldRow narrative, Note-to-Principal) — the final amendment commit `281dfe0` was executor-authored but reviewer-committed (executor session died between edit and commit); its browser spot-check (narrative empty-border state) was NOT re-run — worth an eyeball during merge QA. MERGED to main 2026-07-03 (merge-commit per plan; post-merge gates green: tsc 41 / vitest 62-6 / build 0). |
+| 022 | React correctness quickies: stable keys on editable lists, keyboard-accessible file dropzone, consolidate 5 column-flag-sync effects into 1 | P2 | M | 018 | DONE — executor-run in worktree, 3 commits (`ab1b0f9`, `13260be`, `01c4845`) branch `advisor/022-react-quickies`, reviewer-verified 2026-07-03 (tsc 41 / vitest 44-16 incl. 7 new `apply-flag-columns` tests / build 0 / scope clean / A/B parity proof: old-vs-new rendered column headers byte-identical). Step 3 was reviewer-amended after a correct executor STOP: spec gained `position: before\|after` (3 of 4 effects insert AFTER their anchor) and the imported-columns effect stays separate (different shape) — file now has exactly 2 column-sync effects. MERGED to main 2026-07-03 (merge-commit per plan; post-merge gates green: tsc 41 / vitest 62-6 / build 0). Pre-existing issues found & left alone: (a) `announcements.new.tsx` ~1568 hardcodes `websiteLinks: []` on submit instead of using state — likely real bug, worth a fix; (b) the PHOTO dropzone (~2460) has the same mouse-only a11y gap the file dropzone had — natural follow-up; (c) dev-server-only 307 on plain `/announcements/new` URL (`?resume=false` works) — vite dev middleware quirk; (d) initializer-vs-effect placement discrepancy for `overallPercentage` when `socialLinks` is off (pre-existing, preserved for parity) — noted for plan 023. NOTE: `_key` now serializes into saved drafts (harmless, backward-compatible both directions) — relevant to 023's characterization tests. |
+| 023 | SPIKE (tests + design doc only): characterize draft save/restore, decomposition design for `announcements.new.tsx` (2.7k lines / 41 useState) + `agency-report.new.tsx` (3.7k / 35) | P3 | L | 018, 019, 022 | DONE — executor-run in worktree, 2 commits (`11f3e68`, `411c2d3`) branch `advisor/023-god-component-spike`, reviewer-verified 2026-07-03 (15 draft-storage characterization tests incl. 25-field autosave tripwire verified against the live payload; vitest deterministic 52-6 across 3 runs; tsc 41; zero route-file changes). Deliverable: `docs/plans/2026-07-03-024-announcements-new-decomposition.md` — 7 risk-ordered migration slices for `announcements.new.tsx`, NO-GO on whole-file agency-report decomposition (already reasonably split; scoped `useReportAnswers()` only when ReportForm next grows). **Major test-baseline finding**: the long-standing "37 pass / 16 fail" baseline was 6 real `imported-columns.test.ts` failures + 10 `draft-storage.test.ts` failures caused by a pre-existing vitest/jsdom/Node race (`globalThis.localStorage` intermittently undefined per worker). A test-local MemoryStorage stub (scoped to draft-storage.test.ts only) makes that file deterministic — post-023 baseline is **52 pass / 6 fail**. Follow-ups: fix the 6 real imported-columns failures; consider the same stub (or a vitest setup file) for imported-columns.test.ts. MERGED to main 2026-07-03 (merge-commit per plan; post-merge gates green: tsc 41 / vitest 62-6 / build 0). |
+
+### HDP reporting-cycle lineage (plan files `018-hdp-*` … `025-*`)
+
+> Authored in parallel with the design-system plans above and **reusing numbers 018–023** — these are distinct plans, disambiguated by filename slug (e.g. `018-hdp-report-builder-prototype.md` vs `018-ssr-hydration-mismatches.md`). Merged to main via PR #159.
+
+| Plan | Title | Priority | Effort | Depends on | Status |
+|------|-------|----------|--------|------------|--------|
 | 018 | HDP "Report Builder" prototype (P1) — feature-flagged builder (section toggle/reorder/viz) + generation + P1 parents-first sharing, aimed at the "would use over SC" bet; test track (A0–A5) then demo track (B1–B3) | P1 (test) / P2 (demo) | L | `holistic-reports` flag (exists) | TEST TRACK DONE (verified) — branch `worktree-sdp+hdp-report-builder-prototype`. Built + verified via the tfx-design-ui harness (Phases 1–6). Ships: flags, `report-layouts.ts`, `reports.build` split-view builder, shared `ReportPreview`, inline Suggest, parents-first share + parent guest view (layout persisted), one-door entry, profile wizard hidden, admin Save. Evaluator verdict: **pass-with-findings** → all 3 blocking L1s fixed (TYP-2/3 label sizes, A11Y-9 guest title); LAY-2 320px confirmed. Gates: build/tsc no-regress (111), a11y-static clean. Decision record + verbatim verdict: `docs/decisions/report-builder.md`. Ratchet: proposed "sanitise shared user-authored HTML" anti-pattern. **Demo track B1–B3 (bulk, extended holistic, gamified secondary) not started.** Uncommitted on the branch. |
-
 | 019 | Write-stage remounts per student so editable comments/note can't carry over (fixes cross-student data corruption via pager navigation) | P1 | S | — | DONE (v2, reviewer-verified) — keyed remount (`<CycleWriteBody key={studentId} …/>`). Advisor re-ran gates (tsc 0-new/107, tests 65/65, targeted prettier+eslint clean, one file) AND browser-verified BOTH directions: A→B shows B's own comment (no carry-over — the exact v1 failure), B→A shows A's saved text intact (also fixes the stale-`cycle` read). Uncommitted in `worktree-sdp+hdp-report-builder-prototype`; awaiting user commit decision. v1 "resync effect" was BLOCKED at review (passed gates but Tiptap editor still carried over — focus-guarded sync). |
-
 | 020 | Associate labels with the term picker & comments editor (a11y, WCAG 1.3.1) | P2 | S | — | TODO — written at `077d669`; recommend a focused pass with browser AT verification (touches shared `TermSelector`/`RichTextEditor`). |
 | 021 | Characterization tests for `commitCycleReport` + `statusFor` | P2 | S | — | DONE (reviewer-verified) — `hdp-report-commit.test.ts` (3) + `cycle-student-table.test.ts` (7); advisor re-ran: 75/75 tests, 0 new tsc, eslint clean, tests read + assert real behavior. |
 | 022 | Remove dead exports (`classOptions`, `SECTION_FIELD_DEFS`) + rename template to primary-wide | P3 | S | — | DONE (reviewer-verified) — both dead exports gone (grep 0), template → "Primary Holistic Development" (3 literals). tsc 107 (0 new), 75 tests, prettier clean; the one `mock-students.ts` eslint `no-unnecessary-condition` is pre-existing (verified at HEAD, line just shifted). Minor follow-up: the template `description` still says "Lower-primary default". |
-
 | 023 | Write stage lands at the top, not scrolled into the comments editor (flow / A11Y-11) | P1 | S | — | DONE (reviewer-implemented + browser-verified 2026-07-06) — **Step 1 (autofocus prop) disproven & reverted**: `autofocus` was already `false`; the real cause, found via a focus-trap in-browser, is `@tiptap/react`'s own mount `focus` command, which (a) ran a redundant `setContent` (plain-text seed ≠ normalised HTML) that `scrollIntoView`'d the field −361px, and (b) deferred a `view.focus()` by one rAF. Fix = two parts: (1) shared `rich-text-editor.tsx` — guard the value-sync effect with a `lastSyncedValue` ref so it no longer fires the redundant mount `setContent` (kills the −361 scroll; Suggest/typing/announcements re-verified unaffected); (2) write route — `key`-remount already present, add `headingRef`+`tabIndex={-1}` on the `<h1>` and a **double-rAF** mount effect that focuses it after Tiptap's single-rAF grab. Verified fresh-load / SPA-nav / pager: `h1.top=72` (≥0) and `activeElement===h1` (not the editor) in all three. Gates: tsc 107 (0 new; the 2 editor errors are pre-existing baseline), 75 tests, targeted prettier+eslint clean, scope = 2 in-scope files. Uncommitted → committing now. |
 | 024 | Make the student list the hub's focal point — compact the summary strip + tidy the control row (SLP-11, layout #1/#4) | P2 | S | — | DONE (Step 1 only; reviewer-implemented + browser-verified 2026-07-06) — replaced the four `rounded-lg border bg-card p-4` metric boxes with one compact `text-sm` stat line ("N of M ready · N drafts · N sent · N not started"), reusing the existing not-started derivation verbatim. Browser: legacy metric boxes = 0, compact line present, **student table now wins the squint test** (screenshot `024-hub-final.png`). **Step 2 (drop the redundant "Term" label) reverted per the plan's own STOP-note**: the term picker is `role="combobox"` with no `aria-label`/`aria-labelledby`, so it's name-from-author — dropping the visible label left it with **no accessible name** (verified in-browser: no quoted name, only value "Term 2"). The `htmlFor="cycle-term"` was already non-functional (TermSelector doesn't forward the id — this is plan 020's finding). Fixing the term picker's name + label consistency is deferred to **plan 020** (edits the shared `TermSelector`). Gates: tsc 107 (0 new), 75 tests, prettier+eslint clean, scope = 1 file. |
 | 025 | Remove the nested card in the layout-stage preview (SLP-4) | P3 | S | — | DONE (reviewer-implemented + browser-verified 2026-07-06) — dropped `bg-card rounded-xl border shadow-sm` from the layout preview wrapper (kept `p-6` + the "Previewing with …" caption), so the "Term at a glance" hero is the single frame — no card-in-a-card. `report-preview.tsx`/`TermAtAGlance` untouched (`git diff` scope = layout.tsx only). Browser: layout preview shows one frame (`025-layout-preview.png`); parent guest view hero **still bordered / unchanged** (`025-parent-view.png`, via a real share of student 36). Gates: tsc 107 (0 new), 75 tests, prettier+eslint clean. |
@@ -115,10 +129,6 @@ Two dispatch problems worth recording so the next run avoids them:
    session's untracked plan docs** (019 + reverted README). Fix applied here: plans now tell the
    executor to use targeted `prettier --check`/`eslint` on the single file, never `bun run check`.
 
-> **Numbering note**: 014–017 (dead-code/import cleanup) live on the unmerged `advisor/deadcode-plans`
-> branch and are not present on this branch. 018 skips ahead deliberately to stay monotonic across the
-> project.
-
 ## Round 4 — HDP report-builder prototype (2026-07-01)
 
 A **feature/direction** plan (not tech-debt like rounds 1–3), scoped by the `HDP Mid-Point Check-In
@@ -137,6 +147,84 @@ Discussion Guide` and sharpened via an 11-question grilling. Full context in the
 - Everything is flag-gated (`hdp-report-builder`, `hdp-extended-template`) and default-off, so it can't
   regress the shipped surface. Consistent with the existing `_guest.report-view.$token.tsx`
   "by-design mock, no real data" note under Findings-rejected.
+## Round 5 — design-system re-audit: composition, tokens, React practices, deps (2026-07-02)
+
+Audit at commit `b01d78d` (baseline re-verified this run: `bunx tsc --noEmit` **41**
+errors — 23×TS2322, 9×TS2345, 3×TS2353, 6 singles; `bunx vitest run` 37 pass / 16 fail;
+`bun run build` exit 0). Three parallel auditors (DS composition, color tokens, React
+best practices) + a direct dependency-freshness check; every table finding re-verified
+against the code by the advisor. Produced plans 018–023.
+
+- **Suggested order: 018 → 019 → 020 → 021 → 022 → 023.** 018/019/022 all touch
+  `announcements.new.tsx` and 019/021 both touch `heytalia-panel.tsx` +
+  `attendance-analytics.tsx` — run sequentially on rebased branches.
+- **Headline confirmations**: `src/components/ui/` is structurally clean Base UI (no
+  `asChild`, no Radix imports, correct `render={}` triggers) — BUT `button.tsx` hardcodes
+  `bg-white` in the `outline`/`secondary` variants, so Round 3's "ui/ primitives are 100%
+  token-driven" claim was stale (fixed by 019). Chart-hex centralization (013) held: no
+  raw `fill=`/`stroke=` hex remains in chart components.
+- **Doc drift noted**: plan 012's fence line-ranges for `announcements.new.tsx` are stale —
+  the preview-mockup fence actually spans ~L136–907 (the README Round-3 note "~84 inside
+  the fenced PG phone-preview" remains the accurate record).
+- **Sweep-gate gap found**: `bg-[oklch(0_0_0/…)]` arbitrary values evade the Round-3 grep
+  gates (they match `#…`/`rgba(`/`bg-black` only). 019 fixes the two sites; future color
+  gates must also grep `oklch(`.
+- **Versions at audit**: `@base-ui/react` 1.2.0 (latest 1.6.0 — only breaking change in
+  range, `sanitizeValue`→`normalizeValue`, is unused here), `shadcn` 3.8.5 (latest 4.x,
+  dev-only), `tailwindcss` 4.2.1 (4.3.x), `lucide-react` 0.562.0 (1.x — breaking; 147
+  distinct icons across ~88 files, 10 legacy alias names in use), `tw-animate-css` and
+  `@radix-ui/colors` current.
+
+### Considered and rejected (Round 5)
+
+- **Consolidating the three filter bars** (`forms-filter-bar`, `announcement-filter-bar`,
+  `student-filters` — ~245–295 lines each) — LOW confidence it's past the rule-of-three
+  threshold; behavior differs per entity and over-abstraction would couple unrelated
+  features. Investigate only if a fourth appears.
+- **`useSetBreadcrumbs` `JSON.stringify` effect** (`src/hooks/use-breadcrumbs.tsx:55`) —
+  real smell, small arrays, no measured cost; measure before changing.
+- **Ad-hoc empty states** (~15 hand-built "No … found" blocks vs `EmptyState`) — needs
+  per-site design judgment (page-level vs inline list messages); not mechanical enough
+  for an executor plan this round.
+- **`bg-white` logo plates and radio dots** (`app-card.tsx:34,48`, `agency-logo.tsx:88`,
+  `groups.index.tsx:896,930`) — judged intentional contrast treatments; documented as
+  out-of-scope keeps in plan 019.
+- **`entity-selector.tsx` raw typeahead inputs** — load-bearing for its combobox logic;
+  sanctioned bypass, explicitly out of scope in plan 021 (future candidate: compose on
+  `ui/combobox` with its own interaction-test pass).
+- **Regenerating ui/ components via shadcn v4 `diff`** — deliberate customizations exist;
+  reconciliation is a separate future task after plan 020 installs the v4 CLI.
+- **Date-input `min={new Date()…}` attributes** — midnight-boundary-only mismatch;
+  deferred (noted in plan 018).
+
+## Round 4 — dead-code audit (2026-07-01)
+
+Focused dead-code audit at commit `8a71db6` (knip + import-graph verification; baseline
+`tsc` 111 errors / `bunx vitest run` 37 pass 16 fail / `bun run build` exit 0). Produced
+plans 014–017.
+
+- **Suggested order: 014 → 016 (independent) → 015 → 017.** 014 removes dead files+deps and
+  is the prerequisite for 017 (deleting files shrinks/changes the dead-export list — re-run
+  `bunx knip` after 014). 016 is fully independent (assets). 015 (unused imports/locals) is
+  independent but pairs naturally after 014.
+- **Coupling in 014**: `@tanstack/react-devtools` + `@tanstack/react-router-devtools` are
+  dead only once the orphan `draggable-tanstack-devtools.tsx` is deleted (same plan); and
+  removing `@tanstack/react-router-ssr-query` requires declaring `@tanstack/react-query`
+  (imported directly in `__root.tsx`/`_guest.tsx`, currently transitive) — 014 does both.
+- **Dead-code tooling gap**: knip is not installed. Run it on demand via
+  `bunx --bun knip@5 --no-progress`. Consider adding it as a devDep + a `knip` script and/or
+  `eslint-plugin-unused-imports` to prevent regressions (optional follow-up).
+
+### Considered and rejected (Round 4)
+
+- **~50 unused exports in `src/components/ui/*`** (shadcn primitives: `DialogPortal`,
+  `SidebarMenuSub`, `Combobox*`, `Field*`, `AlertDialogOverlay`, …) — that is the component
+  library's public API surface; keep per the `AGENTS.md`/`CLAUDE.md` reuse policy.
+- **All 16 feature flags** — every one is actively read/gating and user-toggleable via
+  `/flags`; none is define-but-unused or a fully-rolled-out dead branch.
+- **Commented-out code** — none found (a scan for 3+ consecutive commented code lines came
+  back empty; the earlier `mock-agency-reports.ts` hit was a false positive).
+- **`@tanstack/eslint-config`** flagged by knip — false positive; used in `eslint.config.js:3`.
 
 ## Round 3 — feature-wide color-token sweep (2026-06-30)
 
