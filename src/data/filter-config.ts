@@ -214,6 +214,22 @@ export const filterFieldConfigs: Array<FilterFieldConfig> = [
     defaultValue: 5,
   },
   {
+    field: 'privateVrAbsences',
+    label: 'Private VR absences (days)',
+    type: 'numeric',
+    group: 'attendance',
+    defaultOperator: 'gte',
+    defaultValue: 5,
+  },
+  {
+    field: 'mcAbsences',
+    label: 'MC absences (days)',
+    type: 'numeric',
+    group: 'attendance',
+    defaultOperator: 'gte',
+    defaultValue: 5,
+  },
+  {
     field: 'ccaMissed',
     label: 'CCA attendance(%)',
     type: 'numeric',
