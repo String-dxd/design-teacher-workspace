@@ -1,6 +1,6 @@
 {
   "project": "moe-teacher-workspace",
-  "lastUpdated": "2026-07-06T16:45:00.000Z",
+  "lastUpdated": "2026-07-06T17:10:00.000Z",
   "todos": [
     {
       "id": "tw-001",
@@ -329,6 +329,14 @@
       "status": "completed",
       "createdAt": "2026-07-06T16:30:00.000Z",
       "completedAt": "2026-07-06T16:45:00.000Z"
+    },
+    {
+      "id": "tw-037",
+      "title": "Certificate-style hero: identity band, highlights first",
+      "description": "Report hero reworked after Duolingo English Test reference \u2014 identity band with initials avatar (name, class, term left; form teacher + provenance right), Strongest in / Growing in tinted panels with area chips lead the at-a-glance card, attendance and conduct demoted to quiet icon-chip bullet rows, big attendance ring removed from the document.",
+      "status": "completed",
+      "createdAt": "2026-07-06T17:00:00.000Z",
+      "completedAt": "2026-07-06T17:10:00.000Z"
     }
   ]
 }

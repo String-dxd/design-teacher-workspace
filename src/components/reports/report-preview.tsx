@@ -1,10 +1,14 @@
 import {
+  Award,
   BookOpen,
   Calculator,
+  CalendarCheck,
   FlaskConical,
   Globe,
   Languages,
+  Smile,
   Sparkles,
+  Sprout,
 } from 'lucide-react'
 
 import type { LucideIcon } from 'lucide-react'
@@ -21,7 +25,6 @@ import type { CockpitSubjectSubmission } from '@/data/mock-cockpit-submissions'
 import { RichTextEditor } from '@/components/comms/rich-text-editor'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
-import { AttendanceRing } from '@/components/reports/attendance-ring'
 import {
   COCKPIT_LAST_SYNCED,
   getCockpitSubmissions,
@@ -228,6 +231,15 @@ function firstName(name: string): string {
   return name.split(' ').filter(Boolean)[0] ?? name
 }
 
+function initials(name: string): string {
+  return name
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join('')
+}
+
 /** Learning highlights derived from the packaged LO stages: the areas at the
  * highest stage, and (framed positively) the areas still climbing. */
 function deriveHighlights(report: HolisticReport): {
@@ -268,59 +280,99 @@ function TermAtAGlance({ report }: { report: HolisticReport }) {
 
   return (
     <div className="bg-card flex flex-col gap-3 rounded-xl border p-4">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
-        <div className="flex shrink-0 items-center gap-3">
-          <div aria-hidden className="text-primary">
-            <AttendanceRing
-              percentage={attendancePct}
-              size={88}
-              strokeWidth={8}
-              color="currentColor"
-            />
-          </div>
-          <div className="text-sm">
-            <p className="font-medium">Attendance</p>
-            <p className="text-muted-foreground">
-              {attendancePct}% · present {report.attendance.daysPresent} of{' '}
-              {report.attendance.totalSchoolDays} days
-              {report.attendance.daysLate > 0 && (
-                <>
-                  {' '}
-                  ·{' '}
-                  {report.attendance.daysLate === 1
-                    ? '1 day late'
-                    : `${report.attendance.daysLate} days late`}
-                </>
-              )}
+      {/* The lead insight: where the child shines and where she's growing. */}
+      {strongest.length > 0 && (
+        <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
+          <div className="bg-twblue-2 flex-1 rounded-lg p-3">
+            <p className="text-twblue-12 flex items-center gap-2 text-xs font-medium">
+              <span
+                aria-hidden
+                className="bg-card flex size-7 shrink-0 items-center justify-center rounded-full"
+              >
+                <Award className="text-twblue-11 size-3.5" />
+              </span>
+              Strongest in
             </p>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {strongest.map((name) => (
+                <span
+                  key={name}
+                  className="bg-card text-foreground rounded-full border px-2.5 py-0.5 text-xs font-medium"
+                >
+                  {name}
+                </span>
+              ))}
+            </div>
           </div>
+          {growing.length > 0 && (
+            <div className="bg-lime-2 flex-1 rounded-lg p-3">
+              <p className="text-lime-12 flex items-center gap-2 text-xs font-medium">
+                <span
+                  aria-hidden
+                  className="bg-card flex size-7 shrink-0 items-center justify-center rounded-full"
+                >
+                  <Sprout className="text-lime-11 size-3.5" />
+                </span>
+                Growing in
+              </p>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {growing.map((name) => (
+                  <span
+                    key={name}
+                    className="bg-card text-foreground rounded-full border px-2.5 py-0.5 text-xs font-medium"
+                  >
+                    {name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
-        <div className="hidden h-12 w-px bg-border sm:block" aria-hidden />
-        <div className="text-sm">
-          <p className="font-medium">Conduct: {report.character.conduct}</p>
-          <p className="text-muted-foreground">
-            {firstName(report.studentName)} had a{' '}
-            {report.character.conduct.toLowerCase()} term overall.
-          </p>
+      )}
+
+      {/* Attendance and conduct — supporting facts as icon-chip bullet rows
+          (Duolingo-certificate style), deliberately quieter than the panels. */}
+      <div className="flex flex-col gap-2 border-t pt-3">
+        <div className="flex items-center gap-2.5 text-sm">
+          <span
+            aria-hidden
+            className="bg-muted text-muted-foreground flex size-7 shrink-0 items-center justify-center rounded-full"
+          >
+            <CalendarCheck className="size-3.5" />
+          </span>
+          <span className="text-muted-foreground">
+            <span className="text-foreground font-medium">
+              {attendancePct}% attendance
+            </span>{' '}
+            · present {report.attendance.daysPresent} of{' '}
+            {report.attendance.totalSchoolDays} days
+            {report.attendance.daysLate > 0 && (
+              <>
+                {' '}
+                ·{' '}
+                {report.attendance.daysLate === 1
+                  ? '1 day late'
+                  : `${report.attendance.daysLate} days late`}
+              </>
+            )}
+          </span>
+        </div>
+        <div className="flex items-center gap-2.5 text-sm">
+          <span
+            aria-hidden
+            className="bg-muted text-muted-foreground flex size-7 shrink-0 items-center justify-center rounded-full"
+          >
+            <Smile className="size-3.5" />
+          </span>
+          <span className="text-muted-foreground">
+            <span className="text-foreground font-medium">
+              Conduct: {report.character.conduct}
+            </span>{' '}
+            · {firstName(report.studentName)} had a{' '}
+            {report.character.conduct.toLowerCase()} term overall
+          </span>
         </div>
       </div>
-      {strongest.length > 0 && (
-        <p className="border-t pt-3 text-sm">
-          <span className="font-medium">Strongest in: </span>
-          <span className="text-muted-foreground">
-            {strongest.join(', ')}
-          </span>
-          {growing.length > 0 && (
-            <>
-              {' '}
-              <span className="font-medium">· Growing in: </span>
-              <span className="text-muted-foreground">
-                {growing.join(', ')}
-              </span>
-            </>
-          )}
-        </p>
-      )}
     </div>
   )
 }
@@ -432,6 +484,7 @@ function PreviewBlock({
       if (compactPupilInfo) {
         return (
           <div className="flex flex-col gap-1">
+            <h2 className="text-lg font-semibold">{report.studentName}</h2>
             <p className="text-muted-foreground text-sm">
               <span className="text-foreground font-medium">
                 Form teacher:{' '}
@@ -447,33 +500,40 @@ function PreviewBlock({
           </div>
         )
       }
+      // Identity band — avatar + particulars left, provenance right
+      // (certificate-style header, after the Duolingo English Test reference).
       return (
-        <div className="flex flex-col gap-1">
-          <h2 className="text-lg font-semibold">{report.studentName}</h2>
-          <dl className="text-muted-foreground grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-            <div>
-              <dt className="text-foreground inline font-medium">Class: </dt>
-              <dd className="inline">{report.studentClass}</dd>
+        <div className="flex flex-col gap-3 border-b pb-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <div
+              aria-hidden
+              className="bg-twblue-3 text-twblue-11 flex size-12 shrink-0 items-center justify-center rounded-full text-sm font-semibold"
+            >
+              {initials(report.studentName)}
             </div>
             <div>
-              <dt className="text-foreground inline font-medium">Term: </dt>
-              <dd className="inline">
-                {report.term} {report.academicYear}
-              </dd>
+              <h2 className="text-lg font-semibold">{report.studentName}</h2>
+              <p className="text-muted-foreground text-sm">
+                {report.studentClass} · {report.term} {report.academicYear}
+              </p>
             </div>
-            <div>
-              <dt className="text-foreground inline font-medium">
+          </div>
+          <div className="text-sm sm:text-right">
+            <p>
+              <span className="text-foreground font-medium">
                 Form teacher:{' '}
-              </dt>
-              <dd className="inline">{report.formTeacher}</dd>
-            </div>
-          </dl>
-          {audience === 'teacher' && (
-            <p className="text-muted-foreground text-xs">
-              Packaged from School Cockpit · data as at{' '}
-              {formatFullDay(COCKPIT_LAST_SYNCED)}
+              </span>
+              <span className="text-muted-foreground">
+                {report.formTeacher}
+              </span>
             </p>
-          )}
+            {audience === 'teacher' && (
+              <p className="text-muted-foreground text-xs">
+                Packaged from School Cockpit · data as at{' '}
+                {formatFullDay(COCKPIT_LAST_SYNCED)}
+              </p>
+            )}
+          </div>
         </div>
       )
 
