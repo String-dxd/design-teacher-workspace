@@ -136,6 +136,12 @@ The worktree directory was deleted while uncommitted (likely by worktree cleanup
 - **Guest-view identity duplication (advisory) — fixed.** Added a `compactPupilInfo` prop to `ReportPreview`: the pupil-particulars block now drops name/class/term (the host header already shows them) and keeps only form teacher. Applied to the parent guest view and the layout-aware detail page; the builder/write editing surfaces keep full particulars. Verified live — name renders once, "Class:"/"Term:" labels gone from the body, form teacher retained. Gates: tsc 107 unchanged, 65/65 tests, a11y-static clean.
 - **Ratchet items filed** to the standards repo (`transformteamsg/tfx-design-standard`): [#26](https://github.com/transformteamsg/tfx-design-standard/issues/26) (sanitise shared user-authored HTML) and [#27](https://github.com/transformteamsg/tfx-design-standard/issues/27) (domain-content authenticity). Logged in `docs/decisions/HARNESS-FEEDBACK.md`.
 
+### Cleanup pass (2026-07-06, at user request "update it to the rest of the pages")
+
+- **Class selector** simplified to one searchable `Combobox` (flat list of All classes + each level + each class); the Primary/Secondary toggle is gone — `reports.index` now derives its level from the picked class. Shared by attendance/students unchanged.
+- **HDP feature flags consolidated** to a single `hdp-reports` flag (was `hdp-report-builder` + `hdp-template-admin` + `holistic-reports`); `report-generation` stays separate (Agency Reports). On → cycle hub; off → legacy table + hidden profile section.
+- **Hub scope extended P1–P2 → all primary (P1–P6)** — this supersedes locked decision #1. Rationale: the user asked to apply the updated design to the rest of the pages, and the mock treats all primary reports as learning-outcome-based, so they render correctly in the redesigned document (verified live on P3-A: hero + descriptor chips, authentic P3 subjects incl. Science). **Secondary stays on the legacy table** — its grade/aggregate model needs a different document, which was explicitly out of scope. **Authenticity caveat:** real-world P3+ reports use grades/marks, not LO descriptors; the prototype shows LO descriptors across all primary. Flag for HOD/real-build review — related to ratchet #27.
+
 ## Ratchet
 
 - Carried forward from `report-builder.md`: sanitise shared user-authored HTML before any non-prototype ship (`dangerouslySetInnerHTML` in `report-preview.tsx`); domain-content authenticity has no covering control (candidate standard). → **Filed as #26 and #27.**

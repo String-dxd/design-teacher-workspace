@@ -124,12 +124,11 @@ function ReportsPage() {
 
   const builderEnabled = useFeatureFlag('hdp-reports')
 
-  // Cycle hub scope: P1–P2 only, flag on. Everything else (secondary, P3–P6,
-  // flag off) keeps the existing table view untouched.
-  const isLowerPrimaryClass =
-    selectedClass.startsWith('P1') || selectedClass.startsWith('P2')
-  const showCycleHub =
-    schoolLevel === 'primary' && isLowerPrimaryClass && builderEnabled
+  // Cycle hub scope: any specific primary class (P1–P6) with the flag on.
+  // Secondary keeps the legacy table (its grade-based reports use a different
+  // document); level/'all' selections also fall through to the table.
+  const isPrimaryClass = /^P\d/.test(selectedClass)
+  const showCycleHub = isPrimaryClass && builderEnabled
 
   // Filter by school level first
   const levelFilteredReports = useMemo(() => {
