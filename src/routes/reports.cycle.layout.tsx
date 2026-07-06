@@ -52,9 +52,9 @@ export const Route = createFileRoute('/reports/cycle/layout')({
 function CycleLayoutPage() {
   const search = Route.useSearch()
   const navigate = useNavigate()
-  const builderEnabled = useFeatureFlag('hdp-report-builder')
-  const templateAdminEnabled = useFeatureFlag('hdp-template-admin')
-  const isTemplateMode = search.mode === 'template' && templateAdminEnabled
+  const builderEnabled = useFeatureFlag('hdp-reports')
+  // Template management folds under the one HDP flag; reachable via ?mode=template.
+  const isTemplateMode = search.mode === 'template' && builderEnabled
 
   const classId = search.classId ?? 'P1-A'
   const term: Term = search.term ?? 'Term 2'

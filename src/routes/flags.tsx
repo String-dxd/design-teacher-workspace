@@ -51,10 +51,10 @@ const featureFlagConfigs: Array<FeatureFlagConfig> = [
     stage: 'Release 2',
   },
   {
-    key: 'holistic-reports',
-    label: 'Holistic Reports',
+    key: 'hdp-reports',
+    label: 'HDP Reports',
     description:
-      'Enable holistic development reports showing student progress across academic and character development',
+      'Show all Holistic Development reporting: the P1–P2 reporting-cycle hub (class + term picker, two-stage layout/write builder with inline Smart Compose), the parents-first share flow, template management via ?mode=template, and the Holistic Reports section on the student profile. Off hides all of it.',
     stage: 'Experiment',
   },
   {
@@ -153,20 +153,6 @@ const featureFlagConfigs: Array<FeatureFlagConfig> = [
     label: 'Primary contact',
     description:
       'Show the Primary contact button in the student profile header and the Primary contact field in the Family section',
-    stage: 'Experiment',
-  },
-  {
-    key: 'hdp-report-builder',
-    label: 'HDP Report Builder',
-    description:
-      'Enable the P1–P2 reporting-cycle hub — class + term picker, a two-stage layout/write builder (section toggle + reorder, inline Smart Compose), and the parents-first share flow',
-    stage: 'Experiment',
-  },
-  {
-    key: 'hdp-template-admin',
-    label: 'HDP Template Management',
-    description:
-      'Role-gated: show the template-management view so an admin/HOD can create, modify, and save the built-in HDP templates that teachers build reports from',
     stage: 'Experiment',
   },
 ]

@@ -717,7 +717,7 @@ export function StudentProfile({
   const [primaryContactOpen, setPrimaryContactOpen] = useState(false)
   const { isEnabled } = useFeatureFlags()
 
-  const holisticReportsEnabled = useFeatureFlag('holistic-reports')
+  const holisticReportsEnabled = useFeatureFlag('hdp-reports')
   const agencyReportsEnabled = useFeatureFlag('agency-reports')
   const reportGenerationEnabled = useFeatureFlag('report-generation')
   const studentAnalyticsEnabled = useFeatureFlag('student-analytics')
@@ -727,7 +727,8 @@ export function StudentProfile({
   const overallPercentageEnabled = useFeatureFlag('overall-percentage')
   const socialLinksEnabled = useFeatureFlag('social-links')
   const primaryContactEnabled = useFeatureFlag('primary-contact')
-  const reportBuilderEnabled = useFeatureFlag('hdp-report-builder')
+  // HDP reporting is one flag now; keep the local name for the builder-entry check.
+  const reportBuilderEnabled = holisticReportsEnabled
   // Default "Student Insights" view — applies when both analytics flags are off
   const isStudentInsightsView =
     !studentAnalyticsEnabled && !studentAnalyticsBasicEnabled

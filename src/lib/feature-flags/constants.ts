@@ -6,7 +6,7 @@ export const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
   posts: true,
   forms: true,
   notifications: true,
-  'holistic-reports': false,
+  'hdp-reports': false,
   'parents-gateway': true,
   'student-analytics': false,
   'student-analytics-basic': false,
@@ -23,6 +23,4 @@ export const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
   'social-links': false,
   export: false,
   'primary-contact': false,
-  'hdp-report-builder': false,
-  'hdp-template-admin': false,
 }

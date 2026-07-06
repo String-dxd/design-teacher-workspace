@@ -45,7 +45,7 @@ function CycleWritePage() {
   const { studentId } = Route.useParams()
   const search = Route.useSearch()
   const navigate = useNavigate()
-  const builderEnabled = useFeatureFlag('hdp-report-builder')
+  const builderEnabled = useFeatureFlag('hdp-reports')
 
   const student = getStudentById(studentId)
   const classId = search.classId ?? student?.class ?? ''

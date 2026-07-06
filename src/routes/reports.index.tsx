@@ -122,7 +122,7 @@ function ReportsPage() {
 
   useSetBreadcrumbs([{ label: 'Reports', href: '/reports' }])
 
-  const builderEnabled = useFeatureFlag('hdp-report-builder')
+  const builderEnabled = useFeatureFlag('hdp-reports')
 
   // Cycle hub scope: P1–P2 only, flag on. Everything else (secondary, P3–P6,
   // flag off) keeps the existing table view untouched.
