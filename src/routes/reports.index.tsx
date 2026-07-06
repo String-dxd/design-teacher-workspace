@@ -866,28 +866,28 @@ function CycleHub({ classId }: { classId: string }) {
         </div>
       </div>
 
-      {/* Cycle summary strip */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-        <div className="rounded-lg border bg-card p-4">
-          <div className="text-sm text-muted-foreground">Ready</div>
-          <div className="text-2xl font-semibold">
-            {summary.ready} of {summary.total}
-          </div>
-        </div>
-        <div className="rounded-lg border bg-card p-4">
-          <div className="text-sm text-muted-foreground">Drafts</div>
-          <div className="text-2xl font-semibold">{summary.drafts}</div>
-        </div>
-        <div className="rounded-lg border bg-card p-4">
-          <div className="text-sm text-muted-foreground">Sent</div>
-          <div className="text-2xl font-semibold">{summary.sent}</div>
-        </div>
-        <div className="rounded-lg border bg-card p-4">
-          <div className="text-sm text-muted-foreground">Not started</div>
-          <div className="text-2xl font-semibold">
+      {/* Cycle summary — compact, so the student list stays the focal point */}
+      <div className="text-muted-foreground flex flex-wrap items-center gap-x-6 gap-y-1 text-sm">
+        <span>
+          <span className="text-foreground font-semibold">{summary.ready}</span>{' '}
+          of {summary.total} ready
+        </span>
+        <span>
+          <span className="text-foreground font-semibold">
+            {summary.drafts}
+          </span>{' '}
+          drafts
+        </span>
+        <span>
+          <span className="text-foreground font-semibold">{summary.sent}</span>{' '}
+          sent
+        </span>
+        <span>
+          <span className="text-foreground font-semibold">
             {summary.total - summary.ready - summary.drafts - summary.sent}
-          </div>
-        </div>
+          </span>{' '}
+          not started
+        </span>
       </div>
 
       <CycleStudentTable
