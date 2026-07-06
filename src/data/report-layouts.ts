@@ -46,17 +46,17 @@ export const P1_SECTION_DEFS: Array<SectionDef> = [
     supportsDisplay: true,
   },
   {
-    key: 'conduct',
-    label: 'Conduct & comments',
-    description: 'Conduct rating and form-teacher comments',
-    applicableAtP1: true,
-  },
-  {
     key: 'personalQualities',
     label: 'Personal qualities',
     description: 'School-set qualities with descriptors',
     applicableAtP1: true,
     supportsDisplay: true,
+  },
+  {
+    key: 'conduct',
+    label: 'Conduct & comments',
+    description: 'Conduct rating and form-teacher comments',
+    applicableAtP1: true,
   },
   {
     key: 'cca',
@@ -90,10 +90,10 @@ export const P1_DEFAULT_LAYOUT: ReportLayout = {
   blocks: [
     block('pupilInfo', 0),
     block('subjects', 1),
-    block('conduct', 2),
+    block('personalQualities', 2),
     // Attendance lives in the "Term at a glance" hero — no separate section,
     // so the report never states attendance twice.
-    block('personalQualities', 3),
+    block('conduct', 3),
     // "Where applicable" sections — present but OFF by default at P1, so a teacher
     // can turn one on if it applies, and sees it's not typical at this level.
     { key: 'cca', enabled: false, order: 4 },
