@@ -255,7 +255,7 @@ function CycleLayoutPage() {
 
         {/* Preview */}
         <section aria-label="Live preview" className="w-full flex-1">
-          <div className="bg-card rounded-xl border p-6 shadow-sm">
+          <div className="p-6">
             <p className="text-muted-foreground mb-4 text-xs">
               {sampleStudent
                 ? `Previewing with ${sampleStudent.name}’s data`
