@@ -51,13 +51,22 @@ const LO_STAGE_ORDER: Array<LearningOutcomeStatus> = [
   'Accomplished',
 ]
 
-const QUALITY_STAGE_ORDER: Array<CoreValueLevel> = [
-  'Beginning',
-  'Regularly Shows',
-  'Demonstrates',
-  'Demonstrates Strongly',
-  'Demonstrates Very Strongly',
-]
+// Soft stage pills — one blue family, deeper tint = further along the ladder,
+// so the palette reads as depth on a journey rather than good/bad grading.
+const LO_PILL_CLASS: Record<LearningOutcomeStatus, string> = {
+  Accomplished: 'bg-twblue-5 text-twblue-12',
+  Competent: 'bg-twblue-3 text-twblue-11',
+  Developing: 'bg-twblue-2 text-twblue-11',
+  Beginning: 'bg-muted text-muted-foreground',
+}
+
+const QUALITY_PILL_CLASS: Record<CoreValueLevel, string> = {
+  'Demonstrates Very Strongly': 'bg-twblue-5 text-twblue-12',
+  'Demonstrates Strongly': 'bg-twblue-4 text-twblue-12',
+  Demonstrates: 'bg-twblue-3 text-twblue-11',
+  'Regularly Shows': 'bg-twblue-2 text-twblue-11',
+  Beginning: 'bg-muted text-muted-foreground',
+}
 
 const SUBJECT_ICONS = new Map<string, LucideIcon>([
   ['English Language', BookOpen],
@@ -109,14 +118,12 @@ function summarizeSubject(
  * start expanded (their job is checking); parents start collapsed. */
 function SubjectCard({
   subj,
-  subjIdx,
   studentFirstName,
   submission,
   audience,
   display,
 }: {
   subj: SubjectPerformance
-  subjIdx: number
   studentFirstName: string
   submission?: CockpitSubjectSubmission
   audience: 'teacher' | 'parent'
@@ -158,15 +165,13 @@ function SubjectCard({
       </p>
       {open && (
         <div className="mt-2 border-t pt-1.5">
-          {subj.learningOutcomes.map((lo, loIdx) => (
+          {subj.learningOutcomes.map((lo) => (
             <ScaleRow
               key={lo.name}
               label={lo.name}
               expandableDescription={lo.description}
-              stageIndex={LO_STAGE_ORDER.indexOf(lo.status)}
-              totalStages={LO_STAGE_ORDER.length}
               stageLabel={lo.status}
-              rowIndex={subjIdx * 4 + loIdx}
+              pillClass={LO_PILL_CLASS[lo.status]}
               display={display}
             />
           ))}
@@ -191,47 +196,12 @@ function formatFullDay(iso: string): string {
   })
 }
 
-/** Filled segments up to the achieved stage. Decorative — the stage word on the
- * row is the accessible text. */
-function GrowthScale({
-  stageIndex,
-  totalStages,
-  rowIndex,
-}: {
-  stageIndex: number
-  totalStages: number
-  rowIndex: number
-}) {
-  return (
-    <div aria-hidden className="flex w-24 shrink-0 items-center gap-1 sm:w-28">
-      {Array.from({ length: totalStages }, (_, i) => (
-        <div
-          key={i}
-          className={cn(
-            'h-1.5 flex-1 rounded-full',
-            i <= stageIndex
-              ? 'bg-primary animate-hdp-seg-grow'
-              : 'border-border bg-muted/40 border',
-          )}
-          style={
-            i <= stageIndex
-              ? { animationDelay: `${rowIndex * 60 + i * 45}ms` }
-              : undefined
-          }
-        />
-      ))}
-    </div>
-  )
-}
-
 function ScaleRow({
   label,
   sublabel,
   expandableDescription,
-  stageIndex,
-  totalStages,
   stageLabel,
-  rowIndex,
+  pillClass,
   display = 'bars',
 }: {
   label: string
@@ -239,10 +209,9 @@ function ScaleRow({
   sublabel?: string
   /** Tap-to-reveal detail under the row — the full learning-outcome statement. */
   expandableDescription?: string
-  stageIndex: number
-  totalStages: number
   stageLabel: string
-  rowIndex: number
+  pillClass: string
+  /** 'bars' → soft stage pill (default); 'labels' → plain text word. */
   display?: BlockDisplay
 }) {
   const [open, setOpen] = useState(false)
@@ -275,24 +244,23 @@ function ScaleRow({
             </p>
           )}
         </div>
-        {display === 'bars' && (
-          <GrowthScale
-            stageIndex={stageIndex}
-            totalStages={totalStages}
-            rowIndex={rowIndex}
-          />
+        {display === 'bars' ? (
+          <span
+            className={cn(
+              'shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium',
+              pillClass,
+            )}
+          >
+            {stageLabel}
+          </span>
+        ) : (
+          <span className="text-twblue-11 shrink-0 text-right text-xs leading-tight font-medium">
+            {stageLabel}
+          </span>
         )}
-        <span
-          className={cn(
-            'text-twblue-11 shrink-0 text-right text-xs leading-tight font-medium',
-            display === 'bars' ? 'w-24 sm:w-28' : 'w-auto',
-          )}
-        >
-          {stageLabel}
-        </span>
       </div>
       {expandableDescription && open && (
-        <p className="text-muted-foreground pt-0.5 pr-28 text-xs leading-snug">
+        <p className="text-muted-foreground pt-0.5 text-xs leading-snug">
           {expandableDescription}
         </p>
       )}
@@ -561,7 +529,7 @@ function PreviewBlock({
             a stage on the journey, not a grade.
           </p>
           <div className="flex flex-col gap-3 pt-1">
-            {report.academic.subjects.map((subj, subjIdx) => {
+            {report.academic.subjects.map((subj) => {
               const awaiting =
                 showMissingData &&
                 !isSubjectSubmitted(report.studentId, subj.name)
@@ -586,7 +554,6 @@ function PreviewBlock({
                 <SubjectCard
                   key={subj.name}
                   subj={subj}
-                  subjIdx={subjIdx}
                   studentFirstName={firstName(report.studentName)}
                   submission={submission}
                   audience={audience}
@@ -657,15 +624,13 @@ function PreviewBlock({
         <div className="flex flex-col gap-2">
           {heading('Personal qualities')}
           <div className="flex flex-col gap-1">
-            {report.holistic.coreValues.map((cv, i) => (
+            {report.holistic.coreValues.map((cv) => (
               <ScaleRow
                 key={cv.name}
                 label={cv.name}
                 sublabel={cv.description}
-                stageIndex={QUALITY_STAGE_ORDER.indexOf(cv.level)}
-                totalStages={QUALITY_STAGE_ORDER.length}
                 stageLabel={cv.level}
-                rowIndex={i}
+                pillClass={QUALITY_PILL_CLASS[cv.level]}
                 display={block.display}
               />
             ))}

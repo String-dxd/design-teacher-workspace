@@ -143,13 +143,13 @@ export function SectionLayoutEditor({
                     value="bars"
                     className="h-7 px-2.5 text-xs aria-pressed:bg-twblue-3 aria-pressed:text-twblue-11"
                   >
-                    Growth bar
+                    Pills
                   </ToggleGroupItem>
                   <ToggleGroupItem
                     value="labels"
                     className="h-7 px-2.5 text-xs aria-pressed:bg-twblue-3 aria-pressed:text-twblue-11"
                   >
-                    Labels
+                    Text
                   </ToggleGroupItem>
                 </ToggleGroup>
               </div>

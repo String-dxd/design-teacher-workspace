@@ -1,6 +1,6 @@
 {
   "project": "moe-teacher-workspace",
-  "lastUpdated": "2026-07-06T15:55:00.000Z",
+  "lastUpdated": "2026-07-06T16:15:00.000Z",
   "todos": [
     {
       "id": "tw-001",
@@ -313,6 +313,14 @@
       "status": "completed",
       "createdAt": "2026-07-06T15:40:00.000Z",
       "completedAt": "2026-07-06T15:55:00.000Z"
+    },
+    {
+      "id": "tw-035",
+      "title": "Replace growth bars with soft stage pills",
+      "description": "Expanded subject cards and personal qualities now show one tinted pill per row (single blue family, deeper tint = further along) instead of segmented growth bars \u2014 decluttering the expanded view. Layout page display toggle relabelled Pills / Text. Growth-bar component and its keyframes removed.",
+      "status": "completed",
+      "createdAt": "2026-07-06T16:05:00.000Z",
+      "completedAt": "2026-07-06T16:15:00.000Z"
     }
   ]
 }
