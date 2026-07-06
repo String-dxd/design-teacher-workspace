@@ -1,6 +1,12 @@
 import type { ConductGrade } from './student'
 
-export type Term = 'Term 1' | 'Term 2' | 'Term 3' | 'Term 4'
+export type Term =
+  | 'Term 1'
+  | 'Term 2'
+  | 'Term 3'
+  | 'Term 4'
+  | 'Semester 1'
+  | 'Semester 2'
 
 export type ReviewStatus = 'pending' | 'in_review' | 'approved'
 export type ParentStatus = 'not_sent' | 'sent' | 'viewed' | 'acknowledged'
@@ -14,6 +20,7 @@ export type SchoolLevel = 'primary' | 'secondary'
 
 // Academic types
 export type LearningOutcomeStatus =
+  | 'Exceeding'
   | 'Accomplished'
   | 'Competent'
   | 'Developing'

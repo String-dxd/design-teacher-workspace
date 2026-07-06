@@ -442,7 +442,7 @@ export const mockPGAnnouncements: Array<PGAnnouncement> = [
     id: 'pg-5',
     title: 'Co-Curricular Activity Selection — Sec 1',
     description:
-      '<p>Dear Parent/Guardian,</p><p>Please indicate your child\'s preferred CCA from the options listed. Selections must be submitted by <strong>10 Jul 2026</strong>.</p>',
+      "<p>Dear Parent/Guardian,</p><p>Please indicate your child's preferred CCA from the options listed. Selections must be submitted by <strong>10 Jul 2026</strong>.</p>",
     shortcuts: [],
     websiteLinks: [],
     status: 'posted',
@@ -469,7 +469,7 @@ export const mockPGAnnouncements: Array<PGAnnouncement> = [
     id: 'pg-6',
     title: 'Parental Consent for School Excursion',
     description:
-      '<p>Dear Parent/Guardian,</p><p>Your child\'s class will be visiting the Singapore Science Centre on <strong>18 Jul 2026</strong>. Please acknowledge and indicate if your child has any medical conditions to note.</p>',
+      "<p>Dear Parent/Guardian,</p><p>Your child's class will be visiting the Singapore Science Centre on <strong>18 Jul 2026</strong>. Please acknowledge and indicate if your child has any medical conditions to note.</p>",
     shortcuts: [],
     websiteLinks: [],
     status: 'draft',

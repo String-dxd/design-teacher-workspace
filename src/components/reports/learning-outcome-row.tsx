@@ -2,6 +2,7 @@ import type { LearningOutcome, LearningOutcomeStatus } from '@/types/report'
 import { cn } from '@/lib/utils'
 
 const statusColors: Record<LearningOutcomeStatus, string> = {
+  Exceeding: 'bg-lime-3 text-lime-11',
   Accomplished: 'bg-lime-3 text-lime-11',
   Competent: 'bg-twblue-3 text-twblue-11',
   Developing: 'bg-amber-3 text-amber-11',

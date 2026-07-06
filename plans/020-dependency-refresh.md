@@ -37,14 +37,14 @@ against the upstream `base-maia` registry going forward.
 
 Installed (from `node_modules`, verified at `b01d78d`) vs latest (npm, 2026-07-02):
 
-| Package | Installed | Latest | Notes |
-|---|---|---|---|
-| `@base-ui/react` | 1.2.0 | 1.6.0 | Only breaking change in range: `sanitizeValue` → `normalizeValue` (v1.5, field API). `grep -rn 'sanitizeValue' src` → **0 matches**, so effectively non-breaking here. |
-| `tailwindcss` + `@tailwindcss/vite` | 4.2.1 (manifest says ^4.0.6) | 4.3.x | Minor. |
-| `shadcn` (devDep, CLI only) | 3.8.5 | 4.x | Dev-tool; no runtime surface. |
-| `lucide-react` | 0.562.0 | 1.x | **Breaking**: brand icons removed; legacy alias names removed. |
-| `tw-animate-css` | 1.4.0 | 1.4.0 | Current — leave. |
-| `@radix-ui/colors` | 3.0.0 | 3.0.0 | Current — leave. |
+| Package                             | Installed                    | Latest | Notes                                                                                                                                                                  |
+| ----------------------------------- | ---------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@base-ui/react`                    | 1.2.0                        | 1.6.0  | Only breaking change in range: `sanitizeValue` → `normalizeValue` (v1.5, field API). `grep -rn 'sanitizeValue' src` → **0 matches**, so effectively non-breaking here. |
+| `tailwindcss` + `@tailwindcss/vite` | 4.2.1 (manifest says ^4.0.6) | 4.3.x  | Minor.                                                                                                                                                                 |
+| `shadcn` (devDep, CLI only)         | 3.8.5                        | 4.x    | Dev-tool; no runtime surface.                                                                                                                                          |
+| `lucide-react`                      | 0.562.0                      | 1.x    | **Breaking**: brand icons removed; legacy alias names removed.                                                                                                         |
+| `tw-animate-css`                    | 1.4.0                        | 1.4.0  | Current — leave.                                                                                                                                                       |
+| `@radix-ui/colors`                  | 3.0.0                        | 3.0.0  | Current — leave.                                                                                                                                                       |
 
 Lucide inventory (extracted from every `import { … } from 'lucide-react'`
 across `src/`, including multi-line imports): **147 distinct icons in ~88
@@ -56,29 +56,29 @@ compiling on 1.x:
 Probable canonical names (VERIFY each against the lucide docs / tsc errors —
 this table is a lead, not gospel; `ArrowUpDown` may not be renamed at all):
 
-| Legacy | Canonical |
-|---|---|
-| `AlertCircle` | `CircleAlert` |
-| `AlertTriangle` | `TriangleAlert` |
-| `CheckCircle` | `CircleCheckBig` |
-| `CheckCircle2` | `CircleCheck` |
-| `Edit2` | `Pen` |
-| `Home` | `House` |
-| `Loader2` | `LoaderCircle` |
-| `MoreHorizontal` | `Ellipsis` |
-| `MoreVertical` | `EllipsisVertical` |
+| Legacy           | Canonical          |
+| ---------------- | ------------------ |
+| `AlertCircle`    | `CircleAlert`      |
+| `AlertTriangle`  | `TriangleAlert`    |
+| `CheckCircle`    | `CircleCheckBig`   |
+| `CheckCircle2`   | `CircleCheck`      |
+| `Edit2`          | `Pen`              |
+| `Home`           | `House`            |
+| `Loader2`        | `LoaderCircle`     |
+| `MoreHorizontal` | `Ellipsis`         |
+| `MoreVertical`   | `EllipsisVertical` |
 
 These aliases pointed at the same SVGs, so renames are pixel-identical.
 
 ## Commands you will need
 
-| Purpose   | Command                | Expected on success |
-|-----------|------------------------|---------------------|
-| Install   | `bun install`          | exit 0, `bun.lock` updated |
-| Typecheck | `bunx tsc --noEmit`    | baseline ≤41 pre-existing errors (23×TS2322, 9×TS2345, 3×TS2353, 6 singles); no new codes/files |
-| Tests     | `bunx vitest run`      | 37 pass / 16 fail (pre-existing); no new failures |
-| Build     | `bun run build`        | exit 0              |
-| Dev       | `bun run dev`          | port 3000           |
+| Purpose   | Command             | Expected on success                                                                             |
+| --------- | ------------------- | ----------------------------------------------------------------------------------------------- |
+| Install   | `bun install`       | exit 0, `bun.lock` updated                                                                      |
+| Typecheck | `bunx tsc --noEmit` | baseline ≤41 pre-existing errors (23×TS2322, 9×TS2345, 3×TS2353, 6 singles); no new codes/files |
+| Tests     | `bunx vitest run`   | 37 pass / 16 fail (pre-existing); no new failures                                               |
+| Build     | `bun run build`     | exit 0                                                                                          |
+| Dev       | `bun run dev`       | port 3000                                                                                       |
 
 ## Scope
 

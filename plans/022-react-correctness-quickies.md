@@ -85,12 +85,12 @@ No `role`, no `tabIndex`, no key handler, no label associated with the input.
 
 ## Commands you will need
 
-| Purpose   | Command                | Expected on success |
-|-----------|------------------------|---------------------|
-| Typecheck | `bunx tsc --noEmit`    | ≤41 pre-existing errors (23×TS2322, 9×TS2345, 3×TS2353, 6 singles); no new codes/files |
-| Tests     | `bunx vitest run`      | 37 pass / 16 fail (pre-existing); no new failures |
-| Build     | `bun run build`        | exit 0 |
-| Dev       | `bun run dev`          | port 3000 |
+| Purpose   | Command             | Expected on success                                                                    |
+| --------- | ------------------- | -------------------------------------------------------------------------------------- |
+| Typecheck | `bunx tsc --noEmit` | ≤41 pre-existing errors (23×TS2322, 9×TS2345, 3×TS2353, 6 singles); no new codes/files |
+| Tests     | `bunx vitest run`   | 37 pass / 16 fail (pre-existing); no new failures                                      |
+| Build     | `bun run build`     | exit 0                                                                                 |
+| Dev       | `bun run dev`       | port 3000                                                                              |
 
 ## Scope
 
@@ -179,28 +179,37 @@ In `students.index.tsx`, replace the five effects (`:185–:308`) with a single
 spec + effect:
 
 ```tsx
-const FLAG_COLUMN_SPECS: Array<{ enabled: boolean; ids: Array<string>; anchorId: string }> = [
+const FLAG_COLUMN_SPECS: Array<{
+  enabled: boolean
+  ids: Array<string>
+  anchorId: string
+}> = [
   { enabled: msfUpliftEnabled, ids: MSF_IDS, anchorId: 'fas' },
   // …one row per current effect, copying each effect's exact ids + anchor…
 ]
 
-useEffect(() => {
-  setColumns((prev) => {
-    let next = prev
-    for (const spec of FLAG_COLUMN_SPECS) {
-      const has = next.some((c) => spec.ids.includes(c.id))
-      if (spec.enabled && !has) {
-        const cols = defaultColumns.filter((c) => spec.ids.includes(c.id))
-        const at = next.findIndex((c) => c.id === spec.anchorId)
-        const insertAt = at >= 0 ? at : next.length
-        next = [...next.slice(0, insertAt), ...cols, ...next.slice(insertAt)]
-      } else if (!spec.enabled && has) {
-        next = next.filter((c) => !spec.ids.includes(c.id))
+useEffect(
+  () => {
+    setColumns((prev) => {
+      let next = prev
+      for (const spec of FLAG_COLUMN_SPECS) {
+        const has = next.some((c) => spec.ids.includes(c.id))
+        if (spec.enabled && !has) {
+          const cols = defaultColumns.filter((c) => spec.ids.includes(c.id))
+          const at = next.findIndex((c) => c.id === spec.anchorId)
+          const insertAt = at >= 0 ? at : next.length
+          next = [...next.slice(0, insertAt), ...cols, ...next.slice(insertAt)]
+        } else if (!spec.enabled && has) {
+          next = next.filter((c) => !spec.ids.includes(c.id))
+        }
       }
-    }
-    return next === prev ? prev : next
-  })
-}, [/* every flag referenced in FLAG_COLUMN_SPECS */])
+      return next === prev ? prev : next
+    })
+  },
+  [
+    /* every flag referenced in FLAG_COLUMN_SPECS */
+  ],
+)
 ```
 
 Transcribe each existing effect's ids/anchor EXACTLY (open each of the five
@@ -237,7 +246,7 @@ duplicates. `bunx tsc --noEmit` → no new errors.
       `useEffect`s — the consolidated four-flag effect and the untouched
       imported-columns effect (grep `setColumns` → initializer, those two
       effects, and the user-edit call sites at ~`:526/:532/:566` only)
-      *(amended 2026-07-03 — see step 3 note)*
+      _(amended 2026-07-03 — see step 3 note)_
 - [ ] `bunx tsc --noEmit` ≤41 pre-existing; `bunx vitest run` no new
       failures + new tests pass; `bun run build` exit 0
 - [ ] No files outside the in-scope list modified (`git status`)

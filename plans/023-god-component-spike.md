@@ -59,11 +59,11 @@ later plan can execute mechanically.
 
 ## Commands you will need
 
-| Purpose   | Command                | Expected on success |
-|-----------|------------------------|---------------------|
-| Tests     | `bunx vitest run`      | 37+new pass / 16 fail (pre-existing) |
-| Typecheck | `bunx tsc --noEmit`    | ≤41 pre-existing errors; no new codes/files |
-| Line/hook census | `grep -c 'useState' <file>` / `wc -l <file>` | for the design doc's inventory |
+| Purpose          | Command                                      | Expected on success                         |
+| ---------------- | -------------------------------------------- | ------------------------------------------- |
+| Tests            | `bunx vitest run`                            | 37+new pass / 16 fail (pre-existing)        |
+| Typecheck        | `bunx tsc --noEmit`                          | ≤41 pre-existing errors; no new codes/files |
+| Line/hook census | `grep -c 'useState' <file>` / `wc -l <file>` | for the design doc's inventory              |
 
 ## Scope
 

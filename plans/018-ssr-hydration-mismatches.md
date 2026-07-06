@@ -29,7 +29,7 @@ anywhere in the config). Five components read browser-only or time-dependent
 values (`new Date()`, `localStorage`) during the render pass, so the HTML the
 server sends differs from what the client renders on hydration. That produces
 React hydration-mismatch errors, visible content flips on load, and — as this
-project has seen before — *silently broken hydration* where the page looks fine
+project has seen before — _silently broken hydration_ where the page looks fine
 but event handlers never attach. Four of the five sites are on primary routes:
 the home page greeting, `/create`, `/students`, and `/announcements`.
 
@@ -97,13 +97,13 @@ The five offending sites:
 
 ## Commands you will need
 
-| Purpose   | Command                | Expected on success |
-|-----------|------------------------|---------------------|
-| Install   | `bun install`          | exit 0              |
-| Typecheck | `bunx tsc --noEmit`    | ≤41 errors, all pre-existing (baseline at `b01d78d`: 41 errors — 23×TS2322, 9×TS2345, 3×TS2353, 1 each TS7053/TS2769/TS2741/TS2559/TS2367/TS2339). **No new files or error codes.** |
-| Tests     | `bunx vitest run`      | baseline: 37 pass / 16 fail (2 test files fail pre-existing). **No new failures**; your new tests pass. |
-| Build     | `bun run build`        | exit 0              |
-| Dev       | `bun run dev`          | serves on port 3000 |
+| Purpose   | Command             | Expected on success                                                                                                                                                                 |
+| --------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Install   | `bun install`       | exit 0                                                                                                                                                                              |
+| Typecheck | `bunx tsc --noEmit` | ≤41 errors, all pre-existing (baseline at `b01d78d`: 41 errors — 23×TS2322, 9×TS2345, 3×TS2353, 1 each TS7053/TS2769/TS2741/TS2559/TS2367/TS2339). **No new files or error codes.** |
+| Tests     | `bunx vitest run`   | baseline: 37 pass / 16 fail (2 test files fail pre-existing). **No new failures**; your new tests pass.                                                                             |
+| Build     | `bun run build`     | exit 0                                                                                                                                                                              |
+| Dev       | `bun run dev`       | serves on port 3000                                                                                                                                                                 |
 
 ## Scope
 
@@ -120,7 +120,7 @@ The five offending sites:
 **Out of scope** (do NOT touch, even though they look related):
 
 - `src/lib/feature-flags/context.tsx`, `src/lib/draft-storage.ts`,
-  `src/components/ui/sidebar.tsx` — these are the *correct* exemplars.
+  `src/components/ui/sidebar.tsx` — these are the _correct_ exemplars.
 - Everything else in `announcements.new.tsx` (a 2,758-line file; plans 019 and
   022 touch other parts of it — keep your diff surgical).
 - The `min={new Date().toISOString().split('T')[0]}` attributes on date inputs
@@ -228,8 +228,20 @@ that computes `previewDate`/`previewTime`/`timestamp`:
   ```tsx
   const [timestamp, setTimestamp] = useState('')
   useEffect(() => {
-    const previewDate = new Date().toLocaleDateString('en-SG', { day: 'numeric', month: 'short', year: 'numeric' }).toUpperCase()
-    const previewTime = new Date().toLocaleTimeString('en-SG', { hour: 'numeric', minute: '2-digit', hour12: true }).toUpperCase()
+    const previewDate = new Date()
+      .toLocaleDateString('en-SG', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      })
+      .toUpperCase()
+    const previewTime = new Date()
+      .toLocaleTimeString('en-SG', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      })
+      .toUpperCase()
     setTimestamp(`${previewDate}, ${previewTime}`)
   }, [])
   ```

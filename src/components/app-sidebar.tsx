@@ -188,8 +188,15 @@ const parentsCommItems: Array<MenuItem> = [
     featureFlag: 'meetings',
   },
   {
-    title: 'Reports',
+    title: 'HDP',
     url: '/holistic-reports',
+    icon: FileText,
+    stage: 'Experiment',
+    featureFlag: 'holistic-reports',
+  },
+  {
+    title: 'HDP (Primary)',
+    url: '/hdp-primary',
     icon: FileText,
     stage: 'Experiment',
     featureFlag: 'holistic-reports',

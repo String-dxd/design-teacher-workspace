@@ -1769,7 +1769,9 @@ function NewAnnouncementPage() {
                           <ChevronDown className="h-3.5 w-3.5" />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-48">
-                          <DropdownMenuItem onClick={() => setSendOption('now')}>
+                          <DropdownMenuItem
+                            onClick={() => setSendOption('now')}
+                          >
                             <Send className="h-4 w-4" />
                             Post now
                             {sendOption === 'now' && (

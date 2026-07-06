@@ -89,7 +89,7 @@ The violations, each verified at `b01d78d`:
 
 7. `src/components/students/student-table.tsx:754` — sticky-cell hover
    `group-hover:bg-[color-mix(in_oklab,var(--muted)_50%,white)]` — mixes
-   toward literal `white`, which *lightens* in dark mode where the hover
+   toward literal `white`, which _lightens_ in dark mode where the hover
    should stay subtle.
 
 8. `src/components/students/attendance-analytics.tsx:602` — recharts
@@ -119,12 +119,12 @@ and added to scope:
 
 ## Commands you will need
 
-| Purpose   | Command                | Expected on success |
-|-----------|------------------------|---------------------|
-| Typecheck | `bunx tsc --noEmit`    | ≤41 errors, all pre-existing (baseline: 41 — 23×TS2322, 9×TS2345, 3×TS2353, 6 singles). No new codes/files. |
-| Tests     | `bunx vitest run`      | 37 pass / 16 fail (pre-existing) — no new failures |
-| Build     | `bun run build`        | exit 0              |
-| Dev       | `bun run dev`          | serves on port 3000 |
+| Purpose   | Command             | Expected on success                                                                                         |
+| --------- | ------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Typecheck | `bunx tsc --noEmit` | ≤41 errors, all pre-existing (baseline: 41 — 23×TS2322, 9×TS2345, 3×TS2353, 6 singles). No new codes/files. |
+| Tests     | `bunx vitest run`   | 37 pass / 16 fail (pre-existing) — no new failures                                                          |
+| Build     | `bun run build`     | exit 0                                                                                                      |
+| Dev       | `bun run dev`       | serves on port 3000                                                                                         |
 
 ## Scope
 

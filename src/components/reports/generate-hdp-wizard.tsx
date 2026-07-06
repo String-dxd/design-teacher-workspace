@@ -23,37 +23,45 @@ import {
 } from '@/data/mock-reports'
 import { getSchoolLevel } from '@/data/mock-students'
 
-const STEPS = ['Template', 'Selection', 'Preview', 'Save']
+const SECONDARY_STEPS = ['Template', 'Selection', 'Preview', 'Save']
+const PRIMARY_STEPS = ['Configure', 'Preview', 'Save']
 
 const DEFAULT_SECTIONS: Record<string, boolean> = {
   studentInfo: true,
   attendance: true,
   academic: true,
   teacherComments: true,
-  coreValues: true,
-  physicalFitness: true,
-  via: true,
-  cca: true,
+  coreValues: false,
+  physicalFitness: false,
+  via: false,
+  cca: false,
 }
 
 interface GenerateHdpWizardProps {
-  student: Student
-  missingTerms: Array<Term>
+  students: Array<Student>
   open: boolean
   onOpenChange: (open: boolean) => void
 }
 
 export function GenerateHdpWizard({
-  student,
-  missingTerms,
+  students,
   open,
   onOpenChange,
 }: GenerateHdpWizardProps) {
+  const student = students.at(0)
+  const schoolLevel = student ? getSchoolLevel(student.class) : 'secondary'
+  const isPrimary = schoolLevel === 'primary'
+
+  const STEPS = isPrimary ? PRIMARY_STEPS : SECONDARY_STEPS
+  const availableTerms: Array<Term> = isPrimary
+    ? ['Semester 1', 'Semester 2']
+    : ['Term 1', 'Term 2', 'Term 3', 'Term 4']
+
   const [currentStep, setCurrentStep] = useState(0)
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateId | null>(
-    null,
+    isPrimary ? 'comprehensive' : null,
   )
-  const [selectedTerm, setSelectedTerm] = useState<Term>(missingTerms[0])
+  const [selectedTerm, setSelectedTerm] = useState<Term>(availableTerms[0])
   const [selectedSections, setSelectedSections] =
     useState<Record<string, boolean>>(DEFAULT_SECTIONS)
   const [generatedReport, setGeneratedReport] = useState<HolisticReport | null>(
@@ -62,19 +70,17 @@ export function GenerateHdpWizard({
   const [isSaved, setIsSaved] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
 
-  const schoolLevel = getSchoolLevel(student.class)
-
-  // Reset state when closed
+  // Reset state when opened (re-derive from fresh students)
   useEffect(() => {
-    if (!open) {
+    if (open) {
       setCurrentStep(0)
-      setSelectedTemplate(null)
-      setSelectedTerm(missingTerms[0])
+      setSelectedTemplate(isPrimary ? 'comprehensive' : null)
+      setSelectedTerm(availableTerms[0])
       setSelectedSections(DEFAULT_SECTIONS)
       setGeneratedReport(null)
       setIsSaved(false)
     }
-  }, [open, missingTerms])
+  }, [open, isPrimary]) // re-run when open or school level changes
 
   // Scroll to top on step change
   useEffect(() => {
@@ -93,9 +99,11 @@ export function GenerateHdpWizard({
     setSelectedSections((prev) => ({ ...prev, [key]: !prev[key] }))
   }
 
+  const previewStep = isPrimary ? 1 : 2
+
   function handleNext() {
-    if (currentStep === 1) {
-      // Moving to preview — generate the report
+    if (currentStep === previewStep - 1) {
+      // Moving to preview — generate report for first student
       const report = generateReportFromStudent(
         student,
         selectedTerm,
@@ -111,14 +119,23 @@ export function GenerateHdpWizard({
   }
 
   function handleSave() {
-    if (generatedReport) {
-      addReport(generatedReport)
-      setIsSaved(true)
+    // Generate and save reports for all selected students
+    for (const s of students) {
+      const report = generateReportFromStudent(
+        s,
+        selectedTerm,
+        CURRENT_ACADEMIC_YEAR,
+      )
+      addReport(report)
     }
+    setIsSaved(true)
   }
 
-  const canGoNext =
-    currentStep === 0 ? selectedTemplate !== null : currentStep < 2
+  const canGoNext = isPrimary
+    ? currentStep < previewStep
+    : currentStep === 0
+      ? selectedTemplate !== null
+      : currentStep < previewStep
 
   if (!open) return null
 
@@ -128,9 +145,10 @@ export function GenerateHdpWizard({
       <div className="shrink-0 border-b px-6 py-4">
         <div className="mx-auto flex max-w-2xl items-center justify-between">
           <div>
-            <h1 className="text-base font-semibold">Generate Report Card</h1>
+            <h1 className="text-base font-semibold">Generate HDP</h1>
             <p className="text-sm text-muted-foreground">
-              {student.name} &middot; {student.class}
+              {students.length} student{students.length !== 1 ? 's' : ''}{' '}
+              &middot; {student?.class ?? ''}
             </p>
           </div>
           <Button
@@ -172,34 +190,66 @@ export function GenerateHdpWizard({
       {/* Content */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-6">
         <div className="mx-auto max-w-2xl">
-          {currentStep === 0 && (
+          {/* P1 primary flow: Configure → Preview → Save */}
+          {isPrimary && currentStep === 0 && (
             <HdpTemplateStep
               selectedTemplate={selectedTemplate}
               onSelectTemplate={handleSelectTemplate}
               selectedTerm={selectedTerm}
               onSelectTerm={setSelectedTerm}
-              availableTerms={missingTerms}
-            />
-          )}
-          {currentStep === 1 && (
-            <HdpDataStep
+              availableTerms={availableTerms}
+              isPrimary
               selectedSections={selectedSections}
               onToggleSection={handleToggleSection}
-              templateId={selectedTemplate}
             />
           )}
-          {currentStep === 2 && generatedReport && (
+          {isPrimary && currentStep === 1 && generatedReport && (
             <HdpPreviewStep
               report={generatedReport}
               selectedSections={selectedSections}
               schoolLevel={schoolLevel}
             />
           )}
-          {currentStep === 3 && (
+          {isPrimary && currentStep === 2 && (
             <SuccessStep
               report={generatedReport}
               isSaved={isSaved}
-              studentName={student.name}
+              studentCount={students.length}
+              studentClass={student?.class ?? ''}
+              term={selectedTerm}
+            />
+          )}
+
+          {/* Secondary flow: Template → Selection → Preview → Save */}
+          {!isPrimary && currentStep === 0 && (
+            <HdpTemplateStep
+              selectedTemplate={selectedTemplate}
+              onSelectTemplate={handleSelectTemplate}
+              selectedTerm={selectedTerm}
+              onSelectTerm={setSelectedTerm}
+              availableTerms={availableTerms}
+            />
+          )}
+          {!isPrimary && currentStep === 1 && (
+            <HdpDataStep
+              selectedSections={selectedSections}
+              onToggleSection={handleToggleSection}
+              templateId={selectedTemplate}
+            />
+          )}
+          {!isPrimary && currentStep === 2 && generatedReport && (
+            <HdpPreviewStep
+              report={generatedReport}
+              selectedSections={selectedSections}
+              schoolLevel={schoolLevel}
+            />
+          )}
+          {!isPrimary && currentStep === 3 && (
+            <SuccessStep
+              report={generatedReport}
+              isSaved={isSaved}
+              studentCount={1}
+              studentClass={student?.class ?? ''}
               term={selectedTerm}
             />
           )}
@@ -215,26 +265,26 @@ export function GenerateHdpWizard({
                 Cancel
               </Button>
             )}
-            {currentStep > 0 && currentStep < 3 && (
+            {currentStep > 0 && currentStep < STEPS.length - 1 && (
               <Button variant="outline" onClick={handleBack}>
                 <ChevronLeft className="mr-1 size-4" />
                 Back
               </Button>
             )}
-            {currentStep === 3 && (
+            {currentStep === STEPS.length - 1 && (
               <Button variant="outline" onClick={() => onOpenChange(false)}>
-                Close
+                Done
               </Button>
             )}
           </div>
           <div>
-            {currentStep < 2 && (
+            {currentStep < previewStep && (
               <Button onClick={handleNext} disabled={!canGoNext}>
                 Next
                 <ChevronRight className="ml-1 size-4" />
               </Button>
             )}
-            {currentStep === 2 && (
+            {currentStep === previewStep && (
               <Button
                 className="bg-orange-9 text-white hover:bg-orange-10"
                 onClick={() => {
@@ -243,20 +293,26 @@ export function GenerateHdpWizard({
                 }}
               >
                 <Save className="mr-1.5 size-4" />
-                Save Reports
+                Save reports
               </Button>
             )}
-            {currentStep === 3 && isSaved && generatedReport && (
-              <Button
-                className="bg-orange-9 text-white hover:bg-orange-10"
-                render={
-                  <Link to="/reports/$id" params={{ id: generatedReport.id }} />
-                }
-              >
-                <Eye className="mr-1.5 size-4" />
-                View Report
-              </Button>
-            )}
+            {currentStep === STEPS.length - 1 &&
+              isSaved &&
+              !isPrimary &&
+              generatedReport && (
+                <Button
+                  className="bg-orange-9 text-white hover:bg-orange-10"
+                  render={
+                    <Link
+                      to="/holistic-reports/$id"
+                      params={{ id: generatedReport.id }}
+                    />
+                  }
+                >
+                  <Eye className="mr-1.5 size-4" />
+                  View report
+                </Button>
+              )}
           </div>
         </div>
       </div>
@@ -265,20 +321,21 @@ export function GenerateHdpWizard({
 }
 
 function SuccessStep({
-  report,
   isSaved,
-  studentName,
+  studentCount,
+  studentClass,
   term,
 }: {
   report: HolisticReport | null
   isSaved: boolean
-  studentName: string
+  studentCount: number
+  studentClass: string
   term: Term
 }) {
-  if (!isSaved || !report) {
+  if (!isSaved) {
     return (
       <div className="flex flex-1 items-center justify-center py-16">
-        <p className="text-muted-foreground">Saving report...</p>
+        <p className="text-muted-foreground">Saving reports...</p>
       </div>
     )
   }
@@ -288,15 +345,18 @@ function SuccessStep({
       <div className="flex size-16 items-center justify-center rounded-full bg-lime-3">
         <CheckCircle className="size-8 text-lime-11" />
       </div>
-      <h3 className="text-xl font-semibold">Report Saved Successfully</h3>
+      <h3 className="text-xl font-semibold">
+        {studentCount} report{studentCount !== 1 ? 's' : ''} generated
+      </h3>
       <p className="max-w-sm text-sm text-muted-foreground">
-        The Holistic Development Profile for{' '}
-        <span className="font-medium text-foreground">{studentName}</span> —{' '}
-        {term} {report.academicYear} has been saved.
+        Holistic Development Profiles for{' '}
+        <span className="font-medium text-foreground">{studentClass}</span> —{' '}
+        {term} have been saved and are pending review.
       </p>
-      <p className="text-xs text-muted-foreground">
-        You can view, edit, and send this report from the Reports page.
-      </p>
+      <div className="mt-2 flex items-center gap-2 rounded-full border border-amber-6 bg-amber-2 px-4 py-2 text-xs font-medium text-amber-11">
+        Pending review — your level head will review and release reports to
+        students
+      </div>
     </div>
   )
 }

@@ -7,7 +7,7 @@ export const Route = createFileRoute('/reports')({
 
 function ReportsLayout() {
   const search = useSearch({ strict: false })
-  const scope = (search as Record<string, unknown>).scope as string ?? 'my'
+  const scope = ((search as Record<string, unknown>).scope as string) ?? 'my'
   const isAdmin = (search as Record<string, unknown>).view === 'admin'
   const isSchoolWide = isAdmin && scope === 'school'
 
@@ -21,7 +21,12 @@ function ReportsLayout() {
             {isSchoolWide
               ? 'To view your own reports, use the dropdown next to School Reports.'
               : 'To view school reports, use the dropdown next to My Reports.'}
-            <img src="/arrow-down-left-ink.svg" alt="" className="ml-1 inline-block h-5 w-5 -translate-y-0.5" aria-hidden="true" />
+            <img
+              src="/arrow-down-left-ink.svg"
+              alt=""
+              className="ml-1 inline-block h-5 w-5 -translate-y-0.5"
+              aria-hidden="true"
+            />
           </span>
         </div>
       )}

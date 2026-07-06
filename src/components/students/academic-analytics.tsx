@@ -1301,14 +1301,10 @@ export function AcademicAnalytics() {
             style={{ paddingLeft: 28, paddingRight: 8 }}
           >
             <div className="flex flex-1 items-center justify-center border-t border-muted-foreground/30 py-1.5">
-              <span className="text-xs font-semibold text-foreground">
-                G2
-              </span>
+              <span className="text-xs font-semibold text-foreground">G2</span>
             </div>
             <div className="flex flex-[2] items-center justify-center border-t border-muted-foreground/30 py-1.5">
-              <span className="text-xs font-semibold text-foreground">
-                G3
-              </span>
+              <span className="text-xs font-semibold text-foreground">G3</span>
             </div>
           </div>
           <PerformanceLegend />

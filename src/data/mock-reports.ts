@@ -27,6 +27,7 @@ import type {
 import type { Student } from '@/types/student'
 
 const TERMS: Array<Term> = ['Term 1', 'Term 2', 'Term 3', 'Term 4']
+const P1_TERMS: Array<Term> = ['Semester 1', 'Semester 2']
 const CURRENT_ACADEMIC_YEAR = 2025
 
 /**
@@ -162,6 +163,13 @@ const OUTCOME_STATUSES: Array<LearningOutcomeStatus> = [
   'Beginning',
 ]
 
+const P1_OUTCOME_STATUSES: Array<LearningOutcomeStatus> = [
+  'Exceeding',
+  'Competent',
+  'Competent',
+  'Developing',
+]
+
 const SUBJECT_OUTCOMES: Record<
   string,
   Array<{ name: string; description: string }>
@@ -170,34 +178,36 @@ const SUBJECT_OUTCOMES: Record<
     {
       name: 'Speaking',
       description:
-        'Speak clearly and confidently to express thoughts and ideas.',
+        'Speak clearly to express their thoughts, feelings and ideas.',
     },
     {
       name: 'Reading',
-      description: 'Read and comprehend a variety of texts with fluency.',
-    },
-    {
-      name: 'Writing',
-      description: 'Write creatively and accurately for different purposes.',
+      description:
+        'Demonstrate basic word recognition skills (e.g. know the letters of the alphabet; able to pronounce words accurately).',
     },
     {
       name: 'Listening',
-      description:
-        'Listen attentively and respond appropriately to spoken language.',
+      description: 'Listen attentively and follow simple instructions.',
     },
   ],
   'Chinese Language': [
     {
-      name: 'Reading Comprehension',
-      description: 'Reads and comprehends Chinese passages',
+      name: 'Listening',
+      description:
+        'Listen attentively to short, simple spoken content related to daily life.',
     },
     {
-      name: 'Writing',
-      description: 'Writes coherent compositions in Chinese',
+      name: 'Speaking',
+      description:
+        'Speak with correct pronunciation using vocabulary and sentence structures from Primary 1 texts.',
     },
     {
-      name: 'Oral & Listening',
-      description: 'Listens and responds appropriately in Chinese',
+      name: 'Reading',
+      description: 'Recognise characters taught in Primary 1.',
+    },
+    {
+      name: 'Reading aloud',
+      description: 'Read aloud Primary 1 texts with accuracy.',
     },
   ],
   Mathematics: [
@@ -264,27 +274,160 @@ const SUBJECT_OUTCOMES: Record<
   ],
 }
 
+const P1_SUBJECT_OUTCOMES: Record<
+  string,
+  Array<{ name: string; description: string }>
+> = {
+  'English Language': [
+    {
+      name: 'Speaking',
+      description:
+        'Speak clearly to express their thoughts, feelings and ideas.',
+    },
+    {
+      name: 'Reading',
+      description:
+        'Demonstrate basic word recognition skills (e.g. know the letters of the alphabet; able to pronounce words accurately).',
+    },
+    {
+      name: 'Listening',
+      description: 'Listen attentively and follow simple instructions.',
+    },
+  ],
+  'Chinese Language': [
+    {
+      name: 'Listening',
+      description:
+        'Listen attentively to short, simple spoken content related to daily life.',
+    },
+    {
+      name: 'Speaking',
+      description:
+        'Speak with correct pronunciation using vocabulary and sentence structures from Primary 1 texts.',
+    },
+    {
+      name: 'Reading',
+      description: 'Recognise characters taught in Primary 1.',
+    },
+    {
+      name: 'Reading aloud',
+      description: 'Read aloud Primary 1 texts with accuracy.',
+    },
+  ],
+  Mathematics: [
+    {
+      name: 'Number sense',
+      description: 'Understand addition and subtraction.',
+    },
+    {
+      name: 'Computation',
+      description: 'Add and subtract numbers.',
+    },
+    {
+      name: 'Geometry',
+      description: 'Identify, name, describe and sort shapes.',
+    },
+    {
+      name: 'Data handling',
+      description: 'Read and interpret picture graphs.',
+    },
+  ],
+  'Social Studies': [
+    {
+      name: 'Identity',
+      description: 'Recognise that everyone is unique.',
+    },
+    {
+      name: 'Inquiry',
+      description: 'Ask questions to learn more about self, people and places.',
+    },
+    {
+      name: 'Roles & responsibilities',
+      description:
+        'Identify the different roles that students play at home, in class and in school.',
+    },
+  ],
+  Art: [
+    {
+      name: 'Visual observation',
+      description:
+        'Identify simple visual qualities in what they see around them.',
+    },
+    {
+      name: 'Drawing',
+      description: 'Draw from their imagination and observation.',
+    },
+    {
+      name: 'Exploration',
+      description: 'Play with a variety of materials and tools to make art.',
+    },
+    {
+      name: 'Expression',
+      description:
+        'Share their imagination, thoughts and feelings through art making.',
+    },
+    {
+      name: 'Appreciation',
+      description:
+        'Talk about what they see, feel and experience using basic art vocabulary of elements and principles of design.',
+    },
+  ],
+  Music: [
+    {
+      name: 'Singing',
+      description:
+        'Sing with accuracy and expression (e.g. appropriate tempo, dynamics, articulation and phrasing).',
+    },
+    {
+      name: 'Music appreciation',
+      description:
+        'Describe ways in which the elements of music are used for different purposes in the music they listen to, create and perform.',
+    },
+    {
+      name: 'Listening',
+      description:
+        'Describe the sound produced by instruments (e.g. low, high, jingling) and how they are played.',
+    },
+    {
+      name: 'Notation',
+      description: 'Use graphic or standard notation to record music ideas.',
+    },
+  ],
+  'Physical Education': [
+    {
+      name: 'Physical health & fitness',
+      description:
+        'Acquire a range of personal safety practices in school, at home and when using the road.',
+    },
+    {
+      name: 'Games & sports',
+      description:
+        'Demonstrate a range of motor skills in rolling, catching, and throwing a variety of objects.',
+    },
+    {
+      name: 'Outdoor education',
+      description:
+        'Move across a variety of ground surfaces in a familiar environment safely and confidently.',
+    },
+  ],
+}
+
 function generateSubjects(
   student: Student,
   seed: number,
 ): Array<SubjectPerformance> {
-  const subjectNames = Object.keys(SUBJECT_OUTCOMES)
-  return subjectNames.map((name, i) => {
-    const outcomes = SUBJECT_OUTCOMES[name]
+  const isPrimary = getSchoolLevel(student.class) === 'primary'
+  const subjectMap = isPrimary ? P1_SUBJECT_OUTCOMES : SUBJECT_OUTCOMES
+  const statuses = isPrimary ? P1_OUTCOME_STATUSES : OUTCOME_STATUSES
+
+  return Object.entries(subjectMap).map(([name, outcomes], i) => {
     const learningOutcomes: Array<LearningOutcome> = outcomes.map((o, j) => {
       const statusSeed = seed + i * 7 + j * 3 + student.overallPercentage
-      let statusIdx: number
-      if (student.overallPercentage >= 80) {
-        statusIdx = statusSeed % 2 // Accomplished or Competent
-      } else if (student.overallPercentage >= 60) {
-        statusIdx = statusSeed % 3 // Accomplished, Competent, or Developing
-      } else {
-        statusIdx = 1 + (statusSeed % 3) // Competent, Developing, or Beginning
-      }
+      const statusIdx = statusSeed % statuses.length
       return {
         name: o.name,
         description: o.description,
-        status: OUTCOME_STATUSES[statusIdx],
+        status: statuses[statusIdx],
       }
     })
     return { name, learningOutcomes }
@@ -777,13 +920,21 @@ function generateHolisticData(
   }
 }
 
+function getTermIndex(term: Term): number {
+  if (term === 'Semester 1') return 0
+  if (term === 'Semester 2') return 1
+  const idx = TERMS.indexOf(term)
+  return idx >= 0 ? idx : 0
+}
+
 export function generateReportFromStudent(
   student: Student,
   term: Term,
   academicYear: number,
 ): HolisticReport {
-  const termIndex = TERMS.indexOf(term)
-  const reportId = `${student.id}-${academicYear}-${termIndex + 1}`
+  const termIndex = getTermIndex(term)
+  const termSlug = term.toLowerCase().replace(' ', '-')
+  const reportId = `${student.id}-${academicYear}-${termSlug}`
 
   // Use a simple hash from student id and term for deterministic random statuses
   const seed = student.id.charCodeAt(0) + termIndex
@@ -798,7 +949,12 @@ export function generateReportFromStudent(
     schoolName: student.schoolName,
     term,
     academicYear,
-    generatedAt: new Date(academicYear, termIndex * 3 + 2, 15),
+    generatedAt:
+      term === 'Semester 1'
+        ? new Date(academicYear, 4, 15)
+        : term === 'Semester 2'
+          ? new Date(academicYear, 10, 15)
+          : new Date(academicYear, termIndex * 3 + 2, 15),
     schoolLevel,
     academic: {
       overallPercentage: student.overallPercentage,
@@ -827,7 +983,7 @@ export function generateReportFromStudent(
       .filter(Boolean)
       .join(' '),
     ...generateConsistentStatuses(
-      student.id.charCodeAt(0) + (TERMS.length - 1 - termIndex),
+      student.id.charCodeAt(0) + termIndex,
       isSecondary,
     ),
     nric: student.nric,
@@ -847,13 +1003,24 @@ function generateAllReports(): Array<HolisticReport> {
   const reports: Array<HolisticReport> = []
 
   for (const student of mockStudents) {
-    // First 5 students only have Terms 1-2 generated, so the wizard can generate 3-4
-    const studentIdx = mockStudents.indexOf(student)
-    const termsToGenerate = studentIdx < 5 ? TERMS.slice(0, 2) : TERMS
-    for (const term of termsToGenerate) {
-      reports.push(
-        generateReportFromStudent(student, term, CURRENT_ACADEMIC_YEAR),
-      )
+    const isPrimary = getSchoolLevel(student.class) === 'primary'
+
+    if (isPrimary) {
+      // P1 students: pre-generate Semester 1 only so the wizard can generate Semester 2
+      for (const term of P1_TERMS.slice(0, 1)) {
+        reports.push(
+          generateReportFromStudent(student, term, CURRENT_ACADEMIC_YEAR),
+        )
+      }
+    } else {
+      // Secondary: first 5 students only have Terms 1-2 so the wizard can generate 3-4
+      const studentIdx = mockStudents.indexOf(student)
+      const termsToGenerate = studentIdx < 5 ? TERMS.slice(0, 2) : TERMS
+      for (const term of termsToGenerate) {
+        reports.push(
+          generateReportFromStudent(student, term, CURRENT_ACADEMIC_YEAR),
+        )
+      }
     }
   }
 

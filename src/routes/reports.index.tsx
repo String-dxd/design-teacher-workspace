@@ -147,7 +147,8 @@ function ReportsPage({ isAdmin = false }: { isAdmin?: boolean }) {
             )}
           </div>
           <p className="mt-1 hidden text-sm text-muted-foreground lg:block">
-            Download records from Parents Gateway. Choose between onboarding and travel declaration reports.
+            Download records from Parents Gateway. Choose between onboarding and
+            travel declaration reports.
           </p>
         </div>
       </div>
@@ -283,18 +284,29 @@ function ReportsPage({ isAdmin = false }: { isAdmin?: boolean }) {
                     >
                       <CalendarIcon className="h-4 w-4 text-muted-foreground" />
                       {startDate
-                        ? format(parse(startDate, 'yyyy-MM-dd', new Date()), 'dd MMM yyyy')
+                        ? format(
+                            parse(startDate, 'yyyy-MM-dd', new Date()),
+                            'dd MMM yyyy',
+                          )
                         : 'Start date'}
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
                         mode="single"
-                        selected={startDate ? parse(startDate, 'yyyy-MM-dd', new Date()) : undefined}
-                        onSelect={(date) => setStartDate(date ? format(date, 'yyyy-MM-dd') : '')}
+                        selected={
+                          startDate
+                            ? parse(startDate, 'yyyy-MM-dd', new Date())
+                            : undefined
+                        }
+                        onSelect={(date) =>
+                          setStartDate(date ? format(date, 'yyyy-MM-dd') : '')
+                        }
                       />
                     </PopoverContent>
                   </Popover>
-                  <span className="shrink-0 text-sm text-muted-foreground">–</span>
+                  <span className="shrink-0 text-sm text-muted-foreground">
+                    –
+                  </span>
                   <Popover>
                     <PopoverTrigger
                       render={
@@ -309,14 +321,23 @@ function ReportsPage({ isAdmin = false }: { isAdmin?: boolean }) {
                     >
                       <CalendarIcon className="h-4 w-4 text-muted-foreground" />
                       {endDate
-                        ? format(parse(endDate, 'yyyy-MM-dd', new Date()), 'dd MMM yyyy')
+                        ? format(
+                            parse(endDate, 'yyyy-MM-dd', new Date()),
+                            'dd MMM yyyy',
+                          )
                         : 'End date'}
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
                         mode="single"
-                        selected={endDate ? parse(endDate, 'yyyy-MM-dd', new Date()) : undefined}
-                        onSelect={(date) => setEndDate(date ? format(date, 'yyyy-MM-dd') : '')}
+                        selected={
+                          endDate
+                            ? parse(endDate, 'yyyy-MM-dd', new Date())
+                            : undefined
+                        }
+                        onSelect={(date) =>
+                          setEndDate(date ? format(date, 'yyyy-MM-dd') : '')
+                        }
                       />
                     </PopoverContent>
                   </Popover>
@@ -336,8 +357,8 @@ function ReportsPage({ isAdmin = false }: { isAdmin?: boolean }) {
           {tab === 'onboarding' && (
             <div className="mt-6 border-t pt-5">
               <p className="text-xs text-muted-foreground">
-                To allow or remove Parents Gateway access for custodians, please do so in
-                School Cockpit.
+                To allow or remove Parents Gateway access for custodians, please
+                do so in School Cockpit.
               </p>
             </div>
           )}

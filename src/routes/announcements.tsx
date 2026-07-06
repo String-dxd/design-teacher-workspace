@@ -62,7 +62,12 @@ function AnnouncementsLayout() {
             {isSchoolWide
               ? 'To view your own posts, use the dropdown next to School Posts.'
               : 'To view school posts, use the dropdown next to My Posts.'}
-            <img src="/arrow-down-left-ink.svg" alt="" className="ml-1 inline-block h-5 w-5 -translate-y-0.5" aria-hidden="true" />
+            <img
+              src="/arrow-down-left-ink.svg"
+              alt=""
+              className="ml-1 inline-block h-5 w-5 -translate-y-0.5"
+              aria-hidden="true"
+            />
           </span>
         </div>
       )}

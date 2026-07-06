@@ -1939,8 +1939,7 @@ export function StudentProfile({
       </aside>
 
       <GenerateHdpWizard
-        student={student}
-        missingTerms={missingTerms}
+        students={[student]}
         open={wizardOpen}
         onOpenChange={setWizardOpen}
       />

@@ -52,9 +52,9 @@ Work packages, all verified at `b01d78d`:
   it sits beside a correctly-used `<Input>` (line ~428).
 - `src/routes/students_.$id.agency-report.new.tsx:455-461` — message
   `<textarea>` hand-styled `min-h-[90px] w-full resize-none rounded-lg border …
-  focus:ring-1 focus:ring-primary`.
+focus:ring-1 focus:ring-primary`.
 - `src/routes/forms.new.tsx:328-336` — instructions `<textarea
-  id="instructions" … rows={5} maxLength={2000}` hand-styled with
+id="instructions" … rows={5} maxLength={2000}` hand-styled with
   `border-input … focus:ring-1 focus:ring-ring`.
 - A `Textarea` primitive already exists: `src/components/ui/textarea.tsx`.
 
@@ -64,8 +64,8 @@ Work packages, all verified at `b01d78d`:
 - `src/components/students/academic-analytics.tsx:1222` — "Subjects taken and
   current grades": `<table className="w-full text-sm">` with
   `<tr className="border-b bg-muted/40">` and `<th className="px-4 py-2.5
-  text-left text-xs font-medium uppercase tracking-wide
-  text-muted-foreground">`.
+text-left text-xs font-medium uppercase tracking-wide
+text-muted-foreground">`.
 - `src/components/students/academic-analytics.tsx:1793` — cohort table,
   `<table className="w-full table-fixed text-sm">`, headers mapped from
   `['Profile','Name','Class','Score','Grade']`.
@@ -87,7 +87,7 @@ Work packages, all verified at `b01d78d`:
 
 - `src/components/heytalia/heytalia-panel.tsx:~500` — a component rendering
   `<div className="absolute left-3 right-3 top-[calc(100%+4px)] z-50
-  overflow-hidden rounded-xl border bg-white shadow-lg">` with a header
+overflow-hidden rounded-xl border bg-white shadow-lg">` with a header
   ("Teacher Assistant" / "Choose an agent to help you") and `AGENTS.map` →
   `<button>` rows, closed via a manual `onClose`. No outside-click/focus/
   collision handling. (Line ~500 at `b01d78d`; 019 edits line ~496 first.)
@@ -95,18 +95,18 @@ Work packages, all verified at `b01d78d`:
 **E. Raw chat/readonly inputs**
 
 - `src/components/heytalia/heytalia-panel.tsx:~447` — chat `<input
-  type="text">` with hand styling inside the input footer.
+type="text">` with hand styling inside the input footer.
 - `src/components/students/lta-dialog.tsx:543` — readonly `<input>` inside a
   hand-built input-group wrapper (`ui/input-group.tsx` exists).
 
 ## Commands you will need
 
-| Purpose   | Command                | Expected on success |
-|-----------|------------------------|---------------------|
-| Typecheck | `bunx tsc --noEmit`    | ≤41 pre-existing errors (23×TS2322, 9×TS2345, 3×TS2353, 6 singles); no new codes/files |
-| Tests     | `bunx vitest run`      | 37 pass / 16 fail (pre-existing); no new failures |
-| Build     | `bun run build`        | exit 0 |
-| Dev       | `bun run dev`          | port 3000 |
+| Purpose   | Command             | Expected on success                                                                    |
+| --------- | ------------------- | -------------------------------------------------------------------------------------- |
+| Typecheck | `bunx tsc --noEmit` | ≤41 pre-existing errors (23×TS2322, 9×TS2345, 3×TS2353, 6 singles); no new codes/files |
+| Tests     | `bunx vitest run`   | 37 pass / 16 fail (pre-existing); no new failures                                      |
+| Build     | `bun run build`     | exit 0                                                                                 |
+| Dev       | `bun run dev`       | port 3000                                                                              |
 
 ## Scope
 
@@ -156,7 +156,7 @@ Work packages, all verified at `b01d78d`:
   keeping value/onChange/placeholder and `min-h-[90px] resize-none` via
   className.
 - In `forms.new.tsx`: replace the instructions `<textarea>` with `<Textarea
-  id="instructions" rows={5} maxLength={2000} …>` keeping props and
+id="instructions" rows={5} maxLength={2000} …>` keeping props and
   `resize-none`.
 
 **Verify**: `grep -n '<select' src/routes -r` → 0 matches;
@@ -187,7 +187,9 @@ panel + Escape/autoFocus plumbing and render instead:
 ```tsx
 <Dialog open={chartExpanded} onOpenChange={setChartExpanded}>
   <DialogContent className="h-[calc(100vh-3rem)] w-[calc(100vw-3rem)] max-w-none p-6 flex flex-col">
-    <DialogTitle className="text-sm font-semibold">{/* existing heading text */}</DialogTitle>
+    <DialogTitle className="text-sm font-semibold">
+      {/* existing heading text */}
+    </DialogTitle>
     <div className="min-h-0 flex-1">
       {/* existing <ResponsiveContainer> subtree, unchanged */}
     </div>
@@ -225,7 +227,7 @@ switches agent. No new tsc errors.
   from `@/components/ui/input`, preserving `ref={inputRef}`, value/onChange/
   onKeyDown, placeholder, and layout classes (Input accepts className;
   visually match the current compact height with e.g. `h-9 border-0
-  shadow-none focus-visible:ring-0` if the footer already draws the border).
+shadow-none focus-visible:ring-0` if the footer already draws the border).
   If matching the existing look requires fighting the primitive with 4+
   override classes, leave the raw input and note it in the report instead —
   a forced conversion that degrades the look is worse than the status quo.
