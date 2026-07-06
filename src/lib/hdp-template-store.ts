@@ -31,6 +31,48 @@ export function loadTemplateLayout(templateId: string): ReportLayout | null {
   }
 }
 
+// Teacher-saved templates: the current section selection, order, and display
+// choices captured under a name, listed alongside the built-in school templates.
+export interface CustomTemplate {
+  id: string
+  name: string
+  layout: ReportLayout
+}
+
+const CUSTOM_TEMPLATES_KEY = 'hdp_custom_templates'
+
+export function listCustomTemplates(): Array<CustomTemplate> {
+  if (typeof window === 'undefined') return []
+  try {
+    const raw = localStorage.getItem(CUSTOM_TEMPLATES_KEY)
+    return raw ? (JSON.parse(raw) as Array<CustomTemplate>) : []
+  } catch {
+    return []
+  }
+}
+
+export function saveCustomTemplate(
+  name: string,
+  layout: ReportLayout,
+): CustomTemplate {
+  const template: CustomTemplate = {
+    id: `custom-${Date.now()}`,
+    name,
+    layout: { blocks: layout.blocks.map((b) => ({ ...b })) },
+  }
+  if (typeof window === 'undefined') return template
+  try {
+    const existing = listCustomTemplates()
+    localStorage.setItem(
+      CUSTOM_TEMPLATES_KEY,
+      JSON.stringify([...existing, template]),
+    )
+  } catch {
+    // ignore storage errors
+  }
+  return template
+}
+
 export function saveShareMessage(reportId: string, message: string): void {
   if (typeof window === 'undefined') return
   try {

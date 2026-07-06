@@ -176,10 +176,15 @@ export interface HolisticData {
 // A teacher's build persists it on their report instance; an admin template persists
 // it as the shared definition. P1 renders its curated sections as-is; secondary bulk
 // (out of the test-track scope) renders layout ∩ available-data.
+/** How a scale-bearing section renders its descriptors. */
+export type BlockDisplay = 'bars' | 'labels'
+
 export interface ReportBlock {
   key: string // matches a P1_SECTION_DEFS key in src/data/report-layouts.ts
   enabled: boolean
   order: number
+  /** Only meaningful for sections with a progress scale; defaults to 'bars'. */
+  display?: BlockDisplay
 }
 
 export interface ReportLayout {

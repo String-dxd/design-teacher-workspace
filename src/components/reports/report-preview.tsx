@@ -8,6 +8,7 @@ import {
 
 import type { LucideIcon } from 'lucide-react'
 import type {
+  BlockDisplay,
   CoreValueLevel,
   HolisticReport,
   LearningOutcomeStatus,
@@ -131,6 +132,7 @@ function ScaleRow({
   totalStages,
   stageLabel,
   rowIndex,
+  display = 'bars',
 }: {
   label: string
   sublabel?: string
@@ -138,6 +140,7 @@ function ScaleRow({
   totalStages: number
   stageLabel: string
   rowIndex: number
+  display?: BlockDisplay
 }) {
   return (
     <div className="flex items-center gap-3 py-1">
@@ -147,12 +150,19 @@ function ScaleRow({
           <p className="text-muted-foreground truncate text-xs">{sublabel}</p>
         )}
       </div>
-      <GrowthScale
-        stageIndex={stageIndex}
-        totalStages={totalStages}
-        rowIndex={rowIndex}
-      />
-      <span className="text-twblue-11 w-24 shrink-0 text-right text-xs leading-tight font-medium sm:w-28">
+      {display === 'bars' && (
+        <GrowthScale
+          stageIndex={stageIndex}
+          totalStages={totalStages}
+          rowIndex={rowIndex}
+        />
+      )}
+      <span
+        className={cn(
+          'text-twblue-11 shrink-0 text-right text-xs leading-tight font-medium',
+          display === 'bars' ? 'w-24 sm:w-28' : 'w-auto',
+        )}
+      >
         {stageLabel}
       </span>
     </div>
@@ -418,6 +428,7 @@ function PreviewBlock({
                       totalStages={LO_STAGE_ORDER.length}
                       stageLabel={lo.status}
                       rowIndex={subjIdx * 4 + loIdx}
+                      display={block.display}
                     />
                   ))}
                 </div>
@@ -522,6 +533,7 @@ function PreviewBlock({
                 totalStages={QUALITY_STAGE_ORDER.length}
                 stageLabel={cv.level}
                 rowIndex={i}
+                display={block.display}
               />
             ))}
           </div>
