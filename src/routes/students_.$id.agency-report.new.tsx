@@ -55,7 +55,15 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Tooltip,
   TooltipContent,
@@ -133,7 +141,7 @@ function StepBar({
 }) {
   const cur = STEP_MAP[step]
   return (
-    <div className="flex items-center gap-3 border-b bg-white px-4 py-3">
+    <div className="flex items-center gap-3 border-b bg-card px-4 py-3">
       <div className="flex w-40 shrink-0 justify-start">
         {canGoBack && onBack && (
           <Button
@@ -172,7 +180,7 @@ function StepBar({
                     isPast
                       ? 'border-2 border-primary bg-primary/10 text-primary'
                       : isCurrent
-                        ? 'bg-primary text-white'
+                        ? 'bg-primary text-primary-foreground'
                         : 'border-2 border-border bg-muted text-muted-foreground',
                   )}
                 >
@@ -268,7 +276,6 @@ function CollaboratorAvatars({
         {overflow > 0 && (
           <Tooltip>
             <TooltipTrigger
-              nativeButton={false}
               render={
                 <span className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-card bg-muted text-[10px] font-semibold text-muted-foreground" />
               }
@@ -285,7 +292,6 @@ function CollaboratorAvatars({
           return (
             <Tooltip key={c.email}>
               <TooltipTrigger
-                nativeButton={false}
                 render={
                   <span className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-card bg-primary/10 text-[10px] font-semibold text-primary" />
                 }
@@ -434,18 +440,21 @@ function AddCollaboratorsModal({
               placeholder="Or add by name or email"
               className="flex-1"
             />
-            <select
+            <Select
               value={permission}
-              onChange={(e) =>
-                setPermission(e.target.value as Collaborator['permission'])
+              onValueChange={(value) =>
+                setPermission(value as Collaborator['permission'])
               }
-              className="rounded-md border bg-background px-2 text-sm outline-none focus:border-primary"
-              aria-label="Permission"
             >
-              <option value="edit">Can edit</option>
-              <option value="comment">Can comment</option>
-              <option value="view">Can view</option>
-            </select>
+              <SelectTrigger aria-label="Permission">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="edit">Can edit</SelectItem>
+                <SelectItem value="comment">Can comment</SelectItem>
+                <SelectItem value="view">Can view</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <label
@@ -454,12 +463,12 @@ function AddCollaboratorsModal({
             >
               Message <span className="font-normal">(optional)</span>
             </label>
-            <textarea
+            <Textarea
               id="collab-message"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="What do you want them to do?"
-              className="min-h-[90px] w-full resize-none rounded-lg border px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary"
+              className="min-h-[90px] resize-none"
             />
           </div>
         </div>
@@ -534,14 +543,14 @@ function TemplatePreviewModal({
             <iframe
               src={pdf}
               title={`${template.name} preview`}
-              className="h-[78vh] w-full bg-white"
+              className="h-[78vh] w-full bg-card"
             />
           ) : png ? (
             <div className="flex justify-center">
               <img
                 src={png}
                 alt={`${template.name} preview`}
-                className="max-w-full bg-white"
+                className="max-w-full bg-card"
               />
             </div>
           ) : (
@@ -570,7 +579,7 @@ function TemplateSelection({
   selected,
   onToggle,
   onSelectAndContinue,
-  onBack,
+  onBack: _onBack,
   onContinue,
 }: {
   studentName: string
@@ -752,19 +761,21 @@ function TemplateSelection({
               />
             </div>
             <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="gap-2 aria-expanded:bg-white"
-                >
-                  <Filter className="h-4 w-4" />
-                  Filter
-                  {agencyFilter !== 'all' && (
-                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
-                      1
-                    </span>
-                  )}
-                </Button>
+              <PopoverTrigger
+                render={
+                  <Button
+                    variant="outline"
+                    className="gap-2 aria-expanded:bg-accent"
+                  />
+                }
+              >
+                <Filter className="h-4 w-4" />
+                Filter
+                {agencyFilter !== 'all' && (
+                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
+                    1
+                  </span>
+                )}
               </PopoverTrigger>
               <PopoverContent align="end" className="w-60 p-0">
                 <div className="border-b p-2">
@@ -1069,7 +1080,7 @@ function AiSourcePanel({
                     <a
                       href={it.href}
                       onClick={(e) => e.preventDefault()}
-                      className="text-blue-600 underline underline-offset-2 hover:text-blue-700"
+                      className="text-twblue-11 underline underline-offset-2 hover:text-twblue-12"
                     >
                       View in {it.system}
                     </a>
@@ -1210,9 +1221,9 @@ function FieldRow({
   const needsAiDraft =
     field.type === 'narrative' && field.aiDraftable === true && isEmpty
   const emptyInputBorder = needsAiDraft
-    ? 'border-amber-200 bg-amber-50/60'
+    ? 'border-amber-6 bg-amber-3/60'
     : isDrafted
-      ? 'border-purple-200 bg-purple-50/40'
+      ? 'border-violet-6 bg-violet-3/40'
       : 'border-input bg-background'
   // Source-link visibility: show only when the field has an upstream source
   // AND the current value still matches the originally pre-filled value
@@ -1225,19 +1236,19 @@ function FieldRow({
       <div className="flex flex-wrap items-center gap-1.5">
         <label className="text-sm font-medium">{field.label}</label>
         {field.stale && (
-          <Badge className="gap-1 bg-amber-50 text-amber-700 hover:bg-amber-50 text-[11px]">
+          <Badge className="gap-1 bg-amber-3 text-amber-11 hover:bg-amber-3 text-[11px]">
             <AlertTriangle className="h-2.5 w-2.5" />
             {field.staleMsg}
           </Badge>
         )}
         {field.restricted && (
-          <Badge className="gap-1 bg-red-50 text-red-700 hover:bg-red-50 text-[11px]">
+          <Badge className="gap-1 bg-crimson-3 text-crimson-11 hover:bg-crimson-3 text-[11px]">
             <Lock className="h-2.5 w-2.5" />
             {field.restrictedMsg}
           </Badge>
         )}
         {aiFlag && (
-          <Badge className="gap-1 bg-purple-50 text-purple-700 hover:bg-purple-50 text-[11px]">
+          <Badge className="gap-1 bg-violet-3 text-violet-11 hover:bg-violet-3 text-[11px]">
             <Sparkles className="h-2.5 w-2.5" />
             AI-assisted
           </Badge>
@@ -1246,7 +1257,7 @@ function FieldRow({
 
       {field.type === 'narrative' ? (
         <div>
-          <textarea
+          <Textarea
             value={value}
             onChange={(e) => onValueChange(e.target.value)}
             placeholder={
@@ -1255,9 +1266,7 @@ function FieldRow({
                 : 'Enter details…'
             }
             className={cn(
-              'w-full resize-y rounded-lg border px-3.5 py-2.5 text-sm leading-relaxed outline-none transition-colors',
-              'focus:border-primary focus:ring-1 focus:ring-primary',
-              'min-h-[120px]',
+              'resize-y min-h-[120px] px-3.5 py-2.5 leading-relaxed',
               emptyInputBorder,
             )}
           />
@@ -1332,7 +1341,7 @@ function FieldRow({
                             <a
                               href={matched?.href ?? '#'}
                               onClick={(e) => e.preventDefault()}
-                              className="text-blue-600 underline underline-offset-2 hover:text-blue-700"
+                              className="text-twblue-11 underline underline-offset-2 hover:text-twblue-12"
                             >
                               {c.detail}
                             </a>
@@ -1410,7 +1419,7 @@ function FieldRow({
                 'w-full rounded-lg border px-3.5 py-2 text-sm outline-none transition-colors',
                 'focus:border-primary focus:ring-1 focus:ring-primary',
                 showSourceLink && 'pr-9',
-                field.stale && 'border-amber-300 bg-amber-50',
+                field.stale && 'border-amber-7 bg-amber-3',
               )}
             />
             {showSourceLink && field.source && (
@@ -1445,7 +1454,7 @@ function SectionPanel({
   aiSourceSelections,
   onAiSourceChange,
   assignedTo,
-  onAssignedChange,
+  onAssignedChange: _onAssignedChange,
   onValueChange,
   onAiDraft,
 }: {
@@ -1514,14 +1523,14 @@ function SectionPanel({
   return (
     <section
       id={`sec-${section.id}`}
-      className="scroll-mt-24 rounded-xl border bg-white p-6"
+      className="scroll-mt-24 rounded-xl border bg-card p-6"
     >
       <div className="mb-5 flex flex-wrap items-center gap-2">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           {section.title}
         </h2>
         {emptyCount > 0 && (
-          <span className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-medium tabular-nums text-amber-700">
+          <span className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-amber-3 px-2.5 py-0.5 text-[11px] font-medium tabular-nums text-amber-11">
             <AlertTriangle className="h-3 w-3" />
             {emptyCount} empty field{emptyCount !== 1 ? 's' : ''}
           </span>
@@ -1556,8 +1565,8 @@ function SectionPanel({
         </div>
       ) : completed ? (
         <div className="space-y-4">
-          <div className="flex items-center gap-2 rounded-lg bg-green-50 px-4 py-2.5 text-xs text-green-700">
-            <Check className="h-3.5 w-3.5 text-green-600" />
+          <div className="flex items-center gap-2 rounded-lg bg-lime-3 px-4 py-2.5 text-xs text-lime-11">
+            <Check className="h-3.5 w-3.5 text-lime-11" />
             <span>
               Completed by {assignedTo.name}
               {completedDate ? ` · ${completedDate}` : ''}
@@ -1591,8 +1600,8 @@ function SectionPanel({
               </span>
             </div>
           ) : (
-            <div className="flex items-center justify-between gap-3 rounded-lg border border-dashed bg-amber-50/40 px-4 py-2.5 text-xs">
-              <span className="flex items-center gap-2 text-amber-700">
+            <div className="flex items-center justify-between gap-3 rounded-lg border border-dashed bg-amber-3/40 px-4 py-2.5 text-xs">
+              <span className="flex items-center gap-2 text-amber-11">
                 <Clock className="h-3.5 w-3.5" />
                 Awaiting input from {assignedTo.name}
               </span>
@@ -1634,17 +1643,6 @@ function SectionPanel({
       )}
     </section>
   )
-}
-
-function templateReferenceAsset(template: AgencyTemplate): {
-  kind: 'pdf' | 'image'
-  src: string
-} | null {
-  if (template.templateFile?.toLowerCase().endsWith('.pdf')) {
-    return { kind: 'pdf', src: template.templateFile }
-  }
-  const img = templatePreviewImg(template)
-  return img ? { kind: 'image', src: img } : null
 }
 
 // ── Filled report rendering ───────────────────────────────────────────
@@ -1780,28 +1778,6 @@ function FieldBox({ label, value }: { label: string; value?: string }) {
       <span className="flex min-h-[24px] flex-1 items-center border border-black px-2 py-1 text-[12px]">
         {value ?? ''}
       </span>
-    </div>
-  )
-}
-
-function LabeledTickRow({
-  label,
-  on,
-  align = 'right',
-}: {
-  label: string
-  on?: boolean
-  align?: 'left' | 'right'
-}) {
-  return (
-    <div
-      className={cn(
-        'flex items-center gap-3 text-[12px]',
-        align === 'right' ? 'justify-between' : '',
-      )}
-    >
-      <span>{label}</span>
-      <TickBox on={on} />
     </div>
   )
 }
@@ -2538,6 +2514,7 @@ function ChildrenHomeFilledRendering({
         <div>
           {approved ? (
             <p
+              /* fence exception (plan 019): blue-ink signature in the printed-report facsimile — intentionally Tailwind blue-900, permanent light-mode region */
               className="mb-1 text-[20px] leading-none text-blue-900"
               style={{
                 fontFamily:
@@ -2710,7 +2687,7 @@ function ReportForm({
   studentId,
   principalNote,
   currentReportId,
-  onBack,
+  onBack: _onBack,
   onSubmittedForReview,
 }: {
   template: AgencyTemplate
@@ -2902,7 +2879,7 @@ function ReportForm({
   return (
     <div
       className={cn(
-        'mx-auto flex h-[calc(100vh-120px)] flex-col overflow-hidden rounded-xl border bg-white transition-[max-width]',
+        'mx-auto flex h-[calc(100vh-120px)] flex-col overflow-hidden rounded-xl border bg-card transition-[max-width]',
         'max-w-5xl',
       )}
     >
@@ -2925,7 +2902,7 @@ function ReportForm({
           <span
             className={cn(
               'font-mono text-xs font-semibold tabular-nums',
-              progressPct === 100 ? 'text-green-600' : 'text-foreground',
+              progressPct === 100 ? 'text-lime-11' : 'text-foreground',
             )}
           >
             {progressPct}%
@@ -2934,7 +2911,7 @@ function ReportForm({
             <div
               className={cn(
                 'h-full transition-[width] duration-300',
-                progressPct === 100 ? 'bg-green-500' : 'bg-amber-500',
+                progressPct === 100 ? 'bg-lime-9' : 'bg-amber-9',
               )}
               style={{ width: `${progressPct}%` }}
             />
@@ -2949,7 +2926,7 @@ function ReportForm({
             </>
           ) : (
             <>
-              <Check className="h-3 w-3 text-green-600" />
+              <Check className="h-3 w-3 text-lime-11" />
               Saved
             </>
           )}
@@ -3002,28 +2979,28 @@ function ReportForm({
           />
 
           {submitted && (
-            <div className="mb-4 flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
-              <Clock className="h-4 w-4 shrink-0 text-amber-700" />
+            <div className="mb-4 flex items-center gap-3 rounded-xl border border-amber-6 bg-amber-3 px-4 py-3">
+              <Clock className="h-4 w-4 shrink-0 text-amber-11" />
               <div className="flex-1">
-                <p className="text-sm font-semibold text-amber-900">
+                <p className="text-sm font-semibold text-amber-12">
                   Report submitted · Awaiting principal review
                 </p>
-                <p className="text-xs text-amber-800/80">
+                <p className="text-xs text-amber-11/80">
                   This report is locked while {PRINCIPAL_NAME} reviews it.
                 </p>
               </div>
-              <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100">
+              <Badge className="bg-amber-4 text-amber-11 hover:bg-amber-4">
                 In Review
               </Badge>
             </div>
           )}
 
           {principalNote && !submitted && (
-            <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
-              <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-amber-700">
+            <div className="mb-4 rounded-xl border border-amber-6 bg-amber-3 p-4">
+              <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-amber-11">
                 Principal has requested edits
               </p>
-              <p className="text-sm leading-relaxed text-amber-900">
+              <p className="text-sm leading-relaxed text-amber-12">
                 {principalNote}
               </p>
             </div>
@@ -3117,7 +3094,7 @@ function ReportForm({
 
             <div className="flex items-center justify-end gap-2 pt-2">
               {submitted ? (
-                <Badge className="bg-amber-100 px-3 py-1 text-amber-700 hover:bg-amber-100">
+                <Badge className="bg-amber-4 px-3 py-1 text-amber-11 hover:bg-amber-4">
                   <Clock className="mr-1.5 h-3 w-3" />
                   In Review · Awaiting {PRINCIPAL_NAME}
                 </Badge>
@@ -3150,12 +3127,12 @@ function ReportForm({
                   (optional)
                 </span>
               </label>
-              <textarea
+              <Textarea
                 id="note-to-principal"
                 value={noteToPrincipal}
                 onChange={(e) => setNoteToPrincipal(e.target.value)}
                 placeholder="e.g. Counselling details needed in Section 5. Housing info may be outdated."
-                className="min-h-[100px] w-full resize-none rounded-lg border px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary"
+                className="min-h-[100px] resize-none px-3 py-2"
               />
             </div>
             <DialogFooter>
@@ -3188,7 +3165,7 @@ function ReportForm({
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <Check className="h-5 w-5 text-green-600" />
+                <Check className="h-5 w-5 text-lime-11" />
                 Sent to {PRINCIPAL_NAME} for review
               </DialogTitle>
               <DialogDescription>
@@ -3213,7 +3190,7 @@ function ReportForm({
         </Dialog>
 
         {/* Section nav — sticky pill list */}
-        <aside className="hidden w-48 shrink-0 overflow-y-auto border-x bg-white py-5 lg:block">
+        <aside className="hidden w-48 shrink-0 overflow-y-auto border-x bg-card py-5 lg:block">
           <div className="sticky top-0 px-3">
             <p className="mb-2 px-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Sections
@@ -3273,7 +3250,7 @@ function ReportForm({
 function ExportPassword({
   template,
   studentName,
-  onBack,
+  onBack: _onBack,
   onDownload,
 }: {
   template: AgencyTemplate
@@ -3327,14 +3304,14 @@ function ExportPassword({
             {template.name} · {studentName}
           </p>
         </div>
-        <Badge className="gap-1 bg-green-50 text-green-700 hover:bg-green-50">
+        <Badge className="gap-1 bg-lime-3 text-lime-11 hover:bg-lime-3">
           <Check className="h-3 w-3" /> Approved
         </Badge>
       </div>
 
       {/* Full report preview */}
       <div className="overflow-hidden rounded-xl border bg-slate-2">
-        <div className="border-b bg-slate-50 px-5 py-3">
+        <div className="border-b bg-muted px-5 py-3">
           <p className="text-sm font-semibold">Preview</p>
           <p className="text-xs text-muted-foreground">
             {template.name} for {studentName}
@@ -3381,7 +3358,7 @@ function ExportPassword({
       />
 
       {/* Encryption toggle + (conditional) password */}
-      <div className="space-y-4 rounded-xl bg-white p-5 shadow-[0_1px_0_rgba(0,0,0,0.04),0_8px_16px_-12px_rgba(0,0,0,0.12)]">
+      <div className="space-y-4 rounded-xl bg-card p-5 shadow-[0_1px_0_rgba(0,0,0,0.04),0_8px_16px_-12px_rgba(0,0,0,0.12)]">
         <div className="flex items-center justify-between gap-3">
           <span className="text-sm font-semibold">Encrypt with password</span>
           <Switch
@@ -3485,8 +3462,8 @@ function Confirmation({
 }) {
   return (
     <div className="flex flex-col items-center gap-4 py-16 text-center">
-      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-        <Check className="h-8 w-8 text-green-600" />
+      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-lime-3">
+        <Check className="h-8 w-8 text-lime-11" />
       </div>
       <div>
         <h2 className="text-2xl font-semibold">

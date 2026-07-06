@@ -17,7 +17,6 @@ import {
 
 import type {
   GroupTypeFilterOption,
-  StructuredGroup,
   StudentGroup,
 } from '@/types/student-group'
 import { getStructuredTypeLabel } from '@/types/student-group'
@@ -67,12 +66,6 @@ export const Route = createFileRoute('/groups/')({
 const CURRENT_USER_EMAIL = 'tanml@school.edu.sg'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function getUniqueClasses(members: StudentGroup['members']): Array<string> {
-  const seen = new Set<string>()
-  for (const m of members) seen.add(m.class)
-  return [...seen].sort()
-}
 
 function formatRelativeDate(dateStr: string): string {
   const date = new Date(dateStr)
@@ -276,33 +269,6 @@ function OwnershipFilterPopover({
   )
 }
 
-// ─── Classes pill list ─────────────────────────────────────────────────────────
-
-function ClassPills({
-  members,
-}: {
-  members: StudentGroup['members'] | StructuredGroup['members']
-}) {
-  const classes = getUniqueClasses(members)
-  const visible = classes.slice(0, 3)
-  const hidden = classes.length - 3
-  return (
-    <div className="flex flex-wrap items-center gap-1">
-      {visible.map((cls) => (
-        <span
-          key={cls}
-          className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground"
-        >
-          {cls}
-        </span>
-      ))}
-      {hidden > 0 && (
-        <span className="text-xs text-muted-foreground">+{hidden}</span>
-      )}
-    </div>
-  )
-}
-
 // ─── Main component ────────────────────────────────────────────────────────────
 
 type GroupTab = 'my-groups' | 'assigned'
@@ -432,7 +398,7 @@ function GroupsIndex() {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-2xl font-semibold">Groups</h1>
-              <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-900">
+              <span className="rounded-full bg-twblue-3 px-2 py-0.5 text-xs font-medium text-twblue-11">
                 Concept
               </span>
             </div>
@@ -640,15 +606,17 @@ function GroupsIndex() {
                           {!isShared ? (
                             // Owner: full dropdown
                             <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                                  aria-label="More actions"
-                                >
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
+                              <DropdownMenuTrigger
+                                render={
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                    aria-label="More actions"
+                                  />
+                                }
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
                                 <DropdownMenuItem
@@ -709,15 +677,17 @@ function GroupsIndex() {
                           ) : sharedRole === 'editor' ? (
                             // Shared editor: Edit + Make a copy
                             <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                                  aria-label="More actions"
-                                >
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
+                              <DropdownMenuTrigger
+                                render={
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                    aria-label="More actions"
+                                  />
+                                }
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
                                 <DropdownMenuItem
@@ -803,9 +773,9 @@ function GroupsIndex() {
         {tab === 'assigned' && (
           <>
             <div className="px-6">
-              <Alert className="border-blue-200 bg-blue-50/60 text-blue-900">
-                <Info className="h-4 w-4 text-blue-500" />
-                <AlertDescription className="text-blue-800">
+              <Alert className="border-twblue-6 bg-twblue-3/60 text-twblue-12">
+                <Info className="h-4 w-4 text-twblue-9" />
+                <AlertDescription className="text-twblue-11">
                   Membership updates automatically based on selected criteria.
                   Contact your school administrator to make changes.
                 </AlertDescription>
@@ -919,7 +889,7 @@ function GroupsIndex() {
                       'mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border',
                       deleteMode === 'delete-for-self'
                         ? 'border-primary bg-primary'
-                        : 'border-slate-300',
+                        : 'border-border',
                     )}
                   >
                     {deleteMode === 'delete-for-self' && (
@@ -953,7 +923,7 @@ function GroupsIndex() {
                       'mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border',
                       deleteMode === 'delete-for-everyone'
                         ? 'border-destructive bg-destructive'
-                        : 'border-slate-300',
+                        : 'border-border',
                     )}
                   >
                     {deleteMode === 'delete-for-everyone' && (

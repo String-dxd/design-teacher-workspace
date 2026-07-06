@@ -17,6 +17,7 @@ import {
   FEATURE_FLAGS_STORAGE_KEY,
 } from '@/lib/feature-flags'
 
+import { PRESENT_RING, SERIES_BLUE } from '@/lib/chart-colors'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -359,13 +360,13 @@ function PerformancePerSubjectChart() {
           <Bar
             dataKey="thisTerm"
             name="thisTerm"
-            fill="#228be6"
+            fill={SERIES_BLUE}
             radius={[4, 4, 0, 0]}
           />
           <Bar
             dataKey="lastTerm"
             name="lastTerm"
-            fill="#12b886"
+            fill={PRESENT_RING}
             radius={[4, 4, 0, 0]}
           />
         </BarChart>
@@ -571,7 +572,7 @@ function InsightBuddyPage() {
           <span className="font-semibold">Insight Buddy</span>
           <Badge
             variant="outline"
-            className="border-purple-300 bg-purple-50 text-purple-700 dark:border-purple-700 dark:bg-purple-950 dark:text-purple-300"
+            className="border-violet-6 bg-violet-3 text-violet-11"
           >
             Experiment
           </Badge>

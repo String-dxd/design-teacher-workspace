@@ -486,8 +486,8 @@ function GroupDetailPage() {
                 variant="outline"
                 className={cn(
                   group.visibility === 'school'
-                    ? 'border-green-200 bg-green-50 text-green-700'
-                    : 'border-slate-200 bg-slate-50 text-slate-600',
+                    ? 'border-lime-6 bg-lime-3 text-lime-11'
+                    : 'border-border bg-muted text-muted-foreground',
                 )}
               >
                 {group.visibility === 'school' ? 'School-wide' : 'Private'}
@@ -506,10 +506,12 @@ function GroupDetailPage() {
               Share
             </Button>
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" className="size-8">
-                  <MoreHorizontal className="size-4" />
-                </Button>
+              <DropdownMenuTrigger
+                render={
+                  <Button variant="outline" size="icon" className="size-8" />
+                }
+              >
+                <MoreHorizontal className="size-4" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem render={<Link to="/groups/new" />}>
@@ -562,14 +564,14 @@ function GroupDetailPage() {
 
       {/* Live group criteria banner */}
       {group.listType === 'live' && (
-        <Alert className="border-blue-200 bg-blue-50/60 text-blue-900">
-          <Info className="size-4 text-blue-500" />
-          <AlertDescription className="text-blue-800">
+        <Alert className="border-twblue-6 bg-twblue-3/60 text-twblue-12">
+          <Info className="size-4 text-twblue-9" />
+          <AlertDescription className="text-twblue-11">
             Membership updates automatically based on selected criteria.{' '}
             {group.criteriaSourceHref && (
               <Link
                 to={group.criteriaSourceHref as '/students'}
-                className="inline-flex items-center gap-1 underline underline-offset-2 hover:text-blue-700"
+                className="inline-flex items-center gap-1 underline underline-offset-2 hover:text-twblue-11"
               >
                 Manage in source
                 <ExternalLink className="size-3" />

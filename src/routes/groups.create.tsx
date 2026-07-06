@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { Upload, Users, X } from 'lucide-react'
+import { Upload, Users } from 'lucide-react'
 
-import { Button } from '@/components/ui/button'
+import { PageHeader } from '@/components/page-header'
 
 export const Route = createFileRoute('/groups/create')({
   component: GroupsCreate,
@@ -12,8 +12,8 @@ function ManualMockup() {
     <div className="flex flex-col gap-2.5 p-5">
       {(['w-3/4', 'w-2/3', 'w-4/5', 'w-3/5'] as const).map((w, i) => (
         <div key={i} className="flex items-center gap-2.5">
-          <div className="h-4 w-4 shrink-0 rounded border-2 border-slate-300" />
-          <div className={`h-2 rounded-full bg-slate-200 ${w}`} />
+          <div className="h-4 w-4 shrink-0 rounded border-2 border-border" />
+          <div className={`h-2 rounded-full bg-muted ${w}`} />
         </div>
       ))}
     </div>
@@ -23,12 +23,12 @@ function ManualMockup() {
 function UploadMockup() {
   return (
     <div className="flex flex-col items-center justify-center gap-3 px-4 py-6">
-      <div className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100">
-        <Upload className="h-5 w-5 text-slate-400" />
+      <div className="flex h-11 w-11 items-center justify-center rounded-full bg-muted">
+        <Upload className="h-5 w-5 text-muted-foreground" />
       </div>
       <div className="flex flex-col items-center gap-1">
-        <div className="h-2 w-24 rounded-full bg-slate-300" />
-        <div className="h-1.5 w-32 rounded-full bg-slate-200" />
+        <div className="h-2 w-24 rounded-full bg-border" />
+        <div className="h-1.5 w-32 rounded-full bg-muted" />
       </div>
     </div>
   )
@@ -58,18 +58,10 @@ function GroupsCreate() {
 
   return (
     <div className="flex min-h-[calc(100vh-57px)] flex-col bg-muted/30">
-      {/* Top bar */}
-      <div className="flex items-center justify-between px-6 py-4">
-        <span className="text-sm font-medium text-foreground">New group</span>
-        <Button
-          variant="outline"
-          size="icon"
-          className="rounded-full"
-          onClick={() => navigate({ to: '/groups' })}
-        >
-          <X className="h-4 w-4" />
-        </Button>
-      </div>
+      <PageHeader
+        title="New group"
+        onClose={() => navigate({ to: '/groups' })}
+      />
 
       {/* Content */}
       <div className="flex flex-1 items-start justify-center px-6 pt-12 sm:items-center sm:pt-0">
@@ -89,9 +81,9 @@ function GroupsCreate() {
                 key={opt.key}
                 type="button"
                 onClick={() => navigate({ to: opt.href })}
-                className="group flex flex-col overflow-hidden rounded-xl border-2 border-slate-200 bg-white text-left transition-all duration-150 ease-out hover:border-primary/40 hover:shadow-sm active:scale-[0.98]"
+                className="group flex flex-col overflow-hidden rounded-xl border-2 border-border bg-card text-left transition-all duration-150 ease-out hover:border-primary/40 hover:shadow-sm active:scale-[0.98]"
               >
-                <div className="border-b border-slate-100 bg-slate-50">
+                <div className="border-b border-border bg-muted">
                   {opt.mockup}
                 </div>
                 <div className="p-4">

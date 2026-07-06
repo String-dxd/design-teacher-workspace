@@ -9,7 +9,6 @@ import {
   Trophy,
   User,
 } from 'lucide-react'
-import { TEMPLATES } from './hdp-template-step'
 import type { TemplateId } from './hdp-template-step'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
@@ -29,58 +28,58 @@ const SECTION_DEFS: Array<SectionDef> = [
     key: 'studentInfo',
     label: 'Student Information',
     description: 'Name, class, index number, form teacher',
-    icon: <User className="size-4 text-blue-600" />,
-    iconBg: 'bg-blue-50',
+    icon: <User className="size-4 text-twblue-11" />,
+    iconBg: 'bg-twblue-3',
     required: true,
   },
   {
     key: 'attendance',
     label: 'Attendance & Conduct',
     description: 'Days present, absences, late-coming, conduct grade',
-    icon: <ClipboardCheck className="size-4 text-emerald-600" />,
-    iconBg: 'bg-emerald-50',
+    icon: <ClipboardCheck className="size-4 text-lime-11" />,
+    iconBg: 'bg-lime-3',
   },
   {
     key: 'academic',
     label: 'Academic Performance',
     description: 'Subject results, grades, and learning outcomes',
-    icon: <GraduationCap className="size-4 text-violet-600" />,
-    iconBg: 'bg-violet-50',
+    icon: <GraduationCap className="size-4 text-violet-11" />,
+    iconBg: 'bg-violet-3',
   },
   {
     key: 'teacherComments',
     label: 'Teacher Comments',
     description: 'Observations and next steps from form teacher',
-    icon: <MessageSquare className="size-4 text-orange-600" />,
-    iconBg: 'bg-orange-50',
+    icon: <MessageSquare className="size-4 text-orange-11" />,
+    iconBg: 'bg-orange-3',
   },
   {
     key: 'coreValues',
     label: 'Core Values',
     description: 'Character development assessment and radar chart',
-    icon: <Star className="size-4 text-amber-600" />,
-    iconBg: 'bg-amber-50',
+    icon: <Star className="size-4 text-amber-11" />,
+    iconBg: 'bg-amber-3',
   },
   {
     key: 'physicalFitness',
     label: 'Physical Fitness',
     description: 'BMI category and NAPFA results',
-    icon: <Activity className="size-4 text-rose-600" />,
-    iconBg: 'bg-rose-50',
+    icon: <Activity className="size-4 text-crimson-11" />,
+    iconBg: 'bg-crimson-3',
   },
   {
     key: 'via',
     label: 'Values in Action (VIA)',
     description: 'Community service activities and hours',
-    icon: <Heart className="size-4 text-pink-600" />,
-    iconBg: 'bg-pink-50',
+    icon: <Heart className="size-4 text-crimson-11" />,
+    iconBg: 'bg-crimson-3',
   },
   {
     key: 'cca',
     label: 'Co-Curricular Activities (CCA)',
     description: 'CCA participation, role, and achievements',
-    icon: <Trophy className="size-4 text-cyan-600" />,
-    iconBg: 'bg-cyan-50',
+    icon: <Trophy className="size-4 text-twblue-11" />,
+    iconBg: 'bg-twblue-3',
   },
 ]
 
@@ -93,10 +92,8 @@ interface HdpDataStepProps {
 export function HdpDataStep({
   selectedSections,
   onToggleSection,
-  templateId,
+  templateId: _templateId,
 }: HdpDataStepProps) {
-  const templateName =
-    TEMPLATES.find((t) => t.id === templateId)?.name ?? 'Custom'
   const enabledCount = Object.values(selectedSections).filter(Boolean).length
 
   return (
@@ -108,7 +105,7 @@ export function HdpDataStep({
         </p>
       </div>
 
-      <div className="flex items-center gap-2 rounded-lg bg-blue-50 px-4 py-3 text-sm text-blue-700">
+      <div className="flex items-center gap-2 rounded-lg bg-twblue-3 px-4 py-3 text-sm text-twblue-11">
         <Info className="size-4 shrink-0" />
         <span>
           Only data you have permission to access will be included. Restricted

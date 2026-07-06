@@ -25,6 +25,7 @@ import { EnquiryEmailSelector } from '@/components/comms/enquiry-email-selector'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -206,11 +207,11 @@ function NewFormPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50">
+    <div className="flex min-h-screen flex-col bg-background">
       {/* ---------------------------------------------------------------- */}
       {/* Sticky header                                                    */}
       {/* ---------------------------------------------------------------- */}
-      <div className="sticky top-0 z-10 bg-white">
+      <div className="sticky top-0 z-10 bg-card">
         <div className="flex items-center gap-3 border-b px-6 py-3">
           <Button
             variant="ghost"
@@ -238,7 +239,7 @@ function NewFormPage() {
           {/* -------------------------------------------------------------- */}
           {/* Section 1: Recipients                                           */}
           {/* -------------------------------------------------------------- */}
-          <section className="rounded-xl border bg-white p-6">
+          <section className="rounded-xl border bg-card p-6">
             <h2 className="mb-5 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
               Recipients
             </h2>
@@ -286,7 +287,7 @@ function NewFormPage() {
           {/* -------------------------------------------------------------- */}
           {/* Section 2: Content                                               */}
           {/* -------------------------------------------------------------- */}
-          <section className="rounded-xl border bg-white p-6">
+          <section className="rounded-xl border bg-card p-6">
             <h2 className="mb-5 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
               Content
             </h2>
@@ -325,14 +326,14 @@ function NewFormPage() {
                     {instructions.length}/2000
                   </span>
                 </div>
-                <textarea
+                <Textarea
                   id="instructions"
                   placeholder="Write instructions or context for parents filling out this form."
                   value={instructions}
                   onChange={(e) => setInstructions(e.target.value)}
                   maxLength={2000}
                   rows={5}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-ring resize-none"
+                  className="resize-none"
                 />
               </div>
             </div>
@@ -341,14 +342,14 @@ function NewFormPage() {
           {/* -------------------------------------------------------------- */}
           {/* Section 3: Questions                                            */}
           {/* -------------------------------------------------------------- */}
-          <section className="rounded-xl border bg-white p-6">
+          <section className="rounded-xl border bg-card p-6">
             <h2 className="mb-5 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
               Questions
             </h2>
 
             {questions.length === 0 ? (
-              <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-slate-300 py-10 text-center">
-                <MessageSquare className="h-8 w-8 text-slate-300" />
+              <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-border py-10 text-center">
+                <MessageSquare className="h-8 w-8 text-muted-foreground" />
                 <p className="text-sm text-muted-foreground">
                   Add your first question
                 </p>
@@ -365,11 +366,11 @@ function NewFormPage() {
                   return (
                     <div
                       key={question.id}
-                      className="rounded-lg border border-slate-200 bg-slate-50 p-4"
+                      className="rounded-lg border border-border bg-muted p-4"
                     >
                       {/* Question header row */}
                       <div className="mb-3 flex items-start gap-2">
-                        <GripVertical className="mt-2.5 h-4 w-4 shrink-0 cursor-grab text-slate-300" />
+                        <GripVertical className="mt-2.5 h-4 w-4 shrink-0 cursor-grab text-muted-foreground" />
                         <div className="flex-1 space-y-3">
                           {/* Question text */}
                           <Input
@@ -388,7 +389,7 @@ function NewFormPage() {
                               render={
                                 <button
                                   type="button"
-                                  className="flex items-center gap-2 rounded-md border border-input bg-background px-3 py-1.5 text-sm transition-colors hover:bg-slate-50"
+                                  className="flex items-center gap-2 rounded-md border border-input bg-background px-3 py-1.5 text-sm transition-colors hover:bg-muted"
                                 >
                                   <TypeIcon className="h-3.5 w-3.5 text-muted-foreground" />
                                   <span>{typeConfig?.label}</span>
@@ -462,7 +463,7 @@ function NewFormPage() {
                                       onClick={() =>
                                         removeOption(question.id, optIndex)
                                       }
-                                      className="shrink-0 rounded p-1 text-slate-400 transition-colors hover:bg-slate-200 hover:text-slate-600"
+                                      className="shrink-0 rounded p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                                       aria-label={`Remove option ${optIndex + 1}`}
                                     >
                                       <Trash2 className="h-3.5 w-3.5" />
@@ -475,7 +476,7 @@ function NewFormPage() {
                                 <button
                                   type="button"
                                   onClick={() => addOption(question.id)}
-                                  className="flex items-center gap-1.5 rounded px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-slate-200 hover:text-foreground"
+                                  className="flex items-center gap-1.5 rounded px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                                 >
                                   <Plus className="h-3 w-3" />
                                   Add option
@@ -508,7 +509,7 @@ function NewFormPage() {
                           <button
                             type="button"
                             onClick={() => removeQuestion(question.id)}
-                            className="rounded p-1.5 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-500"
+                            className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
                             aria-label="Delete question"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -558,7 +559,7 @@ function NewFormPage() {
           {/* -------------------------------------------------------------- */}
           {/* Section 4: Settings                                             */}
           {/* -------------------------------------------------------------- */}
-          <section className="rounded-xl border bg-white p-6">
+          <section className="rounded-xl border bg-card p-6">
             <h2 className="mb-5 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
               Settings
             </h2>

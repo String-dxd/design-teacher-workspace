@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import { Check, ChevronDown, Search, X } from 'lucide-react'
+import { ChevronDown, Search, X } from 'lucide-react'
 
 import type {
   FilterCriterion,
-  FilterField,
   FilterOperator,
 } from '@/types/student'
 import {
@@ -13,7 +12,13 @@ import {
 } from '@/data/filter-config'
 import { useFeatureFlags } from '@/lib/feature-flags'
 import { cn } from '@/lib/utils'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from '@/components/ui/input-group'
 import {
   Popover,
   PopoverContent,
@@ -80,8 +85,15 @@ export function ProfileGroupCriteriaRow({
   const isStudentInsightsView =
     !isEnabled('student-analytics') && !isEnabled('student-analytics-basic')
   const msfUpliftEnabled = isEnabled('msf-uplift-data')
+  const overallPercentageEnabled = isEnabled('overall-percentage')
+  const socialLinksEnabled = isEnabled('social-links')
 
   const visibleFields = filterFieldConfigs.filter((f) => {
+    // Date range is a data-view setting, not a student attribute to group by
+    if (f.field === 'dateRange') return false
+    if (!overallPercentageEnabled && f.field === 'overallPercentage')
+      return false
+    if (!socialLinksEnabled && f.field === 'socialLinks') return false
     if (
       isStudentInsightsView &&
       (f.field === 'approvedMtl' ||
@@ -94,6 +106,7 @@ export function ProfileGroupCriteriaRow({
       !msfUpliftEnabled &&
       (f.field === 'supportedByComLink' ||
         f.field === 'supportedByFsc' ||
+        f.field === 'parentsConsideringDivorce' ||
         f.field === 'nonIntactFamily')
     )
       return false
@@ -178,7 +191,7 @@ export function ProfileGroupCriteriaRow({
             <button
               type="button"
               className={cn(
-                'border-input flex h-9 w-[180px] shrink-0 items-center justify-between gap-1.5 rounded-[14px] border bg-white px-3 text-sm outline-none',
+                'border-input flex h-9 w-[180px] shrink-0 items-center justify-between gap-1.5 rounded-[14px] border bg-card px-3 text-sm outline-none',
                 !hasField && 'text-muted-foreground',
               )}
               aria-expanded={fieldOpen}
@@ -191,16 +204,17 @@ export function ProfileGroupCriteriaRow({
           <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
         </PopoverTrigger>
         <PopoverContent className="w-[420px] gap-0 p-3" align="start">
-          <div className="mb-1 flex items-center gap-2 rounded-lg border border-blue-400 px-3 py-2 focus-within:border-blue-500">
-            <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
-            <input
+          <InputGroup className="mb-1">
+            <InputGroupAddon align="inline-start">
+              <Search className="h-4 w-4" />
+            </InputGroupAddon>
+            <InputGroupInput
               ref={fieldSearchRef}
-              className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
               placeholder="Search..."
               value={fieldQuery}
               onChange={(e) => setFieldQuery(e.target.value)}
             />
-          </div>
+          </InputGroup>
           <ScrollArea className="h-[260px]">
             <div className="py-1">
               {groupedFields.map(({ group, label, fields }, gi) => (
@@ -252,7 +266,7 @@ export function ProfileGroupCriteriaRow({
       >
         <SelectTrigger
           className={cn(
-            'h-9 w-[160px] shrink-0 rounded-[14px] bg-white',
+            'h-9 w-[160px] shrink-0 rounded-[14px] bg-card',
             !hasField && 'text-muted-foreground',
           )}
         >
@@ -278,7 +292,7 @@ export function ProfileGroupCriteriaRow({
           <Input
             disabled
             placeholder="Enter value"
-            className="h-9 rounded-[14px] bg-white"
+            className="h-9 rounded-[14px] bg-card"
           />
         ) : (
           needsValueInput &&
@@ -307,7 +321,7 @@ export function ProfileGroupCriteriaRow({
             >
               <SelectTrigger
                 className={cn(
-                  'h-9 w-full rounded-[14px] bg-white',
+                  'h-9 w-full rounded-[14px] bg-card',
                   !criterion.value && 'text-muted-foreground',
                 )}
               >
@@ -346,7 +360,7 @@ export function ProfileGroupCriteriaRow({
                 handleValueChange(Number.isNaN(num) ? raw : num)
               }}
               placeholder="Enter number"
-              className="h-9 rounded-[14px] bg-white"
+              className="h-9 rounded-[14px] bg-card"
             />
           ) : (
             <Input
@@ -359,7 +373,7 @@ export function ProfileGroupCriteriaRow({
               }
               onChange={(e) => handleValueChange(e.target.value)}
               placeholder="Enter value"
-              className="h-9 rounded-[14px] bg-white"
+              className="h-9 rounded-[14px] bg-card"
             />
           ))
         )}
@@ -401,8 +415,8 @@ function MultiselectValue({
   searchRef,
 }: MultiselectValueProps) {
   const sortedOptions = [
-    ...(options.includes('-') ? ['-'] : []),
-    ...options.filter((v) => v !== '-'),
+    ...(options.includes('None') ? ['None'] : []),
+    ...options.filter((v) => v !== 'None'),
   ]
   const q = query.trim().toLowerCase()
   const visible = q
@@ -431,7 +445,7 @@ function MultiselectValue({
           <button
             type="button"
             className={cn(
-              'border-input flex h-9 w-full items-center justify-between gap-1.5 rounded-[14px] border bg-white px-3 text-sm outline-none',
+              'border-input flex h-9 w-full items-center justify-between gap-1.5 rounded-[14px] border bg-card px-3 text-sm outline-none',
               selected.length === 0 && 'text-muted-foreground',
             )}
           />
@@ -447,16 +461,17 @@ function MultiselectValue({
         <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
       </PopoverTrigger>
       <PopoverContent className="w-[260px] gap-0 p-3" align="start">
-        <div className="mb-1 flex items-center gap-2 rounded-lg border border-blue-400 px-3 py-2 focus-within:border-blue-500">
-          <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
-          <input
+        <InputGroup className="mb-1">
+          <InputGroupAddon align="inline-start">
+            <Search className="h-4 w-4" />
+          </InputGroupAddon>
+          <InputGroupInput
             ref={searchRef}
-            className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
             placeholder="Search filters"
             value={query}
             onChange={(e) => onQueryChange(e.target.value)}
           />
-        </div>
+        </InputGroup>
         <div className="px-3 pt-2 pb-1 text-sm font-medium">{fieldLabel}</div>
         <ScrollArea className="max-h-[220px]">
           <div className="py-1">
@@ -466,16 +481,7 @@ function MultiselectValue({
                 onClick={toggleAll}
                 className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm hover:bg-accent"
               >
-                <div
-                  className={cn(
-                    'flex h-4 w-4 shrink-0 items-center justify-center rounded border',
-                    allSelected
-                      ? 'border-primary bg-primary text-primary-foreground'
-                      : 'border-input',
-                  )}
-                >
-                  {allSelected && <Check className="h-3 w-3" />}
-                </div>
+                <Checkbox checked={allSelected} className="pointer-events-none" />
                 Select all
               </button>
             )}
@@ -491,16 +497,7 @@ function MultiselectValue({
                     checked && 'bg-accent/50',
                   )}
                 >
-                  <div
-                    className={cn(
-                      'flex h-4 w-4 shrink-0 items-center justify-center rounded border',
-                      checked
-                        ? 'border-primary bg-primary text-primary-foreground'
-                        : 'border-input',
-                    )}
-                  >
-                    {checked && <Check className="h-3 w-3" />}
-                  </div>
+                  <Checkbox checked={checked} className="pointer-events-none" />
                   {v}
                 </button>
               )

@@ -57,7 +57,7 @@ function NotificationItem({ announcement, onSelect }: NotificationItemProps) {
       className="flex gap-3 px-4 py-3 transition-colors hover:bg-muted/50"
     >
       {!announcement.isRead && (
-        <span className="mt-1.5 size-2 shrink-0 rounded-full bg-pink-500" />
+        <span className="mt-1.5 size-2 shrink-0 rounded-full bg-crimson-9" />
       )}
       <div
         className={cn(
@@ -118,7 +118,7 @@ export function NotificationPopover() {
       >
         <Bell className="size-4" />
         {unreadCount > 0 && (
-          <span className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full bg-blue-500 ring-2 ring-background" />
+          <span className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full bg-twblue-9 ring-2 ring-background" />
         )}
       </PopoverTrigger>
 

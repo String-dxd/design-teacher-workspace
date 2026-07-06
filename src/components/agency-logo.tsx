@@ -23,17 +23,17 @@ function agencyTint(name: string): string {
   for (let i = 0; i < name.length; i++)
     hash = (hash * 31 + name.charCodeAt(i)) | 0
   const hues = [
-    '#0064ff',
-    '#7c3aed',
-    '#16a34a',
-    '#ea580c',
-    '#db2777',
-    '#0891b2',
+    'var(--color-twblue-9)',
+    'var(--color-violet-9)',
+    'var(--color-lime-9)',
+    'var(--color-orange-9)',
+    'var(--color-crimson-9)',
+    'var(--color-twblue-9)',
   ]
   return hues[Math.abs(hash) % hues.length]
 }
 
-export type AgencyLogoSize = 'sm' | 'md' | 'lg'
+type AgencyLogoSize = 'sm' | 'md' | 'lg'
 
 const SIZE_CLASSES: Record<
   AgencyLogoSize,

@@ -1,7 +1,6 @@
 import type { SchoolLevel } from '@/types/report'
 import type {
   AttentionTag,
-  ClassOption,
   Student,
   TermlyAccumulatingData,
 } from '@/types/student'
@@ -60,16 +59,8 @@ export const mockStudents: Array<Student> = [
     socialLinks: 2,
     selectedBy: [{ name: 'Tan Mei Ling', class: '3A', closenessRating: 1 }],
     selectedFriends: [{ name: 'Anna Lee', class: '3A', closenessRating: null }],
-    counsellingSessions: 2,
-    counsellingCases: [
-      {
-        category: 'Relationship issues',
-        subcases: [
-          { name: 'Family', count: 1, latestDate: '14 Sep 2025' },
-          { name: 'Peer', count: 1, latestDate: '3 Mar 2025' },
-        ],
-      },
-    ],
+    counsellingSessions: 1,
+    counsellingComplexity: 'Complex cases',
     sen: null,
     fas: 'MOE FAS',
     housing: 'HDB 3-room',
@@ -219,23 +210,8 @@ export const mockStudents: Array<Student> = [
     socialLinks: 1,
     selectedBy: [],
     selectedFriends: [{ name: 'Linda Ong', class: '3A', closenessRating: 3 }],
-    counsellingSessions: 6,
-    counsellingCases: [
-      {
-        category: 'Relationship issues',
-        subcases: [
-          {
-            name: 'Boy-girl relationship',
-            count: 1,
-            latestDate: '28 Sep 2025',
-          },
-          { name: 'Family', count: 1, latestDate: '28 Sep 2025' },
-          { name: 'Peer', count: 1, latestDate: '28 Sep 2025' },
-        ],
-      },
-      { category: 'Bullying (Cyber)', count: 1, latestDate: '28 Sep 2025' },
-      { category: 'Academic stress', count: 2, latestDate: '14 Nov 2025' },
-    ],
+    counsellingSessions: 1,
+    counsellingComplexity: 'Complex cases',
     sen: 'ADHD',
     fas: 'MOE FAS, School FAS',
     housing: 'HDB 2-room',
@@ -306,6 +282,7 @@ export const mockStudents: Array<Student> = [
       { name: 'Hui Min', class: '3A', closenessRating: 4 },
     ],
     counsellingSessions: 1,
+    counsellingComplexity: 'Less complex cases',
     sen: null,
     fas: null,
     housing: 'Condo',
@@ -461,7 +438,8 @@ export const mockStudents: Array<Student> = [
     riskIndicators: 5,
     lowMoodFlagged: 'Yes (3 terms)',
     socialLinks: 0,
-    counsellingSessions: 8,
+    counsellingSessions: 1,
+    counsellingComplexity: 'Complex cases',
     sen: null,
     fas: 'School FAS',
     housing: 'HDB 3-room',
@@ -509,7 +487,8 @@ export const mockStudents: Array<Student> = [
     riskIndicators: 2,
     lowMoodFlagged: null,
     socialLinks: 4,
-    counsellingSessions: 2,
+    counsellingSessions: 1,
+    counsellingComplexity: 'Complex cases',
     sen: null,
     fas: null,
     housing: 'HDB 5-room',
@@ -552,7 +531,8 @@ export const mockStudents: Array<Student> = [
     riskIndicators: 5,
     lowMoodFlagged: 'Yes (2 terms)',
     socialLinks: 1,
-    counsellingSessions: 10,
+    counsellingSessions: 1,
+    counsellingComplexity: 'Complex cases',
     sen: 'ASD',
     fas: 'MOE FAS, School FAS',
     housing: 'HDB 2-room',
@@ -599,7 +579,8 @@ export const mockStudents: Array<Student> = [
       { year: 2025, terms: ['Term 3', 'Term 4'] },
     ],
     socialLinks: 2,
-    counsellingSessions: 3,
+    counsellingSessions: 1,
+    counsellingComplexity: 'Complex cases',
     sen: null,
     fas: null,
     housing: 'HDB 4-room',
@@ -729,6 +710,7 @@ export const mockStudents: Array<Student> = [
     lowMoodFlagged: null,
     socialLinks: 4,
     counsellingSessions: 1,
+    counsellingComplexity: 'Less complex cases',
     sen: null,
     fas: null,
     housing: 'HDB 4-room',
@@ -818,7 +800,8 @@ export const mockStudents: Array<Student> = [
       { year: 2025, terms: ['Term 3', 'Term 4'] },
     ],
     socialLinks: 2,
-    counsellingSessions: 4,
+    counsellingSessions: 1,
+    counsellingComplexity: 'Complex cases',
     sen: null,
     fas: 'MOE FAS',
     housing: 'HDB 3-room',
@@ -904,7 +887,8 @@ export const mockStudents: Array<Student> = [
     riskIndicators: 2,
     lowMoodFlagged: null,
     socialLinks: 3,
-    counsellingSessions: 2,
+    counsellingSessions: 1,
+    counsellingComplexity: 'Complex cases',
     sen: 'ADHD',
     fas: null,
     housing: 'HDB 4-room',
@@ -948,6 +932,7 @@ export const mockStudents: Array<Student> = [
     lowMoodFlagged: null,
     socialLinks: 3,
     counsellingSessions: 1,
+    counsellingComplexity: 'Less complex cases',
     sen: null,
     fas: 'MOE FAS',
     housing: 'HDB 2-room',
@@ -991,6 +976,7 @@ export const mockStudents: Array<Student> = [
     lowMoodFlagged: null,
     socialLinks: 5,
     counsellingSessions: 1,
+    counsellingComplexity: 'Less complex cases',
     sen: null,
     fas: null,
     housing: 'HDB 5-room',
@@ -1080,7 +1066,8 @@ export const mockStudents: Array<Student> = [
       { year: 2025, terms: ['Term 3', 'Term 4'] },
     ],
     socialLinks: 2,
-    counsellingSessions: 3,
+    counsellingSessions: 1,
+    counsellingComplexity: 'Complex cases',
     sen: 'Dyslexia',
     fas: null,
     housing: 'HDB 3-room',
@@ -1166,7 +1153,8 @@ export const mockStudents: Array<Student> = [
     riskIndicators: 4,
     lowMoodFlagged: 'Yes (2 terms)',
     socialLinks: 1,
-    counsellingSessions: 8,
+    counsellingSessions: 1,
+    counsellingComplexity: 'Complex cases',
     sen: 'ASD',
     fas: 'MOE FAS, School FAS',
     housing: 'HDB 2-room',
@@ -1338,7 +1326,8 @@ export const mockStudents: Array<Student> = [
     riskIndicators: 3,
     lowMoodFlagged: null,
     socialLinks: 3,
-    counsellingSessions: 2,
+    counsellingSessions: 1,
+    counsellingComplexity: 'Complex cases',
     sen: null,
     fas: null,
     housing: 'HDB 5-room',
@@ -1424,7 +1413,8 @@ export const mockStudents: Array<Student> = [
     riskIndicators: 2,
     lowMoodFlagged: null,
     socialLinks: 3,
-    counsellingSessions: 2,
+    counsellingSessions: 1,
+    counsellingComplexity: 'Complex cases',
     sen: null,
     fas: 'School FAS',
     housing: 'HDB 3-room',
@@ -1511,6 +1501,7 @@ export const mockStudents: Array<Student> = [
     lowMoodFlagged: null,
     socialLinks: 4,
     counsellingSessions: 1,
+    counsellingComplexity: 'Less complex cases',
     sen: 'Dyslexia',
     fas: null,
     housing: 'HDB 4-room',
@@ -1597,6 +1588,7 @@ export const mockStudents: Array<Student> = [
     lowMoodFlagged: null,
     socialLinks: 4,
     counsellingSessions: 1,
+    counsellingComplexity: 'Less complex cases',
     sen: null,
     fas: null,
     housing: 'HDB 4-room',
@@ -1683,6 +1675,7 @@ export const mockStudents: Array<Student> = [
     lowMoodFlagged: null,
     socialLinks: 3,
     counsellingSessions: 1,
+    counsellingComplexity: 'Less complex cases',
     sen: null,
     fas: 'MOE FAS',
     housing: 'HDB 3-room',
@@ -1859,7 +1852,8 @@ export const mockStudents: Array<Student> = [
       { year: 2025, terms: ['Term 3', 'Term 4'] },
     ],
     socialLinks: 2,
-    counsellingSessions: 4,
+    counsellingSessions: 1,
+    counsellingComplexity: 'Complex cases',
     sen: 'ADHD',
     fas: 'MOE FAS',
     housing: 'HDB 2-room',
@@ -1946,6 +1940,7 @@ export const mockStudents: Array<Student> = [
     lowMoodFlagged: null,
     socialLinks: 4,
     counsellingSessions: 1,
+    counsellingComplexity: 'Less complex cases',
     sen: null,
     fas: null,
     housing: 'HDB 4-room',
@@ -2032,6 +2027,7 @@ export const mockStudents: Array<Student> = [
     lowMoodFlagged: null,
     socialLinks: 3,
     counsellingSessions: 1,
+    counsellingComplexity: 'Less complex cases',
     sen: null,
     fas: 'School FAS',
     housing: 'HDB 3-room',
@@ -2117,7 +2113,8 @@ export const mockStudents: Array<Student> = [
     riskIndicators: 2,
     lowMoodFlagged: null,
     socialLinks: 3,
-    counsellingSessions: 2,
+    counsellingSessions: 1,
+    counsellingComplexity: 'Complex cases',
     sen: null,
     fas: 'MOE FAS',
     housing: 'HDB 3-room',
@@ -2207,7 +2204,8 @@ export const mockStudents: Array<Student> = [
       { year: 2025, terms: ['Term 3', 'Term 4'] },
     ],
     socialLinks: 2,
-    counsellingSessions: 5,
+    counsellingSessions: 1,
+    counsellingComplexity: 'Complex cases',
     sen: 'Dyslexia',
     fas: null,
     housing: 'HDB 4-room',
@@ -2716,7 +2714,7 @@ export const mockStudents: Array<Student> = [
     overallPercentage: 79,
     conduct: 'Good',
     approvedMtl: null,
-    learningSupport: null,
+    learningSupport: 'None',
     postSecEligibility: '648 Poly',
     offences: 0,
     absences: 4,
@@ -2726,7 +2724,8 @@ export const mockStudents: Array<Student> = [
     lowMoodFlagged: null,
     socialLinks: 4,
     counsellingSessions: 1,
-    sen: null,
+    counsellingComplexity: 'Less complex cases',
+    sen: 'Attention Deficit Hyperactivity Disorder',
     fas: 'MOE FAS',
     housing: 'HDB 3-room',
     housingType: 'Rented',
@@ -3329,6 +3328,7 @@ export const mockStudents: Array<Student> = [
     lowMoodFlagged: null,
     socialLinks: 4,
     counsellingSessions: 1,
+    counsellingComplexity: 'Less complex cases',
     sen: null,
     fas: null,
     housing: 'HDB 4-room',
@@ -3373,6 +3373,7 @@ export const mockStudents: Array<Student> = [
     lowMoodFlagged: null,
     socialLinks: 3,
     counsellingSessions: 1,
+    counsellingComplexity: 'Less complex cases',
     sen: null,
     fas: null,
     housing: 'HDB 3-room',
@@ -3460,6 +3461,7 @@ export const mockStudents: Array<Student> = [
     lowMoodFlagged: null,
     socialLinks: 4,
     counsellingSessions: 1,
+    counsellingComplexity: 'Less complex cases',
     sen: null,
     fas: null,
     housing: 'HDB 3-room',
@@ -3503,6 +3505,7 @@ export const mockStudents: Array<Student> = [
     lowMoodFlagged: null,
     socialLinks: 3,
     counsellingSessions: 1,
+    counsellingComplexity: 'Less complex cases',
     sen: null,
     fas: null,
     housing: 'HDB 4-room',
@@ -3591,6 +3594,7 @@ export const mockStudents: Array<Student> = [
     lowMoodFlagged: null,
     socialLinks: 3,
     counsellingSessions: 1,
+    counsellingComplexity: 'Less complex cases',
     sen: null,
     fas: null,
     housing: 'HDB 3-room',
@@ -3635,6 +3639,7 @@ export const mockStudents: Array<Student> = [
     lowMoodFlagged: null,
     socialLinks: 3,
     counsellingSessions: 1,
+    counsellingComplexity: 'Less complex cases',
     sen: null,
     fas: 'MOE FAS',
     housing: 'HDB 2-room',
@@ -3679,6 +3684,7 @@ export const mockStudents: Array<Student> = [
     lowMoodFlagged: null,
     socialLinks: 3,
     counsellingSessions: 1,
+    counsellingComplexity: 'Less complex cases',
     sen: null,
     fas: null,
     housing: 'HDB 3-room',
@@ -3723,6 +3729,7 @@ export const mockStudents: Array<Student> = [
     lowMoodFlagged: null,
     socialLinks: 3,
     counsellingSessions: 1,
+    counsellingComplexity: 'Less complex cases',
     sen: null,
     fas: null,
     housing: 'HDB 4-room',
@@ -3766,6 +3773,7 @@ export const mockStudents: Array<Student> = [
     lowMoodFlagged: null,
     socialLinks: 3,
     counsellingSessions: 1,
+    counsellingComplexity: 'Less complex cases',
     sen: null,
     fas: null,
     housing: 'HDB 3-room',
@@ -3810,6 +3818,7 @@ export const mockStudents: Array<Student> = [
     lowMoodFlagged: null,
     socialLinks: 3,
     counsellingSessions: 1,
+    counsellingComplexity: 'Less complex cases',
     sen: null,
     fas: null,
     housing: 'HDB 3-room',
@@ -3854,6 +3863,7 @@ export const mockStudents: Array<Student> = [
     lowMoodFlagged: null,
     socialLinks: 2,
     counsellingSessions: 1,
+    counsellingComplexity: 'Less complex cases',
     sen: null,
     fas: null,
     housing: 'HDB 3-room',
@@ -3901,7 +3911,8 @@ export const mockStudents: Array<Student> = [
       { year: 2025, terms: ['Term 3', 'Term 4'] },
     ],
     socialLinks: 2,
-    counsellingSessions: 2,
+    counsellingSessions: 1,
+    counsellingComplexity: 'Complex cases',
     sen: null,
     fas: 'MOE FAS',
     housing: 'HDB 2-room',
@@ -3946,6 +3957,7 @@ export const mockStudents: Array<Student> = [
     lowMoodFlagged: null,
     socialLinks: 3,
     counsellingSessions: 1,
+    counsellingComplexity: 'Less complex cases',
     sen: null,
     fas: null,
     housing: 'HDB 3-room',
@@ -3990,6 +4002,7 @@ export const mockStudents: Array<Student> = [
     lowMoodFlagged: null,
     socialLinks: 3,
     counsellingSessions: 1,
+    counsellingComplexity: 'Less complex cases',
     sen: null,
     fas: null,
     housing: 'HDB 4-room',
@@ -4033,6 +4046,7 @@ export const mockStudents: Array<Student> = [
     lowMoodFlagged: null,
     socialLinks: 3,
     counsellingSessions: 1,
+    counsellingComplexity: 'Less complex cases',
     sen: null,
     fas: null,
     housing: 'HDB 3-room',
@@ -4075,7 +4089,8 @@ export const mockStudents: Array<Student> = [
     riskIndicators: 3,
     lowMoodFlagged: null,
     socialLinks: 2,
-    counsellingSessions: 2,
+    counsellingSessions: 1,
+    counsellingComplexity: 'Complex cases',
     sen: null,
     fas: null,
     housing: 'HDB 3-room',
@@ -4122,7 +4137,8 @@ export const mockStudents: Array<Student> = [
       { year: 2025, terms: ['Term 3', 'Term 4'] },
     ],
     socialLinks: 2,
-    counsellingSessions: 2,
+    counsellingSessions: 1,
+    counsellingComplexity: 'Complex cases',
     sen: null,
     fas: 'MOE FAS',
     housing: 'HDB 2-room',
@@ -4166,7 +4182,8 @@ export const mockStudents: Array<Student> = [
     riskIndicators: 3,
     lowMoodFlagged: null,
     socialLinks: 2,
-    counsellingSessions: 2,
+    counsellingSessions: 1,
+    counsellingComplexity: 'Complex cases',
     sen: null,
     fas: null,
     housing: 'HDB 3-room',
@@ -4209,7 +4226,8 @@ export const mockStudents: Array<Student> = [
     riskIndicators: 2,
     lowMoodFlagged: null,
     socialLinks: 2,
-    counsellingSessions: 2,
+    counsellingSessions: 1,
+    counsellingComplexity: 'Complex cases',
     sen: null,
     fas: null,
     housing: 'HDB 3-room',
@@ -4252,7 +4270,8 @@ export const mockStudents: Array<Student> = [
     riskIndicators: 3,
     lowMoodFlagged: null,
     socialLinks: 2,
-    counsellingSessions: 2,
+    counsellingSessions: 1,
+    counsellingComplexity: 'Complex cases',
     sen: null,
     fas: null,
     housing: 'HDB 3-room',
@@ -4296,6 +4315,7 @@ export const mockStudents: Array<Student> = [
     lowMoodFlagged: null,
     socialLinks: 2,
     counsellingSessions: 1,
+    counsellingComplexity: 'Less complex cases',
     sen: null,
     fas: null,
     housing: 'HDB 3-room',
@@ -4338,7 +4358,8 @@ export const mockStudents: Array<Student> = [
     riskIndicators: 3,
     lowMoodFlagged: null,
     socialLinks: 2,
-    counsellingSessions: 2,
+    counsellingSessions: 1,
+    counsellingComplexity: 'Complex cases',
     sen: null,
     fas: null,
     housing: 'HDB 3-room',
@@ -4381,7 +4402,8 @@ export const mockStudents: Array<Student> = [
     riskIndicators: 3,
     lowMoodFlagged: 'Yes (2 terms)',
     socialLinks: 2,
-    counsellingSessions: 3,
+    counsellingSessions: 1,
+    counsellingComplexity: 'Complex cases',
     sen: null,
     fas: null,
     housing: 'HDB 2-room',
@@ -4424,7 +4446,8 @@ export const mockStudents: Array<Student> = [
     riskIndicators: 3,
     lowMoodFlagged: null,
     socialLinks: 2,
-    counsellingSessions: 2,
+    counsellingSessions: 1,
+    counsellingComplexity: 'Complex cases',
     sen: null,
     fas: null,
     housing: 'HDB 3-room',
@@ -4471,7 +4494,8 @@ export const mockStudents: Array<Student> = [
       { year: 2025, terms: ['Term 3', 'Term 4'] },
     ],
     socialLinks: 2,
-    counsellingSessions: 3,
+    counsellingSessions: 1,
+    counsellingComplexity: 'Complex cases',
     sen: null,
     fas: 'MOE FAS',
     housing: 'HDB 2-room',
@@ -4514,7 +4538,8 @@ export const mockStudents: Array<Student> = [
     riskIndicators: 3,
     lowMoodFlagged: null,
     socialLinks: 2,
-    counsellingSessions: 2,
+    counsellingSessions: 1,
+    counsellingComplexity: 'Complex cases',
     sen: null,
     fas: null,
     housing: 'HDB 3-room',
@@ -4558,7 +4583,8 @@ export const mockStudents: Array<Student> = [
     riskIndicators: 3,
     lowMoodFlagged: null,
     socialLinks: 2,
-    counsellingSessions: 2,
+    counsellingSessions: 1,
+    counsellingComplexity: 'Complex cases',
     sen: null,
     fas: null,
     housing: 'HDB 3-room',
@@ -4605,7 +4631,8 @@ export const mockStudents: Array<Student> = [
       { year: 2025, terms: ['Term 3', 'Term 4'] },
     ],
     socialLinks: 2,
-    counsellingSessions: 3,
+    counsellingSessions: 1,
+    counsellingComplexity: 'Complex cases',
     sen: null,
     fas: null,
     housing: 'HDB 3-room',
@@ -4648,7 +4675,8 @@ export const mockStudents: Array<Student> = [
     riskIndicators: 3,
     lowMoodFlagged: 'Yes (2 terms)',
     socialLinks: 1,
-    counsellingSessions: 4,
+    counsellingSessions: 1,
+    counsellingComplexity: 'Complex cases',
     sen: null,
     fas: 'MOE FAS',
     housing: 'HDB 2-room',
@@ -4692,7 +4720,8 @@ export const mockStudents: Array<Student> = [
     riskIndicators: 3,
     lowMoodFlagged: null,
     socialLinks: 2,
-    counsellingSessions: 2,
+    counsellingSessions: 1,
+    counsellingComplexity: 'Complex cases',
     sen: null,
     fas: null,
     housing: 'HDB 3-room',
@@ -4736,7 +4765,8 @@ export const mockStudents: Array<Student> = [
     riskIndicators: 3,
     lowMoodFlagged: null,
     socialLinks: 2,
-    counsellingSessions: 2,
+    counsellingSessions: 1,
+    counsellingComplexity: 'Complex cases',
     sen: null,
     fas: null,
     housing: 'HDB 3-room',
@@ -4779,7 +4809,8 @@ export const mockStudents: Array<Student> = [
     riskIndicators: 3,
     lowMoodFlagged: 'Yes (2 terms)',
     socialLinks: 1,
-    counsellingSessions: 4,
+    counsellingSessions: 1,
+    counsellingComplexity: 'Complex cases',
     sen: null,
     fas: null,
     housing: 'HDB 2-room',
@@ -4823,7 +4854,8 @@ export const mockStudents: Array<Student> = [
     riskIndicators: 3,
     lowMoodFlagged: null,
     socialLinks: 2,
-    counsellingSessions: 2,
+    counsellingSessions: 1,
+    counsellingComplexity: 'Complex cases',
     sen: null,
     fas: null,
     housing: 'HDB 3-room',
@@ -4870,7 +4902,8 @@ export const mockStudents: Array<Student> = [
       { year: 2025, terms: ['Term 3', 'Term 4'] },
     ],
     socialLinks: 2,
-    counsellingSessions: 3,
+    counsellingSessions: 1,
+    counsellingComplexity: 'Complex cases',
     sen: null,
     fas: 'MOE FAS',
     housing: 'HDB 2-room',
@@ -4914,7 +4947,8 @@ export const mockStudents: Array<Student> = [
     riskIndicators: 3,
     lowMoodFlagged: null,
     socialLinks: 2,
-    counsellingSessions: 2,
+    counsellingSessions: 1,
+    counsellingComplexity: 'Complex cases',
     sen: null,
     fas: null,
     housing: 'HDB 3-room',
@@ -4962,7 +4996,8 @@ export const mockStudents: Array<Student> = [
       { year: 2025, terms: ['Term 3', 'Term 4'] },
     ],
     socialLinks: 2,
-    counsellingSessions: 3,
+    counsellingSessions: 1,
+    counsellingComplexity: 'Complex cases',
     sen: null,
     fas: null,
     housing: 'HDB 3-room',
@@ -5005,7 +5040,8 @@ export const mockStudents: Array<Student> = [
     riskIndicators: 3,
     lowMoodFlagged: null,
     socialLinks: 2,
-    counsellingSessions: 2,
+    counsellingSessions: 1,
+    counsellingComplexity: 'Complex cases',
     sen: null,
     fas: null,
     housing: 'HDB 3-room',
@@ -5049,7 +5085,8 @@ export const mockStudents: Array<Student> = [
     riskIndicators: 3,
     lowMoodFlagged: 'Yes (2 terms)',
     socialLinks: 1,
-    counsellingSessions: 4,
+    counsellingSessions: 1,
+    counsellingComplexity: 'Complex cases',
     sen: null,
     fas: 'MOE FAS',
     housing: 'HDB 2-room',
@@ -5097,7 +5134,8 @@ export const mockStudents: Array<Student> = [
       { year: 2025, terms: ['Term 3', 'Term 4'] },
     ],
     socialLinks: 2,
-    counsellingSessions: 3,
+    counsellingSessions: 1,
+    counsellingComplexity: 'Complex cases',
     sen: null,
     fas: null,
     housing: 'HDB 3-room',
@@ -5140,7 +5178,8 @@ export const mockStudents: Array<Student> = [
     riskIndicators: 3,
     lowMoodFlagged: null,
     socialLinks: 2,
-    counsellingSessions: 2,
+    counsellingSessions: 1,
+    counsellingComplexity: 'Complex cases',
     sen: null,
     fas: null,
     housing: 'HDB 3-room',
@@ -5183,7 +5222,8 @@ export const mockStudents: Array<Student> = [
     riskIndicators: 3,
     lowMoodFlagged: 'Yes (2 terms)',
     socialLinks: 1,
-    counsellingSessions: 5,
+    counsellingSessions: 1,
+    counsellingComplexity: 'Complex cases',
     sen: null,
     fas: 'MOE FAS',
     housing: 'HDB 2-room',
@@ -5227,7 +5267,8 @@ export const mockStudents: Array<Student> = [
     riskIndicators: 3,
     lowMoodFlagged: 'Yes (2 terms)',
     socialLinks: 1,
-    counsellingSessions: 5,
+    counsellingSessions: 1,
+    counsellingComplexity: 'Complex cases',
     sen: null,
     fas: 'MOE FAS',
     housing: 'HDB 2-room',
@@ -5271,7 +5312,8 @@ export const mockStudents: Array<Student> = [
     riskIndicators: 3,
     lowMoodFlagged: 'Yes (2 terms)',
     socialLinks: 1,
-    counsellingSessions: 5,
+    counsellingSessions: 1,
+    counsellingComplexity: 'Complex cases',
     sen: null,
     fas: null,
     housing: 'HDB 3-room',
@@ -5298,33 +5340,91 @@ export const mockStudents: Array<Student> = [
   },
 ]
 
-const MSF_VALUES: Array<'Yes' | 'No' | '-'> = ['Yes', 'No', '-']
+const MSF_VALUES: Array<'Yes' | 'No'> = ['Yes', 'No']
+const COMLINK_VALUES: Array<'Yes' | 'No'> = ['Yes', 'No']
+const FSC_VALUES: Array<'Yes' | 'No'> = ['Yes', 'No']
+// "Parents are divorced" and "Parent enrolled in CPP" are mutually exclusive:
+// CPP enrolment happens before filing for divorce, so at most one can be "Yes".
+const assignDivorceFields = (
+  s: Student,
+  divorcedCandidate: 'Yes' | 'No',
+  cppCandidate: 'Yes' | 'No',
+) => {
+  if (divorcedCandidate === 'Yes') {
+    s.nonIntactFamily = 'Yes'
+    s.parentsConsideringDivorce = 'No'
+  } else if (cppCandidate === 'Yes') {
+    s.nonIntactFamily = 'No'
+    s.parentsConsideringDivorce = 'Yes'
+  } else {
+    s.nonIntactFamily = divorcedCandidate
+    s.parentsConsideringDivorce = 'No'
+  }
+}
 mockStudents.forEach((s, i) => {
-  if (s.name === 'Chen Jun Kai' || s.name === 'Sim Xin Yi') {
+  if (s.name === 'Chen Jun Kai') {
     s.supportedByComLink = 'Yes'
     s.supportedByFsc = 'Yes'
     s.nonIntactFamily = 'Yes'
+    s.parentsConsideringDivorce = 'No'
     return
   }
-  s.supportedByComLink = MSF_VALUES[i % 3]
-  s.supportedByFsc = MSF_VALUES[(i + 1) % 3]
-  s.nonIntactFamily = MSF_VALUES[(i + 2) % 3]
+  if (s.name === 'Sim Xin Yi') {
+    s.supportedByComLink = 'Yes'
+    s.supportedByComLinkBy = 'Fei Yue FSC (Choa Chu Kang)'
+    s.supportedByFsc = 'Yes'
+    s.nonIntactFamily = 'Yes'
+    s.parentsConsideringDivorce = 'Yes'
+    return
+  }
+  if (s.name === 'Jing Wei Tan') {
+    s.supportedByComLink = 'Yes'
+    s.supportedByComLinkBy = 'SSO Woodlands'
+    s.supportedByFsc = FSC_VALUES[i % 2]
+    assignDivorceFields(s, MSF_VALUES[(i + 2) % 2], COMLINK_VALUES[(i + 1) % 2])
+    return
+  }
+  s.supportedByComLink = COMLINK_VALUES[i % 2]
+  s.supportedByFsc = FSC_VALUES[i % 3]
+  assignDivorceFields(s, MSF_VALUES[(i + 2) % 2], COMLINK_VALUES[(i + 1) % 2])
 })
 
-export const classOptions: Array<ClassOption> = [
-  { value: 'all', label: 'All Classes' },
-  { value: '3A', label: 'Secondary 3A' },
-  { value: '3B', label: 'Secondary 3B' },
-  { value: '3C', label: 'Secondary 3C' },
-  { value: 'P1-A', label: 'Primary 1A' },
-  { value: 'P2-B', label: 'Primary 2B' },
-  { value: 'P3-A', label: 'Primary 3A' },
-  { value: 'P4-B', label: 'Primary 4B' },
-  { value: 'P5-A', label: 'Primary 5A' },
-  { value: 'P6-B', label: 'Primary 6B' },
-]
+// Students enrolled in more than one CCA. The `cca` string is derived from
+// these names (comma-separated) so the table and profile header stay in sync.
+const multiCcaAssignments: Record<
+  string,
+  Array<{ name: string; attendance: number }>
+> = {
+  'Sim Xin Yi': [
+    { name: 'Volleyball', attendance: 100 },
+    { name: 'Robotics', attendance: 100 },
+    { name: 'Choir', attendance: 40 },
+  ],
+  'Chen Jun Kai': [
+    { name: 'Basketball', attendance: 80 },
+    { name: 'Choir', attendance: 90 },
+  ],
+  'Lam Wei Jie': [
+    { name: 'Volleyball', attendance: 85 },
+    { name: 'Robotics', attendance: 95 },
+    { name: 'Photography', attendance: 100 },
+  ],
+  'Sarah Chan Jun Kai': [
+    { name: 'Football', attendance: 90 },
+    { name: 'Drama', attendance: 100 },
+  ],
+}
+mockStudents.forEach((s) => {
+  const details = multiCcaAssignments[s.name]
+  if (details) {
+    const sorted = [...details].sort((a, b) => a.name.localeCompare(b.name))
+    s.ccaDetails = sorted
+    s.cca = sorted.map((d) => d.name).join(', ')
+  }
+})
 
-export interface ClassGroup {
+
+interface ClassGroup {
   level: string
   classes: Array<{ value: string; label: string }>
 }
@@ -5399,7 +5499,7 @@ export const groupedClassOptions: Array<ClassGroup> = [
   },
 ]
 
-export interface DashboardMetrics {
+interface DashboardMetrics {
   absenteeismRate: number
   lateComing: number
   tier2_3Students: number

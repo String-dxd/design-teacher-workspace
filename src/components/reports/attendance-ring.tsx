@@ -19,10 +19,10 @@ export function AttendanceRing({
     color != null
       ? undefined
       : percentage >= 90
-        ? 'text-[#12b886]'
+        ? 'text-lime-11'
         : percentage >= 75
-          ? 'text-amber-500'
-          : 'text-red-500'
+          ? 'text-amber-11'
+          : 'text-crimson-11'
 
   return (
     <div

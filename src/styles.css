@@ -1,12 +1,8 @@
-@import '@flow/design-tokens/css';
-@import '@flow/design-tokens/tailwind/reset';
-@import '@flow/design-tokens/tailwind';
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
 @import '@fontsource/inter';
 @import '@fontsource/atkinson-hyperlegible';
-@import '@flow/core/tailwind.no-reset.css';
 @import '@radix-ui/colors/slate.css';
 @import '@radix-ui/colors/slate-dark.css';
 @import '@radix-ui/colors/crimson.css';
@@ -19,13 +15,11 @@
 @import '@radix-ui/colors/amber-dark.css';
 @import '@radix-ui/colors/violet.css';
 @import '@radix-ui/colors/violet-dark.css';
-@import './flow-ds-theme.css';
 
 @custom-variant dark (&:is(.dark *));
 
 /* ─── App Token Definitions ────────────────────────────────────────────
- * Brand scales, Shadcn tokens, Tier 1 primitives, and app-specific vars.
- * The imported flow-ds-theme.css reads these to map Flow DS tokens.
+ * Brand scales, Shadcn semantic tokens, and app-specific vars.
  * ──────────────────────────────────────────────────────────────────── */
 :root {
   /* Brand scale: twblue (12-step + alpha) */
@@ -54,20 +48,6 @@
   --twblue-a11: #005bebfe;
   --twblue-a12: #002464f4;
 
-  /* Secondary brand: twpurple (alias for violet) */
-  --twpurple-1: var(--violet-1);
-  --twpurple-2: var(--violet-2);
-  --twpurple-3: var(--violet-3);
-  --twpurple-4: var(--violet-4);
-  --twpurple-5: var(--violet-5);
-  --twpurple-6: var(--violet-6);
-  --twpurple-7: var(--violet-7);
-  --twpurple-8: var(--violet-8);
-  --twpurple-9: var(--violet-9);
-  --twpurple-10: var(--violet-10);
-  --twpurple-11: var(--violet-11);
-  --twpurple-12: var(--violet-12);
-
   /* Shadcn semantic tokens */
   --background: var(--slate-1);
   --foreground: var(--slate-12);
@@ -81,11 +61,12 @@
   --secondary-foreground: var(--slate-12);
   --muted: var(--slate-3);
   --muted-foreground: var(--slate-11);
-  --accent: var(--slate-3);
+  --accent: var(--slate-4);
   --accent-foreground: var(--slate-12);
   --destructive: var(--crimson-9);
+  --destructive-foreground: white;
   --border: var(--slate-6);
-  --input: var(--slate-6);
+  --input: var(--slate-7);
   --ring: var(--twblue-8);
   --chart-1: var(--twblue-5);
   --chart-2: var(--twblue-7);
@@ -93,25 +74,6 @@
   --chart-4: var(--twblue-9);
   --chart-5: var(--twblue-11);
   --radius-input: 14px;
-
-  /* Tier 1 overridable primitives (--_ prefix).
-     TW theme values by default; .flow-theme reverts to Flow DS defaults. */
-  --_radius-sm: 6px;
-  --_radius-md: 8px;
-  --_radius-lg: 10px;
-  --_radius-xl: 14px;
-  --_radius-2xl: 24px;
-  --_radius-3xl: 24px;
-  --_radius-4xl: 32px;
-  --_spacing-xs: 0.5rem;
-  --_spacing-md: 1rem;
-  --_spacing-2xl: 2.25rem;
-  --_text-body-md: 0.875rem;
-  --_text-body-md-strong: 0.875rem;
-  --_text-label-sm: 0.75rem;
-  --_text-label-sm-strong: 0.75rem;
-  --_weight-body-md-strong: 500;
-  --_weight-label-sm-strong: 500;
 
   /* App-specific tokens */
   --overlay: rgba(0, 0, 0, 0.8);
@@ -127,8 +89,7 @@
 
 /* ─── Dark Mode ────────────────────────────────────────────────────────
  * Swap Radix primitives + custom brand to dark values.
- * .dark is on <html> (same as :root), so all var() mappings in
- * flow-ds-theme.css auto-resolve. Only formula changes go here.
+ * .dark is on <html> (same as :root); only formula changes go here.
  * ──────────────────────────────────────────────────────────────────── */
 .dark {
   --overlay: rgba(0, 0, 0, 0.8);
@@ -194,6 +155,18 @@
   --amber-10: var(--amber-dark-10);
   --amber-11: var(--amber-dark-11);
   --amber-12: var(--amber-dark-12);
+  --violet-1: var(--violet-dark-1);
+  --violet-2: var(--violet-dark-2);
+  --violet-3: var(--violet-dark-3);
+  --violet-4: var(--violet-dark-4);
+  --violet-5: var(--violet-dark-5);
+  --violet-6: var(--violet-dark-6);
+  --violet-7: var(--violet-dark-7);
+  --violet-8: var(--violet-dark-8);
+  --violet-9: var(--violet-dark-9);
+  --violet-10: var(--violet-dark-10);
+  --violet-11: var(--violet-dark-11);
+  --violet-12: var(--violet-dark-12);
 
   /* Custom brand dark values (hand-crafted, no Radix dark import) */
   --twblue-1: #0b1223;
@@ -220,18 +193,6 @@
   --twblue-a10: #3381ff;
   --twblue-a11: #6da8ff;
   --twblue-a12: #c0d8ff;
-  --twpurple-1: var(--violet-dark-1);
-  --twpurple-2: var(--violet-dark-2);
-  --twpurple-3: var(--violet-dark-3);
-  --twpurple-4: var(--violet-dark-4);
-  --twpurple-5: var(--violet-dark-5);
-  --twpurple-6: var(--violet-dark-6);
-  --twpurple-7: var(--violet-dark-7);
-  --twpurple-8: var(--violet-dark-8);
-  --twpurple-9: var(--violet-dark-9);
-  --twpurple-10: var(--violet-dark-10);
-  --twpurple-11: var(--violet-dark-11);
-  --twpurple-12: var(--violet-dark-12);
 
   /* Tokens whose formula changes in dark mode (white → slate) */
   --card: var(--slate-2);
@@ -243,6 +204,16 @@
   --font-sans: 'Inter', sans-serif;
   --color-slate-1: var(--slate-1);
   --color-slate-2: var(--slate-2);
+  --color-slate-3: var(--slate-3);
+  --color-slate-4: var(--slate-4);
+  --color-slate-5: var(--slate-5);
+  --color-slate-6: var(--slate-6);
+  --color-slate-7: var(--slate-7);
+  --color-slate-8: var(--slate-8);
+  --color-slate-9: var(--slate-9);
+  --color-slate-10: var(--slate-10);
+  --color-slate-11: var(--slate-11);
+  --color-slate-12: var(--slate-12);
   --color-twblue-1: var(--twblue-1);
   --color-twblue-2: var(--twblue-2);
   --color-twblue-3: var(--twblue-3);
@@ -267,18 +238,18 @@
   --color-twblue-a10: var(--twblue-a10);
   --color-twblue-a11: var(--twblue-a11);
   --color-twblue-a12: var(--twblue-a12);
-  --color-twpurple-1: var(--twpurple-1);
-  --color-twpurple-2: var(--twpurple-2);
-  --color-twpurple-3: var(--twpurple-3);
-  --color-twpurple-4: var(--twpurple-4);
-  --color-twpurple-5: var(--twpurple-5);
-  --color-twpurple-6: var(--twpurple-6);
-  --color-twpurple-7: var(--twpurple-7);
-  --color-twpurple-8: var(--twpurple-8);
-  --color-twpurple-9: var(--twpurple-9);
-  --color-twpurple-10: var(--twpurple-10);
-  --color-twpurple-11: var(--twpurple-11);
-  --color-twpurple-12: var(--twpurple-12);
+  --color-violet-1: var(--violet-1);
+  --color-violet-2: var(--violet-2);
+  --color-violet-3: var(--violet-3);
+  --color-violet-4: var(--violet-4);
+  --color-violet-5: var(--violet-5);
+  --color-violet-6: var(--violet-6);
+  --color-violet-7: var(--violet-7);
+  --color-violet-8: var(--violet-8);
+  --color-violet-9: var(--violet-9);
+  --color-violet-10: var(--violet-10);
+  --color-violet-11: var(--violet-11);
+  --color-violet-12: var(--violet-12);
   --color-crimson-1: var(--crimson-1);
   --color-crimson-2: var(--crimson-2);
   --color-crimson-3: var(--crimson-3);
@@ -344,6 +315,7 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -358,13 +330,6 @@
   --color-card: var(--card);
   --color-foreground: var(--foreground);
   --color-background: var(--background);
-  --radius-sm: var(--_radius-sm);
-  --radius-md: var(--_radius-md);
-  --radius-lg: var(--_radius-lg);
-  --radius-xl: var(--_radius-xl);
-  --radius-2xl: var(--_radius-2xl);
-  --radius-3xl: var(--_radius-3xl);
-  --radius-4xl: var(--_radius-4xl);
   --radius-input: var(--radius-input);
   --color-overlay: var(--overlay);
 }

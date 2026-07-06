@@ -29,7 +29,19 @@ import {
 
 import type { Student } from '@/types/student'
 import { cn } from '@/lib/utils'
+import {
+  ATTENDANCE_SEVERITY,
+  CHART_GRID,
+  CHART_LABEL,
+  CHART_TICK,
+  CHART_TOOLTIP_BORDER,
+  PRESENT_RING,
+  SERIES_BLUE,
+  SERIES_BLUE_COBALT,
+  SERIES_BLUE_LIGHT,
+} from '@/lib/chart-colors'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import {
   Popover,
@@ -43,6 +55,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import {
   TooltipContent,
   TooltipTrigger,
@@ -168,14 +188,14 @@ const ABSENCE_DETAILS = [
   {
     date: '20 Oct 2026',
     type: 'Pending reason',
-    typeColor: '#e03131',
+    typeColor: ATTENDANCE_SEVERITY.pendingReasonStrong,
     subReason: '—',
     remarks: 'Parent informed',
   },
   {
     date: '19 Oct 2026',
     type: 'Absent without valid reason',
-    typeColor: '#f76707',
+    typeColor: ATTENDANCE_SEVERITY.nonVRAbsenceStrong,
     subReason: '—',
     remarks: 'Skipped school',
   },
@@ -189,7 +209,7 @@ const ABSENCE_DETAILS = [
   {
     date: '15 Oct 2026',
     type: 'Absent without valid reason',
-    typeColor: '#f76707',
+    typeColor: ATTENDANCE_SEVERITY.nonVRAbsenceStrong,
     subReason: '—',
     remarks: 'Skipped school',
   },
@@ -210,14 +230,14 @@ const ABSENCE_DETAILS = [
   {
     date: '08 Oct 2026',
     type: 'Absent without valid reason',
-    typeColor: '#f76707',
+    typeColor: ATTENDANCE_SEVERITY.nonVRAbsenceStrong,
     subReason: '—',
     remarks: 'Skipped school',
   },
   {
     date: '07 Oct 2026',
     type: 'Pending reason',
-    typeColor: '#e03131',
+    typeColor: ATTENDANCE_SEVERITY.pendingReasonStrong,
     subReason: '—',
     remarks: '—',
   },
@@ -239,14 +259,14 @@ const ABSENCE_DETAILS = [
   {
     date: '30 Sep 2026',
     type: 'Pending reason',
-    typeColor: '#e03131',
+    typeColor: ATTENDANCE_SEVERITY.pendingReasonStrong,
     subReason: '—',
     remarks: 'Parent not reachable',
   },
   {
     date: '25 Sep 2026',
     type: 'Absent without valid reason',
-    typeColor: '#f76707',
+    typeColor: ATTENDANCE_SEVERITY.nonVRAbsenceStrong,
     subReason: '—',
     remarks: 'Skipped school',
   },
@@ -282,14 +302,14 @@ const ABSENCE_DETAILS = [
   {
     date: '28 Aug 2026',
     type: 'Absent without valid reason',
-    typeColor: '#f76707',
+    typeColor: ATTENDANCE_SEVERITY.nonVRAbsenceStrong,
     subReason: '—',
     remarks: 'Skipped school',
   },
   {
     date: '26 Aug 2026',
     type: 'Pending reason',
-    typeColor: '#e03131',
+    typeColor: ATTENDANCE_SEVERITY.pendingReasonStrong,
     subReason: '—',
     remarks: '—',
   },
@@ -325,7 +345,7 @@ const ABSENCE_DETAILS = [
   {
     date: '23 Jul 2026',
     type: 'Absent without valid reason',
-    typeColor: '#f76707',
+    typeColor: ATTENDANCE_SEVERITY.nonVRAbsenceStrong,
     subReason: '—',
     remarks: 'Skipped school',
   },
@@ -340,14 +360,14 @@ const ABSENCE_DETAILS = [
   {
     date: '25 Jun 2026',
     type: 'Pending reason',
-    typeColor: '#e03131',
+    typeColor: ATTENDANCE_SEVERITY.pendingReasonStrong,
     subReason: '—',
     remarks: 'Parent informed',
   },
   {
     date: '23 Jun 2026',
     type: 'Absent without valid reason',
-    typeColor: '#f76707',
+    typeColor: ATTENDANCE_SEVERITY.nonVRAbsenceStrong,
     subReason: '—',
     remarks: 'Skipped school',
   },
@@ -376,7 +396,7 @@ const ABSENCE_DETAILS = [
   {
     date: '27 May 2026',
     type: 'Absent without valid reason',
-    typeColor: '#f76707',
+    typeColor: ATTENDANCE_SEVERITY.nonVRAbsenceStrong,
     subReason: '—',
     remarks: 'Skipped school',
   },
@@ -397,7 +417,7 @@ const ABSENCE_DETAILS = [
   {
     date: '06 May 2026',
     type: 'Pending reason',
-    typeColor: '#e03131',
+    typeColor: ATTENDANCE_SEVERITY.pendingReasonStrong,
     subReason: '—',
     remarks: '—',
   },
@@ -412,7 +432,7 @@ const ABSENCE_DETAILS = [
   {
     date: '23 Apr 2026',
     type: 'Absent without valid reason',
-    typeColor: '#f76707',
+    typeColor: ATTENDANCE_SEVERITY.nonVRAbsenceStrong,
     subReason: '—',
     remarks: 'Skipped school',
   },
@@ -433,7 +453,7 @@ const ABSENCE_DETAILS = [
   {
     date: '08 Apr 2026',
     type: 'Pending reason',
-    typeColor: '#e03131',
+    typeColor: ATTENDANCE_SEVERITY.pendingReasonStrong,
     subReason: '—',
     remarks: 'Parent informed',
   },
@@ -441,7 +461,7 @@ const ABSENCE_DETAILS = [
   {
     date: '25 Mar 2026',
     type: 'Absent without valid reason',
-    typeColor: '#f76707',
+    typeColor: ATTENDANCE_SEVERITY.nonVRAbsenceStrong,
     subReason: '—',
     remarks: 'Skipped school',
   },
@@ -456,14 +476,14 @@ const ABSENCE_DETAILS = [
   {
     date: '25 Feb 2026',
     type: 'Pending reason',
-    typeColor: '#e03131',
+    typeColor: ATTENDANCE_SEVERITY.pendingReasonStrong,
     subReason: '—',
     remarks: '—',
   },
   {
     date: '18 Feb 2026',
     type: 'Absent without valid reason',
-    typeColor: '#f76707',
+    typeColor: ATTENDANCE_SEVERITY.nonVRAbsenceStrong,
     subReason: '—',
     remarks: 'Skipped school',
   },
@@ -492,7 +512,7 @@ const ABSENCE_DETAILS = [
   {
     date: '21 Jan 2026',
     type: 'Absent without valid reason',
-    typeColor: '#f76707',
+    typeColor: ATTENDANCE_SEVERITY.nonVRAbsenceStrong,
     subReason: '—',
     remarks: 'Skipped school',
   },
@@ -515,19 +535,27 @@ const ABSENCE_DETAILS = [
 const DETAILS_PAGE_SIZE = 5
 
 const BAR_CATEGORIES = [
-  { key: 'pendingReason', label: 'Pending reason', color: '#fa5252' }, // red — top
-  { key: 'absentNoValid', label: 'Non-VR absences', color: '#fd7e14' }, // orange
-  { key: 'latecoming', label: 'Late', color: '#fac53e' }, // yellow — matches reports
-  { key: 'absentMC', label: 'MC', color: '#74c0fc' }, // blue-3 (lightest)
+  {
+    key: 'pendingReason',
+    label: 'Pending reason',
+    color: ATTENDANCE_SEVERITY.pendingReason,
+  }, // red — top
+  {
+    key: 'absentNoValid',
+    label: 'Non-VR absences',
+    color: ATTENDANCE_SEVERITY.nonVRAbsence,
+  }, // orange
+  { key: 'latecoming', label: 'Late', color: ATTENDANCE_SEVERITY.late }, // yellow — matches reports
+  { key: 'absentMC', label: 'MC', color: SERIES_BLUE_LIGHT }, // blue-3 (lightest)
   {
     key: 'absentValidPrivate',
     label: 'Valid reason (private)',
-    color: '#228be6',
+    color: SERIES_BLUE,
   }, // blue — matches reports
   {
     key: 'absentValidOfficial',
     label: 'Valid reason (official)',
-    color: '#4d79e0',
+    color: SERIES_BLUE_COBALT,
   }, // cobalt blue H=222° — shifted from sky-blue to contrast against slate-12
 ]
 
@@ -561,22 +589,26 @@ function AbsenceBarChart({
 
   return (
     <BarChart {...CHART_COMMON_PROPS} data={data} barSize={barSize}>
-      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e9ecef" />
+      <CartesianGrid
+        strokeDasharray="3 3"
+        vertical={false}
+        stroke={CHART_GRID}
+      />
       <XAxis
         dataKey="month"
-        tick={{ fontSize: 12, fill: '#868e96' }}
+        tick={{ fontSize: 12, fill: CHART_TICK }}
         axisLine={false}
         tickLine={false}
       />
       <YAxis
-        tick={{ fontSize: 12, fill: '#868e96' }}
+        tick={{ fontSize: 12, fill: CHART_TICK }}
         axisLine={false}
         tickLine={false}
         allowDecimals={false}
       />
       <Tooltip
         content={<CustomBarTooltip clickable={!!onSegmentClick} />}
-        cursor={{ fill: 'rgba(0,0,0,0.04)' }}
+        cursor={{ fill: 'color-mix(in oklab, var(--color-slate-12) 4%, transparent)' }}
       />
       {reversedCategories.map((cat, i) => (
         <Bar
@@ -630,7 +662,7 @@ function AbsenceBarChart({
                   dominantBaseline="middle"
                   fontSize={10}
                   fontWeight={500}
-                  fill="var(--slate-12)"
+                  fill={CHART_LABEL}
                 >
                   {numVal}
                 </text>
@@ -666,7 +698,7 @@ function AbsenceBarChart({
                     textAnchor="middle"
                     fontSize={10}
                     fontWeight={600}
-                    fill="#495057"
+                    fill={CHART_LABEL}
                   >
                     {total}
                   </text>
@@ -712,7 +744,7 @@ function CustomBarTooltip({
   const total = itemsWithValue.reduce((sum, p) => sum + p.value, 0)
   if (total === 0) return null
   return (
-    <div className="w-[220px] rounded-lg border border-border/60 bg-white px-3 py-2.5 shadow-lg text-xs">
+    <div className="w-[220px] rounded-lg border border-border/60 bg-popover px-3 py-2.5 shadow-lg text-xs">
       <p className="mb-2 text-[11px] font-semibold text-foreground">{label}</p>
       <div className="space-y-1.5">
         {itemsWithValue.map((item) => {
@@ -804,24 +836,6 @@ const LEVEL_MONTHLY: Record<string, typeof MONTHLY_DATA> = {
   'Primary 5': makeLevelMonthlyData(0.8),
   'Primary 4': makeLevelMonthlyData(0.7),
   'Primary 3': makeLevelMonthlyData(0.6),
-}
-
-// ─── Level ring helpers ───────────────────────────────────────────────────────
-
-function buildLevelRingSegments(att: LevelAttendance) {
-  const absent = att.total - att.present - att.lta
-  const segments = [
-    { name: 'Present', value: att.present, color: '#12b886' },
-    { name: 'LTA', value: att.lta, color: '#fd7e14' },
-    { name: 'Absent', value: Math.max(absent, 0), color: '#fa5252' },
-  ]
-  let acc = 0
-  return segments.map((seg) => {
-    const len = (seg.value / att.total) * RING_C
-    const dashoffset = acc === 0 ? 0 : RING_C - acc
-    acc += len
-    return { ...seg, len, dashoffset }
-  })
 }
 
 // ─── Attendance Students Table ────────────────────────────────────────────────
@@ -994,9 +1008,9 @@ function AttSortableHeader({
   )
 
   return (
-    <th
+    <TableHead
       className={cn(
-        'h-12 px-4 align-middle font-medium text-muted-foreground overflow-hidden',
+        'overflow-hidden',
         align === 'right' ? 'text-right' : 'text-left',
         className,
       )}
@@ -1032,10 +1046,10 @@ function AttSortableHeader({
               dir === 'asc' && 'bg-[var(--slate-5)]',
             )}
           >
-            <ArrowUp className="h-4 w-4 text-[var(--slate-11)]" />
+            <ArrowUp className="h-4 w-4 text-muted-foreground" />
             Sort ascending
             {dir === 'asc' && (
-              <Check className="ml-auto h-4 w-4 text-[var(--slate-11)]" />
+              <Check className="ml-auto h-4 w-4 text-muted-foreground" />
             )}
           </button>
           <button
@@ -1050,15 +1064,15 @@ function AttSortableHeader({
               dir === 'desc' && 'bg-[var(--slate-5)]',
             )}
           >
-            <ArrowDown className="h-4 w-4 text-[var(--slate-11)]" />
+            <ArrowDown className="h-4 w-4 text-muted-foreground" />
             Sort descending
             {dir === 'desc' && (
-              <Check className="ml-auto h-4 w-4 text-[var(--slate-11)]" />
+              <Check className="ml-auto h-4 w-4 text-muted-foreground" />
             )}
           </button>
         </PopoverContent>
       </Popover>
-    </th>
+    </TableHead>
   )
 }
 
@@ -1071,9 +1085,10 @@ function NumericFilterRow({
   filter: NumericFilter
   onChange: (f: NumericFilter) => void
 }) {
+  const id = `filter-${label.toLowerCase().replace(/[^a-z0-9]/g, '-')}`
   return (
     <div className="space-y-1.5">
-      <label className="text-xs font-medium text-muted-foreground">
+      <label htmlFor={id} className="text-xs font-medium text-muted-foreground">
         {label}
       </label>
       <div className="flex items-center gap-2">
@@ -1081,7 +1096,7 @@ function NumericFilterRow({
           value={filter.op}
           onValueChange={(v) => onChange({ ...filter, op: v as FilterOp })}
         >
-          <SelectTrigger className="h-9 w-[180px] shrink-0 rounded-[14px] bg-white text-sm">
+          <SelectTrigger className="h-9 w-[180px] shrink-0 rounded-[14px] bg-background text-sm">
             <SelectValue>{OP_LABELS[filter.op]}</SelectValue>
           </SelectTrigger>
           <SelectContent
@@ -1099,6 +1114,7 @@ function NumericFilterRow({
           </SelectContent>
         </Select>
         <Input
+          id={id}
           placeholder="Enter number"
           value={filter.value}
           onChange={(e) => onChange({ ...filter, value: e.target.value })}
@@ -1279,18 +1295,18 @@ function AttendanceStudentsTable({
 
   const segmentCat = segment
     ? segment.categoryKey === 'lta'
-      ? { key: 'lta', label: 'LTA', color: '#fd7e14' }
+      ? { key: 'lta', label: 'LTA', color: ATTENDANCE_SEVERITY.nonVRAbsence }
       : BAR_CATEGORIES.find((c) => c.key === segment.categoryKey)
     : null
 
   return (
-    <div ref={tableRef} className="scroll-mt-8 rounded-lg border bg-white p-4">
+    <div ref={tableRef} className="scroll-mt-8 rounded-lg border bg-card p-4">
       <div className="mb-3 flex items-center gap-2">
         <p className="text-sm font-semibold text-foreground">
           Students sorted by absences / late-coming
         </p>
         {segment && segmentCat && (
-          <span className="flex items-center gap-1.5 rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
+          <span className="flex items-center gap-1.5 rounded-full bg-twblue-3 px-2 py-0.5 text-xs font-medium text-twblue-11">
             <span
               className="inline-block h-2 w-2 shrink-0 rounded-sm"
               style={{ backgroundColor: segmentCat.color }}
@@ -1300,7 +1316,7 @@ function AttendanceStudentsTable({
             <button
               type="button"
               onClick={onClearSegment}
-              className="ml-0.5 rounded-full hover:text-blue-900"
+              className="ml-0.5 rounded-full hover:text-twblue-12"
               aria-label="Clear segment filter"
             >
               <X className="h-3 w-3" />
@@ -1334,7 +1350,7 @@ function AttendanceStudentsTable({
         >
           <SelectTrigger
             size="sm"
-            className="h-8 w-auto gap-1.5 rounded-[14px] border border-border bg-white px-3 text-sm hover:bg-muted"
+            className="h-8 w-auto gap-1.5 rounded-[14px] border border-border bg-background px-3 text-sm hover:bg-muted"
           >
             <SelectValue>
               {filterMonth === 'all' ? 'All' : filterMonth}
@@ -1359,8 +1375,8 @@ function AttendanceStudentsTable({
                 className={cn(
                   'border-border flex h-8 items-center gap-1.5 rounded-full border px-3 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
                   hasPopoverFilters
-                    ? 'border-blue-300 bg-blue-50 text-blue-700'
-                    : 'bg-white hover:bg-muted',
+                    ? 'border-twblue-6 bg-twblue-3 text-twblue-11'
+                    : 'bg-background hover:bg-muted',
                 )}
               />
             }
@@ -1368,7 +1384,7 @@ function AttendanceStudentsTable({
             <SlidersHorizontal className="h-3.5 w-3.5" />
             Filter
             {hasPopoverFilters && (
-              <span className="ml-0.5 rounded-full bg-blue-600 px-1.5 py-0.5 text-[10px] font-medium leading-none text-white">
+              <span className="ml-0.5 rounded-full bg-twblue-9 px-1.5 py-0.5 text-[10px] font-medium leading-none text-twblue-1">
                 {activeFilterCount}
               </span>
             )}
@@ -1458,7 +1474,7 @@ function AttendanceStudentsTable({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-7 w-full gap-1.5 text-xs font-medium text-[var(--slate-12)]"
+                  className="h-7 w-full gap-1.5 text-xs font-medium text-foreground"
                   onClick={() => {
                     clearFilters()
                     setFilterOpen(false)
@@ -1475,12 +1491,12 @@ function AttendanceStudentsTable({
 
       {/* Table */}
       <div className="overflow-x-auto rounded-lg border">
-        <table className="w-full table-fixed text-sm">
-          <thead>
-            <tr className="border-b bg-muted/40">
-              <th className="w-[96px] h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+        <Table tableClassName="table-fixed">
+          <TableHeader>
+            <TableRow className="bg-muted/40 hover:bg-muted/40">
+              <TableHead className="w-[96px] text-muted-foreground">
                 Profile
-              </th>
+              </TableHead>
               <AttSortableHeader
                 label="Name"
                 field="name"
@@ -1566,24 +1582,21 @@ function AttendanceStudentsTable({
                 className="w-[140px]"
                 truncate
               />
-            </tr>
-          </thead>
-          <tbody className="divide-y">
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {paged.map((s) => {
               const realId = studentIdByName.get(s.name)
               return (
-                <tr
+                <TableRow
                   key={s.id}
-                  className={cn(
-                    'transition-colors hover:bg-muted/50',
-                    realId && 'cursor-pointer',
-                  )}
+                  className={cn(realId && 'cursor-pointer')}
                   onClick={() => {
                     if (realId)
                       navigate({ to: '/students/$id', params: { id: realId } })
                   }}
                 >
-                  <td className="w-[96px] p-4 align-middle">
+                  <TableCell className="w-[96px]">
                     <TooltipUI>
                       <TooltipTrigger>
                         {realId ? (
@@ -1591,7 +1604,7 @@ function AttendanceStudentsTable({
                             to="/students/$id"
                             params={{ id: realId }}
                             onClick={(e) => e.stopPropagation()}
-                            className="flex items-center justify-center rounded p-0.5 text-blue-500 hover:bg-blue-50 hover:text-blue-600"
+                            className="flex items-center justify-center rounded p-0.5 text-twblue-11 hover:bg-twblue-3 hover:text-twblue-12"
                           >
                             <FileText className="h-4 w-4" />
                           </Link>
@@ -1607,51 +1620,51 @@ function AttendanceStudentsTable({
                           : 'Profile not available'}
                       </TooltipContent>
                     </TooltipUI>
-                  </td>
-                  <td className="w-[192px] p-4 align-middle font-medium">
+                  </TableCell>
+                  <TableCell className="w-[192px] font-medium">
                     {s.name}
-                  </td>
-                  <td className="min-w-[140px] p-4 align-middle">{s.class}</td>
-                  <td className="min-w-[200px] p-4 align-middle tabular-nums">
+                  </TableCell>
+                  <TableCell className="min-w-[140px]">{s.class}</TableCell>
+                  <TableCell className="min-w-[200px] tabular-nums">
                     {s.nonVRAbsences +
                       s.absentPendingReason +
                       s.mc +
                       s.absentValidPrivate +
                       s.absentValidOfficial}
-                  </td>
-                  <td className="min-w-[140px] p-4 align-middle tabular-nums">
+                  </TableCell>
+                  <TableCell className="min-w-[140px] tabular-nums">
                     {s.late}
-                  </td>
-                  <td className="min-w-[140px] p-4 align-middle tabular-nums">
+                  </TableCell>
+                  <TableCell className="min-w-[140px] tabular-nums">
                     {s.nonVRAbsences}
-                  </td>
-                  <td className="min-w-[140px] p-4 align-middle tabular-nums">
+                  </TableCell>
+                  <TableCell className="min-w-[140px] tabular-nums">
                     {s.absentPendingReason}
-                  </td>
-                  <td className="min-w-[140px] p-4 align-middle tabular-nums">
+                  </TableCell>
+                  <TableCell className="min-w-[140px] tabular-nums">
                     {s.mc}
-                  </td>
-                  <td className="min-w-[140px] p-4 align-middle tabular-nums">
+                  </TableCell>
+                  <TableCell className="min-w-[140px] tabular-nums">
                     {s.absentValidPrivate}
-                  </td>
-                  <td className="min-w-[140px] p-4 align-middle tabular-nums">
+                  </TableCell>
+                  <TableCell className="min-w-[140px] tabular-nums">
                     {s.absentValidOfficial}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               )
             })}
             {paged.length === 0 && (
-              <tr>
-                <td
+              <TableRow className="hover:bg-transparent">
+                <TableCell
                   colSpan={10}
-                  className="px-4 py-8 text-center text-sm text-muted-foreground"
+                  className="py-8 text-center text-muted-foreground"
                 >
                   No students match your filters.
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
       {/* Pagination */}
@@ -1723,21 +1736,6 @@ interface SegmentSelection {
   count: number
 }
 
-function getStudentsForSegment(
-  categoryKey: string,
-  count: number,
-): typeof mockStudents {
-  // Deterministically pick students based on category key
-  const offset = BAR_CATEGORIES.findIndex((c) => c.key === categoryKey)
-  const pool = [...mockStudents]
-  // rotate the pool by offset to get different students per category
-  const rotated = [
-    ...pool.slice(offset % pool.length),
-    ...pool.slice(0, offset % pool.length),
-  ]
-  return rotated.slice(0, Math.min(count, rotated.length))
-}
-
 export function AttendanceLevelAnalytics() {
   const [level, setLevel] = useState('Secondary 4')
   const [chartExpanded, setChartExpanded] = useState(false)
@@ -1750,7 +1748,6 @@ export function AttendanceLevelAnalytics() {
     total: 105,
   }
   const monthlyData = LEVEL_MONTHLY[level] ?? MONTHLY_DATA
-  const ringSegments = buildLevelRingSegments(attendance)
   const presentPct = Math.round((attendance.present / attendance.total) * 100)
   const ltaPct = ((attendance.lta / attendance.total) * 100).toFixed(1)
 
@@ -1765,7 +1762,7 @@ export function AttendanceLevelAnalytics() {
         {/* Cards */}
         <div className="mt-4 grid grid-cols-1 gap-4">
           {/* Current Attendance card */}
-          <div className="rounded-lg border bg-white p-4">
+          <div className="rounded-lg border bg-card p-4">
             <p className="mb-4 text-sm font-semibold text-foreground">
               Current attendance
             </p>
@@ -1773,7 +1770,7 @@ export function AttendanceLevelAnalytics() {
               <AttendanceRing
                 percentage={presentPct}
                 size={100}
-                color="#228be6"
+                color={SERIES_BLUE}
               />
               <div className="flex items-center gap-5">
                 <div>
@@ -1806,7 +1803,7 @@ export function AttendanceLevelAnalytics() {
                               count: attendance.lta,
                             })
                           }
-                          className="-mx-2 flex items-center gap-2 rounded-md px-2 py-1 transition-colors hover:bg-accent cursor-pointer"
+                          className="-mx-2 flex items-center gap-2 rounded-md px-2 py-1 transition-colors hover:bg-accent cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         />
                       }
                     >
@@ -1826,14 +1823,14 @@ export function AttendanceLevelAnalytics() {
           </div>
 
           {/* Absences / Late-coming by Month card */}
-          <div className="rounded-lg border bg-white p-4 [&_svg:focus]:outline-none [&_svg]:outline-none">
+          <div className="rounded-lg border bg-card p-4 [&_svg:focus]:outline-none [&_svg]:outline-none">
             <div className="mb-3 flex items-center justify-between">
               <p className="text-sm font-semibold text-foreground">
                 Absences / Late-coming by month
               </p>
               <button
                 onClick={() => setChartExpanded(true)}
-                className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 aria-label="Expand chart"
               >
                 <Maximize2 className="h-4 w-4" />
@@ -1859,53 +1856,26 @@ export function AttendanceLevelAnalytics() {
       />
 
       {/* Expanded overlay */}
-      {chartExpanded && (
-        <>
-          <div
-            className="fixed inset-0 z-40 bg-black/20"
-            onClick={() => setChartExpanded(false)}
-            role="presentation"
-          />
-          <div
-            className="fixed inset-6 z-50 flex flex-col rounded-xl border bg-white p-6 shadow-2xl"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Absences / Late-coming by Month"
-            tabIndex={-1}
-            // eslint-disable-next-line jsx-a11y/no-autofocus
-            autoFocus
-            onKeyDown={(e) => {
-              if (e.key === 'Escape') setChartExpanded(false)
-            }}
-          >
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-foreground">
-                Absences / Late-coming by month
-              </h3>
-              <button
-                onClick={() => setChartExpanded(false)}
-                className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
-                aria-label="Close chart"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            <div className="min-h-0 flex-1">
-              <ResponsiveContainer width="100%" height="100%">
-                <AbsenceBarChart
-                  data={monthlyData}
-                  barSize={36}
-                  onSegmentClick={(month, categoryKey, count) => {
-                    setChartExpanded(false)
-                    setSelectedSegment({ month, categoryKey, count })
-                  }}
-                />
-              </ResponsiveContainer>
-            </div>
-            <AbsenceLegend />
+      <Dialog open={chartExpanded} onOpenChange={setChartExpanded}>
+        <DialogContent className="flex h-[calc(100vh-3rem)] w-[calc(100vw-3rem)] max-w-none flex-col p-6">
+          <DialogTitle className="text-sm font-semibold">
+            Absences / Late-coming by month
+          </DialogTitle>
+          <div className="min-h-0 flex-1">
+            <ResponsiveContainer width="100%" height="100%">
+              <AbsenceBarChart
+                data={monthlyData}
+                barSize={36}
+                onSegmentClick={(month, categoryKey, count) => {
+                  setChartExpanded(false)
+                  setSelectedSegment({ month, categoryKey, count })
+                }}
+              />
+            </ResponsiveContainer>
           </div>
-        </>
-      )}
+          <AbsenceLegend />
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
@@ -1948,13 +1918,17 @@ export function AttendanceAnalytics({ student }: AttendanceAnalyticsProps) {
     const absentExcl = Math.max(0, remaining - late - absentPending)
     let acc = 0
     return [
-      { name: 'Present', value: present, color: '#12b886' },
-      { name: 'Late', value: late, color: '#fd7e14' },
-      { name: 'Absent pending reason', value: absentPending, color: '#fa5252' },
+      { name: 'Present', value: present, color: PRESENT_RING },
+      { name: 'Late', value: late, color: ATTENDANCE_SEVERITY.nonVRAbsence },
+      {
+        name: 'Absent pending reason',
+        value: absentPending,
+        color: ATTENDANCE_SEVERITY.pendingReason,
+      },
       {
         name: 'Absent (excl pending reason)',
         value: absentExcl,
-        color: '#ffa94d',
+        color: ATTENDANCE_SEVERITY.absentExcl,
       },
     ].map((seg) => {
       const len = total > 0 ? (seg.value / total) * RING_C : 0
@@ -2003,7 +1977,7 @@ export function AttendanceAnalytics({ student }: AttendanceAnalyticsProps) {
               (currentAttendance.present / currentAttendance.total) * 100
             }
             size={100}
-            color="#228be6"
+            color={SERIES_BLUE}
           />
           <div className="flex items-center gap-5">
             <div>
@@ -2042,18 +2016,18 @@ export function AttendanceAnalytics({ student }: AttendanceAnalyticsProps) {
             <CartesianGrid
               strokeDasharray="3 3"
               vertical={false}
-              stroke="#e9ecef"
+              stroke={CHART_GRID}
             />
             <XAxis
               dataKey="week"
-              tick={{ fontSize: 12, fill: '#868e96' }}
+              tick={{ fontSize: 12, fill: CHART_TICK }}
               axisLine={false}
               tickLine={false}
             />
             <YAxis
               domain={[0, 100]}
               ticks={[0, 25, 50, 75, 100]}
-              tick={{ fontSize: 12, fill: '#868e96' }}
+              tick={{ fontSize: 12, fill: CHART_TICK }}
               axisLine={false}
               tickLine={false}
             />
@@ -2062,19 +2036,19 @@ export function AttendanceAnalytics({ student }: AttendanceAnalyticsProps) {
               contentStyle={{
                 fontSize: 12,
                 borderRadius: 6,
-                border: '1px solid #dee2e6',
+                border: `1px solid ${CHART_TOOLTIP_BORDER}`,
               }}
             />
             <Line
               type="monotone"
               dataKey="rate"
-              stroke="#228be6"
+              stroke={SERIES_BLUE}
               strokeWidth={2}
-              dot={{ fill: '#228be6', r: 4, strokeWidth: 0 }}
+              dot={{ fill: SERIES_BLUE, r: 4, strokeWidth: 0 }}
               label={{
                 position: 'top',
                 fontSize: 11,
-                fill: '#495057',
+                fill: CHART_LABEL,
                 formatter: (v: number) => (v < 100 ? `${v}%` : ''),
               }}
             />
@@ -2090,7 +2064,7 @@ export function AttendanceAnalytics({ student }: AttendanceAnalyticsProps) {
           </h3>
           <button
             onClick={() => setChartExpanded(true)}
-            className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+            className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             aria-label="Expand chart"
           >
             <Maximize2 className="h-4 w-4" />
@@ -2103,46 +2077,19 @@ export function AttendanceAnalytics({ student }: AttendanceAnalyticsProps) {
       </div>
 
       {/* Expanded overlay */}
-      {chartExpanded && (
-        <>
-          <div
-            className="fixed inset-0 z-40 bg-black/20"
-            onClick={() => setChartExpanded(false)}
-            role="presentation"
-          />
-          <div
-            className="fixed inset-6 z-50 flex flex-col rounded-xl border bg-white p-6 shadow-2xl"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Absences / Late-coming by Month"
-            tabIndex={-1}
-            // eslint-disable-next-line jsx-a11y/no-autofocus
-            autoFocus
-            onKeyDown={(e) => {
-              if (e.key === 'Escape') setChartExpanded(false)
-            }}
-          >
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-foreground">
-                Absences / Late-coming by month
-              </h3>
-              <button
-                onClick={() => setChartExpanded(false)}
-                className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
-                aria-label="Close chart"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            <div className="min-h-0 flex-1">
-              <ResponsiveContainer width="100%" height="100%">
-                <AbsenceBarChart barSize={36} />
-              </ResponsiveContainer>
-            </div>
-            <AbsenceLegend />
+      <Dialog open={chartExpanded} onOpenChange={setChartExpanded}>
+        <DialogContent className="flex h-[calc(100vh-3rem)] w-[calc(100vw-3rem)] max-w-none flex-col p-6">
+          <DialogTitle className="text-sm font-semibold">
+            Absences / Late-coming by month
+          </DialogTitle>
+          <div className="min-h-0 flex-1">
+            <ResponsiveContainer width="100%" height="100%">
+              <AbsenceBarChart barSize={36} />
+            </ResponsiveContainer>
           </div>
-        </>
-      )}
+          <AbsenceLegend />
+        </DialogContent>
+      </Dialog>
 
       {/* 4. Absences / Late-coming details */}
       <div>
@@ -2161,7 +2108,7 @@ export function AttendanceAnalytics({ student }: AttendanceAnalyticsProps) {
             >
               <SelectTrigger
                 size="sm"
-                className="h-8 w-auto gap-1.5 rounded-[14px] border border-border bg-white px-3 text-sm hover:bg-muted"
+                className="h-8 w-auto gap-1.5 rounded-[14px] border border-border bg-background px-3 text-sm hover:bg-muted"
               >
                 <SelectValue>
                   {detailsFilterMonth === 'all'
@@ -2188,7 +2135,7 @@ export function AttendanceAnalytics({ student }: AttendanceAnalyticsProps) {
             >
               <SelectTrigger
                 size="sm"
-                className="h-8 w-auto gap-1.5 rounded-[14px] border border-border bg-white px-3 text-sm hover:bg-muted"
+                className="h-8 w-auto gap-1.5 rounded-[14px] border border-border bg-background px-3 text-sm hover:bg-muted"
               >
                 <SelectValue>
                   {detailsFilterType === 'all'
@@ -2208,42 +2155,42 @@ export function AttendanceAnalytics({ student }: AttendanceAnalyticsProps) {
           </div>
         </div>
         <div className="overflow-hidden rounded-lg border">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-muted/40">
-                <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/40 hover:bg-muted/40">
+                <TableHead className="h-auto px-4 py-2.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Date
-                </th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                </TableHead>
+                <TableHead className="h-auto px-4 py-2.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Absences / Latecoming
-                </th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                </TableHead>
+                <TableHead className="h-auto px-4 py-2.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Sub-reason
-                </th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                </TableHead>
+                <TableHead className="h-auto px-4 py-2.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Remarks
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {pagedDetails.map((row, i) => (
-                <tr key={i} className="bg-white">
-                  <td className="px-4 py-3 text-sm text-foreground">
+                <TableRow key={i} className="bg-card hover:bg-card">
+                  <TableCell className="px-4 py-3 text-sm whitespace-normal text-foreground">
                     {row.date}
-                  </td>
-                  <td className="px-4 py-3 text-sm font-medium text-[var(--slate-12)]">
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-sm font-medium whitespace-normal text-foreground">
                     {row.type}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-muted-foreground">
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-sm whitespace-normal text-muted-foreground">
                     {row.subReason}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-sm whitespace-normal text-foreground">
                     {row.remarks}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
         {/* Pagination */}
         <div className="mt-3 flex items-center justify-between text-sm">

@@ -47,7 +47,7 @@ interface StudentTableProps {
   /** Current sort configuration */
   sort: SortConfig | null
   /** Set of filter fields that have active filters */
-  activeFilterFields: Set<FilterField>
+  activeFilterFields: Set<string>
   /** Handler for sorting by a column */
   onSort: (field: string, direction: SortDirection) => void
   /** Handler for clearing the current sort */
@@ -67,6 +67,9 @@ interface StudentTableProps {
   /** When set, table groups students by profile-group buckets. Adds Criteria
    *  met / Criteria tag columns and removes pagination. */
   group?: ProfileGroup | null
+  /** Term key (e.g. "T4 2025") derived from the Date range filter. Drives the
+   *  default term shown for temporal columns so values mimic the chosen period. */
+  periodTermKey?: string
 }
 
 const tagVariantMap: Record<AttentionTag, 'default' | 'secondary' | 'outline'> =
@@ -106,8 +109,8 @@ export function StudentTable({
   columns,
   className,
   pageSize = 10,
-  matchedIds,
-  matchedCount = 0,
+  matchedIds: _matchedIds,
+  matchedCount: _matchedCount = 0,
   sort,
   activeFilterFields,
   onSort,
@@ -119,20 +122,14 @@ export function StudentTable({
   isRecalculating,
   onDeleteColumn,
   group,
+  periodTermKey,
 }: StudentTableProps) {
   const navigate = useNavigate()
   const { isEnabled } = useFeatureFlags()
   const isGrouped = !!group
 
-  const [columnTermSelections, setColumnTermSelections] = useState<
-    Record<string, string>
-  >({})
-
-  const getSelectedTerm = (columnId: string) =>
-    columnTermSelections[columnId] ?? CURRENT_TERM_KEY
-
-  const handleTermChange = (columnId: string, term: string) =>
-    setColumnTermSelections((prev) => ({ ...prev, [columnId]: term }))
+  // Temporal columns show data for the term chosen via the Date range filter.
+  const selectedTermKey = periodTermKey ?? CURRENT_TERM_KEY
 
   // Sticky header state
   const tableContainerRef = useRef<HTMLDivElement>(null)
@@ -420,8 +417,6 @@ export function StudentTable({
           onAddQuickFilter={onAddQuickFilter}
           onClearFilter={onClearFilter}
           className="min-w-[120px]"
-          selectedTerm={getSelectedTerm('attendance')}
-          onTermChange={(t) => handleTermChange('attendance', t)}
         />
       )}
       {isVisible('lateComing') && (
@@ -434,8 +429,6 @@ export function StudentTable({
           onAddQuickFilter={onAddQuickFilter}
           onClearFilter={onClearFilter}
           className="min-w-[135px]"
-          selectedTerm={getSelectedTerm('lateComing')}
-          onTermChange={(t) => handleTermChange('lateComing', t)}
         />
       )}
       {isVisible('absences') && (
@@ -448,8 +441,6 @@ export function StudentTable({
           onAddQuickFilter={onAddQuickFilter}
           onClearFilter={onClearFilter}
           className="min-w-[115px]"
-          selectedTerm={getSelectedTerm('absences')}
-          onTermChange={(t) => handleTermChange('absences', t)}
         />
       )}
       {isVisible('ccaMissed') && (
@@ -462,48 +453,6 @@ export function StudentTable({
           onAddQuickFilter={onAddQuickFilter}
           onClearFilter={onClearFilter}
           className="min-w-[130px]"
-          selectedTerm={getSelectedTerm('ccaMissed')}
-          onTermChange={(t) => handleTermChange('ccaMissed', t)}
-        />
-      )}
-      {isVisible('offences') && (
-        <ColumnHeaderMenu
-          column={columns.find((c) => c.id === 'offences')!}
-          currentSort={sort}
-          activeFilterFields={activeFilterFields}
-          onSort={onSort}
-          onClearSort={onClearSort}
-          onAddQuickFilter={onAddQuickFilter}
-          onClearFilter={onClearFilter}
-          className="min-w-[115px]"
-          selectedTerm={getSelectedTerm('offences')}
-          onTermChange={(t) => handleTermChange('offences', t)}
-        />
-      )}
-      {isVisible('counsellingSessions') && (
-        <ColumnHeaderMenu
-          column={columns.find((c) => c.id === 'counsellingSessions')!}
-          currentSort={sort}
-          activeFilterFields={activeFilterFields}
-          onSort={onSort}
-          onClearSort={onClearSort}
-          onAddQuickFilter={onAddQuickFilter}
-          onClearFilter={onClearFilter}
-          className="min-w-[135px]"
-          selectedTerm={getSelectedTerm('counsellingSessions')}
-          onTermChange={(t) => handleTermChange('counsellingSessions', t)}
-        />
-      )}
-      {isVisible('sen') && (
-        <ColumnHeaderMenu
-          column={columns.find((c) => c.id === 'sen')!}
-          currentSort={sort}
-          activeFilterFields={activeFilterFields}
-          onSort={onSort}
-          onClearSort={onClearSort}
-          onAddQuickFilter={onAddQuickFilter}
-          onClearFilter={onClearFilter}
-          className="min-w-[80px]"
         />
       )}
       {isVisible('conduct') && (
@@ -516,6 +465,42 @@ export function StudentTable({
           onAddQuickFilter={onAddQuickFilter}
           onClearFilter={onClearFilter}
           className="min-w-[115px]"
+        />
+      )}
+      {isVisible('offences') && (
+        <ColumnHeaderMenu
+          column={columns.find((c) => c.id === 'offences')!}
+          currentSort={sort}
+          activeFilterFields={activeFilterFields}
+          onSort={onSort}
+          onClearSort={onClearSort}
+          onAddQuickFilter={onAddQuickFilter}
+          onClearFilter={onClearFilter}
+          className="min-w-[115px]"
+        />
+      )}
+      {isVisible('counsellingSessions') && (
+        <ColumnHeaderMenu
+          column={columns.find((c) => c.id === 'counsellingSessions')!}
+          currentSort={sort}
+          activeFilterFields={activeFilterFields}
+          onSort={onSort}
+          onClearSort={onClearSort}
+          onAddQuickFilter={onAddQuickFilter}
+          onClearFilter={onClearFilter}
+          className="min-w-[135px]"
+        />
+      )}
+      {isVisible('sen') && (
+        <ColumnHeaderMenu
+          column={columns.find((c) => c.id === 'sen')!}
+          currentSort={sort}
+          activeFilterFields={activeFilterFields}
+          onSort={onSort}
+          onClearSort={onClearSort}
+          onAddQuickFilter={onAddQuickFilter}
+          onClearFilter={onClearFilter}
+          className="min-w-[80px]"
         />
       )}
       {isVisible('riskIndicators') && (
@@ -604,16 +589,52 @@ export function StudentTable({
           className="min-w-[200px]"
         />
       )}
-      {isVisible('siblings') && (
+      {isVisible('parentsConsideringDivorce') && (
         <ColumnHeaderMenu
-          column={columns.find((c) => c.id === 'siblings')!}
+          column={columns.find((c) => c.id === 'parentsConsideringDivorce')!}
           currentSort={sort}
           activeFilterFields={activeFilterFields}
           onSort={onSort}
           onClearSort={onClearSort}
           onAddQuickFilter={onAddQuickFilter}
           onClearFilter={onClearFilter}
-          className="min-w-[110px]"
+          className="min-w-[180px]"
+        />
+      )}
+      {isVisible('nonIntactFamily') && (
+        <ColumnHeaderMenu
+          column={columns.find((c) => c.id === 'nonIntactFamily')!}
+          currentSort={sort}
+          activeFilterFields={activeFilterFields}
+          onSort={onSort}
+          onClearSort={onClearSort}
+          onAddQuickFilter={onAddQuickFilter}
+          onClearFilter={onClearFilter}
+          className="min-w-[180px]"
+        />
+      )}
+      {isVisible('supportedByComLink') && (
+        <ColumnHeaderMenu
+          column={columns.find((c) => c.id === 'supportedByComLink')!}
+          currentSort={sort}
+          activeFilterFields={activeFilterFields}
+          onSort={onSort}
+          onClearSort={onClearSort}
+          onAddQuickFilter={onAddQuickFilter}
+          onClearFilter={onClearFilter}
+          className="min-w-[180px]"
+        />
+      )}
+      {isVisible('supportedByFsc') && (
+        <ColumnHeaderMenu
+          column={columns.find((c) => c.id === 'supportedByFsc')!}
+          currentSort={sort}
+          activeFilterFields={activeFilterFields}
+          onSort={onSort}
+          onClearSort={onClearSort}
+          onAddQuickFilter={onAddQuickFilter}
+          onClearFilter={onClearFilter}
+          className="min-w-[240px]"
         />
       )}
       {isVisible('fas') && (
@@ -652,40 +673,16 @@ export function StudentTable({
           className="min-w-[125px]"
         />
       )}
-      {isVisible('supportedByComLink') && (
+      {isVisible('siblings') && (
         <ColumnHeaderMenu
-          column={columns.find((c) => c.id === 'supportedByComLink')!}
+          column={columns.find((c) => c.id === 'siblings')!}
           currentSort={sort}
           activeFilterFields={activeFilterFields}
           onSort={onSort}
           onClearSort={onClearSort}
           onAddQuickFilter={onAddQuickFilter}
           onClearFilter={onClearFilter}
-          className="min-w-[180px]"
-        />
-      )}
-      {isVisible('supportedByFsc') && (
-        <ColumnHeaderMenu
-          column={columns.find((c) => c.id === 'supportedByFsc')!}
-          currentSort={sort}
-          activeFilterFields={activeFilterFields}
-          onSort={onSort}
-          onClearSort={onClearSort}
-          onAddQuickFilter={onAddQuickFilter}
-          onClearFilter={onClearFilter}
-          className="min-w-[240px]"
-        />
-      )}
-      {isVisible('nonIntactFamily') && (
-        <ColumnHeaderMenu
-          column={columns.find((c) => c.id === 'nonIntactFamily')!}
-          currentSort={sort}
-          activeFilterFields={activeFilterFields}
-          onSort={onSort}
-          onClearSort={onClearSort}
-          onAddQuickFilter={onAddQuickFilter}
-          onClearFilter={onClearFilter}
-          className="min-w-[180px]"
+          className="min-w-[110px]"
         />
       )}
       {isVisible('commuterStatus') && (
@@ -747,27 +744,33 @@ export function StudentTable({
       }
     >
       {isVisible('index') && (
-        <TableCell className="sticky left-0 z-10 bg-white pl-6 text-muted-foreground transition-colors group-hover:bg-[color-mix(in_oklab,var(--muted)_50%,white)]">
+        <TableCell className="sticky left-0 z-10 bg-card pl-6 text-muted-foreground transition-colors group-hover:bg-[color-mix(in_oklab,var(--muted)_50%,white)]">
           {displayIndex}
         </TableCell>
       )}
       {isVisible('name') && (
         <TableCell
           className={cn(
-            'sticky z-10 bg-white font-medium shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] transition-colors group-hover:bg-[color-mix(in_oklab,var(--muted)_50%,white)]',
+            'sticky z-10 bg-card font-medium shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] transition-colors group-hover:bg-[color-mix(in_oklab,var(--muted)_50%,var(--background))]',
             isVisible('index') ? 'left-12' : 'left-0',
           )}
         >
           <div className="flex items-center gap-2">
             {student.name}
-            <Link
-              to="/students/$id"
-              params={{ id: student.id }}
-              className="text-muted-foreground hover:text-foreground"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <FileText className="size-4" />
-            </Link>
+            {/* Profile shortcut — only an experiment feature (Student
+                Analytics), hidden on the base "Student Insights" view to
+                match production. */}
+            {(isEnabled('student-analytics') ||
+              isEnabled('student-analytics-basic')) && (
+              <Link
+                to="/students/$id"
+                params={{ id: student.id }}
+                className="text-muted-foreground hover:text-foreground"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <FileText className="size-4" />
+              </Link>
+            )}
           </div>
         </TableCell>
       )}
@@ -779,12 +782,12 @@ export function StudentTable({
             {meta?.primaryTag ? (
               <Badge
                 variant="secondary"
-                className="border-emerald-300 bg-emerald-50 text-emerald-700"
+                className="border-lime-6 bg-lime-3 text-lime-11"
               >
                 {meta.primaryTag}
               </Badge>
             ) : (
-              <span className="text-muted-foreground">-</span>
+              <span className="text-muted-foreground">None</span>
             )}
           </TableCell>
         </>
@@ -811,13 +814,13 @@ export function StudentTable({
                 ))}
             </div>
           ) : (
-            <span className="text-muted-foreground">-</span>
+            <span className="text-muted-foreground">None</span>
           )}
         </TableCell>
       )}
       {isVisible('attendance') &&
         (() => {
-          const d = getTermlyData(student, getSelectedTerm('attendance'))
+          const d = getTermlyData(student, selectedTermKey)
           return (
             <TableCell>
               {d.totalSchoolDays > 0
@@ -828,39 +831,26 @@ export function StudentTable({
           )
         })()}
       {isVisible('lateComing') && (
-        <TableCell>
-          {getTermlyData(student, getSelectedTerm('lateComing')).lateComing}
-        </TableCell>
+        <TableCell>{student.lateComing}</TableCell>
       )}
-      {isVisible('absences') && (
-        <TableCell>
-          {getTermlyData(student, getSelectedTerm('absences')).absences}
-        </TableCell>
-      )}
+      {isVisible('absences') && <TableCell>{student.absences}</TableCell>}
       {isVisible('ccaMissed') && (
-        <TableCell>
-          {getTermlyData(student, getSelectedTerm('ccaMissed')).ccaMissed}
-        </TableCell>
+        <TableCell>{100 - student.ccaMissed * 5}%</TableCell>
       )}
+      {isVisible('conduct') && <TableCell>{student.conduct}</TableCell>}
       {isVisible('offences') && (
         <TableCell>
-          {getTermlyData(student, getSelectedTerm('offences')).offences}
+          {getTermlyData(student, selectedTermKey).offences}
         </TableCell>
       )}
       {isVisible('counsellingSessions') && (
-        <TableCell>
-          {
-            getTermlyData(student, getSelectedTerm('counsellingSessions'))
-              .counsellingSessions
-          }
-        </TableCell>
+        <TableCell>{student.counsellingComplexity ?? 'None'}</TableCell>
       )}
       {isVisible('sen') && (
         <TableCell>
-          {student.sen || <span className="text-muted-foreground">-</span>}
+          {student.sen || <span className="text-muted-foreground">None</span>}
         </TableCell>
       )}
-      {isVisible('conduct') && <TableCell>{student.conduct}</TableCell>}
       {isVisible('riskIndicators') && (
         <TableCell>{student.riskIndicators}</TableCell>
       )}
@@ -884,14 +874,14 @@ export function StudentTable({
       {isVisible('approvedMtl') && (
         <TableCell>
           {student.approvedMtl || (
-            <span className="text-muted-foreground">-</span>
+            <span className="text-muted-foreground">None</span>
           )}
         </TableCell>
       )}
       {isVisible('learningSupport') && (
         <TableCell>
           {student.learningSupport || (
-            <span className="text-muted-foreground">-</span>
+            <span className="text-muted-foreground">None</span>
           )}
         </TableCell>
       )}
@@ -900,15 +890,32 @@ export function StudentTable({
           {student.postSecEligibility}
         </TableCell>
       )}
-      {isVisible('siblings') && <TableCell>{student.siblings}</TableCell>}
+      {isVisible('parentsConsideringDivorce') && (
+        <TableCell>{student.parentsConsideringDivorce ?? 'No'}</TableCell>
+      )}
+      {isVisible('nonIntactFamily') && (
+        <TableCell>
+          {!student.nonIntactFamily ? (
+            <span className="text-muted-foreground">None</span>
+          ) : (
+            student.nonIntactFamily
+          )}
+        </TableCell>
+      )}
+      {isVisible('supportedByComLink') && (
+        <TableCell>{student.supportedByComLink ?? 'No'}</TableCell>
+      )}
+      {isVisible('supportedByFsc') && (
+        <TableCell>{student.supportedByFsc ?? 'No'}</TableCell>
+      )}
       {isVisible('fas') && (
         <TableCell>
-          {student.fas || <span className="text-muted-foreground">-</span>}
+          {student.fas || <span className="text-muted-foreground">None</span>}
         </TableCell>
       )}
       {isVisible('housing') && (
         <TableCell>
-          {student.housing || <span className="text-muted-foreground">-</span>}
+          {student.housing || <span className="text-muted-foreground">None</span>}
         </TableCell>
       )}
       {isVisible('housingType') && (
@@ -918,37 +925,11 @@ export function StudentTable({
           ) : student.housingType === 'Owned' ? (
             'Owner-occupied'
           ) : (
-            <span className="text-muted-foreground">-</span>
+            <span className="text-muted-foreground">None</span>
           )}
         </TableCell>
       )}
-      {isVisible('supportedByComLink') && (
-        <TableCell>
-          {student.supportedByComLink === '-' || !student.supportedByComLink ? (
-            <span className="text-muted-foreground">-</span>
-          ) : (
-            student.supportedByComLink
-          )}
-        </TableCell>
-      )}
-      {isVisible('supportedByFsc') && (
-        <TableCell>
-          {student.supportedByFsc === '-' || !student.supportedByFsc ? (
-            <span className="text-muted-foreground">-</span>
-          ) : (
-            student.supportedByFsc
-          )}
-        </TableCell>
-      )}
-      {isVisible('nonIntactFamily') && (
-        <TableCell>
-          {student.nonIntactFamily === '-' || !student.nonIntactFamily ? (
-            <span className="text-muted-foreground">-</span>
-          ) : (
-            student.nonIntactFamily
-          )}
-        </TableCell>
-      )}
+      {isVisible('siblings') && <TableCell>{student.siblings}</TableCell>}
       {isVisible('commuterStatus') && (
         <TableCell>
           {student.commuterStatus || (
@@ -982,14 +963,14 @@ export function StudentTable({
       <div
         ref={stickyHeaderRef}
         className={cn(
-          'sticky top-0 z-30 overflow-x-auto bg-white',
+          'sticky top-0 z-30 overflow-x-auto bg-card',
           isHeaderVisible ? 'invisible h-0 overflow-hidden' : 'shadow-md',
         )}
         style={{ scrollbarWidth: 'none' }}
         onScroll={handleStickyHeaderScroll}
       >
         <Table>
-          <TableHeader className="border-b bg-white">
+          <TableHeader className="border-b bg-card">
             {renderHeaderContent()}
           </TableHeader>
         </Table>
@@ -998,10 +979,10 @@ export function StudentTable({
       {/* Main table container */}
       <div
         ref={tableContainerRef}
-        className={cn('max-w-full overflow-x-auto bg-white', className)}
+        className={cn('max-w-full overflow-x-auto bg-card', className)}
       >
         <Table>
-          <TableHeader className="border-b bg-white">
+          <TableHeader className="border-b bg-card">
             {renderHeaderContent()}
           </TableHeader>
           <TableBody>
@@ -1065,7 +1046,7 @@ export function StudentTable({
 
       {/* Record count and Pagination - outside scroll container so it stays horizontally sticky */}
       {!isGrouped && (
-        <div className="flex shrink-0 items-center justify-between bg-white px-6 py-4">
+        <div className="flex shrink-0 items-center justify-between bg-card px-6 py-4">
           <div className="text-sm text-muted-foreground">
             {displayStartIndex}–
             {Math.min(startIndex + pageSize, students.length)} of{' '}

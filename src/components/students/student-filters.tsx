@@ -1,8 +1,16 @@
 import { useRef, useState } from 'react'
-import { Download, MoreHorizontal, Search, Upload } from 'lucide-react'
+import {
+  Calendar,
+  ChevronDown,
+  Download,
+  MoreHorizontal,
+  Search,
+  Upload,
+} from 'lucide-react'
 import { toast } from 'sonner'
 
 import { MultiFilterPopover } from './multi-filter-popover'
+import { DateRangePicker } from './date-range-picker'
 import { ColumnVisibilityPopover } from './column-visibility-popover'
 import { ExportCsvModal } from './export-csv-modal'
 import { ImportWizard } from './import-wizard'
@@ -12,6 +20,7 @@ import type { ImportResult } from './import-wizard'
 import type { ReactNode } from 'react'
 import type { ColumnConfig } from './column-visibility-popover'
 import type { FilterCriterion } from '@/types/student'
+import { LATEST_PERIOD } from '@/data/filter-config'
 import { useFeatureFlags } from '@/lib/feature-flags'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
@@ -61,6 +70,42 @@ export function StudentFilters({
     fieldsByCategory: Record<string, Array<string>>
   } | null>(null)
   const progressIntervalRef = useRef<number | null>(null)
+
+  // Quick "Date" selector — a shortcut that reads/writes the same `dateRange`
+  // criterion shown in the main filter popover. "Latest available" is the
+  // default (no condition); picking a specific period adds it as a filter.
+  const dateRangeFilter = filters.find((f) => f.field === 'dateRange')
+  const quickDateValue =
+    dateRangeFilter &&
+    Array.isArray(dateRangeFilter.value) &&
+    dateRangeFilter.value.length > 0
+      ? dateRangeFilter.value
+      : [LATEST_PERIOD]
+
+  function handleQuickDateChange(value: Array<string>) {
+    const isDefault =
+      value.length === 0 || (value.length === 1 && value[0] === LATEST_PERIOD)
+    if (isDefault) {
+      // Back to the recommended default — drop the explicit condition
+      onFiltersChange(filters.filter((f) => f.field !== 'dateRange'))
+      return
+    }
+    if (dateRangeFilter) {
+      onFiltersChange(
+        filters.map((f) => (f.field === 'dateRange' ? { ...f, value } : f)),
+      )
+    } else {
+      onFiltersChange([
+        ...filters,
+        {
+          id: `date-range-${Date.now()}`,
+          field: 'dateRange',
+          operator: 'is',
+          value,
+        },
+      ])
+    }
+  }
 
   function startImportProgress(result: ImportResult) {
     const { columns: columnsToImport, fileName, fieldsByCategory } = result
@@ -166,36 +211,59 @@ export function StudentFilters({
             matchedCount={matchedCount}
             totalCount={totalCount}
           />
+          {flags['date-range-filter'] && (
+            <DateRangePicker
+              value={quickDateValue}
+              onChange={handleQuickDateChange}
+              trigger={
+                <button
+                  type="button"
+                  aria-label="Filter by date range"
+                  className="border-border flex h-9 items-center gap-1.5 rounded-full border bg-card px-3 text-sm font-medium outline-none transition-colors hover:bg-muted aria-expanded:bg-muted"
+                >
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  Date
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                </button>
+              }
+            />
+          )}
         </div>
 
         <div className="flex items-center gap-2">
           {rightSlot}
-          <ColumnVisibilityPopover
-            columns={columns}
-            onColumnsChange={onColumnsChange}
-          />
-
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              render={
-                <Button variant="outline" size="icon">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              }
+          {flags['column-visibility'] && (
+            <ColumnVisibilityPopover
+              columns={columns}
+              onColumnsChange={onColumnsChange}
             />
-            <DropdownMenuContent align="end" className="p-3">
-              <DropdownMenuItem onClick={() => setExportModalOpen(true)}>
-                <Download className="mr-2 size-4" />
-                Export data
-              </DropdownMenuItem>
-              {flags['import-data'] && (
-                <DropdownMenuItem onClick={() => setImportDialogOpen(true)}>
-                  <Upload className="mr-2 size-4" />
-                  Import data
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          )}
+
+          {(flags['export'] || flags['import-data']) && (
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <Button variant="outline" size="icon">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                }
+              />
+              <DropdownMenuContent align="end" className="p-3">
+                {flags['export'] && (
+                  <DropdownMenuItem onClick={() => setExportModalOpen(true)}>
+                    <Download className="mr-2 size-4" />
+                    Export data
+                  </DropdownMenuItem>
+                )}
+                {flags['import-data'] && (
+                  <DropdownMenuItem onClick={() => setImportDialogOpen(true)}>
+                    <Upload className="mr-2 size-4" />
+                    Import data
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
 

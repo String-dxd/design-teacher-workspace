@@ -1,14 +1,10 @@
 import { useMemo, useState } from 'react'
 import {
-  CheckCircle2,
-  Clock,
   Columns2,
   Download,
   RotateCcw,
   Search,
   SlidersHorizontal,
-  ThumbsDown,
-  ThumbsUp,
   X,
 } from 'lucide-react'
 import type { PGQuestion, PGRecipient } from '@/types/pg-announcement'
@@ -292,23 +288,25 @@ export function RecipientReadTable({
 
         {/* Filter popover */}
         <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              className={cn(
-                'gap-1.5',
-                activeFilterCount > 0 && 'border-twblue-9 text-twblue-9',
-              )}
-            >
-              <SlidersHorizontal className="h-3.5 w-3.5" />
-              Filter
-              {activeFilterCount > 0 && (
-                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-twblue-9 text-[10px] font-semibold text-white">
-                  {activeFilterCount}
-                </span>
-              )}
-            </Button>
+          <PopoverTrigger
+            render={
+              <Button
+                variant="outline"
+                size="sm"
+                className={cn(
+                  'gap-1.5',
+                  activeFilterCount > 0 && 'border-twblue-9 text-twblue-9',
+                )}
+              />
+            }
+          >
+            <SlidersHorizontal className="h-3.5 w-3.5" />
+            Filter
+            {activeFilterCount > 0 && (
+              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-twblue-9 text-[10px] font-semibold text-twblue-1">
+                {activeFilterCount}
+              </span>
+            )}
           </PopoverTrigger>
           <PopoverContent align="end" className="w-52 p-0">
             <div className="px-3 pt-3">
@@ -326,18 +324,18 @@ export function RecipientReadTable({
                     key={cls}
                     type="button"
                     onClick={() => setClassFilter(cls)}
-                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-slate-100"
+                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-slate-4"
                   >
                     <span
                       className={cn(
                         'flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full border transition-colors',
                         classFilter === cls
                           ? 'border-twblue-9 bg-twblue-9'
-                          : 'border-slate-300',
+                          : 'border-slate-6',
                       )}
                     >
                       {classFilter === cls && (
-                        <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                        <span className="h-1.5 w-1.5 rounded-full bg-twblue-1" />
                       )}
                     </span>
                     {cls === 'all' ? 'All classes' : `Class ${cls}`}
@@ -355,18 +353,18 @@ export function RecipientReadTable({
                     key={val}
                     type="button"
                     onClick={() => setStatusFilter(val)}
-                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-slate-100"
+                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-slate-4"
                   >
                     <span
                       className={cn(
                         'flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full border transition-colors',
                         statusFilter === val
                           ? 'border-twblue-9 bg-twblue-9'
-                          : 'border-slate-300',
+                          : 'border-slate-6',
                       )}
                     >
                       {statusFilter === val && (
-                        <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                        <span className="h-1.5 w-1.5 rounded-full bg-twblue-1" />
                       )}
                     </span>
                     {label}
@@ -390,18 +388,18 @@ export function RecipientReadTable({
                     key={val}
                     type="button"
                     onClick={() => setPgFilter(val)}
-                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-slate-100"
+                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-slate-4"
                   >
                     <span
                       className={cn(
                         'flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full border transition-colors',
                         pgFilter === val
                           ? 'border-twblue-9 bg-twblue-9'
-                          : 'border-slate-300',
+                          : 'border-slate-6',
                       )}
                     >
                       {pgFilter === val && (
-                        <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                        <span className="h-1.5 w-1.5 rounded-full bg-twblue-1" />
                       )}
                     </span>
                     {label}
@@ -415,7 +413,7 @@ export function RecipientReadTable({
                 <button
                   type="button"
                   onClick={resetFilters}
-                  className="w-full rounded-md px-2 py-1.5 text-center text-xs font-medium text-muted-foreground transition-colors hover:bg-slate-100 hover:text-foreground"
+                  className="w-full rounded-md px-2 py-1.5 text-center text-xs font-medium text-muted-foreground transition-colors hover:bg-slate-4 hover:text-foreground"
                 >
                   Reset all filters
                 </button>
@@ -426,11 +424,11 @@ export function RecipientReadTable({
 
         {/* Column visibility */}
         <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-1.5">
-              <Columns2 className="h-3.5 w-3.5" />
-              Columns
-            </Button>
+          <PopoverTrigger
+            render={<Button variant="outline" size="sm" className="gap-1.5" />}
+          >
+            <Columns2 className="h-3.5 w-3.5" />
+            Columns
           </PopoverTrigger>
           <PopoverContent align="end" className="w-[280px] p-0">
             {/* Quick actions */}
@@ -618,7 +616,7 @@ export function RecipientReadTable({
                     <TableCell>
                       {responseType === 'acknowledge' ? (
                         status === 'acknowledged' ? (
-                          <span className="text-sm font-medium text-green-700">
+                          <span className="text-sm font-medium text-lime-11">
                             Acknowledged
                           </span>
                         ) : (
@@ -628,11 +626,11 @@ export function RecipientReadTable({
                         )
                       ) : responseType === 'yes-no' ? (
                         status === 'yes' ? (
-                          <span className="text-sm font-medium text-green-700">
+                          <span className="text-sm font-medium text-lime-11">
                             Yes
                           </span>
                         ) : status === 'no' ? (
-                          <span className="text-sm font-medium text-rose-600">
+                          <span className="text-sm font-medium text-crimson-11">
                             No
                           </span>
                         ) : (
@@ -641,7 +639,7 @@ export function RecipientReadTable({
                           </span>
                         )
                       ) : r.readStatus === 'read' ? (
-                        <span className="text-sm font-medium text-green-700">
+                        <span className="text-sm font-medium text-lime-11">
                           Read
                         </span>
                       ) : (
@@ -706,7 +704,7 @@ export function RecipientReadTable({
                             'inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium',
                             r.pgStatus === 'onboarded'
                               ? 'bg-twblue-2 text-twblue-9'
-                              : 'bg-slate-100 text-slate-500',
+                              : 'bg-slate-3 text-slate-11',
                           )}
                         >
                           {r.pgStatus === 'onboarded'

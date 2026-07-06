@@ -2,6 +2,12 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "blueprint-builder",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": ["-c", "cd /Users/leemunyee/Downloads/blueprint-builder && exec /Users/leemunyee/.local/share/mise/installs/node/24.14.1/bin/npm run dev"],
+      "port": 5173
+    },
+    {
       "name": "Dev",
       "runtimeExecutable": "/opt/homebrew/bin/bun",
       "runtimeArgs": ["run", "dev"],

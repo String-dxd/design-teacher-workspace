@@ -4,19 +4,6 @@ export interface OffenceDetail {
   latestDate: string
 }
 
-export interface CounsellingSubcase {
-  name: string
-  count: number
-  latestDate: string
-}
-
-export interface CounsellingCase {
-  category: string
-  subcases?: Array<CounsellingSubcase>
-  count?: number
-  latestDate?: string
-}
-
 export interface RiskIndicatorRecord {
   year: number
   term: string
@@ -38,7 +25,10 @@ export interface Student {
   id: string
   name: string
   class: string
+  /** Comma-separated CCA names for table/header display. */
   cca: string
+  /** Per-CCA attendance, set for students enrolled in more than one CCA. */
+  ccaDetails?: Array<{ name: string; attendance: number }>
   attentionTags: Array<AttentionTag>
   // Academic Performance
   overallPercentage: number
@@ -62,7 +52,8 @@ export interface Student {
   selectedBy?: Array<SocialLinkPerson>
   selectedFriends?: Array<SocialLinkPerson>
   counsellingSessions: number
-  counsellingCases?: Array<CounsellingCase>
+  /** Severity bucket for the single counselling case, shown in the table/filter. */
+  counsellingComplexity?: 'Less complex cases' | 'Complex cases'
   sen: string | null
   fas: string | null
   // Family, Housing, Finance
@@ -75,9 +66,12 @@ export interface Student {
   siblings: number
   siblingDetails?: Array<{ name: string; class: string; relationship?: string }>
   externalAgencies: string | null
-  supportedByComLink?: 'Yes' | 'No' | '-'
-  supportedByFsc?: 'Yes' | 'No' | '-'
-  nonIntactFamily?: 'Yes' | 'No' | '-'
+  supportedByComLink?: 'Yes' | 'No'
+  /** Name of the FSC or SSO providing ComLink+ support (shown on the profile) */
+  supportedByComLinkBy?: string
+  supportedByFsc?: 'Yes' | 'No'
+  parentsConsideringDivorce?: 'Yes' | 'No'
+  nonIntactFamily?: 'Yes' | 'No'
   // Personal
   birthday?: string
   citizenship?: 'Singapore citizen' | 'Permanent resident' | 'Foreigner'
@@ -124,13 +118,10 @@ export interface TermlyAccumulatingData {
   ccaMissed: number
 }
 
-export interface ClassOption {
-  value: string
-  label: string
-}
 
 export type FilterField =
   // General
+  | 'dateRange'
   | 'class'
   | 'cca'
   // Academic Performance
@@ -161,6 +152,7 @@ export type FilterField =
   | 'externalAgencies'
   | 'supportedByComLink'
   | 'supportedByFsc'
+  | 'parentsConsideringDivorce'
   | 'nonIntactFamily'
 
 export type FilterOperator =

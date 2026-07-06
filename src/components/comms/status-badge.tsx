@@ -12,7 +12,7 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
     return (
       <Badge
         className={cn(
-          'bg-green-100 text-green-700 hover:bg-green-100',
+          'bg-lime-3 text-lime-11 hover:bg-lime-3',
           className,
         )}
       >
@@ -23,7 +23,10 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
   if (status === 'scheduled') {
     return (
       <Badge
-        className={cn('bg-blue-100 text-blue-700 hover:bg-blue-100', className)}
+        className={cn(
+          'bg-twblue-3 text-twblue-11 hover:bg-twblue-3',
+          className,
+        )}
       >
         Scheduled
       </Badge>
@@ -32,7 +35,7 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
   return (
     <Badge
       className={cn(
-        'bg-slate-100 text-slate-600 hover:bg-slate-100',
+        'bg-muted text-muted-foreground hover:bg-muted',
         className,
       )}
     >

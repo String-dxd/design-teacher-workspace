@@ -7,8 +7,6 @@ import {
   getStudentScopes,
 } from '@/data/mock-student-groups'
 
-// Backward-compatible type alias — existing code that imports SelectedRecipient continues to work
-export type { SelectedEntity as SelectedRecipient }
 
 interface StudentRecipientSelectorProps {
   value: Array<SelectedEntity>
@@ -50,7 +48,7 @@ export function StudentRecipientSelector({
         maxVisibleTokens={3}
       />
       {overlaps.map((w, i) => (
-        <p key={i} className="mt-1.5 text-xs text-amber-600">
+        <p key={i} className="mt-1.5 text-xs text-amber-11">
           {w.childLabel} is already included in {w.parentLabel}. Some students
           may receive duplicates.
         </p>

@@ -10,7 +10,7 @@ import * as React from 'react'
 
 import { DirectEdit } from 'made-refine'
 import appCss from '../styles.css?url'
-import { DraggableTanStackDevtools } from '@/components/draggable-tanstack-devtools'
+import { NotFoundPage } from './$'
 import { AppHeader } from '@/components/app-header'
 import { AppSidebar } from '@/components/app-sidebar'
 import { WelcomeModal } from '@/components/welcome-modal'
@@ -24,6 +24,7 @@ import { HeyTaliaPanel } from '@/components/heytalia/heytalia-panel'
 import { HeyTaliaProvider } from '@/components/heytalia/heytalia-context'
 
 export const Route = createRootRoute({
+  notFoundComponent: NotFoundPage,
   head: () => ({
     meta: [
       {
@@ -96,9 +97,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         {children}
-        {process.env.NODE_ENV === 'development' && (
-          <DraggableTanStackDevtools />
-        )}
         {process.env.NODE_ENV === 'development' && <DirectEdit />}
         <Scripts />
       </body>
@@ -113,8 +111,11 @@ function RootComponent() {
   const isGlowRoute = matches.some((m) =>
     (m as { pathname: string }).pathname?.startsWith('/glow/'),
   )
+  const isNotFoundRoute =
+    matches.some((m) => m.routeId === '/$') ||
+    matches.at(-1)?.status === 'notFound'
 
-  if (isGuestRoute || isGlowRoute) {
+  if (isGuestRoute || isGlowRoute || isNotFoundRoute) {
     return (
       <ErrorBoundary>
         <QueryClientProvider client={queryClient}>
@@ -140,11 +141,11 @@ function RootComponent() {
                 <SidebarProvider>
                   <AppSidebar />
                   <SidebarInset className="h-screen overflow-hidden">
-                    <AppHeader />
                     <div
                       data-scroll-container
                       className="flex min-h-0 flex-1 flex-col overflow-auto bg-slate-1"
                     >
+                      <AppHeader />
                       <ErrorBoundary>
                         <Outlet />
                       </ErrorBoundary>

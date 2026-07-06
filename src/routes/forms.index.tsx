@@ -39,15 +39,15 @@ function getStatusBadge(status: FormStatus) {
   const config = {
     active: {
       label: 'Open',
-      className: 'bg-green-100 text-green-700 hover:bg-green-100',
+      className: 'bg-lime-3 text-lime-11 hover:bg-lime-3',
     },
     draft: {
       label: 'Draft',
-      className: 'bg-slate-100 text-slate-700 hover:bg-slate-100',
+      className: 'bg-muted text-muted-foreground hover:bg-muted',
     },
     closed: {
       label: 'Closed',
-      className: 'bg-amber-100 text-amber-700 hover:bg-amber-100',
+      className: 'bg-amber-3 text-amber-11 hover:bg-amber-3',
     },
   }
   const { label, className } = config[status]
@@ -124,7 +124,7 @@ function FormsPage() {
       </div>
 
       {/* Forms Table */}
-      <div className="mt-4 max-w-full overflow-x-auto bg-white">
+      <div className="mt-4 max-w-full overflow-x-auto bg-card">
         {filteredForms.length === 0 ? (
           <EmptyState
             title="No forms found"
@@ -132,7 +132,7 @@ function FormsPage() {
           />
         ) : (
           <Table tableClassName="table-fixed w-full">
-            <TableHeader className="border-b bg-white">
+            <TableHeader className="border-b bg-card">
               <TableRow className="border-0 hover:bg-transparent">
                 <TableHead className="w-[500px] pl-6">Title</TableHead>
                 <TableHead className="w-[110px]">Date</TableHead>
@@ -205,15 +205,17 @@ function FormsPage() {
                       onClick={(e) => e.stopPropagation()}
                     >
                       <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                            aria-label="More actions"
-                          >
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
+                        <DropdownMenuTrigger
+                          render={
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                              aria-label="More actions"
+                            />
+                          }
+                        >
+                          <MoreHorizontal className="h-4 w-4" />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem>

@@ -20,14 +20,26 @@ import {
   RotateCcw,
   Search,
   SlidersHorizontal,
-  X,
 } from 'lucide-react'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { CATEGORICAL_6 } from '@/lib/chart-colors'
+import {
+  ATTENDANCE_SEVERITY,
+  CHART_GRID,
+  CHART_LABEL,
+  CHART_TICK,
+  CHART_TOOLTIP_BORDER,
+  CHART_SURFACE,
+  GRADE_FILL,
+  PRESENT_RING,
+  SERIES_BLUE,
+  SERIES_BLUE_COBALT,
+  SERIES_BLUE_LIGHT,
+} from '@/lib/chart-colors'
 
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import {
   Popover,
@@ -43,6 +55,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import {
   TooltipContent,
   TooltipTrigger,
@@ -117,16 +137,12 @@ const PERFORMANCE_DATA = [
   },
 ]
 
-const G2_COUNT = 2
-const G3_COUNT = 4
-const TOTAL_SUBJECTS = G2_COUNT + G3_COUNT
-
 const BAR_COLORS = {
-  term1WA: '#4d79e0', // cobalt blue — matches attendance chart
-  term2WA: '#228be6', // blue
-  term3WA: '#74c0fc', // light blue
-  endOfYear: '#fac53e', // yellow
-  overall: '#fd7e14', // orange
+  term1WA: SERIES_BLUE_COBALT, // cobalt blue — matches attendance chart
+  term2WA: SERIES_BLUE, // blue
+  term3WA: SERIES_BLUE_LIGHT, // light blue
+  endOfYear: ATTENDANCE_SEVERITY.late, // yellow
+  overall: ATTENDANCE_SEVERITY.nonVRAbsence, // orange
 }
 
 const LEGEND_ITEMS = [
@@ -226,9 +242,6 @@ const ASSESSMENT_OPTIONS = [
 
 const INDICATOR_OPTIONS = ['Distinction', 'Pass'] as const
 
-// Mock results data — Secondary 4, EL-G3, Term 1 WA
-const QUICK_STATS = { total: 120, distinction: 42, pass: 68 }
-
 const GRADE_DATA = [
   { grade: 'A1', count: 15 },
   { grade: 'A2', count: 27 },
@@ -240,26 +253,42 @@ const GRADE_DATA = [
   { grade: 'VR', count: 3 },
 ]
 
-const GRADE_FILL: Record<string, string> = {
-  A1: '#228be6',
-  A2: '#74c0fc',
-  B3: '#12b886',
-  B4: '#63e6be',
-  C5: '#fd7e14',
-  C6: '#ffa94d',
-  D7: '#fa5252',
-  VR: '#adb5bd',
-}
-
-const GRADE_BADGE: Record<string, string> = {
-  A1: 'bg-blue-100 text-blue-800',
-  A2: 'bg-blue-50 text-blue-700',
-  B3: 'bg-teal-100 text-teal-800',
-  B4: 'bg-teal-50 text-teal-700',
-  C5: 'bg-orange-100 text-orange-800',
-  C6: 'bg-orange-50 text-orange-700',
-  D7: 'bg-red-100 text-red-800',
-  VR: 'bg-gray-100 text-gray-600',
+const GRADE_BADGE_STYLE: Record<
+  string,
+  { backgroundColor: string; color: string }
+> = {
+  A1: {
+    backgroundColor: `color-mix(in srgb, ${SERIES_BLUE} 15%, transparent)`,
+    color: 'var(--color-twblue-12)',
+  },
+  A2: {
+    backgroundColor: `color-mix(in srgb, ${SERIES_BLUE_LIGHT} 25%, transparent)`,
+    color: 'var(--color-twblue-11)',
+  },
+  B3: {
+    backgroundColor: `color-mix(in srgb, ${PRESENT_RING} 15%, transparent)`,
+    color: PRESENT_RING,
+  },
+  B4: {
+    backgroundColor: `color-mix(in srgb, ${GRADE_FILL.B4} 25%, transparent)`,
+    color: PRESENT_RING,
+  },
+  C5: {
+    backgroundColor: `color-mix(in srgb, ${ATTENDANCE_SEVERITY.nonVRAbsence} 15%, transparent)`,
+    color: ATTENDANCE_SEVERITY.nonVRAbsenceStrong,
+  },
+  C6: {
+    backgroundColor: `color-mix(in srgb, ${ATTENDANCE_SEVERITY.absentExcl} 25%, transparent)`,
+    color: ATTENDANCE_SEVERITY.nonVRAbsenceStrong,
+  },
+  D7: {
+    backgroundColor: `color-mix(in srgb, ${ATTENDANCE_SEVERITY.pendingReason} 15%, transparent)`,
+    color: ATTENDANCE_SEVERITY.pendingReasonStrong,
+  },
+  VR: {
+    backgroundColor: `color-mix(in srgb, ${GRADE_FILL.VR} 30%, transparent)`,
+    color: CHART_LABEL,
+  },
 }
 
 const BOX_PLOT_DATA = [
@@ -631,17 +660,21 @@ function PerformanceBarChart({ barSize }: { barSize?: number }) {
       barGap={0}
       barSize={barSize}
     >
-      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e9ecef" />
+      <CartesianGrid
+        strokeDasharray="3 3"
+        vertical={false}
+        stroke={CHART_GRID}
+      />
       <XAxis
         dataKey="subject"
-        tick={{ fontSize: 12, fill: '#868e96' }}
+        tick={{ fontSize: 12, fill: CHART_TICK }}
         axisLine={false}
         tickLine={false}
       />
       <YAxis
         domain={[0, 100]}
         ticks={[0, 25, 50, 75, 100]}
-        tick={{ fontSize: 12, fill: '#868e96' }}
+        tick={{ fontSize: 12, fill: CHART_TICK }}
         axisLine={false}
         tickLine={false}
       />
@@ -650,27 +683,27 @@ function PerformanceBarChart({ barSize }: { barSize?: number }) {
         contentStyle={{
           fontSize: 12,
           borderRadius: 6,
-          border: '1px solid #dee2e6',
+          border: `1px solid ${CHART_TOOLTIP_BORDER}`,
         }}
       />
       <Bar dataKey="term1WA" fill={BAR_COLORS.term1WA} radius={[2, 2, 0, 0]}>
-        <LabelList position="top" style={{ fontSize: 10, fill: '#495057' }} />
+        <LabelList position="top" style={{ fontSize: 10, fill: CHART_LABEL }} />
       </Bar>
       <Bar dataKey="term2WA" fill={BAR_COLORS.term2WA} radius={[2, 2, 0, 0]}>
-        <LabelList position="top" style={{ fontSize: 10, fill: '#495057' }} />
+        <LabelList position="top" style={{ fontSize: 10, fill: CHART_LABEL }} />
       </Bar>
       <Bar dataKey="term3WA" fill={BAR_COLORS.term3WA} radius={[2, 2, 0, 0]}>
-        <LabelList position="top" style={{ fontSize: 10, fill: '#495057' }} />
+        <LabelList position="top" style={{ fontSize: 10, fill: CHART_LABEL }} />
       </Bar>
       <Bar
         dataKey="endOfYear"
         fill={BAR_COLORS.endOfYear}
         radius={[2, 2, 0, 0]}
       >
-        <LabelList position="top" style={{ fontSize: 10, fill: '#495057' }} />
+        <LabelList position="top" style={{ fontSize: 10, fill: CHART_LABEL }} />
       </Bar>
       <Bar dataKey="overall" fill={BAR_COLORS.overall} radius={[2, 2, 0, 0]}>
-        <LabelList position="top" style={{ fontSize: 10, fill: '#495057' }} />
+        <LabelList position="top" style={{ fontSize: 10, fill: CHART_LABEL }} />
       </Bar>
     </BarChart>
   )
@@ -746,7 +779,7 @@ export function LevelDropdown({ value, onValueChange }: LevelDropdownProps) {
         render={
           <button
             type="button"
-            className="border-border bg-white hover:bg-muted flex h-8 items-center gap-1.5 rounded-full border px-3 text-sm transition-colors outline-none"
+            className="border-border bg-card hover:bg-muted flex h-8 items-center gap-1.5 rounded-full border px-3 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
           />
         }
       >
@@ -866,7 +899,7 @@ function IndicatorDropdown({ value, onValueChange }: IndicatorDropdownProps) {
         render={
           <button
             type="button"
-            className="border-border bg-white hover:bg-muted flex h-8 items-center gap-1.5 rounded-full border px-3 text-sm transition-colors outline-none"
+            className="border-border bg-card hover:bg-muted flex h-8 items-center gap-1.5 rounded-full border px-3 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
           />
         }
       >
@@ -911,8 +944,8 @@ function GradeDistTooltip({
       style={{
         fontSize: 12,
         borderRadius: 6,
-        border: '1px solid #dee2e6',
-        background: '#fff',
+        border: `1px solid ${CHART_TOOLTIP_BORDER}`,
+        background: CHART_SURFACE,
         padding: '6px 10px',
         boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
       }}
@@ -926,7 +959,7 @@ function GradeDistTooltip({
 // Grade distribution bar chart
 function GradeDistChart({
   data,
-  selectedGrade,
+  selectedGrade: _selectedGrade,
   onGradeClick,
 }: {
   data: BreakdownData['gradeData']
@@ -944,15 +977,19 @@ function GradeDistChart({
       onMouseLeave={() => setHoveredGrade(null)}
       onMouseDown={(e: React.MouseEvent) => e.preventDefault()}
     >
-      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e9ecef" />
+      <CartesianGrid
+        strokeDasharray="3 3"
+        vertical={false}
+        stroke={CHART_GRID}
+      />
       <XAxis
         dataKey="grade"
-        tick={{ fontSize: 12, fill: '#868e96' }}
+        tick={{ fontSize: 12, fill: CHART_TICK }}
         axisLine={false}
         tickLine={false}
       />
       <YAxis
-        tick={{ fontSize: 11, fill: '#868e96' }}
+        tick={{ fontSize: 11, fill: CHART_TICK }}
         axisLine={false}
         tickLine={false}
       />
@@ -973,7 +1010,7 @@ function GradeDistChart({
         {data.map((entry) => (
           <Cell
             key={entry.grade}
-            fill="#228be6"
+            fill={SERIES_BLUE}
             opacity={1}
             style={{ cursor: 'pointer', outline: 'none' }}
             tabIndex={-1}
@@ -983,7 +1020,7 @@ function GradeDistChart({
         <LabelList
           dataKey="count"
           position="top"
-          style={{ fontSize: 11, fill: '#495057', fontWeight: 500 }}
+          style={{ fontSize: 11, fill: CHART_LABEL, fontWeight: 500 }}
         />
         <LabelList
           dataKey="count"
@@ -1018,7 +1055,7 @@ function GradeDistChart({
                   textAnchor="middle"
                   dominantBaseline="middle"
                   fontSize={9}
-                  fill="#ffffff"
+                  fill={CHART_LABEL}
                   fontWeight={500}
                 >
                   View
@@ -1029,7 +1066,7 @@ function GradeDistChart({
                   textAnchor="middle"
                   dominantBaseline="middle"
                   fontSize={9}
-                  fill="#ffffff"
+                  fill={CHART_LABEL}
                   fontWeight={500}
                 >
                   students
@@ -1076,7 +1113,7 @@ function BoxPlotSVGInner({
           y1={mt}
           x2={toX(t)}
           y2={height - mb}
-          stroke="#e9ecef"
+          stroke={CHART_GRID}
           strokeDasharray="3 3"
         />
       ))}
@@ -1088,7 +1125,7 @@ function BoxPlotSVGInner({
           y={height - mb + 16}
           textAnchor="middle"
           fontSize={11}
-          fill="#868e96"
+          fill={CHART_TICK}
         >
           {t}
         </text>
@@ -1110,7 +1147,7 @@ function BoxPlotSVGInner({
               y1={cy}
               x2={xQ1}
               y2={cy}
-              stroke="#868e96"
+              stroke={CHART_TICK}
               strokeWidth={1.5}
             />
             <line
@@ -1118,7 +1155,7 @@ function BoxPlotSVGInner({
               y1={cy - capH}
               x2={xMin}
               y2={cy + capH}
-              stroke="#868e96"
+              stroke={CHART_TICK}
               strokeWidth={1.5}
             />
             {/* IQR box */}
@@ -1127,8 +1164,8 @@ function BoxPlotSVGInner({
               y={cy - bh / 2}
               width={xQ3 - xQ1}
               height={bh}
-              fill="rgba(34,139,230,0.1)"
-              stroke="#228be6"
+              fill={`color-mix(in srgb, ${SERIES_BLUE} 10%, transparent)`}
+              stroke={SERIES_BLUE}
               strokeWidth={1.5}
               rx={2}
             />
@@ -1138,7 +1175,7 @@ function BoxPlotSVGInner({
               y1={cy - bh / 2}
               x2={xMed}
               y2={cy + bh / 2}
-              stroke="#228be6"
+              stroke={SERIES_BLUE}
               strokeWidth={2.5}
             />
             {/* Right whisker */}
@@ -1147,7 +1184,7 @@ function BoxPlotSVGInner({
               y1={cy}
               x2={xMax}
               y2={cy}
-              stroke="#868e96"
+              stroke={CHART_TICK}
               strokeWidth={1.5}
             />
             <line
@@ -1155,7 +1192,7 @@ function BoxPlotSVGInner({
               y1={cy - capH}
               x2={xMax}
               y2={cy + capH}
-              stroke="#868e96"
+              stroke={CHART_TICK}
               strokeWidth={1.5}
             />
             {/* Class label */}
@@ -1164,7 +1201,7 @@ function BoxPlotSVGInner({
               y={cy + 4}
               textAnchor="end"
               fontSize={12}
-              fill="#868e96"
+              fill={CHART_TICK}
             >
               {d.class}
             </text>
@@ -1190,30 +1227,30 @@ export function AcademicAnalytics() {
           Subjects taken and current grades
         </h3>
         <div className="overflow-hidden rounded-lg border">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-muted/40">
-                <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/40 hover:bg-muted/40">
+                <TableHead className="h-auto px-4 py-2.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Subject
-                </th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                </TableHead>
+                <TableHead className="h-auto px-4 py-2.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Current grades
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {SUBJECTS_BANDING.map((row) => (
-                <tr key={row.subject} className="bg-white">
-                  <td className="px-4 py-3 text-sm text-foreground">
+                <TableRow key={row.subject} className="bg-card hover:bg-card">
+                  <TableCell className="px-4 py-3 text-sm whitespace-normal text-foreground">
                     {row.subject}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-sm whitespace-normal text-foreground">
                     {row.grade}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       </div>
 
@@ -1249,48 +1286,34 @@ export function AcademicAnalytics() {
       </div>
 
       {/* Expanded overlay */}
-      {chartExpanded && (
-        <>
-          <div
-            className="fixed inset-0 z-40 bg-black/20"
-            onClick={() => setChartExpanded(false)}
-          />
-          <div className="fixed inset-6 z-50 flex flex-col rounded-xl border bg-white p-6 shadow-2xl">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-foreground">
-                Results over time
-              </h3>
-              <button
-                onClick={() => setChartExpanded(false)}
-                className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            <div className="min-h-0 flex-1">
-              <ResponsiveContainer width="100%" height="100%">
-                <PerformanceBarChart barSize={16} />
-              </ResponsiveContainer>
-            </div>
-            <div
-              className="flex gap-2"
-              style={{ paddingLeft: 28, paddingRight: 8 }}
-            >
-              <div className="flex flex-1 items-center justify-center border-t border-muted-foreground/30 py-1.5">
-                <span className="text-xs font-semibold text-foreground">
-                  G2
-                </span>
-              </div>
-              <div className="flex flex-[2] items-center justify-center border-t border-muted-foreground/30 py-1.5">
-                <span className="text-xs font-semibold text-foreground">
-                  G3
-                </span>
-              </div>
-            </div>
-            <PerformanceLegend />
+      <Dialog open={chartExpanded} onOpenChange={setChartExpanded}>
+        <DialogContent className="flex h-[calc(100vh-3rem)] w-[calc(100vw-3rem)] max-w-none flex-col p-6">
+          <DialogTitle className="text-sm font-semibold">
+            Results over time
+          </DialogTitle>
+          <div className="min-h-0 flex-1">
+            <ResponsiveContainer width="100%" height="100%">
+              <PerformanceBarChart barSize={16} />
+            </ResponsiveContainer>
           </div>
-        </>
-      )}
+          <div
+            className="flex gap-2"
+            style={{ paddingLeft: 28, paddingRight: 8 }}
+          >
+            <div className="flex flex-1 items-center justify-center border-t border-muted-foreground/30 py-1.5">
+              <span className="text-xs font-semibold text-foreground">
+                G2
+              </span>
+            </div>
+            <div className="flex flex-[2] items-center justify-center border-t border-muted-foreground/30 py-1.5">
+              <span className="text-xs font-semibold text-foreground">
+                G3
+              </span>
+            </div>
+          </div>
+          <PerformanceLegend />
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
@@ -1452,7 +1475,7 @@ export function MonitoringAcademicAnalytics() {
           <Select value={subject} onValueChange={setSubject}>
             <SelectTrigger
               size="sm"
-              className="h-8 w-auto gap-1.5 rounded-full border-border bg-white"
+              className="h-8 w-auto gap-1.5 rounded-full border-border bg-card"
             >
               <span className="text-muted-foreground text-sm">Subject:</span>
               <SelectValue>
@@ -1478,7 +1501,7 @@ export function MonitoringAcademicAnalytics() {
           <Select value={assessment} onValueChange={setAssessment}>
             <SelectTrigger
               size="sm"
-              className="h-8 w-auto gap-1.5 rounded-full border-border bg-white"
+              className="h-8 w-auto gap-1.5 rounded-full border-border bg-card"
             >
               <span className="text-muted-foreground text-sm">Assessment:</span>
               <SelectValue>
@@ -1500,13 +1523,13 @@ export function MonitoringAcademicAnalytics() {
 
         {/* ── Quick stats ─────────────────────────────────────────────── */}
         <div className="mt-6 grid grid-cols-3 gap-4">
-          <div className="rounded-lg border bg-white p-4">
+          <div className="rounded-lg border bg-card p-4">
             <p className="text-xs text-muted-foreground">No. of students sat</p>
             <p className="mt-1 text-2xl font-bold text-foreground">
               {breakdown.quickStats.total}
             </p>
           </div>
-          <div className="rounded-lg border bg-white p-4">
+          <div className="rounded-lg border bg-card p-4">
             <p className="text-xs text-muted-foreground">
               Students with distinction
             </p>
@@ -1519,7 +1542,7 @@ export function MonitoringAcademicAnalytics() {
               %
             </p>
           </div>
-          <div className="rounded-lg border bg-white p-4">
+          <div className="rounded-lg border bg-card p-4">
             <p className="text-xs text-muted-foreground">Students with pass</p>
             <p className="mt-1 text-2xl font-bold text-foreground">
               {Math.round(
@@ -1533,7 +1556,7 @@ export function MonitoringAcademicAnalytics() {
         {/* ── Charts row ──────────────────────────────────────────────── */}
         <div className="mt-4 grid grid-cols-1 gap-4">
           {/* No. of students in each grade */}
-          <div className="rounded-lg border bg-white p-4 [&_svg:focus]:outline-none [&_svg]:outline-none">
+          <div className="rounded-lg border bg-card p-4 [&_svg:focus]:outline-none [&_svg]:outline-none">
             <p className="mb-3 text-sm font-semibold text-foreground">
               No. of students in each grade
             </p>
@@ -1547,7 +1570,7 @@ export function MonitoringAcademicAnalytics() {
           </div>
 
           {/* Scores by class */}
-          <div className="rounded-lg border bg-white overflow-hidden">
+          <div className="rounded-lg border bg-card overflow-hidden">
             <p className="px-4 pt-4 pb-3 text-sm font-semibold text-foreground">
               Scores by class
             </p>
@@ -1560,15 +1583,15 @@ export function MonitoringAcademicAnalytics() {
             </div>
             <div className="px-4 pb-4 mt-3 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
               <div className="flex items-center gap-1.5">
-                <span className="inline-block h-3 w-4 rounded-sm border border-blue-400 bg-blue-400/10" />
+                <span className="inline-block h-3 w-4 rounded-sm border border-twblue-6 bg-twblue-9/10" />
                 IQR (Q1–Q3)
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="inline-block h-[2px] w-4 bg-blue-500" />
+                <span className="inline-block h-[2px] w-4 bg-twblue-9" />
                 Median
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="inline-block h-3 w-px bg-gray-400" />
+                <span className="inline-block h-3 w-px bg-slate-9" />
                 Min / Max
               </div>
             </div>
@@ -1578,7 +1601,7 @@ export function MonitoringAcademicAnalytics() {
         {/* ── Students sorted by results ──────────────────────────────── */}
         <div
           ref={candidatesTableRef}
-          className="mt-4 scroll-mt-8 rounded-lg border bg-white p-4"
+          className="mt-4 scroll-mt-8 rounded-lg border bg-card p-4"
         >
           <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -1587,10 +1610,13 @@ export function MonitoringAcademicAnalytics() {
               </p>
               {selectedGrade && (
                 <span
-                  className={cn(
-                    'rounded-full px-2 py-0.5 text-xs font-medium',
-                    GRADE_BADGE[selectedGrade] ?? 'bg-gray-100 text-gray-600',
-                  )}
+                  className="rounded-full px-2 py-0.5 text-xs font-medium"
+                  style={
+                    GRADE_BADGE_STYLE[selectedGrade] ?? {
+                      backgroundColor: `color-mix(in srgb, ${GRADE_FILL.VR} 30%, transparent)`,
+                      color: CHART_LABEL,
+                    }
+                  }
                 >
                   {selectedGrade} — {filteredCandidates.length} students
                 </span>
@@ -1619,10 +1645,10 @@ export function MonitoringAcademicAnalytics() {
                   <button
                     type="button"
                     className={cn(
-                      'border-border flex h-8 items-center gap-1.5 rounded-full border px-3 text-sm transition-colors outline-none',
+                      'border-border flex h-8 items-center gap-1.5 rounded-full border px-3 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
                       hasActiveTableFilters
-                        ? 'bg-blue-50 border-blue-300 text-blue-700'
-                        : 'bg-white hover:bg-muted',
+                        ? 'bg-twblue-3 border-twblue-6 text-twblue-11'
+                        : 'bg-card hover:bg-muted',
                     )}
                   />
                 }
@@ -1630,7 +1656,7 @@ export function MonitoringAcademicAnalytics() {
                 <SlidersHorizontal className="h-3.5 w-3.5" />
                 Filter
                 {hasActiveTableFilters && (
-                  <span className="ml-0.5 rounded-full bg-blue-600 px-1.5 py-0.5 text-[10px] font-medium text-white leading-none">
+                  <span className="ml-0.5 rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-medium text-primary-foreground leading-none">
                     {
                       [
                         filterClass !== 'all',
@@ -1741,7 +1767,7 @@ export function MonitoringAcademicAnalytics() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-7 w-full gap-1.5 text-xs font-medium text-[var(--slate-12)]"
+                      className="h-7 w-full gap-1.5 text-xs font-medium text-slate-12"
                       onClick={() => {
                         clearTableFilters()
                         setFilterOpen(false)
@@ -1758,36 +1784,33 @@ export function MonitoringAcademicAnalytics() {
 
           {/* Table */}
           <div className="overflow-x-auto rounded-lg border">
-            <table className="w-full table-fixed text-sm">
-              <thead>
-                <tr className="border-b bg-muted/40">
+            <Table tableClassName="table-fixed">
+              <TableHeader>
+                <TableRow className="bg-muted/40 hover:bg-muted/40">
                   {(
                     ['Profile', 'Name', 'Class', 'Score', 'Grade'] as const
                   ).map((label, i) => (
-                    <th
+                    <TableHead
                       key={label}
                       className={cn(
-                        'h-12 px-4 text-left align-middle font-medium text-muted-foreground',
+                        'text-muted-foreground',
                         i === 0 && 'w-[96px]',
                         i === 1 && 'w-[300px]',
                         (i === 2 || i === 3 || i === 4) && 'w-[140px]',
                       )}
                     >
                       {label}
-                    </th>
+                    </TableHead>
                   ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y">
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {pagedCandidates.map((c) => {
                   const realId = studentIdByName.get(c.name)
                   return (
-                    <tr
+                    <TableRow
                       key={c.id}
-                      className={cn(
-                        'transition-colors hover:bg-muted/50',
-                        realId && 'cursor-pointer',
-                      )}
+                      className={cn(realId && 'cursor-pointer')}
                       onClick={() => {
                         if (realId)
                           navigate({
@@ -1796,7 +1819,7 @@ export function MonitoringAcademicAnalytics() {
                           })
                       }}
                     >
-                      <td className="w-[96px] p-4 align-middle">
+                      <TableCell className="w-[96px]">
                         <TooltipUI>
                           <TooltipTrigger>
                             {realId ? (
@@ -1804,7 +1827,7 @@ export function MonitoringAcademicAnalytics() {
                                 to="/students/$id"
                                 params={{ id: realId }}
                                 onClick={(e) => e.stopPropagation()}
-                                className="flex items-center justify-center rounded p-0.5 text-blue-500 hover:bg-blue-50 hover:text-blue-600"
+                                className="flex items-center justify-center rounded p-0.5 text-twblue-11 hover:bg-twblue-3 hover:text-twblue-12"
                               >
                                 <FileText className="h-4 w-4" />
                               </Link>
@@ -1820,30 +1843,30 @@ export function MonitoringAcademicAnalytics() {
                               : 'Profile not available'}
                           </TooltipContent>
                         </TooltipUI>
-                      </td>
-                      <td className="w-[300px] p-4 align-middle font-medium">
+                      </TableCell>
+                      <TableCell className="w-[300px] font-medium">
                         {c.name}
-                      </td>
-                      <td className="w-[140px] p-4 align-middle">{c.class}</td>
-                      <td className="w-[140px] p-4 align-middle tabular-nums">
+                      </TableCell>
+                      <TableCell className="w-[140px]">{c.class}</TableCell>
+                      <TableCell className="w-[140px] tabular-nums">
                         {c.score}
-                      </td>
-                      <td className="w-[140px] p-4 align-middle">{c.grade}</td>
-                    </tr>
+                      </TableCell>
+                      <TableCell className="w-[140px]">{c.grade}</TableCell>
+                    </TableRow>
                   )
                 })}
                 {pagedCandidates.length === 0 && (
-                  <tr>
-                    <td
+                  <TableRow className="hover:bg-transparent">
+                    <TableCell
                       colSpan={5}
-                      className="px-4 py-8 text-center text-sm text-muted-foreground"
+                      className="py-8 text-center text-muted-foreground"
                     >
                       No students match your filters.
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
 
           {/* Pagination */}
@@ -1927,7 +1950,7 @@ export function MonitoringAcademicAnalytics() {
           <Select value={trendsSubject} onValueChange={setTrendsSubject}>
             <SelectTrigger
               size="sm"
-              className="h-8 w-auto gap-1.5 rounded-full border-border bg-white"
+              className="h-8 w-auto gap-1.5 rounded-full border-border bg-card"
             >
               <span className="text-muted-foreground text-sm">Subject:</span>
               <SelectValue>
@@ -1952,7 +1975,7 @@ export function MonitoringAcademicAnalytics() {
         </div>
 
         {/* Subject performance over time */}
-        <div className="mt-4 rounded-lg border bg-white p-4">
+        <div className="mt-4 rounded-lg border bg-card p-4">
           <p className="mb-3 text-sm font-semibold text-foreground">
             Subject performance over time
           </p>
@@ -1966,18 +1989,18 @@ export function MonitoringAcademicAnalytics() {
               <CartesianGrid
                 strokeDasharray="3 3"
                 vertical={false}
-                stroke="#e9ecef"
+                stroke={CHART_GRID}
               />
               <XAxis
                 dataKey="assessment"
-                tick={{ fontSize: 12, fill: '#868e96' }}
+                tick={{ fontSize: 12, fill: CHART_TICK }}
                 axisLine={false}
                 tickLine={false}
               />
               <YAxis
                 domain={[0, 100]}
                 ticks={[0, 25, 50, 75, 100]}
-                tick={{ fontSize: 12, fill: '#868e96' }}
+                tick={{ fontSize: 12, fill: CHART_TICK }}
                 axisLine={false}
                 tickLine={false}
                 tickFormatter={(v: number) => `${v}%`}
@@ -1990,21 +2013,25 @@ export function MonitoringAcademicAnalytics() {
                 contentStyle={{
                   fontSize: 12,
                   borderRadius: 6,
-                  border: '1px solid #dee2e6',
+                  border: `1px solid ${CHART_TOOLTIP_BORDER}`,
                 }}
               />
-              <Bar dataKey="distinction" fill="#228be6" radius={[2, 2, 0, 0]}>
+              <Bar
+                dataKey="distinction"
+                fill={SERIES_BLUE}
+                radius={[2, 2, 0, 0]}
+              >
                 <LabelList
                   position="top"
                   formatter={(v: number) => `${v}%`}
-                  style={{ fontSize: 10, fill: '#495057' }}
+                  style={{ fontSize: 10, fill: CHART_LABEL }}
                 />
               </Bar>
-              <Bar dataKey="pass" fill="#12b886" radius={[2, 2, 0, 0]}>
+              <Bar dataKey="pass" fill={PRESENT_RING} radius={[2, 2, 0, 0]}>
                 <LabelList
                   position="top"
                   formatter={(v: number) => `${v}%`}
-                  style={{ fontSize: 10, fill: '#495057' }}
+                  style={{ fontSize: 10, fill: CHART_LABEL }}
                 />
               </Bar>
             </BarChart>
@@ -2013,14 +2040,14 @@ export function MonitoringAcademicAnalytics() {
             <div className="flex items-center gap-1.5">
               <span
                 className="h-3 w-3 shrink-0 rounded-sm"
-                style={{ backgroundColor: '#228be6' }}
+                style={{ backgroundColor: SERIES_BLUE }}
               />
               <span className="text-muted-foreground">% with distinction</span>
             </div>
             <div className="flex items-center gap-1.5">
               <span
                 className="h-3 w-3 shrink-0 rounded-sm"
-                style={{ backgroundColor: '#12b886' }}
+                style={{ backgroundColor: PRESENT_RING }}
               />
               <span className="text-muted-foreground">% with pass</span>
             </div>

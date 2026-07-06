@@ -3,6 +3,11 @@ import { ExternalLink, FileText, Send, User, X } from 'lucide-react'
 
 import type { Student } from '@/types/student'
 import { Button } from '@/components/ui/button'
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from '@/components/ui/input-group'
 import { cn } from '@/lib/utils'
 
 type ResourceTab = 'resources' | 'learn-more'
@@ -336,7 +341,7 @@ export function GlowStudentSupportPage({
       <div className="flex items-center justify-between px-6 py-4">
         <div className="flex items-center gap-2.5">
           <GlowBotIcon size={28} />
-          <span className="text-sm font-medium text-slate-700">
+          <span className="text-sm font-medium text-foreground">
             Glow · Student Support
           </span>
         </div>
@@ -539,21 +544,23 @@ export function GlowStudentSupportPage({
 
           {/* Chat input — pinned to bottom */}
           <div className="shrink-0 border-t border-border px-4 py-4 lg:px-8">
-            <div className="flex items-center gap-2 rounded-[var(--radius-input)] border border-border bg-background px-4 py-2.5 transition-colors focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/20">
-              <input
+            <InputGroup className="h-auto rounded-[var(--radius-input)] border-border bg-background px-4 py-2.5">
+              <InputGroupInput
                 type="text"
                 placeholder={`Ask a follow-up about ${firstName}…`}
-                className="flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
+                className="text-sm text-foreground"
                 readOnly
               />
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <Send className="h-4 w-4" />
-              </Button>
-            </div>
+              <InputGroupAddon align="inline-end">
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+              </InputGroupAddon>
+            </InputGroup>
           </div>
         </main>
 
@@ -652,15 +659,6 @@ export function GlowStudentSupportPage({
 }
 
 // ── Sub-components ──────────────────────────────────────────
-
-function MetaField({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <p className="text-[10px] font-semibold text-muted-foreground">{label}</p>
-      <p className="mt-1 text-sm text-foreground">{value}</p>
-    </div>
-  )
-}
 
 function TabButton({
   active,

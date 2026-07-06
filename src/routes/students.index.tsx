@@ -9,14 +9,23 @@ import type {
   Student,
 } from '@/types/student'
 import type { ColumnConfig } from '@/components/students/column-visibility-popover'
+import type { FlagColumnSpec } from '@/lib/apply-flag-columns'
 import { useFeatureFlag } from '@/hooks/use-feature-flag'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
-import { filterFieldConfigs, isFilterComplete } from '@/data/filter-config'
+import {
+  LATEST_PERIOD,
+  filterFieldConfigs,
+  isFilterComplete,
+  periodYears,
+} from '@/data/filter-config'
 import { DataCard } from '@/components/data-card'
 import { StudentFilters } from '@/components/students/student-filters'
 import { StudentTable } from '@/components/students/student-table'
 import { ClassSelector } from '@/components/students/class-selector'
-import { defaultColumns } from '@/components/students/column-visibility-popover'
+import {
+  CURRENT_TERM_KEY,
+  defaultColumns,
+} from '@/components/students/column-visibility-popover'
 import { ProfileGroupControl } from '@/components/students/profile-group-control'
 import {
   ALL_SUBJECTS,
@@ -25,7 +34,12 @@ import {
 
 import { getMetrics, mockStudents } from '@/data/mock-students'
 import { getImportedColumns, saveImportedColumns } from '@/lib/imported-columns'
+import { applyFlagColumns } from '@/lib/apply-flag-columns'
 import { useProfileGroups } from '@/lib/profile-group-storage'
+import {
+  computeStudentOverall,
+  evaluateCriterion,
+} from '@/lib/filter-evaluation'
 
 const SUBJECT_SELECTION_KEY = 'overall-pct-subjects'
 
@@ -57,133 +71,41 @@ function saveSelectedSubjects(subjects: Array<string> | null) {
   }
 }
 
-function computeStudentOverall(
-  student: Student,
-  selectedSubjects: Array<string> | null,
-): number {
-  if (!selectedSubjects || !student.subjectScores) {
-    return student.overallPercentage
-  }
-  const relevant = student.subjectScores.filter((s) =>
-    selectedSubjects.includes(s.subject),
-  )
-  if (relevant.length === 0) return student.overallPercentage
-  return Math.round(
-    relevant.reduce((sum, s) => sum + s.percentage, 0) / relevant.length,
-  )
-}
-
 export const Route = createFileRoute('/students/')({
   component: StudentsPage,
 })
 
-// Check if a student matches a filter condition
-function matchesCondition(
-  student: Student,
-  filter: FilterCriterion,
-  selectedSubjects?: Array<string> | null,
-): boolean {
-  // Imported/custom fields have no student data — skip filter (show all)
-  const knownFields = new Set<string>([
-    'class',
-    'cca',
-    'attendance',
-    'overallPercentage',
-    'conduct',
-    'approvedMtl',
-    'learningSupport',
-    'postSecEligibility',
-    'offences',
-    'absences',
-    'lateComing',
-    'ccaMissed',
-    'riskIndicators',
-    'lowMoodFlagged',
-    'socialLinks',
-    'counsellingSessions',
-    'sen',
-    'fas',
-    'housing',
-    'housingType',
-    'commuterStatus',
-    'afterSchoolArrangement',
-    'siblings',
-    'externalAgencies',
-    'supportedByComLink',
-    'supportedByFsc',
-    'nonIntactFamily',
-  ])
-  if (!knownFields.has(filter.field)) return true
+// Map a Date-range filter value ('2025-T4') to a termly-data key ('T4 2025')
+function periodValueToTermKey(value: string): string {
+  const [year, term] = value.split('-')
+  return `${term} ${year}`
+}
 
-  // For overallPercentage, use the computed value based on selected subjects
-  // For attendance, compute % from daysPresent / totalSchoolDays
-  // For housingType, map raw 'Owned'/'Rented'/null to the canonical filter values
-  const value =
-    filter.field === 'overallPercentage'
-      ? computeStudentOverall(student, selectedSubjects ?? null)
-      : filter.field === 'attendance'
-        ? student.totalSchoolDays > 0
-          ? Math.round((student.daysPresent / student.totalSchoolDays) * 100)
-          : 0
-        : filter.field === 'housingType'
-          ? student.housingType === 'Owned'
-            ? 'Owner-occupied'
-            : student.housingType === 'Rented'
-              ? 'Rented'
-              : '-'
-          : student[filter.field as keyof Student]
-
-  switch (filter.operator) {
-    // Numeric operators
-    case 'gt':
-      return Number(value) > Number(filter.value)
-    case 'gte':
-      return Number(value) >= Number(filter.value)
-    case 'lt':
-      return Number(value) < Number(filter.value)
-    case 'lte':
-      return Number(value) <= Number(filter.value)
-    case 'eq':
-      return Number(value) === Number(filter.value)
-    case 'neq':
-      return Number(value) !== Number(filter.value)
-    case 'between': {
-      const range = filter.value as { min: number; max: number }
-      return Number(value) >= range.min && Number(value) <= range.max
+// Single representative term key for the active Date-range selection, used to
+// drive the temporal columns so displayed values mimic the chosen period.
+// Multiple terms -> most recent selected; "Latest available"/none -> current term.
+function getPeriodTermKey(filters: Array<FilterCriterion>): string {
+  const dateRange = filters.find((f) => f.field === 'dateRange')
+  const values = Array.isArray(dateRange?.value) ? dateRange.value : []
+  const terms = values.filter((v) => v !== LATEST_PERIOD)
+  if (terms.length === 0) return CURRENT_TERM_KEY
+  // periodYears is ordered most-recent-first (by year, then term)
+  for (const year of periodYears) {
+    for (const t of year.terms) {
+      if (terms.includes(t.value)) return periodValueToTermKey(t.value)
     }
-    case 'not_between': {
-      const range = filter.value as { min: number; max: number }
-      return Number(value) < range.min || Number(value) > range.max
-    }
-    // Text operators
-    case 'contains':
-      return String(value ?? '')
-        .toLowerCase()
-        .includes(String(filter.value).toLowerCase())
-    case 'not_contains':
-      return !String(value ?? '')
-        .toLowerCase()
-        .includes(String(filter.value).toLowerCase())
-    case 'is':
-      if (Array.isArray(filter.value)) {
-        return filter.value.includes(String(value ?? ''))
-      }
-      return String(value ?? '') === String(filter.value)
-    case 'is_not':
-      return String(value ?? '') !== String(filter.value)
-    case 'is_empty':
-      return !value || value === ''
-    case 'is_not_empty':
-      return !!value && value !== ''
-    default:
-      return false
   }
+  return CURRENT_TERM_KEY
 }
 
 function StudentsPage() {
   const studentAnalyticsEnabled = useFeatureFlag('student-analytics')
   const studentAnalyticsBasicEnabled = useFeatureFlag('student-analytics-basic')
   const msfUpliftEnabled = useFeatureFlag('msf-uplift-data')
+  const attentionTagEnabled = useFeatureFlag('attention-tag')
+  const overallPercentageEnabled = useFeatureFlag('overall-percentage')
+  const socialLinksEnabled = useFeatureFlag('social-links')
+  const importDataEnabled = useFeatureFlag('import-data')
   const isStudentInsightsView =
     !studentAnalyticsEnabled && !studentAnalyticsBasicEnabled
   const pageTitle = isStudentInsightsView
@@ -205,15 +127,30 @@ function StudentsPage() {
             c.id !== 'afterSchoolArrangement',
         )
       : defaultColumns
-    const baseColumns = msfUpliftEnabled
+    const msfFiltered = msfUpliftEnabled
       ? insightsFiltered
       : insightsFiltered.filter(
           (c) =>
             c.id !== 'supportedByComLink' &&
             c.id !== 'supportedByFsc' &&
+            c.id !== 'parentsConsideringDivorce' &&
             c.id !== 'nonIntactFamily',
         )
-    const saved = getImportedColumns()
+    const attentionFiltered = attentionTagEnabled
+      ? msfFiltered
+      : msfFiltered.filter((c) => c.id !== 'attentionTags')
+    // The Social links column only appears when its flag is on.
+    const socialFiltered = socialLinksEnabled
+      ? attentionFiltered
+      : attentionFiltered.filter((c) => c.id !== 'socialLinks')
+    // The Overall % across selected subjects column only appears when its flag
+    // is on.
+    const baseColumns = overallPercentageEnabled
+      ? socialFiltered
+      : socialFiltered.filter((c) => c.id !== 'overallPercentage')
+    // Imported columns (e.g. "VIA missed", "Next steps", "Teacher's remarks")
+    // only appear when the Import Data flag is on.
+    const saved = importDataEnabled ? getImportedColumns() : []
     if (saved.length === 0) return baseColumns
     const now = new Date()
     const dateStr = now.toLocaleDateString('en-GB', {
@@ -239,31 +176,92 @@ function StudentsPage() {
   })
   const importedColumns = columns.filter((c) => c.imported)
 
-  // Sync MSF via Uplift Office columns when the feature flag toggles at runtime
+  // Sync flag-gated columns when their feature flags toggle at runtime.
+  // One table-driven pass: each spec inserts its columns at an anchor when
+  // enabled, or removes them when disabled. Spec order matters — the
+  // overallPercentage spec anchors on 'socialLinks', which the socialLinks
+  // spec may insert earlier in the same pass.
   useEffect(() => {
-    const MSF_IDS = ['supportedByComLink', 'supportedByFsc', 'nonIntactFamily']
+    const specs: Array<FlagColumnSpec> = [
+      {
+        enabled: msfUpliftEnabled,
+        ids: [
+          'supportedByComLink',
+          'supportedByFsc',
+          'parentsConsideringDivorce',
+          'nonIntactFamily',
+        ],
+        anchorId: 'fas',
+        position: 'before',
+      },
+      {
+        enabled: attentionTagEnabled,
+        ids: ['attentionTags'],
+        anchorId: 'cca',
+        position: 'after',
+      },
+      {
+        enabled: socialLinksEnabled,
+        ids: ['socialLinks'],
+        anchorId: 'lowMoodFlagged',
+        position: 'after',
+      },
+      {
+        enabled: overallPercentageEnabled,
+        ids: ['overallPercentage'],
+        anchorId: 'socialLinks',
+        position: 'after',
+      },
+    ]
+    setColumns((prev) => applyFlagColumns(prev, specs, defaultColumns))
+  }, [
+    msfUpliftEnabled,
+    attentionTagEnabled,
+    socialLinksEnabled,
+    overallPercentageEnabled,
+  ])
+
+  // Sync imported columns when the Import Data flag toggles at runtime.
+  // When off, hide previously-imported columns; when on, restore them from
+  // the saved import (localStorage).
+  useEffect(() => {
     setColumns((prev) => {
-      const hasMsf = prev.some((c) => MSF_IDS.includes(c.id))
-      if (msfUpliftEnabled && !hasMsf) {
-        const msfColumns = defaultColumns.filter((c) => MSF_IDS.includes(c.id))
-        const fasIndex = prev.findIndex((c) => c.id === 'fas')
-        const insertAt = fasIndex >= 0 ? fasIndex + 1 : prev.length
-        return [
-          ...prev.slice(0, insertAt),
-          ...msfColumns,
-          ...prev.slice(insertAt),
-        ]
+      const hasImported = prev.some((c) => c.imported)
+      if (!importDataEnabled && hasImported) {
+        return prev.filter((c) => !c.imported)
       }
-      if (!msfUpliftEnabled && hasMsf) {
-        return prev.filter((c) => !MSF_IDS.includes(c.id))
+      if (importDataEnabled && !hasImported) {
+        const saved = getImportedColumns()
+        if (saved.length === 0) return prev
+        const dateStr = new Date().toLocaleDateString('en-GB', {
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
+        })
+        const restoredImported: Array<ColumnConfig> = saved.map((c) => ({
+          id: c.id,
+          label: c.label,
+          visible: true,
+          sortable: true,
+          imported: true,
+          source: 'Imported by user',
+          lastUpdated: `${dateStr} by You`,
+        }))
+        return [
+          ...prev.filter((c) => !restoredImported.some((ic) => ic.id === c.id)),
+          ...restoredImported,
+        ]
       }
       return prev
     })
-  }, [msfUpliftEnabled])
+  }, [importDataEnabled])
 
   const [sort, setSort] = useState<SortConfig | null>(null)
   const [selectedSubjects, setSelectedSubjects] =
-    useState<Array<string> | null>(() => loadSelectedSubjects())
+    useState<Array<string> | null>(null)
+  useEffect(() => {
+    setSelectedSubjects(loadSelectedSubjects())
+  }, [])
   const [subjectDialogOpen, setSubjectDialogOpen] = useState(false)
   const [isRecalculating, setIsRecalculating] = useState(false)
 
@@ -316,7 +314,10 @@ function StudentsPage() {
       const matchesFilters =
         !hasFilterCriteria ||
         completeFilters.every((filter) =>
-          matchesCondition(student, filter, selectedSubjects),
+          evaluateCriterion(student, filter, {
+            unknownField: 'match',
+            selectedSubjects,
+          }),
         )
 
       if (matchesSearch && matchesFilters) {
@@ -420,6 +421,10 @@ function StudentsPage() {
 
   const metrics = useMemo(() => getMetrics(matchedStudents), [matchedStudents])
 
+  // Term key driven by the Date range filter — temporal columns use this so the
+  // table's mock values reflect the selected period.
+  const periodTermKey = useMemo(() => getPeriodTermKey(filters), [filters])
+
   return (
     <div className="flex flex-col">
       {/* Fixed content area */}
@@ -440,27 +445,29 @@ function StudentsPage() {
           />
         </div>
 
-        {/* Metrics Cards */}
-        <div className="grid grid-cols-1 gap-4 px-6 md:grid-cols-3">
-          <DataCard
-            label="Attendance"
-            value={`${metrics.absenteeismRate}%`}
-            description="Current term"
-            trend="declining"
-          />
-          <DataCard
-            label="Attendance"
-            value={metrics.lateComing}
-            description="Late-coming"
-            trend="improving"
-          />
-          <DataCard
-            label="Tier 2-3"
-            value={metrics.tier2_3Students}
-            description="Students needing support"
-            trend="stable"
-          />
-        </div>
+        {/* Metrics Cards — only shown when Student Analytics is enabled */}
+        {studentAnalyticsEnabled && (
+          <div className="grid grid-cols-1 gap-4 px-6 md:grid-cols-3">
+            <DataCard
+              label="Attendance"
+              value={`${metrics.absenteeismRate}%`}
+              description="Current term"
+              trend="declining"
+            />
+            <DataCard
+              label="Attendance"
+              value={metrics.lateComing}
+              description="Late-coming"
+              trend="improving"
+            />
+            <DataCard
+              label="Attendance"
+              value={metrics.tier2_3Students}
+              description="Non-VR absences (days)"
+              trend="stable"
+            />
+          </div>
+        )}
 
         {/* Filters */}
         <StudentFilters
@@ -512,6 +519,7 @@ function StudentsPage() {
           setColumns((prev) => prev.filter((c) => c.id !== columnId))
         }
         group={appliedGroup}
+        periodTermKey={periodTermKey}
       />
 
       <SubjectSelectorDialog

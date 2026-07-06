@@ -35,9 +35,6 @@ export interface ColumnConfig {
 }
 
 export const CURRENT_TERM_KEY = 'T1 2026'
-export const CURRENT_TERM_LABEL = 'Current term'
-export const PREV_TERM_KEY = 'T4 2025'
-export const PREV_TERM_LABEL = 'Previous term (Term 4, 2025)'
 
 export const defaultColumns: Array<ColumnConfig> = [
   {
@@ -55,7 +52,7 @@ export const defaultColumns: Array<ColumnConfig> = [
     filterable: true,
     filterField: 'name',
     source: 'School Cockpit, RE_SDT_041',
-    lastUpdated: '16 Sep 2025',
+    lastUpdated: '26 May 2026',
   },
   {
     id: 'class',
@@ -65,7 +62,7 @@ export const defaultColumns: Array<ColumnConfig> = [
     filterable: true,
     filterField: 'class',
     source: 'School Cockpit, RE_SDT_041',
-    lastUpdated: '16 Sep 2025',
+    lastUpdated: '26 May 2026',
   },
   {
     id: 'cca',
@@ -73,8 +70,8 @@ export const defaultColumns: Array<ColumnConfig> = [
     visible: true,
     sortable: true,
     filterable: false,
-    source: 'School Cockpit, RE_SDT_041',
-    lastUpdated: '16 Sep 2025',
+    source: 'School Cockpit, RE_AT_014, 2026',
+    lastUpdated: '26 May 2026',
   },
   {
     id: 'attentionTags',
@@ -89,8 +86,8 @@ export const defaultColumns: Array<ColumnConfig> = [
     visible: true,
     sortable: true,
     filterable: false,
-    source: 'School Cockpit, RE_AT_002',
-    lastUpdated: '16 Sep 2025',
+    source: 'School Cockpit, RE_AT_002, Term 2, 2026',
+    lastUpdated: '26 May 2026',
     temporalType: 'accumulating',
   },
   {
@@ -100,8 +97,8 @@ export const defaultColumns: Array<ColumnConfig> = [
     sortable: true,
     filterable: true,
     filterField: 'lateComing',
-    source: 'School Cockpit, RE_AT_002',
-    lastUpdated: '16 Sep 2025',
+    source: 'School Cockpit, RE_AT_002, Term 2, 2026',
+    lastUpdated: '26 May 2026',
     temporalType: 'accumulating',
   },
   {
@@ -111,8 +108,8 @@ export const defaultColumns: Array<ColumnConfig> = [
     sortable: true,
     filterable: true,
     filterField: 'absences',
-    source: 'School Cockpit, RE_AT_002',
-    lastUpdated: '16 Sep 2025',
+    source: 'School Cockpit, RE_AT_002, Term 2, 2026',
+    lastUpdated: '26 May 2026',
     temporalType: 'accumulating',
   },
   {
@@ -122,42 +119,9 @@ export const defaultColumns: Array<ColumnConfig> = [
     sortable: true,
     filterable: true,
     filterField: 'ccaMissed',
-    source: 'School Cockpit, RE_AT_002',
-    lastUpdated: '16 Sep 2025',
+    source: 'School Cockpit, RE_AT_003, Term 2, 2026',
+    lastUpdated: '26 May 2026',
     temporalType: 'accumulating',
-  },
-  {
-    id: 'offences',
-    label: 'Offences',
-    visible: true,
-    sortable: true,
-    filterable: true,
-    filterField: 'offences',
-    source: 'School Cockpit, RE_DI_003',
-    lastUpdated: '16 Sep 2025',
-    temporalType: 'accumulating',
-  },
-  {
-    id: 'counsellingSessions',
-    label: 'Counselling cases',
-    visible: true,
-    sortable: true,
-    filterable: true,
-    filterField: 'counsellingSessions',
-    source: 'School Cockpit, RE_WB_004',
-    lastUpdated: '16 Sep 2025',
-    temporalType: 'accumulating',
-  },
-  {
-    id: 'sen',
-    label: 'SEN',
-    visible: true,
-    sortable: true,
-    filterable: true,
-    filterField: 'sen',
-    source: 'School Cockpit, RE_WB_004',
-    lastUpdated: '16 Sep 2025',
-    temporalType: 'fixed',
   },
   {
     id: 'conduct',
@@ -166,9 +130,42 @@ export const defaultColumns: Array<ColumnConfig> = [
     sortable: true,
     filterable: true,
     filterField: 'conduct',
-    source: 'School Cockpit, RE_SDT_041, Latest available (Term 4, 2025)',
-    lastUpdated: '16 Sep 2025',
+    source: 'School Cockpit, RE_AT_004, Term 2, 2026',
+    lastUpdated: '26 May 2026',
     temporalType: 'event-based',
+  },
+  {
+    id: 'offences',
+    label: 'Offences',
+    visible: true,
+    sortable: true,
+    filterable: true,
+    filterField: 'offences',
+    source: 'School Cockpit, RE_AT_005, All records',
+    lastUpdated: '26 May 2026',
+    temporalType: 'accumulating',
+  },
+  {
+    id: 'counsellingSessions',
+    label: 'Counselling',
+    visible: true,
+    sortable: true,
+    filterable: true,
+    filterField: 'counsellingSessions',
+    source: 'School Cockpit, RE_AT_006, All records',
+    lastUpdated: '26 May 2026',
+    temporalType: 'accumulating',
+  },
+  {
+    id: 'sen',
+    label: 'Special Educational Needs (SEN)',
+    visible: true,
+    sortable: true,
+    filterable: true,
+    filterField: 'sen',
+    source: 'School Cockpit, RE_AT_007',
+    lastUpdated: '26 May 2026',
+    temporalType: 'fixed',
   },
   {
     id: 'riskIndicators',
@@ -177,8 +174,8 @@ export const defaultColumns: Array<ColumnConfig> = [
     sortable: true,
     filterable: true,
     filterField: 'riskIndicators',
-    source: 'School Cockpit, RE_SDT_041, Latest available (Term 4, 2025)',
-    lastUpdated: '16 Sep 2025',
+    source: 'Termly Check-in Survey, Term 2, 2026',
+    lastUpdated: '26 May 2026',
     temporalType: 'event-based',
   },
   {
@@ -188,8 +185,8 @@ export const defaultColumns: Array<ColumnConfig> = [
     sortable: true,
     filterable: true,
     filterField: 'lowMoodFlagged',
-    source: 'School Cockpit, RE_WB_004',
-    lastUpdated: '16 Sep 2025',
+    source: 'Termly Check-in Survey, within past 4 terms',
+    lastUpdated: '26 May 2026',
     temporalType: 'cross-term',
   },
   {
@@ -200,7 +197,7 @@ export const defaultColumns: Array<ColumnConfig> = [
     filterable: true,
     filterField: 'socialLinks',
     source: 'School Cockpit, RE_SDT_041, Latest available (Term 4, 2025)',
-    lastUpdated: '16 Sep 2025',
+    lastUpdated: '26 May 2026',
     temporalType: 'event-based',
   },
   {
@@ -211,7 +208,7 @@ export const defaultColumns: Array<ColumnConfig> = [
     filterable: true,
     filterField: 'overallPercentage',
     source: 'School Cockpit, RE_SDT_041, Latest available (Term 4, 2025)',
-    lastUpdated: '16 Sep 2025',
+    lastUpdated: '26 May 2026',
     temporalType: 'event-based',
   },
   {
@@ -221,7 +218,7 @@ export const defaultColumns: Array<ColumnConfig> = [
     sortable: true,
     filterable: false,
     source: 'School Cockpit, RE_AC_005',
-    lastUpdated: '16 Sep 2025',
+    lastUpdated: '26 May 2026',
   },
   {
     id: 'learningSupport',
@@ -230,8 +227,8 @@ export const defaultColumns: Array<ColumnConfig> = [
     sortable: true,
     filterable: true,
     filterField: 'learningSupport',
-    source: 'School Cockpit, RE_AC_005',
-    lastUpdated: '16 Sep 2025',
+    source: 'School Cockpit, RE_AT_013',
+    lastUpdated: '26 May 2026',
   },
   {
     id: 'postSecEligibility',
@@ -241,50 +238,30 @@ export const defaultColumns: Array<ColumnConfig> = [
     filterable: true,
     filterField: 'postSecEligibility',
     source: 'School Cockpit, RE_AC_005',
-    lastUpdated: '16 Sep 2025',
+    lastUpdated: '26 May 2026',
   },
   {
-    id: 'siblings',
-    label: 'Siblings',
+    id: 'parentsConsideringDivorce',
+    label: 'Parent enrolled in CPP',
     visible: true,
     sortable: true,
     filterable: true,
-    filterField: 'siblings',
-    source: 'School Cockpit, RE_FA_006',
-    lastUpdated: '16 Sep 2025',
+    filterField: 'parentsConsideringDivorce',
+    source: 'MSF via Uplift Office',
+    lastUpdated: '19 Jan 2026',
+    dateLabel: 'Last synced:',
     temporalType: 'fixed',
   },
   {
-    id: 'fas',
-    label: 'FAS',
+    id: 'nonIntactFamily',
+    label: 'Parents are divorced',
     visible: true,
     sortable: true,
     filterable: true,
-    filterField: 'fas',
-    source: 'School Cockpit, RE_FA_006',
-    lastUpdated: '16 Sep 2025',
-    temporalType: 'fixed',
-  },
-  {
-    id: 'housing',
-    label: 'Housing',
-    visible: true,
-    sortable: true,
-    filterable: true,
-    filterField: 'housing',
-    source: 'School Cockpit, RE_FA_006',
-    lastUpdated: '16 Sep 2025',
-    temporalType: 'fixed',
-  },
-  {
-    id: 'housingType',
-    label: 'Housing ownership',
-    visible: true,
-    sortable: true,
-    filterable: true,
-    filterField: 'housingType',
-    source: 'School Cockpit, RE_FA_006',
-    lastUpdated: '16 Sep 2025',
+    filterField: 'nonIntactFamily',
+    source: 'MSF via Uplift Office',
+    lastUpdated: '19 Jan 2026',
+    dateLabel: 'Last synced:',
     temporalType: 'fixed',
   },
   {
@@ -295,32 +272,64 @@ export const defaultColumns: Array<ColumnConfig> = [
     filterable: true,
     filterField: 'supportedByComLink',
     source: 'MSF via Uplift Office',
-    lastUpdated: 'As of 19 Sep 2025',
-    dateLabel: 'Date:',
+    lastUpdated: '19 Jan 2026',
+    dateLabel: 'Last synced:',
     temporalType: 'fixed',
   },
   {
     id: 'supportedByFsc',
-    label: 'Supported by FSC in the past 2 years',
+    label: 'Supported by FSC',
     visible: true,
     sortable: true,
     filterable: true,
     filterField: 'supportedByFsc',
     source: 'MSF via Uplift Office',
-    lastUpdated: 'As of 19 Sep 2025',
-    dateLabel: 'Date:',
+    lastUpdated: '19 Jan 2026',
+    dateLabel: 'Last synced:',
     temporalType: 'fixed',
   },
   {
-    id: 'nonIntactFamily',
-    label: 'From Non-Intact Family',
+    id: 'fas',
+    label: 'FAS',
     visible: true,
     sortable: true,
     filterable: true,
-    filterField: 'nonIntactFamily',
-    source: 'School Cockpit, MSF via Uplift Office',
-    lastUpdated: 'As of 1 May 2026',
-    dateLabel: 'Date:',
+    filterField: 'fas',
+    source: 'School Cockpit, RE_AT_012',
+    lastUpdated: '26 May 2026',
+    temporalType: 'fixed',
+  },
+  {
+    id: 'housing',
+    label: 'Housing',
+    visible: true,
+    sortable: true,
+    filterable: true,
+    filterField: 'housing',
+    source: 'School Cockpit, RE_AT_008',
+    lastUpdated: '26 May 2026',
+    temporalType: 'fixed',
+  },
+  {
+    id: 'housingType',
+    label: 'Housing ownership',
+    visible: true,
+    sortable: true,
+    filterable: true,
+    filterField: 'housingType',
+    source: 'School Cockpit, RE_AT_009',
+    lastUpdated: '26 May 2026',
+    temporalType: 'fixed',
+  },
+  {
+    id: 'siblings',
+    label: 'Siblings',
+    visible: true,
+    sortable: true,
+    filterable: true,
+    filterField: 'siblings',
+    source: 'School Cockpit, RE_AT_010',
+    lastUpdated: '26 May 2026',
     temporalType: 'fixed',
   },
   {
@@ -330,7 +339,7 @@ export const defaultColumns: Array<ColumnConfig> = [
     sortable: true,
     filterable: false,
     source: 'School Cockpit, RE_FA_006',
-    lastUpdated: '16 Sep 2025',
+    lastUpdated: '26 May 2026',
     temporalType: 'fixed',
   },
   {
@@ -340,7 +349,7 @@ export const defaultColumns: Array<ColumnConfig> = [
     sortable: true,
     filterable: false,
     source: 'School Cockpit, RE_FA_006',
-    lastUpdated: '16 Sep 2025',
+    lastUpdated: '26 May 2026',
     temporalType: 'fixed',
   },
 ]
@@ -360,6 +369,9 @@ export function ColumnVisibilityPopover({
   const isStudentInsightsView =
     !isEnabled('student-analytics') && !isEnabled('student-analytics-basic')
   const msfUpliftEnabled = isEnabled('msf-uplift-data')
+  const attentionTagEnabled = isEnabled('attention-tag')
+  const overallPercentageEnabled = isEnabled('overall-percentage')
+  const socialLinksEnabled = isEnabled('social-links')
   const [open, setOpen] = useState(false)
 
   const visibleCount = columns.filter((c) => c.visible).length
@@ -378,14 +390,24 @@ export function ColumnVisibilityPopover({
           (c) => c.id !== 'approvedMtl' && c.id !== 'postSecEligibility',
         )
       : defaultColumns
-    const resetColumns = msfUpliftEnabled
+    const msfReset = msfUpliftEnabled
       ? baseReset
       : baseReset.filter(
           (c) =>
             c.id !== 'supportedByComLink' &&
             c.id !== 'supportedByFsc' &&
+            c.id !== 'parentsConsideringDivorce' &&
             c.id !== 'nonIntactFamily',
         )
+    const attentionReset = attentionTagEnabled
+      ? msfReset
+      : msfReset.filter((c) => c.id !== 'attentionTags')
+    const overallReset = overallPercentageEnabled
+      ? attentionReset
+      : attentionReset.filter((c) => c.id !== 'overallPercentage')
+    const resetColumns = socialLinksEnabled
+      ? overallReset
+      : overallReset.filter((c) => c.id !== 'socialLinks')
     onColumnsChange(resetColumns)
   }
 

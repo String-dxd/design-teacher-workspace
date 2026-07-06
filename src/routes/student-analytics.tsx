@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { Clock } from 'lucide-react'
 
@@ -37,7 +37,7 @@ function ComingSoon({ description }: { description?: string }) {
   return (
     <div className="mt-6 flex flex-col items-center justify-center rounded-xl border border-dashed py-20 text-center">
       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-        <Clock className="size-5 text-muted-foreground" />
+        <Clock className="size-5 text-muted-foreground" aria-hidden="true" />
       </div>
       <p className="mt-4 text-xl font-medium text-foreground">Coming soon</p>
       {description && (
@@ -54,6 +54,13 @@ type AcademicView = 'monitoring' | 'benchmark'
 function StudentAnalyticsPage() {
   useSetBreadcrumbs([{ label: 'Analytics', href: '/student-analytics' }])
 
+  useEffect(() => {
+    document.title = 'Analytics | MOE Workspace'
+    return () => {
+      document.title = 'MOE Workspace Homepage'
+    }
+  }, [])
+
   const [academicView, setAcademicView] = useState<AcademicView>('monitoring')
   const studentAnalyticsEnabled = useFeatureFlag('student-analytics')
 
@@ -65,7 +72,7 @@ function StudentAnalyticsPage() {
           <h1 className="text-2xl font-semibold">Analytics</h1>
           <Badge
             variant="outline"
-            className="border-purple-300 bg-purple-50 text-purple-700 dark:border-purple-700 dark:bg-purple-950 dark:text-purple-300"
+            className="border-violet-6 bg-violet-3 text-violet-11"
           >
             Experiment
           </Badge>
@@ -79,19 +86,19 @@ function StudentAnalyticsPage() {
           <TabsList variant="line">
             <TabsTrigger
               value="attendance"
-              className="after:bg-blue-600! data-active:text-blue-600"
+              className="after:bg-primary! data-active:text-primary"
             >
               Attendance
             </TabsTrigger>
             <TabsTrigger
               value="academic"
-              className="after:bg-blue-600! data-active:text-blue-600"
+              className="after:bg-primary! data-active:text-primary"
             >
               Academic
             </TabsTrigger>
             <TabsTrigger
               value="wellbeing"
-              className="after:bg-blue-600! data-active:text-blue-600"
+              className="after:bg-primary! data-active:text-primary"
             >
               Wellbeing
             </TabsTrigger>
@@ -110,10 +117,10 @@ function StudentAnalyticsPage() {
                 onClick={() => setAcademicView('monitoring')}
                 aria-pressed={academicView === 'monitoring'}
                 className={cn(
-                  'rounded-full px-4 py-1.5 text-sm font-medium transition-colors',
+                  'rounded-full px-4 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
                   academicView === 'monitoring'
                     ? 'bg-background/90 text-foreground shadow-xs'
-                    : 'text-foreground/50 hover:text-foreground/80',
+                    : 'text-muted-foreground hover:text-foreground',
                 )}
               >
                 Monitoring
@@ -122,10 +129,10 @@ function StudentAnalyticsPage() {
                 onClick={() => setAcademicView('benchmark')}
                 aria-pressed={academicView === 'benchmark'}
                 className={cn(
-                  'rounded-full px-4 py-1.5 text-sm font-medium transition-colors',
+                  'rounded-full px-4 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
                   academicView === 'benchmark'
                     ? 'bg-background/90 text-foreground shadow-xs'
-                    : 'text-foreground/50 hover:text-foreground/80',
+                    : 'text-muted-foreground hover:text-foreground',
                 )}
               >
                 Benchmark reports

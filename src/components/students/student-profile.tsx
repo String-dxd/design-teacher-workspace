@@ -3,7 +3,6 @@ import { Link } from '@tanstack/react-router'
 import {
   BookOpen,
   Calendar,
-  Check,
   ChevronRight,
   Clock,
   Eye,
@@ -30,6 +29,7 @@ import { ProfileCriteriaDetailsCard } from './profile-criteria-details-card'
 import type { Student } from '@/types/student'
 import type { HolisticReport, ReviewStatus, Term } from '@/types/report'
 import type { AgencyReport } from '@/data/mock-agency-reports'
+import type { ImportedColumn } from '@/lib/imported-columns'
 import { useFeatureFlag } from '@/hooks/use-feature-flag'
 import { getImportedColumns } from '@/lib/imported-columns'
 import {
@@ -84,7 +84,7 @@ function Section({
   children,
 }: SectionProps) {
   return (
-    <section id={id} className="scroll-mt-24 rounded-lg border bg-white p-6">
+    <section id={id} className="scroll-mt-24 rounded-3xl border bg-card p-6">
       <div className="mb-4 flex items-center gap-3">
         <span
           className={cn(
@@ -110,12 +110,31 @@ interface FieldProps {
   className?: string
 }
 
+// Source/date-period tooltip shown 4px above a field label when the user
+// hovers the info icon. Renders the dark popup defined by TooltipContent.
+function FieldTooltip({ text }: { text: string }) {
+  return (
+    <Tooltip>
+      <TooltipTrigger render={<span className="inline-flex shrink-0" />}>
+        <Info className="h-3.5 w-3.5 text-muted-foreground" />
+      </TooltipTrigger>
+      <TooltipContent
+        side="top"
+        sideOffset={4}
+        className="max-w-xs whitespace-pre-line"
+      >
+        {text}
+      </TooltipContent>
+    </Tooltip>
+  )
+}
+
 function Field({ label, value, tooltip, description, className }: FieldProps) {
   return (
     <div className={cn('flex flex-col gap-1', className)}>
       <dt className="flex items-center gap-1 text-sm text-muted-foreground">
         {label}
-        {tooltip && <Info className="h-3.5 w-3.5 shrink-0" />}
+        {tooltip && <FieldTooltip text={tooltip} />}
       </dt>
       {description && (
         <p className="text-xs text-muted-foreground">{description}</p>
@@ -136,7 +155,7 @@ function RemarksField({ label, value, tooltip }: RemarksFieldProps) {
     <div className="flex flex-col gap-1">
       <dt className="flex items-center gap-1 text-sm text-muted-foreground">
         {label}
-        {tooltip && <Info className="h-3.5 w-3.5 shrink-0" />}
+        {tooltip && <FieldTooltip text={tooltip} />}
       </dt>
       <dd className="text-sm font-medium">
         {value || <span className="font-normal text-muted-foreground">-</span>}
@@ -178,12 +197,15 @@ function FieldWithDetails({
       >
         <dt className="flex items-center gap-1 text-sm text-muted-foreground">
           {label}
-          <Info className="h-3.5 w-3.5 shrink-0" />
+          <FieldTooltip text={tooltip} />
         </dt>
         {description && (
           <p className="text-xs text-muted-foreground">{description}</p>
         )}
-        <dd className="text-sm font-medium">{value ?? '-'}</dd>
+        <dd className="flex items-center gap-1 text-sm font-medium">
+          <span className="min-w-0">{value ?? '-'}</span>
+          <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+        </dd>
 
         {isOpen ? (
           <button
@@ -236,10 +258,14 @@ function MsfUpliftSheetContent({
   title,
   value,
   titleTooltip,
+  fscCaseStartDate,
+  fscCaseEndDate,
 }: {
   title: string
   value: string
   titleTooltip?: string
+  fscCaseStartDate?: string
+  fscCaseEndDate?: string
 }) {
   return (
     <div className="space-y-5">
@@ -263,7 +289,7 @@ function MsfUpliftSheetContent({
           )}
         </div>
         <p className="mb-2 text-xs text-muted-foreground">
-          MSF via Uplift Office • As of 19 May 2025
+          MSF via Uplift Office • As of 19 Jan 2026
         </p>
         <div className="rounded-lg bg-muted px-4 py-3">
           <ul className="space-y-1 text-sm">
@@ -277,19 +303,42 @@ function MsfUpliftSheetContent({
       <div>
         <p className="mb-2 text-sm font-medium">Remarks</p>
         <div className="rounded-lg bg-muted px-4 py-3 space-y-4 text-sm">
+          {fscCaseStartDate && (
+            <div>
+              <p className="mb-1.5 font-medium">FSC Case start date</p>
+              <ul className="space-y-1">
+                <li className="flex items-center gap-2">
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-foreground" />
+                  {fscCaseStartDate}
+                </li>
+              </ul>
+            </div>
+          )}
+          {fscCaseEndDate && (
+            <div>
+              <p className="mb-1.5 font-medium">FSC Case end date</p>
+              <ul className="space-y-1">
+                <li className="flex items-center gap-2">
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-foreground" />
+                  {fscCaseEndDate}
+                </li>
+              </ul>
+            </div>
+          )}
           <div>
             <div className="mb-1.5 flex items-start gap-1">
-              <p className="flex-1 font-medium">
-                SSO nearest to student&apos;s residential address
-              </p>
+              <p className="font-medium">Nearest SSO</p>
               <Tooltip>
                 <TooltipTrigger
                   render={<span className="mt-0.5 inline-flex shrink-0" />}
                 >
                   <Info className="h-3.5 w-3.5 text-muted-foreground" />
                 </TooltipTrigger>
-                <TooltipContent side="top">
-                  MSF via Uplift Office • As of 19 May 2025
+                <TooltipContent
+                  side="top"
+                  className="max-w-xs whitespace-pre-line"
+                >
+                  {`Social Service Offices (SSOs) nearest to student's residential address. MSF via Uplift Office • As of 19 Jan 2026`}
                 </TooltipContent>
               </Tooltip>
             </div>
@@ -306,42 +355,15 @@ function MsfUpliftSheetContent({
   )
 }
 
-function NonIntactFamilySheetContent({
-  value,
-  custody,
-  divorced,
-  consideringDivorce,
-  titleTooltip,
-}: {
-  value: string
-  custody: string
-  divorced: 'Yes' | 'No'
-  consideringDivorce: 'Yes' | 'No'
-  titleTooltip?: string
-}) {
+function NonIntactFamilySheetContent({ value }: { value: string }) {
   return (
     <div className="space-y-5">
       <div>
         <div className="mb-1 flex items-center gap-1">
-          <p className="text-sm font-medium">From Non-Intact Family</p>
-          {titleTooltip && (
-            <Tooltip>
-              <TooltipTrigger
-                render={<span className="inline-flex shrink-0" />}
-              >
-                <Info className="h-3.5 w-3.5 text-muted-foreground" />
-              </TooltipTrigger>
-              <TooltipContent
-                side="top"
-                className="max-w-xs whitespace-pre-line"
-              >
-                {titleTooltip}
-              </TooltipContent>
-            </Tooltip>
-          )}
+          <p className="text-sm font-medium">Parents are divorced</p>
         </div>
         <p className="mb-2 text-xs text-muted-foreground">
-          School Cockpit, MSF via Uplift Office • As of 1 May 2026
+          MSF via Uplift Office • As of 19 Jan 2026
         </p>
         <div className="rounded-lg bg-muted px-4 py-3">
           <ul className="space-y-1 text-sm">
@@ -356,46 +378,19 @@ function NonIntactFamilySheetContent({
         <p className="mb-2 text-sm font-medium">Remarks</p>
         <div className="rounded-lg bg-muted px-4 py-3 space-y-4 text-sm">
           <div>
-            <p className="font-medium">Custody</p>
-            <p className="mb-1.5 text-xs text-muted-foreground">
-              School Cockpit • As of 1 May 2026
-            </p>
-            <ul className="space-y-1">
-              <li className="flex items-start gap-2">
-                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-foreground" />
-                {custody}
-              </li>
-            </ul>
-          </div>
-          <div>
-            <p className="font-medium">Parents&apos; marital status</p>
-            <p className="mb-1.5 text-xs text-muted-foreground">
-              MSF via Uplift Office • As of 19 May 2025
-            </p>
-            <ul className="space-y-1">
-              <li className="flex items-center gap-2">
-                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-foreground" />
-                Divorced: {divorced}
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-foreground" />
-                Considering divorce: {consideringDivorce}
-              </li>
-            </ul>
-          </div>
-          <div>
             <div className="mb-1.5 flex items-start gap-1">
-              <p className="flex-1 font-medium">
-                SSO nearest to student&apos;s residential address
-              </p>
+              <p className="font-medium">Nearest SSO</p>
               <Tooltip>
                 <TooltipTrigger
                   render={<span className="mt-0.5 inline-flex shrink-0" />}
                 >
                   <Info className="h-3.5 w-3.5 text-muted-foreground" />
                 </TooltipTrigger>
-                <TooltipContent side="top">
-                  MSF via Uplift Office • As of 19 May 2025
+                <TooltipContent
+                  side="top"
+                  className="max-w-xs whitespace-pre-line"
+                >
+                  {`Social Service Offices (SSOs) nearest to student's residential address. MSF via Uplift Office • As of 19 Jan 2026`}
                 </TooltipContent>
               </Tooltip>
             </div>
@@ -411,6 +406,14 @@ function NonIntactFamilySheetContent({
     </div>
   )
 }
+
+// Default fields shown in the Others section when the Import Data flag is on
+// but no columns have been imported yet. Mirrors the wizard's incoming fields.
+const DEFAULT_OTHERS_COLUMNS: Array<ImportedColumn> = [
+  { id: 'via_missed', label: 'VIA missed' },
+  { id: 'next_steps', label: 'Next steps' },
+  { id: 'teacher_remarks', label: "Teacher's remarks" },
+]
 
 // Subject data used to compute Overall % across selected subjects
 const SUBJECT_COMPUTATION = [
@@ -433,15 +436,15 @@ const REVIEW_STATUS_CONFIG: Record<
 > = {
   pending: {
     label: 'Pending',
-    className: 'bg-slate-100 text-slate-700 hover:bg-slate-100',
+    className: 'bg-muted text-muted-foreground hover:bg-muted',
   },
   in_review: {
     label: 'In Review',
-    className: 'bg-amber-100 text-amber-700 hover:bg-amber-100',
+    className: 'bg-amber-3 text-amber-11 hover:bg-amber-3',
   },
   approved: {
     label: 'Approved',
-    className: 'bg-green-100 text-green-700 hover:bg-green-100',
+    className: 'bg-lime-3 text-lime-11 hover:bg-lime-3',
   },
 }
 
@@ -484,19 +487,19 @@ const AGENCY_STATUS_CONFIG: Record<
 > = {
   draft: {
     label: 'Draft',
-    className: 'bg-slate-100 text-slate-700 hover:bg-slate-100',
+    className: 'bg-muted text-muted-foreground hover:bg-muted',
   },
   pending_review: {
     label: 'In Review',
-    className: 'bg-amber-100 text-amber-700 hover:bg-amber-100',
+    className: 'bg-amber-3 text-amber-11 hover:bg-amber-3',
   },
   edits_requested: {
     label: 'Edits Requested',
-    className: 'bg-orange-100 text-orange-700 hover:bg-orange-100',
+    className: 'bg-orange-3 text-orange-11 hover:bg-orange-3',
   },
   approved: {
     label: 'Approved',
-    className: 'bg-green-100 text-green-700 hover:bg-green-100',
+    className: 'bg-lime-3 text-lime-11 hover:bg-lime-3',
   },
 }
 
@@ -530,7 +533,6 @@ function AgencyReportRow({ report }: { report: AgencyReport }) {
 
   // Due date: clock icon + bare "N days" (no "Due in" prefix)
   // Deadlines removed from the agency-report flow entirely.
-
 
   // Click target: drafts/edits resume the form; approved jumps to Export.
   // pending_review rows are not click-through — but the badge itself is a
@@ -686,10 +688,24 @@ export function StudentProfile({
   const studentAnalyticsEnabled = useFeatureFlag('student-analytics')
   const studentAnalyticsBasicEnabled = useFeatureFlag('student-analytics-basic')
   const msfUpliftEnabled = useFeatureFlag('msf-uplift-data')
+  const importDataEnabled = useFeatureFlag('import-data')
+  const overallPercentageEnabled = useFeatureFlag('overall-percentage')
+  const socialLinksEnabled = useFeatureFlag('social-links')
+  const primaryContactEnabled = useFeatureFlag('primary-contact')
   // Default "Student Insights" view — applies when both analytics flags are off
   const isStudentInsightsView =
     !studentAnalyticsEnabled && !studentAnalyticsBasicEnabled
-  const importedColumns = useMemo(() => getImportedColumns(), [])
+  const savedImportedColumns = useMemo(() => getImportedColumns(), [])
+  // The Others section surfaces fields imported without a category tag. Its
+  // visibility is gated entirely on the Import Data flag — when the flag is
+  // off the section is hidden even if columns were imported in this browser
+  // previously. When on, it shows the saved imported columns (falling back to
+  // the default uncategorised fields when nothing has been imported yet).
+  const importedColumns =
+    savedImportedColumns.length > 0
+      ? savedImportedColumns
+      : DEFAULT_OTHERS_COLUMNS
+  const showOthers = importDataEnabled
 
   const gradeCounts = getStudentGradeCounts(student)
   const studentReports = filterReports({ studentId: student.id })
@@ -697,57 +713,21 @@ export function StudentProfile({
   const missingTerms = TERMS.filter((t): t is Term => !existingTerms.has(t))
   const agencyReports = getAgencyReportsByStudent(student.id)
 
-  const fasField = <Field label="FAS" value={student.fas || '-'} />
+  const fasField = (
+    <Field label="FAS" value={student.fas || '-'} tooltip="School Cockpit" />
+  )
+  const custodyField = (
+    <Field
+      label="Custody"
+      value={student.custody || 'Mother (Sole custody with care and control)'}
+      tooltip="School Cockpit"
+    />
+  )
   const housingField = (
-    <FieldWithDetails
+    <Field
       label="Housing"
       value={student.housing || '-'}
-      tooltip="Housing details"
-      sideSheetTitle="Housing"
-      sideSheetContent={
-        <div className="space-y-5">
-          <div>
-            <p className="mb-2 text-sm font-medium">Housing</p>
-            <div className="rounded-lg bg-muted px-4 py-3">
-              <ul className="space-y-1 text-sm">
-                <li className="flex items-center gap-2">
-                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-foreground" />
-                  {student.housing || '-'}
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div>
-            <p className="mb-2 text-sm font-medium">Remarks</p>
-            <div className="rounded-lg bg-muted px-4 py-3 space-y-4 text-sm">
-              <div>
-                <p className="font-medium mb-1.5">Address</p>
-                <ul className="space-y-1">
-                  <li className="flex items-center gap-2">
-                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-foreground" />
-                    Blk/Hse-1 #1-1 MOE St Singapore 111111
-                  </li>
-                </ul>
-              </div>
-              {!isStudentInsightsView && (
-                <div>
-                  <p className="font-medium mb-1.5">Living arrangement</p>
-                  <ul className="space-y-1">
-                    <li className="flex items-center gap-2">
-                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-foreground" />
-                      Not staying with parents
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-foreground" />
-                      Father deceased
-                    </li>
-                  </ul>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      }
+      tooltip="School Cockpit"
     />
   )
   const housingOwnershipField = (
@@ -760,6 +740,7 @@ export function StudentProfile({
             ? 'Owner-occupied'
             : '-'
       }
+      tooltip="School Cockpit"
     />
   )
   const primaryContactField = (
@@ -831,7 +812,7 @@ export function StudentProfile({
       <FieldWithDetails
         label="Siblings"
         value={student.siblings}
-        tooltip="Sibling details"
+        tooltip="School Cockpit"
         sideSheetTitle="Siblings"
         sideSheetContent={
           <div className="space-y-5">
@@ -886,6 +867,69 @@ export function StudentProfile({
       <Field
         label="Siblings"
         value={student.siblings > 0 ? student.siblings : '-'}
+        tooltip="School Cockpit"
+      />
+    )
+
+  // Per-CCA attendance, alphabetically ordered. Falls back to the single-CCA
+  // value for students without explicit per-CCA details.
+  const ccaAttendance = (
+    student.ccaDetails ?? [
+      { name: student.cca, attendance: 100 - student.ccaMissed * 5 },
+    ]
+  )
+    .slice()
+    .sort((a, b) => a.name.localeCompare(b.name))
+  const primaryCca = ccaAttendance[0]
+  const extraCcaCount = ccaAttendance.length - 1
+
+  // Single field always. With more than one CCA, show the first plus a "+N"
+  // affordance that opens a side sheet listing every CCA's attendance.
+  const ccaAttendanceField =
+    extraCcaCount > 0 ? (
+      <FieldWithDetails
+        label="CCA attendance (%)"
+        value={
+          <>
+            {primaryCca.attendance}%{' '}
+            <span className="font-normal text-muted-foreground">
+              ({primaryCca.name})
+            </span>{' '}
+            <span className="font-normal text-muted-foreground">
+              + {extraCcaCount} more
+            </span>
+          </>
+        }
+        tooltip="School Cockpit • Term 2, 2026"
+        sideSheetTitle="CCA attendance (%)"
+        sideSheetContent={
+          <div>
+            <p className="mb-2 text-sm font-medium">CCA attendance (%)</p>
+            <div className="rounded-lg bg-muted px-4 py-3">
+              <ul className="space-y-1 text-sm">
+                {ccaAttendance.map((item) => (
+                  <li key={item.name} className="flex items-center gap-2">
+                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-foreground" />
+                    {item.name}: {item.attendance}%
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        }
+      />
+    ) : (
+      <Field
+        label="CCA attendance (%)"
+        value={
+          <>
+            {primaryCca.attendance}%{' '}
+            <span className="font-normal text-muted-foreground">
+              ({primaryCca.name})
+            </span>
+          </>
+        }
+        tooltip="School Cockpit • Term 2, 2026"
       />
     )
 
@@ -901,7 +945,7 @@ export function StudentProfile({
     ...(!msfUpliftEnabled && (holisticReportsEnabled || agencyReportsEnabled)
       ? [{ id: 'reports', label: 'Reports' }]
       : []),
-    ...(importedColumns.length > 0 ? [{ id: 'others', label: 'Others' }] : []),
+    ...(showOthers ? [{ id: 'others', label: 'Others' }] : []),
   ]
 
   return (
@@ -911,7 +955,7 @@ export function StudentProfile({
         {headerControls}
 
         {/* Student Header Card */}
-        <div className="flex items-center gap-4 rounded-3xl border bg-white p-6">
+        <div className="flex items-center gap-4 rounded-3xl border bg-card p-6">
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
             <User className="h-8 w-8 text-muted-foreground" />
           </div>
@@ -921,15 +965,17 @@ export function StudentProfile({
               Class {student.class} · {student.cca}
             </p>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-2 text-sm"
-            onClick={() => setPrimaryContactOpen(true)}
-          >
-            <Phone className="h-3.5 w-3.5" />
-            Primary contact
-          </Button>
+          {primaryContactEnabled && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 text-sm"
+              onClick={() => setPrimaryContactOpen(true)}
+            >
+              <Phone className="h-3.5 w-3.5" />
+              Primary contact
+            </Button>
+          )}
         </div>
 
         <Sheet open={primaryContactOpen} onOpenChange={setPrimaryContactOpen}>
@@ -1015,8 +1061,8 @@ export function StudentProfile({
           <InterventionBanner student={student} />
         )}
 
-        {/* Overview Cards */}
-        <StudentOverviewCards student={student} />
+        {/* Overview Cards — only shown when Student Analytics is enabled */}
+        {studentAnalyticsEnabled && <StudentOverviewCards student={student} />}
 
         {/* Criteria details (only when an applied profile group matches) */}
         <ProfileCriteriaDetailsCard student={student} />
@@ -1027,7 +1073,7 @@ export function StudentProfile({
             id="attendance"
             title="Attendance"
             icon={<Calendar className="h-5 w-5" />}
-            iconClassName="bg-yellow-100 text-yellow-600"
+            iconClassName="bg-amber-3 text-amber-11"
           >
             <dl className="grid grid-cols-3 gap-x-8 gap-y-4">
               <Field
@@ -1039,13 +1085,19 @@ export function StudentProfile({
                       )
                     : 0
                 }
+                tooltip="School Cockpit • Term 2, 2026"
               />
-              <Field label="Late-coming (days)" value={student.lateComing} />
-              <Field label="Non-VR absences (days)" value={student.absences} />
               <Field
-                label="CCA attendance(%)"
-                value={`${100 - student.ccaMissed * 5}`}
+                label="Late-coming (days)"
+                value={student.lateComing}
+                tooltip="School Cockpit • Term 2, 2026"
               />
+              <Field
+                label="Non-VR absences (days)"
+                value={student.absences}
+                tooltip="School Cockpit • Term 2, 2026"
+              />
+              {ccaAttendanceField}
             </dl>
 
             {analyticsOpen && <AttendanceAnalytics student={student} />}
@@ -1055,7 +1107,7 @@ export function StudentProfile({
                 <Button
                   variant="link"
                   size="sm"
-                  className="h-auto p-0 text-blue-600"
+                  className="h-auto p-0 text-twblue-11"
                   onClick={() => setAnalyticsOpen((prev) => !prev)}
                 >
                   {analyticsOpen ? 'Show less ∧' : 'View analytics ∨'}
@@ -1070,13 +1122,59 @@ export function StudentProfile({
           id="behaviour"
           title="Behaviour"
           icon={<BookOpen className="h-5 w-5" />}
-          iconClassName="bg-indigo-100 text-indigo-600"
+          iconClassName="bg-twblue-3 text-twblue-11"
         >
           <dl className="grid grid-cols-3 gap-x-8 gap-y-4">
+            {/* In the Uplift default view the standalone Attendance section is
+                hidden, so surface its core attendance metrics here. When
+                Student Analytics is on, the Attendance section renders on its
+                own and these are intentionally omitted to avoid duplication. */}
+            {msfUpliftEnabled && isStudentInsightsView && (
+              <>
+                <Field
+                  label="Attendance (%)"
+                  value={
+                    student.totalSchoolDays > 0
+                      ? Math.round(
+                          (student.daysPresent / student.totalSchoolDays) * 100,
+                        )
+                      : 0
+                  }
+                  tooltip="School Cockpit • Term 2, 2026"
+                />
+                <Field
+                  label="Late-coming (days)"
+                  value={student.lateComing}
+                  tooltip="School Cockpit • Term 2, 2026"
+                />
+                <Field
+                  label="Non-VR absences (days)"
+                  value={student.absences}
+                  tooltip="School Cockpit • Term 2, 2026"
+                />
+                {ccaAttendanceField}
+              </>
+            )}
+            <Field
+              label="Conduct grade"
+              value={
+                student.conduct ? (
+                  <>
+                    {student.conduct}{' '}
+                    <span className="font-normal text-muted-foreground">
+                      (2025, Overall)
+                    </span>
+                  </>
+                ) : (
+                  '-'
+                )
+              }
+              tooltip="School Cockpit • Term 2, 2026"
+            />
             <FieldWithDetails
               label="Offences"
               value={student.offences}
-              tooltip="Total disciplinary offences this year"
+              tooltip="School Cockpit • All records"
               sideSheetTitle="Offences"
               sideSheetContent={
                 <div className="space-y-5">
@@ -1111,16 +1209,14 @@ export function StudentProfile({
               }
             />
             <FieldWithDetails
-              label="Counselling cases"
+              label="Counselling"
               value={student.counsellingSessions}
-              tooltip="Number of counselling sessions this year"
-              sideSheetTitle="Counselling cases"
+              tooltip="School Cockpit • All records"
+              sideSheetTitle="Counselling"
               sideSheetContent={
                 <div className="space-y-5">
                   <div>
-                    <p className="mb-2 text-sm font-medium">
-                      Counselling cases
-                    </p>
+                    <p className="mb-2 text-sm font-medium">Counselling</p>
                     <div className="rounded-lg bg-muted px-4 py-3">
                       <ul className="space-y-1 text-sm">
                         <li className="flex items-center gap-2">
@@ -1130,55 +1226,30 @@ export function StudentProfile({
                       </ul>
                     </div>
                   </div>
-                  {student.counsellingCases &&
-                    student.counsellingCases.length > 0 && (
-                      <div>
-                        <p className="mb-2 text-sm font-medium">Remarks</p>
-                        <div className="rounded-lg bg-muted px-4 py-3">
-                          <ul className="space-y-1.5 text-sm">
-                            {student.counsellingCases.map((c, i) => (
-                              <li key={i} className="flex items-start gap-2">
-                                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-foreground" />
-                                {c.subcases && c.subcases.length > 0 ? (
-                                  <span>
-                                    {c.category}:{' '}
-                                    {c.subcases
-                                      .map(
-                                        (s) =>
-                                          `${s.name} x${s.count} (latest ${s.latestDate})`,
-                                      )
-                                      .join(', ')}
-                                  </span>
-                                ) : (
-                                  <span>
-                                    {c.category} x{c.count} (latest{' '}
-                                    {c.latestDate})
-                                  </span>
-                                )}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
+                  {student.counsellingComplexity && (
+                    <div>
+                      <p className="mb-2 text-sm font-medium">Remarks</p>
+                      <div className="rounded-lg bg-muted px-4 py-3">
+                        <ul className="space-y-1.5 text-sm">
+                          <li className="flex items-start gap-2">
+                            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-foreground" />
+                            <span>
+                              {student.counsellingComplexity === 'Complex cases'
+                                ? 'Physical Bullying (aggressor) x 1 (latest 15 Aug 2026)'
+                                : 'Disruptive Behaviour x 1 (latest 2 Aug 2025)'}
+                            </span>
+                          </li>
+                        </ul>
                       </div>
-                    )}
+                    </div>
+                  )}
                 </div>
               }
             />
-            <Field label="SEN" value={student.sen || '-'} />
             <Field
-              label="Conduct grade"
-              value={
-                student.conduct ? (
-                  <>
-                    {student.conduct}{' '}
-                    <span className="font-normal text-muted-foreground">
-                      (2025, Overall)
-                    </span>
-                  </>
-                ) : (
-                  '-'
-                )
-              }
+              label="Special Educational Needs (SEN)"
+              value={student.sen || '-'}
+              tooltip="School Cockpit"
             />
           </dl>
 
@@ -1198,10 +1269,10 @@ export function StudentProfile({
           id="wellbeing"
           title="Wellbeing"
           icon={<Heart className="h-5 w-5" />}
-          iconClassName="bg-pink-100 text-pink-600"
+          iconClassName="bg-crimson-3 text-crimson-11"
         >
           {(() => {
-            const socialLinks = (
+            const socialLinks = socialLinksEnabled ? (
               <FieldWithDetails
                 label="Social links"
                 value={student.socialLinks}
@@ -1270,12 +1341,12 @@ export function StudentProfile({
                   </div>
                 }
               />
-            )
+            ) : null
             const riskIndicators = (
               <FieldWithDetails
                 label="TCI risk indicators"
                 value={`${student.riskIndicators} of 5 indicators`}
-                tooltip="Risk indicators from TCI survey"
+                tooltip="Termly Check-in Survey • Term 2, 2026"
                 sideSheetTitle="TCI risk indicators"
                 sideSheetContent={
                   <div className="space-y-5">
@@ -1334,7 +1405,7 @@ export function StudentProfile({
               <FieldWithDetails
                 label="Low mood flagged 2+ terms"
                 value={lowMoodValue}
-                tooltip="Flagged for persistent low mood"
+                tooltip="Termly Check-in Survey • within past 4 terms"
                 sideSheetTitle="Low mood flagged 2+ terms"
                 sideSheetContent={
                   <div className="space-y-5">
@@ -1405,48 +1476,53 @@ export function StudentProfile({
           id="academic"
           title="Academic"
           icon={<GraduationCap className="h-5 w-5" />}
-          iconClassName="bg-blue-100 text-blue-600"
+          iconClassName="bg-twblue-3 text-twblue-11"
         >
           <dl className="grid grid-cols-3 gap-x-8 gap-y-4">
-            <FieldWithDetails
-              label="Overall % across selected subjects"
-              value={`${COMPUTED_OVERALL_PERCENTAGE}%`}
-              tooltip="Average percentage across subjects selected for computation"
-              sideSheetTitle="Overall % across selected subjects"
-              sideSheetContent={
-                <div className="space-y-5">
-                  <div>
-                    <p className="mb-2 text-sm font-medium">
-                      Overall % across selected subjects
-                    </p>
-                    <div className="rounded-lg bg-muted px-4 py-3">
-                      <ul className="space-y-1 text-sm">
-                        <li className="flex items-center gap-2">
-                          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-foreground" />
-                          {COMPUTED_OVERALL_PERCENTAGE}%
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                  <div>
-                    <p className="mb-2 text-sm font-medium">Remarks</p>
-                    <div className="rounded-lg bg-muted px-4 py-3 space-y-4 text-sm">
-                      <div>
-                        <p className="font-medium mb-1.5">Selected subjects</p>
-                        <ul className="space-y-1.5">
-                          {SUBJECT_COMPUTATION.map((item, i) => (
-                            <li key={i} className="flex items-center gap-2">
-                              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-foreground" />
-                              {item.subject} - {item.band} ({item.percentage}%)
-                            </li>
-                          ))}
+            {overallPercentageEnabled && (
+              <FieldWithDetails
+                label="Overall % across selected subjects"
+                value={`${COMPUTED_OVERALL_PERCENTAGE}%`}
+                tooltip="Average percentage across subjects selected for computation"
+                sideSheetTitle="Overall % across selected subjects"
+                sideSheetContent={
+                  <div className="space-y-5">
+                    <div>
+                      <p className="mb-2 text-sm font-medium">
+                        Overall % across selected subjects
+                      </p>
+                      <div className="rounded-lg bg-muted px-4 py-3">
+                        <ul className="space-y-1 text-sm">
+                          <li className="flex items-center gap-2">
+                            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-foreground" />
+                            {COMPUTED_OVERALL_PERCENTAGE}%
+                          </li>
                         </ul>
                       </div>
                     </div>
+                    <div>
+                      <p className="mb-2 text-sm font-medium">Remarks</p>
+                      <div className="rounded-lg bg-muted px-4 py-3 space-y-4 text-sm">
+                        <div>
+                          <p className="font-medium mb-1.5">
+                            Selected subjects
+                          </p>
+                          <ul className="space-y-1.5">
+                            {SUBJECT_COMPUTATION.map((item, i) => (
+                              <li key={i} className="flex items-center gap-2">
+                                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-foreground" />
+                                {item.subject} - {item.band} ({item.percentage}
+                                %)
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              }
-            />
+                }
+              />
+            )}
 
             {!isStudentInsightsView && (
               <>
@@ -1472,6 +1548,7 @@ export function StudentProfile({
             <Field
               label="Learning support"
               value={student.learningSupport || '-'}
+              tooltip="School Cockpit"
             />
             {!isStudentInsightsView && (
               <Field
@@ -1488,7 +1565,7 @@ export function StudentProfile({
               <Button
                 variant="link"
                 size="sm"
-                className="h-auto p-0 text-blue-600"
+                className="h-auto p-0 text-twblue-11"
                 onClick={() => setAcademicAnalyticsOpen((prev) => !prev)}
               >
                 {academicAnalyticsOpen ? 'Show less ∧' : 'View analytics ∨'}
@@ -1502,25 +1579,60 @@ export function StudentProfile({
           id="family"
           title="Family"
           icon={<Home className="h-5 w-5" />}
-          iconClassName="bg-green-100 text-green-600"
+          iconClassName="bg-lime-3 text-lime-11"
         >
           <dl className="grid grid-cols-3 gap-x-8 gap-y-4">
             {msfUpliftEnabled ? (
               <>
-                {primaryContactField}
-                {siblingsField}
-                {fasField}
-                {housingField}
-                {housingOwnershipField}
+                {primaryContactEnabled && primaryContactField}
+                {custodyField}
                 {(() => {
-                  const comLink = student.supportedByComLink ?? '-'
+                  const consideringDivorce =
+                    student.parentsConsideringDivorce ?? 'No'
+                  const consideringDivorceTooltip = `"Yes" indicates that at least one parent is enrolled in the Mandatory Co-Parenting Programme (CPP). All parents with children below 21 years old are required to attend the CPP before filing for divorce. Under the CPP, parents receive support from counsellors to help them make informed decisions that prioritise the well-being of their children, such as working out co-parenting arrangements arising from a divorce.`
+                  return (
+                    <FieldWithDetails
+                      label="Parent enrolled in CPP"
+                      tooltip="MSF via Uplift Office • as of 19 Jan 2026"
+                      description="MSF via Uplift Office • 19 Jan 2026"
+                      value={consideringDivorce}
+                      sideSheetTitle="Parent enrolled in CPP"
+                      sideSheetContent={
+                        <MsfUpliftSheetContent
+                          title="Parent enrolled in CPP"
+                          value={consideringDivorce}
+                          titleTooltip={consideringDivorceTooltip}
+                        />
+                      }
+                    />
+                  )
+                })()}
+                {(() => {
+                  const nonIntact = student.nonIntactFamily ?? 'None'
+                  return (
+                    <FieldWithDetails
+                      label="Parents are divorced"
+                      tooltip="MSF via Uplift Office • as of 19 Jan 2026"
+                      description="MSF via Uplift Office • 19 Jan 2026"
+                      value={nonIntact}
+                      sideSheetTitle="Parents are divorced"
+                      sideSheetContent={
+                        <NonIntactFamilySheetContent value={nonIntact} />
+                      }
+                    />
+                  )
+                })()}
+                {(() => {
+                  const comLink = student.supportedByComLink ?? 'No'
                   const comLinkDisplay =
-                    comLink === 'Yes' ? 'Yes by SSO Woodlands' : comLink
+                    comLink === 'Yes'
+                      ? `Yes by ${student.supportedByComLinkBy ?? 'SSO Woodlands'}`
+                      : comLink
                   return (
                     <FieldWithDetails
                       label="Supported by ComLink+"
-                      tooltip="Supported by ComLink+"
-                      description="MSF via Uplift Office • 19 May 2025"
+                      tooltip="MSF via Uplift Office • as of 19 Jan 2026"
+                      description="MSF via Uplift Office • 19 Jan 2026"
                       value={comLinkDisplay}
                       sideSheetTitle="Supported by ComLink+"
                       sideSheetContent={
@@ -1533,50 +1645,35 @@ export function StudentProfile({
                   )
                 })()}
                 {(() => {
-                  const fsc = student.supportedByFsc ?? '-'
+                  const fsc = student.supportedByFsc ?? 'No'
                   const fscDisplay =
                     fsc === 'Yes' ? 'Yes by Fei Yue FSC (Choa Chu Kang)' : fsc
                   return (
                     <FieldWithDetails
-                      label="Supported by FSC in the past 2 years"
-                      tooltip="Supported by FSC in the past 2 years"
-                      description="MSF via Uplift Office • 19 May 2025"
+                      label="Supported by FSC"
+                      tooltip="MSF via Uplift Office • as of 19 Jan 2026"
+                      description="MSF via Uplift Office • 19 Jan 2026"
                       value={fscDisplay}
-                      sideSheetTitle="Supported by FSC in the past 2 years"
+                      sideSheetTitle="Supported by FSC"
                       sideSheetContent={
                         <MsfUpliftSheetContent
-                          title="Supported by FSC in the past 2 years"
+                          title="Supported by FSC"
                           value={fscDisplay}
-                        />
-                      }
-                    />
-                  )
-                })()}
-                {(() => {
-                  const nonIntact = student.nonIntactFamily ?? '-'
-                  const nonIntactTooltip = `"Yes" if any of the following is provided:\n• Custody information\n• Parents' divorced status\n• Parents' considering divorce status based on enrolment the Mandatory Co-Parenting Programme (CCP)\n\nBased on School Cockpit and MSF via Uplift Office`
-                  return (
-                    <FieldWithDetails
-                      label="From Non-Intact Family"
-                      tooltip="From Non-Intact Family"
-                      description="School Cockpit, MSF via Uplift Office • 1 May 2026"
-                      value={nonIntact}
-                      sideSheetTitle="From Non-Intact Family"
-                      sideSheetContent={
-                        <NonIntactFamilySheetContent
-                          value={nonIntact}
-                          custody={
-                            student.custody ||
-                            'Mother (Sole custody with care and control)'
+                          fscCaseStartDate="11 Jan 2025"
+                          fscCaseEndDate={
+                            student.name === 'Sim Xin Yi'
+                              ? 'Ongoing'
+                              : '22 May 2026'
                           }
-                          divorced="No"
-                          consideringDivorce="Yes"
-                          titleTooltip={nonIntactTooltip}
                         />
                       }
                     />
                   )
                 })()}
+                {fasField}
+                {housingField}
+                {housingOwnershipField}
+                {siblingsField}
               </>
             ) : (
               <>
@@ -1595,7 +1692,7 @@ export function StudentProfile({
                     value={student.afterSchoolArrangement || 'No arrangement'}
                   />
                 )}
-                {primaryContactField}
+                {primaryContactEnabled && primaryContactField}
                 {siblingsField}
               </>
             )}
@@ -1608,7 +1705,7 @@ export function StudentProfile({
             id="personal"
             title="Personal"
             icon={<Languages className="h-5 w-5" />}
-            iconClassName="bg-purple-100 text-purple-600"
+            iconClassName="bg-violet-3 text-violet-11"
           >
             <dl className="grid grid-cols-3 gap-x-8 gap-y-4">
               {!isStudentInsightsView && (
@@ -1658,7 +1755,7 @@ export function StudentProfile({
               id="reports"
               title="Reports"
               icon={<FileText className="h-5 w-5" />}
-              iconClassName="bg-red-100 text-red-600"
+              iconClassName="bg-crimson-3 text-crimson-11"
               headerRight={
                 holisticReportsEnabled && studentReports.length > 0 ? (
                   <Button
@@ -1765,12 +1862,12 @@ export function StudentProfile({
             </Section>
           )}
         {/* Others Section — imported fields */}
-        {importedColumns.length > 0 && (
+        {showOthers && (
           <Section
             id="others"
             title="Others"
             icon={<LayoutGrid className="h-5 w-5" />}
-            iconClassName="bg-slate-100 text-slate-600"
+            iconClassName="bg-muted text-muted-foreground"
           >
             <dl className="grid grid-cols-3 gap-x-8 gap-y-6">
               {importedColumns.map((col) => (

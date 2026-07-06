@@ -27,7 +27,6 @@ import { Route as StudentsIndexRouteImport } from './routes/students.index'
 import { Route as ReportsIndexRouteImport } from './routes/reports.index'
 import { Route as GroupsIndexRouteImport } from './routes/groups.index'
 import { Route as FormsIndexRouteImport } from './routes/forms.index'
-import { Route as DsIndexRouteImport } from './routes/ds.index'
 import { Route as AnnouncementsIndexRouteImport } from './routes/announcements.index'
 import { Route as StudentsIdRouteImport } from './routes/students.$id'
 import { Route as ReportsIdRouteImport } from './routes/reports.$id'
@@ -38,9 +37,6 @@ import { Route as GroupsGroupIdRouteImport } from './routes/groups.$groupId'
 import { Route as GlowStudentIdRouteImport } from './routes/glow.$studentId'
 import { Route as FormsNewRouteImport } from './routes/forms.new'
 import { Route as FormsIdRouteImport } from './routes/forms.$id'
-import { Route as DsTwThemeRouteImport } from './routes/ds.tw-theme'
-import { Route as DsFlowTokensRouteImport } from './routes/ds.flow-tokens'
-import { Route as DsFlowComponentsRouteImport } from './routes/ds.flow-components'
 import { Route as AnnouncementsNewRouteImport } from './routes/announcements.new'
 import { Route as AnnouncementsIdRouteImport } from './routes/announcements.$id'
 import { Route as GuestStudentLoginRouteImport } from './routes/_guest.student-login'
@@ -140,11 +136,6 @@ const FormsIndexRoute = FormsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => FormsRoute,
 } as any)
-const DsIndexRoute = DsIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => DsRoute,
-} as any)
 const AnnouncementsIndexRoute = AnnouncementsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -194,21 +185,6 @@ const FormsIdRoute = FormsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => FormsRoute,
-} as any)
-const DsTwThemeRoute = DsTwThemeRouteImport.update({
-  id: '/tw-theme',
-  path: '/tw-theme',
-  getParentRoute: () => DsRoute,
-} as any)
-const DsFlowTokensRoute = DsFlowTokensRouteImport.update({
-  id: '/flow-tokens',
-  path: '/flow-tokens',
-  getParentRoute: () => DsRoute,
-} as any)
-const DsFlowComponentsRoute = DsFlowComponentsRouteImport.update({
-  id: '/flow-components',
-  path: '/flow-components',
-  getParentRoute: () => DsRoute,
 } as any)
 const AnnouncementsNewRoute = AnnouncementsNewRouteImport.update({
   id: '/new',
@@ -262,7 +238,7 @@ export interface FileRoutesByFullPath {
   '/$': typeof SplatRoute
   '/announcements': typeof AnnouncementsRouteWithChildren
   '/attendance': typeof AttendanceRoute
-  '/ds': typeof DsRouteWithChildren
+  '/ds': typeof DsRoute
   '/flags': typeof FlagsRoute
   '/forms': typeof FormsRouteWithChildren
   '/groups': typeof GroupsRouteWithChildren
@@ -277,9 +253,6 @@ export interface FileRoutesByFullPath {
   '/student-login': typeof GuestStudentLoginRoute
   '/announcements/$id': typeof AnnouncementsIdRoute
   '/announcements/new': typeof AnnouncementsNewRoute
-  '/ds/flow-components': typeof DsFlowComponentsRoute
-  '/ds/flow-tokens': typeof DsFlowTokensRoute
-  '/ds/tw-theme': typeof DsTwThemeRoute
   '/forms/$id': typeof FormsIdRoute
   '/forms/new': typeof FormsNewRoute
   '/glow/$studentId': typeof GlowStudentIdRoute
@@ -290,7 +263,6 @@ export interface FileRoutesByFullPath {
   '/reports/$id': typeof ReportsIdRoute
   '/students/$id': typeof StudentsIdRoute
   '/announcements/': typeof AnnouncementsIndexRoute
-  '/ds/': typeof DsIndexRoute
   '/forms/': typeof FormsIndexRoute
   '/groups/': typeof GroupsIndexRoute
   '/reports/': typeof ReportsIndexRoute
@@ -303,6 +275,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
   '/attendance': typeof AttendanceRoute
+  '/ds': typeof DsRoute
   '/flags': typeof FlagsRoute
   '/insight-buddy': typeof InsightBuddyRoute
   '/settings': typeof SettingsRoute
@@ -313,9 +286,6 @@ export interface FileRoutesByTo {
   '/student-login': typeof GuestStudentLoginRoute
   '/announcements/$id': typeof AnnouncementsIdRoute
   '/announcements/new': typeof AnnouncementsNewRoute
-  '/ds/flow-components': typeof DsFlowComponentsRoute
-  '/ds/flow-tokens': typeof DsFlowTokensRoute
-  '/ds/tw-theme': typeof DsTwThemeRoute
   '/forms/$id': typeof FormsIdRoute
   '/forms/new': typeof FormsNewRoute
   '/glow/$studentId': typeof GlowStudentIdRoute
@@ -326,7 +296,6 @@ export interface FileRoutesByTo {
   '/reports/$id': typeof ReportsIdRoute
   '/students/$id': typeof StudentsIdRoute
   '/announcements': typeof AnnouncementsIndexRoute
-  '/ds': typeof DsIndexRoute
   '/forms': typeof FormsIndexRoute
   '/groups': typeof GroupsIndexRoute
   '/reports': typeof ReportsIndexRoute
@@ -342,7 +311,7 @@ export interface FileRoutesById {
   '/_guest': typeof GuestRouteWithChildren
   '/announcements': typeof AnnouncementsRouteWithChildren
   '/attendance': typeof AttendanceRoute
-  '/ds': typeof DsRouteWithChildren
+  '/ds': typeof DsRoute
   '/flags': typeof FlagsRoute
   '/forms': typeof FormsRouteWithChildren
   '/groups': typeof GroupsRouteWithChildren
@@ -357,9 +326,6 @@ export interface FileRoutesById {
   '/_guest/student-login': typeof GuestStudentLoginRoute
   '/announcements/$id': typeof AnnouncementsIdRoute
   '/announcements/new': typeof AnnouncementsNewRoute
-  '/ds/flow-components': typeof DsFlowComponentsRoute
-  '/ds/flow-tokens': typeof DsFlowTokensRoute
-  '/ds/tw-theme': typeof DsTwThemeRoute
   '/forms/$id': typeof FormsIdRoute
   '/forms/new': typeof FormsNewRoute
   '/glow/$studentId': typeof GlowStudentIdRoute
@@ -370,7 +336,6 @@ export interface FileRoutesById {
   '/reports/$id': typeof ReportsIdRoute
   '/students/$id': typeof StudentsIdRoute
   '/announcements/': typeof AnnouncementsIndexRoute
-  '/ds/': typeof DsIndexRoute
   '/forms/': typeof FormsIndexRoute
   '/groups/': typeof GroupsIndexRoute
   '/reports/': typeof ReportsIndexRoute
@@ -401,9 +366,6 @@ export interface FileRouteTypes {
     | '/student-login'
     | '/announcements/$id'
     | '/announcements/new'
-    | '/ds/flow-components'
-    | '/ds/flow-tokens'
-    | '/ds/tw-theme'
     | '/forms/$id'
     | '/forms/new'
     | '/glow/$studentId'
@@ -414,7 +376,6 @@ export interface FileRouteTypes {
     | '/reports/$id'
     | '/students/$id'
     | '/announcements/'
-    | '/ds/'
     | '/forms/'
     | '/groups/'
     | '/reports/'
@@ -427,6 +388,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$'
     | '/attendance'
+    | '/ds'
     | '/flags'
     | '/insight-buddy'
     | '/settings'
@@ -437,9 +399,6 @@ export interface FileRouteTypes {
     | '/student-login'
     | '/announcements/$id'
     | '/announcements/new'
-    | '/ds/flow-components'
-    | '/ds/flow-tokens'
-    | '/ds/tw-theme'
     | '/forms/$id'
     | '/forms/new'
     | '/glow/$studentId'
@@ -450,7 +409,6 @@ export interface FileRouteTypes {
     | '/reports/$id'
     | '/students/$id'
     | '/announcements'
-    | '/ds'
     | '/forms'
     | '/groups'
     | '/reports'
@@ -480,9 +438,6 @@ export interface FileRouteTypes {
     | '/_guest/student-login'
     | '/announcements/$id'
     | '/announcements/new'
-    | '/ds/flow-components'
-    | '/ds/flow-tokens'
-    | '/ds/tw-theme'
     | '/forms/$id'
     | '/forms/new'
     | '/glow/$studentId'
@@ -493,7 +448,6 @@ export interface FileRouteTypes {
     | '/reports/$id'
     | '/students/$id'
     | '/announcements/'
-    | '/ds/'
     | '/forms/'
     | '/groups/'
     | '/reports/'
@@ -509,7 +463,7 @@ export interface RootRouteChildren {
   GuestRoute: typeof GuestRouteWithChildren
   AnnouncementsRoute: typeof AnnouncementsRouteWithChildren
   AttendanceRoute: typeof AttendanceRoute
-  DsRoute: typeof DsRouteWithChildren
+  DsRoute: typeof DsRoute
   FlagsRoute: typeof FlagsRoute
   FormsRoute: typeof FormsRouteWithChildren
   GroupsRoute: typeof GroupsRouteWithChildren
@@ -650,13 +604,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FormsIndexRouteImport
       parentRoute: typeof FormsRoute
     }
-    '/ds/': {
-      id: '/ds/'
-      path: '/'
-      fullPath: '/ds/'
-      preLoaderRoute: typeof DsIndexRouteImport
-      parentRoute: typeof DsRoute
-    }
     '/announcements/': {
       id: '/announcements/'
       path: '/'
@@ -726,27 +673,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/forms/$id'
       preLoaderRoute: typeof FormsIdRouteImport
       parentRoute: typeof FormsRoute
-    }
-    '/ds/tw-theme': {
-      id: '/ds/tw-theme'
-      path: '/tw-theme'
-      fullPath: '/ds/tw-theme'
-      preLoaderRoute: typeof DsTwThemeRouteImport
-      parentRoute: typeof DsRoute
-    }
-    '/ds/flow-tokens': {
-      id: '/ds/flow-tokens'
-      path: '/flow-tokens'
-      fullPath: '/ds/flow-tokens'
-      preLoaderRoute: typeof DsFlowTokensRouteImport
-      parentRoute: typeof DsRoute
-    }
-    '/ds/flow-components': {
-      id: '/ds/flow-components'
-      path: '/flow-components'
-      fullPath: '/ds/flow-components'
-      preLoaderRoute: typeof DsFlowComponentsRouteImport
-      parentRoute: typeof DsRoute
     }
     '/announcements/new': {
       id: '/announcements/new'
@@ -848,22 +774,6 @@ const AnnouncementsRouteWithChildren = AnnouncementsRoute._addFileChildren(
   AnnouncementsRouteChildren,
 )
 
-interface DsRouteChildren {
-  DsFlowComponentsRoute: typeof DsFlowComponentsRoute
-  DsFlowTokensRoute: typeof DsFlowTokensRoute
-  DsTwThemeRoute: typeof DsTwThemeRoute
-  DsIndexRoute: typeof DsIndexRoute
-}
-
-const DsRouteChildren: DsRouteChildren = {
-  DsFlowComponentsRoute: DsFlowComponentsRoute,
-  DsFlowTokensRoute: DsFlowTokensRoute,
-  DsTwThemeRoute: DsTwThemeRoute,
-  DsIndexRoute: DsIndexRoute,
-}
-
-const DsRouteWithChildren = DsRoute._addFileChildren(DsRouteChildren)
-
 interface FormsRouteChildren {
   FormsIdRoute: typeof FormsIdRoute
   FormsNewRoute: typeof FormsNewRoute
@@ -932,7 +842,7 @@ const rootRouteChildren: RootRouteChildren = {
   GuestRoute: GuestRouteWithChildren,
   AnnouncementsRoute: AnnouncementsRouteWithChildren,
   AttendanceRoute: AttendanceRoute,
-  DsRoute: DsRouteWithChildren,
+  DsRoute: DsRoute,
   FlagsRoute: FlagsRoute,
   FormsRoute: FormsRouteWithChildren,
   GroupsRoute: GroupsRouteWithChildren,

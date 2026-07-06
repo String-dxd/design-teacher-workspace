@@ -12,6 +12,13 @@ export type FeatureFlagKey =
   | 'agency-reports'
   | 'report-generation'
   | 'msf-uplift-data'
+  | 'date-range-filter'
+  | 'attention-tag'
+  | 'column-visibility'
+  | 'overall-percentage'
+  | 'social-links'
+  | 'export'
+  | 'primary-contact'
 
 export type FeatureFlags = {
   [K in FeatureFlagKey]: boolean

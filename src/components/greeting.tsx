@@ -1,11 +1,11 @@
+import { useEffect, useState } from 'react'
 import { useAuth } from '@/lib/auth'
 
 interface GreetingProps {
   userName?: string
 }
 
-function getGreeting(): string {
-  const hour = new Date().getHours()
+export function getGreeting(hour: number): string {
   if (hour < 12) {
     return 'Good morning'
   } else if (hour < 17) {
@@ -16,7 +16,10 @@ function getGreeting(): string {
 }
 
 export function Greeting({ userName = 'Mr. Tan' }: GreetingProps) {
-  const greeting = getGreeting()
+  const [greeting, setGreeting] = useState('Good day')
+  useEffect(() => {
+    setGreeting(getGreeting(new Date().getHours()))
+  }, [])
   const { isLoggedIn } = useAuth()
 
   return (

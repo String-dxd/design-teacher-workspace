@@ -16,7 +16,7 @@ type Message = {
   content: string
 }
 
-export interface InsightBuddyProps {
+interface InsightBuddyProps {
   examplePrompts?: Array<string>
   /** When true, renders as a FAB + fixed overlay (analytics page).
    *  When false (default), renders as a sticky in-flow panel (profile page). */
@@ -261,8 +261,8 @@ function MessageContent({ content }: { content: string }) {
 function TypingIndicator() {
   return (
     <div className="animate-msg-in flex gap-2 justify-start">
-      <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-100">
-        <Sparkles className="animate-sparkle-idle h-3 w-3 text-blue-600" />
+      <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-twblue-3">
+        <Sparkles className="animate-sparkle-idle h-3 w-3 text-twblue-11" />
       </div>
       <div className="flex items-center gap-1 rounded-2xl rounded-tl-sm bg-muted/70 px-3 py-2">
         {[0, 150, 300].map((delay) => (
@@ -318,8 +318,8 @@ function PanelContent({
       {/* Header */}
       <div className="flex items-center justify-between border-b px-4 py-3">
         <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-100">
-            <Sparkles className="h-3.5 w-3.5 text-blue-600" />
+          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-twblue-3">
+            <Sparkles className="h-3.5 w-3.5 text-twblue-11" />
           </div>
           <div>
             <p className="text-sm font-semibold leading-tight">Insight Buddy</p>
@@ -349,11 +349,11 @@ function PanelContent({
                 key={prompt}
                 type="button"
                 onClick={() => sendMessage(prompt)}
-                className="animate-fade-slide-up group flex items-center gap-2 rounded-xl border bg-background px-3 py-2.5 text-left text-xs transition-all hover:-translate-y-px hover:border-blue-200 hover:bg-blue-50/50 active:translate-y-0"
+                className="animate-fade-slide-up group flex items-center gap-2 rounded-xl border bg-background px-3 py-2.5 text-left text-xs transition-all hover:-translate-y-px hover:border-twblue-6 hover:bg-twblue-3/50 active:translate-y-0"
                 style={{ animationDelay: `${i * 60}ms` }}
               >
                 <span className="flex-1 text-foreground">{prompt}</span>
-                <ArrowRight className="size-3.5 shrink-0 text-muted-foreground/30 transition-all group-hover:translate-x-0.5 group-hover:text-blue-500/70" />
+                <ArrowRight className="size-3.5 shrink-0 text-muted-foreground/30 transition-all group-hover:translate-x-0.5 group-hover:text-twblue-9/70" />
               </button>
             ))}
             {examplePrompts.length === 0 && (
@@ -375,15 +375,15 @@ function PanelContent({
                 )}
               >
                 {msg.role === 'assistant' && (
-                  <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-100">
-                    <Sparkles className="h-3 w-3 text-blue-600" />
+                  <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-twblue-3">
+                    <Sparkles className="h-3 w-3 text-twblue-11" />
                   </div>
                 )}
                 <div
                   className={cn(
                     'max-w-[85%] rounded-2xl px-3 py-2 text-xs',
                     msg.role === 'user'
-                      ? 'rounded-tr-sm bg-blue-600 text-white'
+                      ? 'rounded-tr-sm bg-primary text-primary-foreground'
                       : 'rounded-tl-sm bg-muted/70 text-foreground',
                   )}
                 >
@@ -398,7 +398,7 @@ function PanelContent({
       </div>
 
       {/* Input area */}
-      <div className="border-t bg-white p-3">
+      <div className="border-t bg-card p-3">
         <div className="relative flex items-center gap-2 rounded-2xl border bg-background px-3 py-2 focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50">
           <Textarea
             value={input}
@@ -488,8 +488,8 @@ export function InsightBuddy({
           className={cn(
             'fixed bottom-6 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-full shadow-lg transition-all hover:scale-105 hover:shadow-xl active:scale-95',
             isOpen
-              ? 'bg-gray-700 text-white hover:bg-gray-800'
-              : 'bg-blue-600 text-white hover:bg-blue-700',
+              ? 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+              : 'bg-primary text-primary-foreground hover:bg-primary/90',
           )}
           title={isOpen ? 'Close Insight Buddy' : 'Open Insight Buddy'}
         >
@@ -502,7 +502,7 @@ export function InsightBuddy({
 
         {/* Overlay panel */}
         {isOpen && (
-          <div className="animate-panel-up fixed bottom-[72px] right-6 z-40 flex h-[min(560px,calc(100vh-6rem))] w-80 flex-col overflow-hidden rounded-2xl border bg-white shadow-2xl">
+          <div className="animate-panel-up fixed bottom-[72px] right-6 z-40 flex h-[min(560px,calc(100vh-6rem))] w-80 flex-col overflow-hidden rounded-2xl border bg-card shadow-2xl">
             <PanelContent {...panelProps} onClose={() => setIsOpen(false)} />
           </div>
         )}
@@ -512,7 +512,7 @@ export function InsightBuddy({
 
   // ── Sticky mode: in-flow panel (student profile) ────────────────────────────
   return (
-    <div className="sticky top-6 flex h-[calc(100vh-3rem)] w-72 shrink-0 flex-col overflow-hidden rounded-xl border bg-white shadow-sm">
+    <div className="sticky top-6 flex h-[calc(100vh-3rem)] w-72 shrink-0 flex-col overflow-hidden rounded-xl border bg-card shadow-sm">
       <PanelContent {...panelProps} />
     </div>
   )

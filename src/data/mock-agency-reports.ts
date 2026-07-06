@@ -115,7 +115,6 @@ export interface AgencyTemplate {
   agency: string
   name: string
   abbrev: string
-  color: string
   category: TemplateCategoryLabel
   locked?: boolean
   totalFields: number
@@ -156,13 +155,6 @@ export interface AiSourceItem {
   href: string
 }
 
-export interface DataSource {
-  id: string
-  name: string
-  desc: string
-  lastUpdated: string
-  checked: boolean
-}
 
 export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
   {
@@ -170,7 +162,6 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
     agency: 'Child Protective Service',
     name: 'MSF CPS Annex A',
     abbrev: 'CPS',
-    color: '#dc2626',
     category: 'Family & Social Services',
     totalFields: 32,
     autoFilled: 22,
@@ -405,7 +396,6 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
     agency: 'Probation Service, MSF',
     name: 'MSF Probation School Report',
     abbrev: 'MSF-P',
-    color: '#0064ff',
     category: 'Offences & Law Enforcement',
     totalFields: 22,
     autoFilled: 14,
@@ -487,7 +477,6 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
     agency: 'Ministry of Social and Family Development (PSV)',
     name: 'MSF PSV Annex A',
     abbrev: 'PSV',
-    color: '#0064ff',
     category: 'Family & Social Services',
     totalFields: 18,
     autoFilled: 12,
@@ -550,7 +539,6 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
     agency: 'Singapore Police Force',
     name: 'SPF Annex F',
     abbrev: 'SPF',
-    color: '#1e40af',
     category: 'Offences & Law Enforcement',
     totalFields: 20,
     autoFilled: 14,
@@ -646,7 +634,6 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
     agency: 'Central Narcotics Bureau',
     name: 'CNB Annex F',
     abbrev: 'CNB',
-    color: '#b45309',
     category: 'Offences & Law Enforcement',
     totalFields: 18,
     autoFilled: 12,
@@ -729,7 +716,6 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
     agency: 'Institute of Mental Health / Child Guidance Clinic',
     name: 'IMH CGC School Report',
     abbrev: 'IMH',
-    color: '#7c3aed',
     category: 'Mental Health',
     totalFields: 26,
     autoFilled: 16,
@@ -836,7 +822,6 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
     agency: 'National University Hospital',
     name: 'NUH REACH Referral Response',
     abbrev: 'REACH',
-    color: '#059669',
     category: 'Mental Health',
     totalFields: 22,
     autoFilled: 14,
@@ -931,7 +916,6 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
     agency: 'Singapore Prison Service',
     name: 'SPS School Information Request',
     abbrev: 'SPS',
-    color: '#374151',
     category: 'Offences & Law Enforcement',
     totalFields: 16,
     autoFilled: 10,
@@ -1008,7 +992,6 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
     agency: "Children's Home",
     name: "MSF Children's Home School Report",
     abbrev: 'CH',
-    color: '#d97706',
     category: 'Care & Placement',
     totalFields: 70,
     autoFilled: 60,
@@ -1668,7 +1651,6 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
     agency: 'National University Hospital',
     name: 'NUH ASSQ Form',
     abbrev: 'ASSQ',
-    color: '#9333ea',
     category: 'Mental Health',
     totalFields: 30,
     autoFilled: 8,
@@ -1768,7 +1750,6 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
     agency: 'Child Protective Service',
     name: 'MSF CPS Interview Template A',
     abbrev: 'CPS',
-    color: '#0064ff',
     category: 'Family & Social Services',
     totalFields: 20,
     autoFilled: 14,
@@ -1839,7 +1820,6 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
     agency: 'Child Protective Service',
     name: 'MSF CPS Interview Template B',
     abbrev: 'CPS',
-    color: '#0064ff',
     category: 'Family & Social Services',
     totalFields: 18,
     autoFilled: 12,
@@ -1919,7 +1899,6 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
     agency: 'Child Protective Service',
     name: 'MSF CPS Intake Assessment (Part 1)',
     abbrev: 'CPS',
-    color: '#0064ff',
     category: 'Family & Social Services',
     totalFields: 24,
     autoFilled: 16,
@@ -2016,7 +1995,6 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
     agency: 'National Anti-Violence Helpline',
     name: 'MSF NAVH Intake Assessment (Part 1)',
     abbrev: 'NAVH',
-    color: '#0064ff',
     category: 'Family & Social Services',
     totalFields: 18,
     autoFilled: 10,
@@ -2065,7 +2043,6 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
     agency: 'National Anti-Violence Helpline',
     name: 'MSF NAVH Interview Template A',
     abbrev: 'NAVH',
-    color: '#0064ff',
     category: 'Family & Social Services',
     totalFields: 14,
     autoFilled: 8,
@@ -2107,7 +2084,6 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
     agency: 'National Anti-Violence Helpline',
     name: 'MSF NAVH Interview Template B',
     abbrev: 'NAVH',
-    color: '#0064ff',
     category: 'Family & Social Services',
     totalFields: 14,
     autoFilled: 8,
@@ -2149,7 +2125,6 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
     agency: 'Singapore Police Force',
     name: 'SPF Annex N',
     abbrev: 'SPF',
-    color: '#1e40af',
     category: 'Offences & Law Enforcement',
     totalFields: 16,
     autoFilled: 9,
@@ -2191,7 +2166,6 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
     agency: 'Ministry of Social and Family Development',
     name: 'MSF School Report',
     abbrev: 'MSF',
-    color: '#0064ff',
     category: 'Family & Social Services',
     totalFields: 60,
     autoFilled: 50,
@@ -2799,7 +2773,6 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
     agency: 'Family Service Centre',
     name: 'FAM@FSC Interagency Referral Form',
     abbrev: 'FSC',
-    color: '#0064ff',
     category: 'Family & Social Services',
     totalFields: 0,
     autoFilled: 0,
@@ -2826,7 +2799,6 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
     agency: 'National University Hospital (REACH North)',
     name: 'NUH REACH North Forms',
     abbrev: 'REACH',
-    color: '#059669',
     category: 'Mental Health',
     totalFields: 0,
     autoFilled: 0,
@@ -2853,7 +2825,6 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
     agency: 'School',
     name: 'Assessment of Student Needs Form',
     abbrev: 'ASN',
-    color: '#9333ea',
     category: 'Mental Health',
     totalFields: 0,
     autoFilled: 0,
@@ -2880,7 +2851,6 @@ export const AGENCY_TEMPLATES: Array<AgencyTemplate> = [
     agency: 'Youth Court',
     name: 'School Report for Court Order',
     abbrev: 'COURT',
-    color: '#374151',
     category: 'Care & Placement',
     totalFields: 0,
     autoFilled: 0,
@@ -3007,37 +2977,6 @@ export const AI_DRAFTS: Record<string, string> = {
     "Jun Kai is not previously known to MSF, the Singapore Police Force, or any other community agency; this Children's Home referral is his first agency-level engagement¹. The school has been the consistent stable touchpoint across Secondary 1 to 3 and intends to remain so regardless of placement outcome — he has positive working relationships with his Year Head Mr Daniel Tan (3 years known), his Form Teacher Mr Ahmad Rizal, and the School Counsellor². The school's view is that any placement decision should preserve continuity of school attendance and counselling where possible; existing trust relationships are likely to be the most stabilising factor in any intervention plan put in place³.",
 }
 
-export const DATA_SOURCES: Array<DataSource> = [
-  {
-    id: 'sc',
-    name: 'School Cockpit',
-    desc: 'Attendance, academics, family details, offences',
-    lastUpdated: '19 Apr 2026',
-    checked: true,
-  },
-  {
-    id: 'eduhub',
-    name: 'EduHub',
-    desc: 'Student biodata, enrolment info',
-    lastUpdated: '19 Apr 2026',
-    checked: true,
-  },
-  {
-    id: 'casesync',
-    name: 'Case Sync',
-    desc: 'Counselling case notes, intervention plans',
-    lastUpdated: '17 Apr 2026',
-    checked: true,
-  },
-  {
-    id: 'tci',
-    name: 'TCI',
-    desc: 'Termly Check-In wellbeing data',
-    lastUpdated: '15 Apr 2026',
-    checked: true,
-  },
-]
-
 // Mutable: empty by default (clean state for demo). The agency-report wizard
 // pushes a freshly-submitted report into this array so the student profile
 // reflects the new "In Review" card without round-tripping a backend.
@@ -3129,13 +3068,6 @@ export function getAgencyLogo(agency: string): string | undefined {
   return undefined
 }
 
-// Legacy export retained for any direct lookups. Prefer getAgencyLogo().
-export const AGENCY_LOGOS: Record<string, string | undefined> = new Proxy(
-  {},
-  {
-    get: (_t, prop: string) => getAgencyLogo(prop),
-  },
-) as Record<string, string | undefined>
 
 // Push a freshly-submitted report onto the mock store and return it. Used by
 // the wizard's "Submit for Principal review" flow.
@@ -3502,7 +3434,7 @@ export function getAgencyReportsByStudent(
 // field-level `source` string already present on `ReportField` plus an
 // optional per-field excerpt override.
 
-export interface SourceExcerpt {
+interface SourceExcerpt {
   system: string
   excerpt: string
   lastUpdated: string

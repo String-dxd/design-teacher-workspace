@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
-  Check,
   ChevronDown,
   ChevronUp,
   Filter,
@@ -10,6 +9,7 @@ import {
   X,
 } from 'lucide-react'
 
+import { DateRangePicker } from './date-range-picker'
 import type {
   FilterCriterion,
   FilterField,
@@ -18,7 +18,9 @@ import type {
 } from '@/types/student'
 import type { FilterFieldOption } from '@/data/filter-config'
 import {
+  LATEST_PERIOD,
   filterFieldConfigs,
+  formatPeriodValue,
   groupLabels,
   groupOrder,
   isFilterComplete,
@@ -26,7 +28,13 @@ import {
 import { useFeatureFlags } from '@/lib/feature-flags'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from '@/components/ui/input-group'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   Popover,
@@ -62,6 +70,8 @@ const multiselectOperatorOptions = [
   { value: 'is' as FilterOperator, label: 'is' },
 ]
 
+const periodOperatorOptions = [{ value: 'is' as FilterOperator, label: 'is' }]
+
 const textOperatorOptions = [
   { value: 'contains' as FilterOperator, label: 'contains' },
   { value: 'not_contains' as FilterOperator, label: 'does not contain' },
@@ -83,9 +93,11 @@ const filterFieldOptions: Array<FilterFieldOption2> = filterFieldConfigs.map(
         ? numericOperatorOptions
         : config.type === 'multiselect'
           ? multiselectOperatorOptions
-          : config.type === 'boolean' || config.type === 'enum'
-            ? booleanOperatorOptions
-            : textOperatorOptions,
+          : config.type === 'period'
+            ? periodOperatorOptions
+            : config.type === 'boolean' || config.type === 'enum'
+              ? booleanOperatorOptions
+              : textOperatorOptions,
   }),
 )
 
@@ -113,6 +125,9 @@ export function MultiFilterPopover({
   const isStudentInsightsView =
     !isEnabled('student-analytics') && !isEnabled('student-analytics-basic')
   const msfUpliftEnabled = isEnabled('msf-uplift-data')
+  const dateRangeFilterEnabled = isEnabled('date-range-filter')
+  const overallPercentageEnabled = isEnabled('overall-percentage')
+  const socialLinksEnabled = isEnabled('social-links')
   const [open, setOpen] = useState(false)
   const [selectorOpen, setSelectorOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -200,11 +215,27 @@ export function MultiFilterPopover({
         (opt) =>
           opt.field !== 'supportedByComLink' &&
           opt.field !== 'supportedByFsc' &&
+          opt.field !== 'parentsConsideringDivorce' &&
           opt.field !== 'nonIntactFamily',
       )
     }
+    if (!dateRangeFilterEnabled) {
+      opts = opts.filter((opt) => opt.field !== 'dateRange')
+    }
+    if (!overallPercentageEnabled) {
+      opts = opts.filter((opt) => opt.field !== 'overallPercentage')
+    }
+    if (!socialLinksEnabled) {
+      opts = opts.filter((opt) => opt.field !== 'socialLinks')
+    }
     return opts
-  }, [isStudentInsightsView, msfUpliftEnabled])
+  }, [
+    isStudentInsightsView,
+    msfUpliftEnabled,
+    dateRangeFilterEnabled,
+    overallPercentageEnabled,
+    socialLinksEnabled,
+  ])
 
   const allFieldOptions = useMemo(
     () => [...visibleFilterFieldOptions, ...importedFieldOptions],
@@ -268,7 +299,9 @@ export function MultiFilterPopover({
         ? ''
         : fieldOption.type === 'multiselect'
           ? []
-          : fieldOption.defaultValue
+          : fieldOption.type === 'period'
+            ? []
+            : fieldOption.defaultValue
     onFiltersChange([
       ...filters,
       {
@@ -295,7 +328,9 @@ export function MultiFilterPopover({
         ? ''
         : fieldOption.type === 'multiselect'
           ? []
-          : fieldOption.defaultValue
+          : fieldOption.type === 'period'
+            ? []
+            : fieldOption.defaultValue
     const newFilters = [...filters]
     newFilters[index] = {
       ...newFilters[index],
@@ -327,7 +362,7 @@ export function MultiFilterPopover({
 
   const handleValueChange = (
     index: number,
-    value: string | number | FilterRangeValue,
+    value: string | number | FilterRangeValue | Array<string>,
   ) => {
     const newFilters = [...filters]
     newFilters[index] = { ...newFilters[index], value }
@@ -360,7 +395,7 @@ export function MultiFilterPopover({
         render={
           <Button
             variant="outline"
-            className={cn('gap-2 aria-expanded:bg-white', className)}
+            className={cn('gap-2 aria-expanded:bg-card', className)}
             aria-label="Filter students"
             aria-expanded={open}
           />
@@ -449,7 +484,7 @@ export function MultiFilterPopover({
                           render={
                             <button
                               type="button"
-                              className="border-input flex h-9 w-[152px] shrink-0 items-center justify-between gap-1.5 rounded-[14px] border bg-white px-3 text-sm outline-none"
+                              className="border-input flex h-9 w-[152px] shrink-0 items-center justify-between gap-1.5 rounded-[14px] border bg-card px-3 text-sm outline-none"
                             />
                           }
                         >
@@ -462,18 +497,19 @@ export function MultiFilterPopover({
                           className="w-[480px] gap-0 p-3"
                           align="start"
                         >
-                          <div className="mb-1 flex items-center gap-2 rounded-lg border border-blue-400 px-3 py-2 focus-within:border-blue-500">
-                            <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
-                            <input
+                          <InputGroup className="mb-1">
+                            <InputGroupAddon align="inline-start">
+                              <Search className="h-4 w-4" />
+                            </InputGroupAddon>
+                            <InputGroupInput
                               ref={fieldSelectorSearchRef}
-                              className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
                               placeholder="Search options"
                               value={fieldSelectorQuery}
                               onChange={(e) =>
                                 setFieldSelectorQuery(e.target.value)
                               }
                             />
-                          </div>
+                          </InputGroup>
                           <ScrollArea className="h-[220px]">
                             <div className="py-1">
                               {rowGroupedFields.map(
@@ -527,7 +563,7 @@ export function MultiFilterPopover({
                       handleOperatorChange(index, value as FilterOperator)
                     }
                   >
-                    <SelectTrigger className="w-[104px] shrink-0 rounded-[14px] bg-white">
+                    <SelectTrigger className="w-[104px] shrink-0 rounded-[14px] bg-card">
                       <SelectValue>
                         {
                           fieldOption?.operators.find(
@@ -553,7 +589,44 @@ export function MultiFilterPopover({
                   <div className="w-[240px] shrink-0">
                     {needsValueInput(filter.operator) && (
                       <>
-                        {fieldOption?.type === 'multiselect' ? (
+                        {fieldOption?.type === 'period' ? (
+                          // Date range (period) picker — hierarchical year/term
+                          (() => {
+                            const selected = Array.isArray(filter.value)
+                              ? filter.value
+                              : []
+                            const triggerLabel = selected.includes(
+                              LATEST_PERIOD,
+                            )
+                              ? formatPeriodValue(LATEST_PERIOD)
+                              : selected.length === 0
+                                ? 'Select option'
+                                : selected.length === 1
+                                  ? formatPeriodValue(selected[0])
+                                  : `${selected.length} selected`
+                            return (
+                              <DateRangePicker
+                                value={selected}
+                                onChange={(v) => handleValueChange(index, v)}
+                                trigger={
+                                  <button
+                                    type="button"
+                                    className={cn(
+                                      'border-input flex h-9 w-full items-center justify-between gap-1.5 rounded-[14px] border bg-card px-3 text-sm outline-none',
+                                      selected.length === 0 &&
+                                        'text-muted-foreground',
+                                    )}
+                                  >
+                                    <span className="flex-1 truncate text-left">
+                                      {triggerLabel}
+                                    </span>
+                                    <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+                                  </button>
+                                }
+                              />
+                            )
+                          })()
+                        ) : fieldOption?.type === 'multiselect' ? (
                           // Multi-select dropdown
                           (() => {
                             const isOpen = openMultiselectIndex === index
@@ -562,11 +635,11 @@ export function MultiFilterPopover({
                               : []
                             const q = multiselectQuery.trim().toLowerCase()
                             const sortedEnumValues = [
-                              ...((fieldOption.enumValues ?? []).includes('-')
-                                ? ['-']
+                              ...((fieldOption.enumValues ?? []).includes('None')
+                                ? ['None']
                                 : []),
                               ...(fieldOption.enumValues ?? []).filter(
-                                (v) => v !== '-',
+                                (v) => v !== 'None',
                               ),
                             ]
                             const visibleOptions = q
@@ -616,7 +689,7 @@ export function MultiFilterPopover({
                                     <button
                                       type="button"
                                       className={cn(
-                                        'border-input flex h-9 w-full items-center justify-between gap-1.5 rounded-[14px] border bg-white px-3 text-sm outline-none',
+                                        'border-input flex h-9 w-full items-center justify-between gap-1.5 rounded-[14px] border bg-card px-3 text-sm outline-none',
                                         selectedValues.length === 0 &&
                                           'text-muted-foreground',
                                       )}
@@ -637,18 +710,19 @@ export function MultiFilterPopover({
                                   align="start"
                                 >
                                   {/* Search */}
-                                  <div className="mb-1 flex items-center gap-2 rounded-lg border border-blue-400 px-3 py-2 focus-within:border-blue-500">
-                                    <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
-                                    <input
+                                  <InputGroup className="mb-1">
+                                    <InputGroupAddon align="inline-start">
+                                      <Search className="h-4 w-4" />
+                                    </InputGroupAddon>
+                                    <InputGroupInput
                                       ref={multiselectSearchRef}
-                                      className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
                                       placeholder="Search filters"
                                       value={multiselectQuery}
                                       onChange={(e) =>
                                         setMultiselectQuery(e.target.value)
                                       }
                                     />
-                                  </div>
+                                  </InputGroup>
                                   {/* Field label */}
                                   <div className="px-3 pt-2 pb-1 text-sm font-medium">
                                     {fieldOption.label}
@@ -661,18 +735,10 @@ export function MultiFilterPopover({
                                           onClick={toggleAll}
                                           className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm hover:bg-accent"
                                         >
-                                          <div
-                                            className={cn(
-                                              'flex h-4 w-4 shrink-0 items-center justify-center rounded border',
-                                              allSelected
-                                                ? 'border-primary bg-primary text-primary-foreground'
-                                                : 'border-input',
-                                            )}
-                                          >
-                                            {allSelected && (
-                                              <Check className="h-3 w-3" />
-                                            )}
-                                          </div>
+                                          <Checkbox
+                                            checked={allSelected}
+                                            className="pointer-events-none"
+                                          />
                                           Select all
                                         </button>
                                       )}
@@ -689,18 +755,10 @@ export function MultiFilterPopover({
                                               checked && 'bg-accent/50',
                                             )}
                                           >
-                                            <div
-                                              className={cn(
-                                                'flex h-4 w-4 shrink-0 items-center justify-center rounded border',
-                                                checked
-                                                  ? 'border-primary bg-primary text-primary-foreground'
-                                                  : 'border-input',
-                                              )}
-                                            >
-                                              {checked && (
-                                                <Check className="h-3 w-3" />
-                                              )}
-                                            </div>
+                                            <Checkbox
+                                              checked={checked}
+                                              className="pointer-events-none"
+                                            />
                                             {v}
                                           </button>
                                         )
@@ -821,7 +879,7 @@ export function MultiFilterPopover({
                               handleValueChange(index, value)
                             }
                           >
-                            <SelectTrigger className="w-full rounded-[14px] bg-white">
+                            <SelectTrigger className="w-full rounded-[14px] bg-card">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -894,16 +952,17 @@ export function MultiFilterPopover({
                   </PopoverTrigger>
                   <PopoverContent className="w-[582px] gap-0 p-3" align="start">
                     {/* Search */}
-                    <div className="mb-1 flex items-center gap-2 rounded-lg border border-blue-400 px-3 py-2 focus-within:border-blue-500">
-                      <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
-                      <input
+                    <InputGroup className="mb-1">
+                      <InputGroupAddon align="inline-start">
+                        <Search className="h-4 w-4" />
+                      </InputGroupAddon>
+                      <InputGroupInput
                         ref={searchRef}
-                        className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
                         placeholder="Search options"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                       />
-                    </div>
+                    </InputGroup>
 
                     {/* List */}
                     <ScrollArea className="h-[220px]">

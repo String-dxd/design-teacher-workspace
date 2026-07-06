@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import {
   Link,
   createFileRoute,
@@ -11,37 +11,28 @@ import {
   ChevronDown,
   Clock,
   Lock,
-  Mail,
   MessageSquare,
   Paperclip,
-  Plus,
   Trash2,
   User,
   Users,
-  X,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { SelectedEntity } from '@/components/comms/entity-selector'
 import type { PGRole } from '@/types/pg-announcement'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
 import { getPGAnnouncementById } from '@/data/mock-pg-announcements'
-import { getStudentById } from '@/data/mock-students'
-import { CLASS_GROUPS } from '@/data/mock-student-groups'
 import { PG_SHORTCUT_PRESETS } from '@/data/pg-shortcuts'
 import { StatusBadge } from '@/components/comms/status-badge'
 import { ReadRate } from '@/components/comms/read-rate'
 import { RecipientReadTable } from '@/components/comms/recipient-read-table'
 import { StaffSelector } from '@/components/comms/staff-selector'
 import { EnquiryEmailSelector } from '@/components/comms/enquiry-email-selector'
-import { MOCK_STAFF } from '@/data/mock-staff'
+
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
+
 import {
   Dialog,
   DialogContent,
@@ -49,7 +40,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog'
 import { cn, stripSalutation } from '@/lib/utils'
 
@@ -108,7 +98,7 @@ function AnnouncementDetailPage() {
     {},
   )
   const [editEnquiryEmail, setEditEnquiryEmail] = useState('')
-  const [editClasses, setEditClasses] = useState<Array<string>>([])
+  const [editClasses, _setEditClasses] = useState<Array<string>>([])
 
   // ---------------------------------------------------------------------------
   // Schedule edit state
@@ -150,19 +140,6 @@ function AnnouncementDetailPage() {
   const noCount = savedData.recipients.filter(
     (r) => r.formResponse === 'no',
   ).length
-  const pendingResponseCount = totalCount - respondedCount
-
-  const uniqueClasses = useMemo(
-    () => [...new Set(savedData.recipients.map((r) => r.classLabel))].sort(),
-    [savedData.recipients],
-  )
-
-  // Class labels available to add (not already in current edit selection)
-  const addableClasses = useMemo(
-    () =>
-      CLASS_GROUPS.map((g) => g.label).filter((l) => !editClasses.includes(l)),
-    [editClasses],
-  )
 
   const postedDate = announcement.postedAt
     ? formatDateTime(announcement.postedAt)
@@ -201,25 +178,6 @@ function AnnouncementDetailPage() {
   // ---------------------------------------------------------------------------
   // Edit handlers
   // ---------------------------------------------------------------------------
-  function startEditing() {
-    setEditTitle(savedData.title)
-    setEditDescription(stripHtml(savedData.description))
-    setEditStaffInCharge(
-      savedData.staffInCharge.map((m) => ({
-        id: m.id,
-        label: m.name,
-        type: 'individual' as const,
-        count: 1,
-      })),
-    )
-    const roleMap: Record<string, PGRole> = {}
-    for (const m of savedData.staffInCharge) roleMap[m.id] = m.role
-    setEditStaffRoles(roleMap)
-    setEditEnquiryEmail(savedData.enquiryEmail)
-    setEditClasses([...uniqueClasses])
-    setIsEditing(true)
-  }
-
   function cancelEditing() {
     setIsEditing(false)
   }
@@ -281,14 +239,6 @@ function AnnouncementDetailPage() {
     setIsEditing(false)
   }
 
-  function removeClass(cls: string) {
-    setEditClasses((prev) => prev.filter((c) => c !== cls))
-  }
-
-  function addClass(cls: string) {
-    setEditClasses((prev) => [...prev, cls].sort())
-  }
-
   return (
     <div className="flex flex-col gap-6 pt-6">
       {/* ── Header ── */}
@@ -324,7 +274,7 @@ function AnnouncementDetailPage() {
                   Posted {postedDate}
                   {' · Daniel Tan'}
                   {isShared && isViewer && (
-                    <span className="ml-2 inline-flex items-center gap-1 text-slate-400">
+                    <span className="ml-2 inline-flex items-center gap-1 text-muted-foreground">
                       <Lock className="h-3 w-3" />
                       Viewer
                     </span>
@@ -334,19 +284,19 @@ function AnnouncementDetailPage() {
               {announcement.status === 'scheduled' &&
                 (isEditingSchedule ? (
                   <div className="mt-2 flex flex-wrap items-center gap-2">
-                    <CalendarClock className="h-3.5 w-3.5 shrink-0 text-amber-600" />
+                    <CalendarClock className="h-3.5 w-3.5 shrink-0 text-amber-11" />
                     <input
                       type="date"
                       value={editScheduleDate}
                       min={new Date().toISOString().split('T')[0]}
                       onChange={(e) => setEditScheduleDate(e.target.value)}
-                      className="rounded-md border border-slate-300 bg-white px-2.5 py-1 text-sm text-foreground outline-none focus:ring-2 focus:ring-blue-300"
+                      className="rounded-md border border-input bg-background px-2.5 py-1 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring"
                     />
                     <input
                       type="time"
                       value={editScheduleTime}
                       onChange={(e) => setEditScheduleTime(e.target.value)}
-                      className="rounded-md border border-slate-300 bg-white px-2.5 py-1 text-sm text-foreground outline-none focus:ring-2 focus:ring-blue-300"
+                      className="rounded-md border border-input bg-background px-2.5 py-1 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring"
                     />
                     <Button
                       size="sm"
@@ -364,7 +314,7 @@ function AnnouncementDetailPage() {
                     </button>
                   </div>
                 ) : (
-                  <p className="mt-1 flex items-center gap-1.5 text-sm text-amber-600">
+                  <p className="mt-1 flex items-center gap-1.5 text-sm text-amber-11">
                     <CalendarClock className="h-3.5 w-3.5" />
                     Scheduled for {scheduledDate}
                     <span className="text-muted-foreground">· Daniel Tan</span>
@@ -372,7 +322,7 @@ function AnnouncementDetailPage() {
                       <button
                         type="button"
                         onClick={startEditingSchedule}
-                        className="ml-1 text-xs font-medium text-blue-600 hover:underline"
+                        className="ml-1 text-xs font-medium text-twblue-11 hover:underline"
                       >
                         Edit
                       </button>
@@ -383,7 +333,7 @@ function AnnouncementDetailPage() {
                 <p className="mt-1 text-sm text-muted-foreground">
                   Not yet sent
                   {isShared && (
-                    <span className="ml-2 inline-flex items-center gap-1 text-slate-400">
+                    <span className="ml-2 inline-flex items-center gap-1 text-muted-foreground">
                       <Users className="h-3 w-3" />
                       Shared
                     </span>
@@ -446,8 +396,8 @@ function AnnouncementDetailPage() {
 
       {/* 30-day file expiry banner — shown whenever the announcement has attachments */}
       {(announcement.attachments?.length ?? 0) > 0 && (
-        <div className="mx-6 mb-2 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          <Clock className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+        <div className="mx-6 mb-2 flex items-start gap-3 rounded-lg border border-amber-6 bg-amber-3 px-4 py-3 text-sm text-amber-12">
+          <Clock className="mt-0.5 h-4 w-4 shrink-0 text-amber-11" />
           <p>
             <span className="font-medium">Files expire after 30 days.</span>{' '}
             Uploaded files and images are automatically removed 30 days after
@@ -474,11 +424,11 @@ function AnnouncementDetailPage() {
                     </span>
                   </p>
                   {unreadCount > 0 ? (
-                    <p className="mt-1 text-sm text-amber-600">
+                    <p className="mt-1 text-sm text-amber-11">
                       {unreadCount} unread
                     </p>
                   ) : (
-                    <p className="mt-1 text-sm text-green-700">All read</p>
+                    <p className="mt-1 text-sm text-lime-11">All read</p>
                   )}
                 </div>
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-twblue-2">
@@ -511,11 +461,11 @@ function AnnouncementDetailPage() {
                       </span>
                     </p>
                     {pendingAckCount > 0 ? (
-                      <p className="mt-1 text-sm text-amber-600">
+                      <p className="mt-1 text-sm text-amber-11">
                         {pendingAckCount} pending
                       </p>
                     ) : (
-                      <p className="mt-1 text-sm text-green-700">
+                      <p className="mt-1 text-sm text-lime-11">
                         All acknowledged
                       </p>
                     )}
@@ -551,7 +501,7 @@ function AnnouncementDetailPage() {
                 </div>
                 <div className="flex items-center gap-6 text-center">
                   <div className="text-center">
-                    <p className="text-3xl font-semibold text-green-700">
+                    <p className="text-3xl font-semibold text-lime-11">
                       {yesCount}
                     </p>
                     <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -559,7 +509,7 @@ function AnnouncementDetailPage() {
                     </p>
                   </div>
                   <div className="text-center">
-                    <p className="text-3xl font-semibold text-rose-600">
+                    <p className="text-3xl font-semibold text-crimson-11">
                       {noCount}
                     </p>
                     <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -581,7 +531,7 @@ function AnnouncementDetailPage() {
           {announcement.status === 'scheduled' && (
             <div className="flex h-40 items-center justify-center rounded-lg border bg-background">
               <div className="flex flex-col items-center gap-2 text-center">
-                <CalendarClock className="h-8 w-8 text-blue-400" />
+                <CalendarClock className="h-8 w-8 text-twblue-11" />
                 <p className="text-sm text-muted-foreground">
                   Read tracking will be available after the announcement is
                   sent.
@@ -678,7 +628,7 @@ function AnnouncementDetailPage() {
 
               {/* Locked content notice */}
               {isEditing && contentLocked && (
-                <p className="flex items-center gap-1.5 rounded-md bg-slate-50 px-3 py-2 text-xs text-muted-foreground">
+                <p className="flex items-center gap-1.5 rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">
                   <Lock className="h-3 w-3 shrink-0" />
                   Title, description, and shortcuts cannot be edited after
                   posting.
@@ -701,9 +651,9 @@ function AnnouncementDetailPage() {
                   ).map((preset) => (
                     <div
                       key={preset.id}
-                      className="flex items-center gap-2.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2"
+                      className="flex items-center gap-2.5 rounded-lg border border-twblue-6 bg-twblue-3 px-3 py-2"
                     >
-                      <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded border border-blue-600 bg-blue-600 text-white">
+                      <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded border border-twblue-9 bg-twblue-9 text-twblue-1">
                         <svg
                           viewBox="0 0 10 8"
                           fill="none"
@@ -716,7 +666,7 @@ function AnnouncementDetailPage() {
                           <path d="M1 4l3 3 5-6" />
                         </svg>
                       </span>
-                      <p className="text-sm font-medium text-blue-900">
+                      <p className="text-sm font-medium text-twblue-12">
                         {preset.composerLabel}
                       </p>
                     </div>
@@ -757,10 +707,10 @@ function AnnouncementDetailPage() {
                   {announcement.questions.map((q, i) => (
                     <div
                       key={q.id}
-                      className="rounded-md bg-slate-50 px-3 py-2.5"
+                      className="rounded-md bg-muted px-3 py-2.5"
                     >
                       <div className="flex items-start gap-2">
-                        <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[10px] font-semibold text-slate-600">
+                        <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-semibold text-muted-foreground">
                           {i + 1}
                         </span>
                         <div className="min-w-0 flex-1">
@@ -772,7 +722,7 @@ function AnnouncementDetailPage() {
                               q.options.map((opt) => (
                                 <span
                                   key={opt}
-                                  className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[11px] text-muted-foreground"
+                                  className="rounded-full border border-border bg-background px-2 py-0.5 text-[11px] text-muted-foreground"
                                 >
                                   {opt}
                                 </span>
@@ -791,8 +741,8 @@ function AnnouncementDetailPage() {
                                 className={cn(
                                   'font-medium',
                                   q.showAfter === 'yes'
-                                    ? 'text-green-700'
-                                    : 'text-rose-600',
+                                    ? 'text-lime-11'
+                                    : 'text-crimson-11',
                                 )}
                               >
                                 {q.showAfter === 'yes' ? 'Yes' : 'No'}
@@ -870,8 +820,8 @@ function AnnouncementDetailPage() {
                             className={cn(
                               'flex items-center gap-0.5 rounded border px-1.5 py-0.5 text-[10px] font-semibold transition-colors',
                               isEditor
-                                ? 'border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100'
-                                : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50',
+                                ? 'border-twblue-6 bg-twblue-3 text-twblue-11 hover:bg-twblue-4'
+                                : 'border-border bg-background text-muted-foreground hover:bg-muted',
                             )}
                           >
                             {isEditor ? 'Editor' : 'Viewer'}
@@ -891,16 +841,16 @@ function AnnouncementDetailPage() {
                         {announcement.staffInCharge.map((m) => (
                           <span
                             key={m.id}
-                            className="inline-flex items-center gap-2 rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium text-slate-700"
+                            className="inline-flex items-center gap-2 rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium text-foreground"
                           >
-                            <User className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                            <User className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                             <span className="flex-1 truncate">{m.name}</span>
                             <span
                               className={cn(
                                 'ml-2 shrink-0 rounded border px-1.5 py-0.5 text-[10px] font-semibold',
                                 m.role === 'editor'
-                                  ? 'border-blue-200 bg-blue-50 text-blue-700'
-                                  : 'border-slate-200 bg-slate-50 text-slate-500',
+                                  ? 'border-twblue-6 bg-twblue-3 text-twblue-11'
+                                  : 'border-border bg-muted text-muted-foreground',
                               )}
                             >
                               {m.role === 'editor' ? 'Editor' : 'Viewer'}
@@ -957,11 +907,11 @@ function AnnouncementDetailPage() {
                       'mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border',
                       deleteMode === 'remove-from-list'
                         ? 'border-primary bg-primary'
-                        : 'border-slate-300',
+                        : 'border-input',
                     )}
                   >
                     {deleteMode === 'remove-from-list' && (
-                      <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-primary-foreground" />
                     )}
                   </span>
                   <div>
@@ -991,11 +941,11 @@ function AnnouncementDetailPage() {
                       'mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border',
                       deleteMode === 'delete-for-everyone'
                         ? 'border-destructive bg-destructive'
-                        : 'border-slate-300',
+                        : 'border-input',
                     )}
                   >
                     {deleteMode === 'delete-for-everyone' && (
-                      <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-destructive-foreground" />
                     )}
                   </span>
                   <div>

@@ -24,11 +24,11 @@ export function ReadRate({
   return (
     <div className={cn('flex items-center gap-2', className)}>
       {/* Progress bar */}
-      <div className="h-1.5 w-20 overflow-hidden rounded-full bg-slate-100">
+      <div className="h-1.5 w-20 overflow-hidden rounded-full bg-muted">
         <div
           className={cn(
             'h-full rounded-full transition-all',
-            isLow ? 'bg-amber-400' : 'bg-primary',
+            isLow ? 'bg-amber-9' : 'bg-primary',
           )}
           style={{ width: `${pct}%` }}
         />
