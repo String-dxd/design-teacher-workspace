@@ -26,6 +26,10 @@ your row when done.
 
 | 019 | Write-stage remounts per student so editable comments/note can't carry over (fixes cross-student data corruption via pager navigation) | P1 | S | — | DONE (v2, reviewer-verified) — keyed remount (`<CycleWriteBody key={studentId} …/>`). Advisor re-ran gates (tsc 0-new/107, tests 65/65, targeted prettier+eslint clean, one file) AND browser-verified BOTH directions: A→B shows B's own comment (no carry-over — the exact v1 failure), B→A shows A's saved text intact (also fixes the stale-`cycle` read). Uncommitted in `worktree-sdp+hdp-report-builder-prototype`; awaiting user commit decision. v1 "resync effect" was BLOCKED at review (passed gates but Tiptap editor still carried over — focus-guarded sync). |
 
+| 020 | Associate labels with the term picker & comments editor (a11y, WCAG 1.3.1) | P2 | S | — | TODO — written at `077d669`; recommend a focused pass with browser AT verification (touches shared `TermSelector`/`RichTextEditor`). |
+| 021 | Characterization tests for `commitCycleReport` + `statusFor` | P2 | S | — | DONE (reviewer-verified) — `hdp-report-commit.test.ts` (3) + `cycle-student-table.test.ts` (7); advisor re-ran: 75/75 tests, 0 new tsc, eslint clean, tests read + assert real behavior. |
+| 022 | Remove dead exports (`classOptions`, `SECTION_FIELD_DEFS`) + rename template to primary-wide | P3 | S | — | TODO — written at `077d669`. |
+
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) |
 REJECTED (with one-line rationale).
 
