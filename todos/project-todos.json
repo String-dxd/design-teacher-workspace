@@ -1,6 +1,6 @@
 {
   "project": "moe-teacher-workspace",
-  "lastUpdated": "2026-07-06T15:20:00.000Z",
+  "lastUpdated": "2026-07-06T15:55:00.000Z",
   "todos": [
     {
       "id": "tw-001",
@@ -305,6 +305,14 @@
       "status": "completed",
       "createdAt": "2026-07-06T15:05:00.000Z",
       "completedAt": "2026-07-06T15:20:00.000Z"
+    },
+    {
+      "id": "tw-034",
+      "title": "Subject story cards in the report document",
+      "description": "Subjects render as collapsible cards: icon + subject + teacher, a deterministic summary sentence built from LO stages (strongest/building phrasing, uniform-stage variants), and LO growth-bar rows behind a tap. Teachers default expanded, parents collapsed. Single-semester view \u2014 progression deferred per user direction. Awaiting-data card unchanged.",
+      "status": "completed",
+      "createdAt": "2026-07-06T15:40:00.000Z",
+      "completedAt": "2026-07-06T15:55:00.000Z"
     }
   ]
 }

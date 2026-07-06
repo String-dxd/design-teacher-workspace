@@ -13,9 +13,12 @@ import type {
   BlockDisplay,
   CoreValueLevel,
   HolisticReport,
+  LearningOutcome,
   LearningOutcomeStatus,
   ReportBlock,
+  SubjectPerformance,
 } from '@/types/report'
+import type { CockpitSubjectSubmission } from '@/data/mock-cockpit-submissions'
 import { RichTextEditor } from '@/components/comms/rich-text-editor'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -62,6 +65,116 @@ const SUBJECT_ICONS = new Map<string, LucideIcon>([
   ['Mathematics', Calculator],
   ['Science', FlaskConical],
 ])
+
+/** Join names conversationally: "Reading", "Reading and Listening",
+ * "Reading, Listening and Writing". */
+function joinNames(names: Array<string>): string {
+  if (names.length <= 1) return names.join('')
+  return `${names.slice(0, -1).join(', ')} and ${names.at(-1) ?? ''}`
+}
+
+/** One deterministic sentence per subject, built from the LO stages — the
+ * parent's entry point before any bars or stage words. */
+function summarizeSubject(
+  first: string,
+  learningOutcomes: Array<LearningOutcome>,
+): string {
+  const staged = learningOutcomes.map((lo) => ({
+    name: lo.name,
+    stage: LO_STAGE_ORDER.indexOf(lo.status),
+  }))
+  const max = Math.max(...staged.map((s) => s.stage))
+  const min = Math.min(...staged.map((s) => s.stage))
+  if (max === min) {
+    const uniform: Record<LearningOutcomeStatus, string> = {
+      Accomplished: `${first} is working confidently and independently across all areas.`,
+      Competent: `${first} is meeting the learning outcomes confidently across all areas.`,
+      Developing: `${first} is making steady progress across all areas.`,
+      Beginning: `${first} is starting out and building foundations.`,
+    }
+    return uniform[LO_STAGE_ORDER[max]]
+  }
+  const top = staged
+    .filter((s) => s.stage === max)
+    .map((s) => s.name)
+    .slice(0, 2)
+  const bottom = staged
+    .filter((s) => s.stage === min)
+    .map((s) => s.name)
+    .slice(0, 2)
+  return `${first} is strongest in ${joinNames(top)}, and is building ${joinNames(bottom)}.`
+}
+
+/** Collapsible per-subject card: sentence first, LO detail on tap. Teachers
+ * start expanded (their job is checking); parents start collapsed. */
+function SubjectCard({
+  subj,
+  subjIdx,
+  studentFirstName,
+  submission,
+  audience,
+  display,
+}: {
+  subj: SubjectPerformance
+  subjIdx: number
+  studentFirstName: string
+  submission?: CockpitSubjectSubmission
+  audience: 'teacher' | 'parent'
+  display?: BlockDisplay
+}) {
+  const [open, setOpen] = useState(audience === 'teacher')
+  const SubjectIcon = SUBJECT_ICONS.get(subj.name) ?? BookOpen
+  return (
+    <div className="rounded-xl border px-3.5 py-3">
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center gap-2 text-left"
+      >
+        <SubjectIcon aria-hidden className="text-primary size-4 shrink-0" />
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-sm font-medium">
+            {subj.name}
+          </span>
+          {submission?.submittedAt && (
+            <span className="text-muted-foreground block truncate text-xs">
+              {submission.teacherName}
+              {audience === 'teacher' &&
+                ` · ${formatDay(submission.submittedAt)}`}
+            </span>
+          )}
+        </span>
+        <ChevronDown
+          aria-hidden
+          className={cn(
+            'text-muted-foreground size-4 shrink-0 transition-transform',
+            open && 'rotate-180',
+          )}
+        />
+      </button>
+      <p className="pt-1.5 text-sm leading-relaxed">
+        {summarizeSubject(studentFirstName, subj.learningOutcomes)}
+      </p>
+      {open && (
+        <div className="mt-2 border-t pt-1.5">
+          {subj.learningOutcomes.map((lo, loIdx) => (
+            <ScaleRow
+              key={lo.name}
+              label={lo.name}
+              expandableDescription={lo.description}
+              stageIndex={LO_STAGE_ORDER.indexOf(lo.status)}
+              totalStages={LO_STAGE_ORDER.length}
+              stageLabel={lo.status}
+              rowIndex={subjIdx * 4 + loIdx}
+              display={display}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 function formatDay(iso: string): string {
   return new Date(iso).toLocaleDateString('en-SG', {
@@ -447,7 +560,7 @@ function PreviewBlock({
             Where {firstName(report.studentName)} is on each learning outcome —
             a stage on the journey, not a grade.
           </p>
-          <div className="flex flex-col gap-4 pt-1">
+          <div className="flex flex-col gap-3 pt-1">
             {report.academic.subjects.map((subj, subjIdx) => {
               const awaiting =
                 showMissingData &&
@@ -455,12 +568,11 @@ function PreviewBlock({
               const submission = submissions.find(
                 (s) => s.subject === subj.name,
               )
-              const SubjectIcon = SUBJECT_ICONS.get(subj.name) ?? BookOpen
               if (awaiting) {
                 return (
                   <div
                     key={subj.name}
-                    className="rounded-lg border border-dashed p-3"
+                    className="rounded-xl border border-dashed px-3.5 py-3"
                   >
                     <p className="text-sm font-medium">{subj.name}</p>
                     <p className="text-muted-foreground text-sm">
@@ -471,34 +583,15 @@ function PreviewBlock({
                 )
               }
               return (
-                <div key={subj.name} className="flex flex-col gap-1">
-                  <div className="flex items-baseline gap-2">
-                    <SubjectIcon
-                      aria-hidden
-                      className="text-primary size-4 shrink-0 self-center"
-                    />
-                    <p className="text-sm font-medium">{subj.name}</p>
-                    {submission?.submittedAt && (
-                      <p className="text-muted-foreground text-xs">
-                        {submission.teacherName}
-                        {audience === 'teacher' &&
-                          ` · ${formatDay(submission.submittedAt)}`}
-                      </p>
-                    )}
-                  </div>
-                  {subj.learningOutcomes.map((lo, loIdx) => (
-                    <ScaleRow
-                      key={lo.name}
-                      label={lo.name}
-                      expandableDescription={lo.description}
-                      stageIndex={LO_STAGE_ORDER.indexOf(lo.status)}
-                      totalStages={LO_STAGE_ORDER.length}
-                      stageLabel={lo.status}
-                      rowIndex={subjIdx * 4 + loIdx}
-                      display={block.display}
-                    />
-                  ))}
-                </div>
+                <SubjectCard
+                  key={subj.name}
+                  subj={subj}
+                  subjIdx={subjIdx}
+                  studentFirstName={firstName(report.studentName)}
+                  submission={submission}
+                  audience={audience}
+                  display={block.display}
+                />
               )
             })}
           </div>
