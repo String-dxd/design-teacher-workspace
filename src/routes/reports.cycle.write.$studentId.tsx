@@ -43,6 +43,14 @@ export const Route = createFileRoute('/reports/cycle/write/$studentId')({
 
 function CycleWritePage() {
   const { studentId } = Route.useParams()
+  // key forces a full remount when the active student changes, so per-student
+  // editable state (comments/note) and the Tiptap editor content re-initialize
+  // cleanly and loadCycle re-reads — otherwise the previous student's text
+  // carries over (same-route param change re-renders, it does not remount).
+  return <CycleWriteBody key={studentId} studentId={studentId} />
+}
+
+function CycleWriteBody({ studentId }: { studentId: string }) {
   const search = Route.useSearch()
   const navigate = useNavigate()
   const builderEnabled = useFeatureFlag('hdp-reports')

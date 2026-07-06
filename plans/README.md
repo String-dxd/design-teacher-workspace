@@ -24,8 +24,66 @@ your row when done.
 | 013 | Color sweep: charts & SVG (Phase 11; centralize ~90 chart literals into `src/lib/chart-colors.ts`; visual-review gated) | P3 | M | 010, 011, 012 | DONE — branch `advisor/color-sweep`, chart hex centralized (chrome→slate vars, series→named consts), gates green (build 0 / tsc 111 / vitest 37-16), 2026-07-01. Light-mode verified; **dark-mode + Radix-ifying reserved series hues pending the dark-mode toggle (deferred)** |
 | 018 | HDP "Report Builder" prototype (P1) — feature-flagged builder (section toggle/reorder/viz) + generation + P1 parents-first sharing, aimed at the "would use over SC" bet; test track (A0–A5) then demo track (B1–B3) | P1 (test) / P2 (demo) | L | `holistic-reports` flag (exists) | TEST TRACK DONE (verified) — branch `worktree-sdp+hdp-report-builder-prototype`. Built + verified via the tfx-design-ui harness (Phases 1–6). Ships: flags, `report-layouts.ts`, `reports.build` split-view builder, shared `ReportPreview`, inline Suggest, parents-first share + parent guest view (layout persisted), one-door entry, profile wizard hidden, admin Save. Evaluator verdict: **pass-with-findings** → all 3 blocking L1s fixed (TYP-2/3 label sizes, A11Y-9 guest title); LAY-2 320px confirmed. Gates: build/tsc no-regress (111), a11y-static clean. Decision record + verbatim verdict: `docs/decisions/report-builder.md`. Ratchet: proposed "sanitise shared user-authored HTML" anti-pattern. **Demo track B1–B3 (bulk, extended holistic, gamified secondary) not started.** Uncommitted on the branch. |
 
+| 019 | Write-stage remounts per student so editable comments/note can't carry over (fixes cross-student data corruption via pager navigation) | P1 | S | — | DONE (v2, reviewer-verified) — keyed remount (`<CycleWriteBody key={studentId} …/>`). Advisor re-ran gates (tsc 0-new/107, tests 65/65, targeted prettier+eslint clean, one file) AND browser-verified BOTH directions: A→B shows B's own comment (no carry-over — the exact v1 failure), B→A shows A's saved text intact (also fixes the stale-`cycle` read). Uncommitted in `worktree-sdp+hdp-report-builder-prototype`; awaiting user commit decision. v1 "resync effect" was BLOCKED at review (passed gates but Tiptap editor still carried over — focus-guarded sync). |
+
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) |
 REJECTED (with one-line rationale).
+
+## Round 5 — HDP branch hardening audit (2026-07-06)
+
+Branch-scoped `/improve` over the whole HDP body of work (33 files, commit `a7c534b`),
+fanned out to three fresh-context audit agents (correctness/state, a11y/UI, tests/tech-debt)
+to counter author bias, then vetted against the code.
+
+**Planned & attempted:**
+- **019** — the one confirmed data-corruption bug: the Write-stage pager re-renders the route
+  rather than remounting it, so `useState` never reseeds and the previous student's
+  comments/parent-note get autosaved + committed under the next student.
+  - **v1 (resync effect) BLOCKED at review.** An executor implemented it faithfully; it passed
+    tsc/tests/lint but the **advisor's browser review caught** that it did NOT fix the visible
+    bug: the plain-textarea note reset, but the Tiptap comments editor kept the previous
+    student's text (its `value`→content sync is guarded by `!hasFocus()`, and the `cycle` memo
+    is stale after writes). Reverted.
+  - **v2 (keyed remount) written**, not yet executed: give the Write body `key={studentId}` so
+    it remounts per student — fresh editor content, fresh `loadCycle`. Focus-independent.
+
+**Vetted findings ready to plan on request (not yet written):**
+- **a11y batch** — form labels not associated (`TermSelector` and `RichTextEditor` receive an
+  `htmlFor` id they don't forward: `reports.index.tsx:820`, `report-preview.tsx:255`); plus
+  focus-move + `aria-live` on Write-stage student navigation.
+- **tests** — characterization tests for `commitCycleReport` (single commit point, untested) and
+  `statusFor` (`cycle-student-table.tsx:23`, pure, drives hub metrics).
+- **cleanup** — remove dead exports `classOptions` (`mock-students.ts:5427`) and
+  `SECTION_FIELD_DEFS` (`report-layouts.ts:87`); rename template `'P1 Holistic Development'`
+  → primary-wide (hub now covers P1–P6; `report-layouts.ts:168`).
+
+## Findings considered and rejected (Round 5)
+
+- **Bulk-share stale-closure "bug"** (`reports.index.tsx:789`): the share dialog is a modal
+  `AlertDialog` and `setShareOpen(false)` fires only inside the timeout, so no term/class switch
+  can interleave during the 600ms window. Not reproducible through the UI.
+- **Chip contrast below AA** (`report-preview.tsx:24`): already fixed — chips use step-12/twblue-11
+  (measured 5.0–10.5:1). Agent misread the explanatory code comment as a live failure.
+- **Unused `useFeatureFlags`/`isEnabled`** (`student-profile.tsx:718`): `isEnabled` is used at
+  line 1097. Not dead.
+- **`dangerouslySetInnerHTML` XSS** (`report-preview.tsx:280`) and **P3–P6 show LO descriptors,
+  not grades**: real but already decided/by-design for the prototype and filed as standards
+  ratchet issues #26 (sanitise shared HTML) and #27 (domain-content authenticity). Not re-planned.
+- **Assorted low/speculative edge cases** (empty-class term persistence, detail-vs-write pager
+  ordering, memo identity, dl/dd reading order, title-on-acknowledge, `as ClassItem` casts,
+  state-machine invariant doc): noted, below the leverage bar for a prototype.
+
+### Executor-tooling incident (2026-07-06)
+
+Two dispatch problems worth recording so the next run avoids them:
+1. `isolation: "worktree"` branches a fresh worktree from `main`, which does **not** contain this
+   feature branch's files — the isolated executor correctly stopped ("file not found on this
+   history"). Isolated execution isn't usable for a plan whose current-state lives only on the
+   feature branch; run the executor in-tree instead (and gate by leaving changes uncommitted).
+2. An in-tree executor ran `bun run check` (which is repo-wide `prettier --write .`), reformatting
+   ~45 unrelated files, then "restored scope" via `git checkout -- <files>` and **deleted this
+   session's untracked plan docs** (019 + reverted README). Fix applied here: plans now tell the
+   executor to use targeted `prettier --check`/`eslint` on the single file, never `bun run check`.
 
 > **Numbering note**: 014–017 (dead-code/import cleanup) live on the unmerged `advisor/deadcode-plans`
 > branch and are not present on this branch. 018 skips ahead deliberately to stay monotonic across the
