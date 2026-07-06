@@ -1,6 +1,6 @@
 {
   "project": "moe-teacher-workspace",
-  "lastUpdated": "2026-07-06T17:30:00.000Z",
+  "lastUpdated": "2026-07-06T17:55:00.000Z",
   "todos": [
     {
       "id": "tw-001",
@@ -345,6 +345,14 @@
       "status": "completed",
       "createdAt": "2026-07-06T17:20:00.000Z",
       "completedAt": "2026-07-06T17:30:00.000Z"
+    },
+    {
+      "id": "tw-039",
+      "title": "Policy LO copy + growth-ramp pill colours",
+      "description": "P1 learning-outcome names and statements replaced with the policy wording from the school HDP sample (English Speaking/Reading/Listening, Chinese incl. Reading aloud, Maths Number sense/Computation/Geometry/Data handling, Social Studies) in a P1-only outcome map so secondary is untouched. Stage pills recoloured to the Option A growth ramp: outlined neutral Beginning, amber Developing, light lime Competent, saturated lime Accomplished; quality levels mapped across the same ramp.",
+      "status": "completed",
+      "createdAt": "2026-07-06T17:45:00.000Z",
+      "completedAt": "2026-07-06T17:55:00.000Z"
     }
   ]
 }

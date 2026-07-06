@@ -52,23 +52,24 @@ const LO_STAGE_ORDER: Array<LearningOutcomeStatus> = [
   'Accomplished',
 ]
 
-// Stage pills — one blue family, deeper tint = further along the ladder, so
-// the palette reads as depth on a journey rather than good/bad grading. The
-// top stage earns the solid brand blue (the document's one vibrant moment per
-// row); the rest step down through the tints.
+// Stage pills — growth ramp, seed to bloom: Beginning is a quiet outlined
+// seed, Developing warms to amber, Competent turns light lime, Accomplished
+// blooms into saturated lime. A nature progression with no red anywhere, so
+// it reads as growth, not grading — and it leaves blue to the app's
+// interactive elements.
 const LO_PILL_CLASS: Record<LearningOutcomeStatus, string> = {
-  Accomplished: 'bg-twblue-9 text-white',
-  Competent: 'bg-twblue-5 text-twblue-12',
-  Developing: 'bg-twblue-3 text-twblue-11',
-  Beginning: 'bg-muted text-muted-foreground',
+  Accomplished: 'bg-lime-9 text-lime-12',
+  Competent: 'bg-lime-3 text-lime-12',
+  Developing: 'bg-amber-3 text-amber-12',
+  Beginning: 'text-muted-foreground border bg-transparent',
 }
 
 const QUALITY_PILL_CLASS: Record<CoreValueLevel, string> = {
-  'Demonstrates Very Strongly': 'bg-twblue-9 text-white',
-  'Demonstrates Strongly': 'bg-twblue-5 text-twblue-12',
-  Demonstrates: 'bg-twblue-4 text-twblue-12',
-  'Regularly Shows': 'bg-twblue-3 text-twblue-11',
-  Beginning: 'bg-muted text-muted-foreground',
+  'Demonstrates Very Strongly': 'bg-lime-9 text-lime-12',
+  'Demonstrates Strongly': 'bg-lime-4 text-lime-12',
+  Demonstrates: 'bg-lime-3 text-lime-12',
+  'Regularly Shows': 'bg-amber-3 text-amber-12',
+  Beginning: 'text-muted-foreground border bg-transparent',
 }
 
 const SUBJECT_ICONS = new Map<string, LucideIcon>([

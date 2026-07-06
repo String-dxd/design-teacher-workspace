@@ -264,11 +264,67 @@ const SUBJECT_OUTCOMES: Record<
   ],
 }
 
-// P1-only subjects that don't appear in the shared (secondary) outcome set.
-const P1_ONLY_OUTCOMES: Record<
+// P1 learning-outcome statements — policy wording taken verbatim from the
+// school's P1 HDP sample. Kept separate from the shared secondary outcome set
+// so secondary reports are unaffected.
+const P1_OUTCOMES: Record<
   string,
   Array<{ name: string; description: string }>
 > = {
+  'English Language': [
+    {
+      name: 'Speaking',
+      description:
+        'Speak clearly to express their thoughts, feelings and ideas.',
+    },
+    {
+      name: 'Reading',
+      description:
+        'Demonstrate basic word recognition skills (e.g. know the letters of the alphabet; able to pronounce words accurately).',
+    },
+    {
+      name: 'Listening',
+      description: 'Listen attentively and follow simple instructions.',
+    },
+  ],
+  'Chinese Language': [
+    {
+      name: 'Listening',
+      description:
+        'Listen attentively to short, simple spoken content related to daily life.',
+    },
+    {
+      name: 'Speaking',
+      description:
+        'Speak with correct pronunciation using vocabulary and sentence structures from Primary 1 texts.',
+    },
+    {
+      name: 'Reading',
+      description: 'Recognise characters taught in Primary 1.',
+    },
+    {
+      name: 'Reading aloud',
+      description: 'Read aloud Primary 1 texts with accuracy.',
+    },
+  ],
+  Mathematics: [
+    {
+      name: 'Number sense',
+      description: 'Understand addition and subtraction.',
+    },
+    {
+      name: 'Computation',
+      description: 'Add and subtract numbers.',
+    },
+    {
+      name: 'Geometry',
+      description: 'Identify, name, describe and sort shapes.',
+    },
+    {
+      name: 'Data handling',
+      description: 'Read and interpret picture graphs.',
+    },
+  ],
   'Social Studies': [
     {
       name: 'Identity',
@@ -286,8 +342,6 @@ const P1_ONLY_OUTCOMES: Record<
   ],
 }
 
-const ALL_OUTCOMES = { ...SUBJECT_OUTCOMES, ...P1_ONLY_OUTCOMES }
-
 // Lower primary (P1–P2) reports grade LOs for languages, Maths and Social
 // Studies — Science starts at P3; Music/Art/PE are not graded LO subjects at P1.
 const LOWER_PRIMARY_SUBJECTS = [
@@ -301,11 +355,13 @@ function generateSubjects(
   student: Student,
   seed: number,
 ): Array<SubjectPerformance> {
-  const subjectNames = /^P[12]/.test(student.class)
+  const isLowerPrimary = /^P[12]/.test(student.class)
+  const subjectNames = isLowerPrimary
     ? LOWER_PRIMARY_SUBJECTS
     : Object.keys(SUBJECT_OUTCOMES)
+  const outcomeMap = isLowerPrimary ? P1_OUTCOMES : SUBJECT_OUTCOMES
   return subjectNames.map((name, i) => {
-    const outcomes = ALL_OUTCOMES[name]
+    const outcomes = outcomeMap[name]
     const learningOutcomes: Array<LearningOutcome> = outcomes.map((o, j) => {
       const statusSeed = seed + i * 7 + j * 3 + student.overallPercentage
       let statusIdx: number
