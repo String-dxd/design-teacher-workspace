@@ -4,7 +4,6 @@ import {
   BookOpen,
   Calendar,
   ChevronRight,
-  Clock,
   Eye,
   EyeOff,
   FileText,
@@ -500,17 +499,6 @@ const AGENCY_STATUS_CONFIG: Record<
     label: 'Approved',
     className: 'bg-lime-3 text-lime-11 hover:bg-lime-3',
   },
-}
-
-function addBusinessDaysSimple(from: Date, days: number): Date {
-  const d = new Date(from)
-  let added = 0
-  while (added < days) {
-    d.setDate(d.getDate() + 1)
-    const dow = d.getDay()
-    if (dow !== 0 && dow !== 6) added++
-  }
-  return d
 }
 
 function AgencyReportRow({ report }: { report: AgencyReport }) {
