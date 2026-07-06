@@ -9,7 +9,10 @@ import type { ReportBlock, ReportLayout } from '@/types/report'
 const templateKey = (id: string) => `hdp_template_${id}`
 const shareMsgKey = (reportId: string) => `hdp_share_msg_${reportId}`
 
-export function saveTemplateLayout(templateId: string, layout: ReportLayout): void {
+export function saveTemplateLayout(
+  templateId: string,
+  layout: ReportLayout,
+): void {
   if (typeof window === 'undefined') return
   try {
     localStorage.setItem(templateKey(templateId), JSON.stringify(layout))

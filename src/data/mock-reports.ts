@@ -27,7 +27,6 @@ import type {
 import type { Student } from '@/types/student'
 
 const TERMS: Array<Term> = ['Term 1', 'Term 2', 'Term 3', 'Term 4']
-const P1_TERMS: Array<Term> = ['Semester 1', 'Semester 2']
 const CURRENT_ACADEMIC_YEAR = 2025
 
 /**
@@ -163,13 +162,6 @@ const OUTCOME_STATUSES: Array<LearningOutcomeStatus> = [
   'Beginning',
 ]
 
-const P1_OUTCOME_STATUSES: Array<LearningOutcomeStatus> = [
-  'Exceeding',
-  'Competent',
-  'Competent',
-  'Developing',
-]
-
 const SUBJECT_OUTCOMES: Record<
   string,
   Array<{ name: string; description: string }>
@@ -178,36 +170,34 @@ const SUBJECT_OUTCOMES: Record<
     {
       name: 'Speaking',
       description:
-        'Speak clearly to express their thoughts, feelings and ideas.',
+        'Speak clearly and confidently to express thoughts and ideas.',
     },
     {
       name: 'Reading',
-      description:
-        'Demonstrate basic word recognition skills (e.g. know the letters of the alphabet; able to pronounce words accurately).',
+      description: 'Read and comprehend a variety of texts with fluency.',
+    },
+    {
+      name: 'Writing',
+      description: 'Write creatively and accurately for different purposes.',
     },
     {
       name: 'Listening',
-      description: 'Listen attentively and follow simple instructions.',
+      description:
+        'Listen attentively and respond appropriately to spoken language.',
     },
   ],
   'Chinese Language': [
     {
-      name: 'Listening',
-      description:
-        'Listen attentively to short, simple spoken content related to daily life.',
+      name: 'Reading Comprehension',
+      description: 'Reads and comprehends Chinese passages',
     },
     {
-      name: 'Speaking',
-      description:
-        'Speak with correct pronunciation using vocabulary and sentence structures from Primary 1 texts.',
+      name: 'Writing',
+      description: 'Writes coherent compositions in Chinese',
     },
     {
-      name: 'Reading',
-      description: 'Recognise characters taught in Primary 1.',
-    },
-    {
-      name: 'Reading aloud',
-      description: 'Read aloud Primary 1 texts with accuracy.',
+      name: 'Oral & Listening',
+      description: 'Listens and responds appropriately in Chinese',
     },
   ],
   Mathematics: [
@@ -286,20 +276,25 @@ function generateSubjects(
   student: Student,
   seed: number,
 ): Array<SubjectPerformance> {
-  const isLowerPrimary = /^P[12]/.test(student.class)
-  const subjectNames = isLowerPrimary
+  const subjectNames = /^P[12]/.test(student.class)
     ? LOWER_PRIMARY_SUBJECTS
     : Object.keys(SUBJECT_OUTCOMES)
-  const statuses = isLowerPrimary ? P1_OUTCOME_STATUSES : OUTCOME_STATUSES
   return subjectNames.map((name, i) => {
     const outcomes = SUBJECT_OUTCOMES[name]
     const learningOutcomes: Array<LearningOutcome> = outcomes.map((o, j) => {
       const statusSeed = seed + i * 7 + j * 3 + student.overallPercentage
-      const statusIdx = statusSeed % statuses.length
+      let statusIdx: number
+      if (student.overallPercentage >= 80) {
+        statusIdx = statusSeed % 2 // Accomplished or Competent
+      } else if (student.overallPercentage >= 60) {
+        statusIdx = statusSeed % 3 // Accomplished, Competent, or Developing
+      } else {
+        statusIdx = 1 + (statusSeed % 3) // Competent, Developing, or Beginning
+      }
       return {
         name: o.name,
         description: o.description,
-        status: statuses[statusIdx],
+        status: OUTCOME_STATUSES[statusIdx],
       }
     })
     return { name, learningOutcomes }
@@ -792,21 +787,13 @@ function generateHolisticData(
   }
 }
 
-function getTermIndex(term: Term): number {
-  if (term === 'Semester 1') return 0
-  if (term === 'Semester 2') return 1
-  const idx = TERMS.indexOf(term)
-  return idx >= 0 ? idx : 0
-}
-
 export function generateReportFromStudent(
   student: Student,
   term: Term,
   academicYear: number,
 ): HolisticReport {
-  const termIndex = getTermIndex(term)
-  const termSlug = term.toLowerCase().replace(' ', '-')
-  const reportId = `${student.id}-${academicYear}-${termSlug}`
+  const termIndex = TERMS.indexOf(term)
+  const reportId = `${student.id}-${academicYear}-${termIndex + 1}`
 
   // Use a simple hash from student id and term for deterministic random statuses
   const seed = student.id.charCodeAt(0) + termIndex
@@ -821,12 +808,7 @@ export function generateReportFromStudent(
     schoolName: student.schoolName,
     term,
     academicYear,
-    generatedAt:
-      term === 'Semester 1'
-        ? new Date(academicYear, 4, 15)
-        : term === 'Semester 2'
-          ? new Date(academicYear, 10, 15)
-          : new Date(academicYear, termIndex * 3 + 2, 15),
+    generatedAt: new Date(academicYear, termIndex * 3 + 2, 15),
     schoolLevel,
     academic: {
       overallPercentage: student.overallPercentage,
@@ -855,7 +837,7 @@ export function generateReportFromStudent(
       .filter(Boolean)
       .join(' '),
     ...generateConsistentStatuses(
-      student.id.charCodeAt(0) + termIndex,
+      student.id.charCodeAt(0) + (TERMS.length - 1 - termIndex),
       isSecondary,
     ),
     nric: student.nric,
@@ -875,24 +857,13 @@ function generateAllReports(): Array<HolisticReport> {
   const reports: Array<HolisticReport> = []
 
   for (const student of mockStudents) {
-    const isPrimary = getSchoolLevel(student.class) === 'primary'
-
-    if (isPrimary) {
-      // P1 students: pre-generate Semester 1 only so the wizard can generate Semester 2
-      for (const term of P1_TERMS.slice(0, 1)) {
-        reports.push(
-          generateReportFromStudent(student, term, CURRENT_ACADEMIC_YEAR),
-        )
-      }
-    } else {
-      // Secondary: first 5 students only have Terms 1-2 so the wizard can generate 3-4
-      const studentIdx = mockStudents.indexOf(student)
-      const termsToGenerate = studentIdx < 5 ? TERMS.slice(0, 2) : TERMS
-      for (const term of termsToGenerate) {
-        reports.push(
-          generateReportFromStudent(student, term, CURRENT_ACADEMIC_YEAR),
-        )
-      }
+    // First 5 students only have Terms 1-2 generated, so the wizard can generate 3-4
+    const studentIdx = mockStudents.indexOf(student)
+    const termsToGenerate = studentIdx < 5 ? TERMS.slice(0, 2) : TERMS
+    for (const term of termsToGenerate) {
+      reports.push(
+        generateReportFromStudent(student, term, CURRENT_ACADEMIC_YEAR),
+      )
     }
   }
 

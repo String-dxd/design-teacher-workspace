@@ -4,6 +4,7 @@ import { CheckCircle, Send } from 'lucide-react'
 import { toast } from 'sonner'
 
 import type { HolisticReport } from '@/types/report'
+import type { SharedReport } from '@/lib/hdp-template-store'
 import { ReportOverviewTab } from '@/components/reports/report-overview-tab'
 import { AcademicTab } from '@/components/reports/academic-tab'
 import { HolisticTab } from '@/components/reports/holistic-tab'
@@ -12,7 +13,6 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { getReportById } from '@/data/mock-reports'
-import type { SharedReport } from '@/lib/hdp-template-store'
 import { loadShareMessage, loadSharedReport } from '@/lib/hdp-template-store'
 
 export const Route = createFileRoute('/_guest/report-view/$token')({

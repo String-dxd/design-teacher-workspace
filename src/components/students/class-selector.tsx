@@ -56,10 +56,8 @@ export function ClassSelector({
     <Combobox
       items={CLASS_ITEMS}
       value={selected}
-      onValueChange={(item) =>
-        onValueChange((item as ClassItem | null)?.value ?? 'all')
-      }
-      itemToStringLabel={(item) => (item as ClassItem).label}
+      onValueChange={(item) => onValueChange(item?.value ?? 'all')}
+      itemToStringLabel={(item) => item.label}
       isItemEqualToValue={(a, b) =>
         (a as ClassItem | null)?.value === (b as ClassItem | null)?.value
       }
