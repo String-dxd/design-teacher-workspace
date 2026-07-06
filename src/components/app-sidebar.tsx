@@ -217,7 +217,7 @@ export function AppSidebar() {
   const [feedbackOpen, setFeedbackOpen] = React.useState(false)
   const [showCoachMark, setShowCoachMark] = React.useState(false)
   const postsEnabled = useFeatureFlag('posts')
-  const holisticReportsEnabled = useFeatureFlag('holistic-reports')
+  const hdpReportsEnabled = useFeatureFlag('hdp-reports')
   const parentsGatewayEnabled = useFeatureFlag('parents-gateway')
   const studentAnalyticsEnabled = useFeatureFlag('student-analytics')
   const studentAnalyticsBasicEnabled = useFeatureFlag('student-analytics-basic')
@@ -263,7 +263,7 @@ export function AppSidebar() {
     items.filter((item) => {
       if (!item.featureFlag) return true
       if (item.featureFlag === 'posts') return postsEnabled
-      if (item.featureFlag === 'holistic-reports') return holisticReportsEnabled
+      if (item.featureFlag === 'hdp-reports') return hdpReportsEnabled
       if (item.featureFlag === 'parents-gateway') return parentsGatewayEnabled
       if (item.featureFlag === 'student-groups') return studentGroupsEnabled
       return true

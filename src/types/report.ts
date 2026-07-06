@@ -171,6 +171,21 @@ export interface HolisticData {
   cca: Array<CCAInfo>
 }
 
+// Report Builder layout model.
+// The layout is a "template of intent": the ordered set of sections a report shows.
+// A teacher's build persists it on their report instance; an admin template persists
+// it as the shared definition. P1 renders its curated sections as-is; secondary bulk
+// (out of the test-track scope) renders layout ∩ available-data.
+export interface ReportBlock {
+  key: string // matches a P1_SECTION_DEFS key in src/data/report-layouts.ts
+  enabled: boolean
+  order: number
+}
+
+export interface ReportLayout {
+  blocks: Array<ReportBlock>
+}
+
 export interface HolisticReport {
   id: string
   studentId: string
@@ -197,4 +212,8 @@ export interface HolisticReport {
   coFormTeacher: string | null
   promotionStatus: string | null
   attendance: AttendanceData
+  // Optional — reports built with the Report Builder carry their section layout so
+  // the detail + parent share views render exactly what was built. Older reports
+  // without one fall back to a default layout at render time.
+  layout?: ReportLayout
 }

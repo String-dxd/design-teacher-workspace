@@ -33,9 +33,120 @@ your row when done.
 | 022 | React correctness quickies: stable keys on editable lists, keyboard-accessible file dropzone, consolidate 5 column-flag-sync effects into 1 | P2 | M | 018 | DONE — executor-run in worktree, 3 commits (`ab1b0f9`, `13260be`, `01c4845`) branch `advisor/022-react-quickies`, reviewer-verified 2026-07-03 (tsc 41 / vitest 44-16 incl. 7 new `apply-flag-columns` tests / build 0 / scope clean / A/B parity proof: old-vs-new rendered column headers byte-identical). Step 3 was reviewer-amended after a correct executor STOP: spec gained `position: before\|after` (3 of 4 effects insert AFTER their anchor) and the imported-columns effect stays separate (different shape) — file now has exactly 2 column-sync effects. MERGED to main 2026-07-03 (merge-commit per plan; post-merge gates green: tsc 41 / vitest 62-6 / build 0). Pre-existing issues found & left alone: (a) `announcements.new.tsx` ~1568 hardcodes `websiteLinks: []` on submit instead of using state — likely real bug, worth a fix; (b) the PHOTO dropzone (~2460) has the same mouse-only a11y gap the file dropzone had — natural follow-up; (c) dev-server-only 307 on plain `/announcements/new` URL (`?resume=false` works) — vite dev middleware quirk; (d) initializer-vs-effect placement discrepancy for `overallPercentage` when `socialLinks` is off (pre-existing, preserved for parity) — noted for plan 023. NOTE: `_key` now serializes into saved drafts (harmless, backward-compatible both directions) — relevant to 023's characterization tests. |
 | 023 | SPIKE (tests + design doc only): characterize draft save/restore, decomposition design for `announcements.new.tsx` (2.7k lines / 41 useState) + `agency-report.new.tsx` (3.7k / 35) | P3 | L | 018, 019, 022 | DONE — executor-run in worktree, 2 commits (`11f3e68`, `411c2d3`) branch `advisor/023-god-component-spike`, reviewer-verified 2026-07-03 (15 draft-storage characterization tests incl. 25-field autosave tripwire verified against the live payload; vitest deterministic 52-6 across 3 runs; tsc 41; zero route-file changes). Deliverable: `docs/plans/2026-07-03-024-announcements-new-decomposition.md` — 7 risk-ordered migration slices for `announcements.new.tsx`, NO-GO on whole-file agency-report decomposition (already reasonably split; scoped `useReportAnswers()` only when ReportForm next grows). **Major test-baseline finding**: the long-standing "37 pass / 16 fail" baseline was 6 real `imported-columns.test.ts` failures + 10 `draft-storage.test.ts` failures caused by a pre-existing vitest/jsdom/Node race (`globalThis.localStorage` intermittently undefined per worker). A test-local MemoryStorage stub (scoped to draft-storage.test.ts only) makes that file deterministic — post-023 baseline is **52 pass / 6 fail**. Follow-ups: fix the 6 real imported-columns failures; consider the same stub (or a vitest setup file) for imported-columns.test.ts. MERGED to main 2026-07-03 (merge-commit per plan; post-merge gates green: tsc 41 / vitest 62-6 / build 0). |
 
+### HDP reporting-cycle lineage (plan files `018-hdp-*` … `025-*`)
+
+> Authored in parallel with the design-system plans above and **reusing numbers 018–023** — these are distinct plans, disambiguated by filename slug (e.g. `018-hdp-report-builder-prototype.md` vs `018-ssr-hydration-mismatches.md`). Merged to main via PR #159.
+
+| Plan | Title | Priority | Effort | Depends on | Status |
+|------|-------|----------|--------|------------|--------|
+| 018 | HDP "Report Builder" prototype (P1) — feature-flagged builder (section toggle/reorder/viz) + generation + P1 parents-first sharing, aimed at the "would use over SC" bet; test track (A0–A5) then demo track (B1–B3) | P1 (test) / P2 (demo) | L | `holistic-reports` flag (exists) | TEST TRACK DONE (verified) — branch `worktree-sdp+hdp-report-builder-prototype`. Built + verified via the tfx-design-ui harness (Phases 1–6). Ships: flags, `report-layouts.ts`, `reports.build` split-view builder, shared `ReportPreview`, inline Suggest, parents-first share + parent guest view (layout persisted), one-door entry, profile wizard hidden, admin Save. Evaluator verdict: **pass-with-findings** → all 3 blocking L1s fixed (TYP-2/3 label sizes, A11Y-9 guest title); LAY-2 320px confirmed. Gates: build/tsc no-regress (111), a11y-static clean. Decision record + verbatim verdict: `docs/decisions/report-builder.md`. Ratchet: proposed "sanitise shared user-authored HTML" anti-pattern. **Demo track B1–B3 (bulk, extended holistic, gamified secondary) not started.** Uncommitted on the branch. |
+| 019 | Write-stage remounts per student so editable comments/note can't carry over (fixes cross-student data corruption via pager navigation) | P1 | S | — | DONE (v2, reviewer-verified) — keyed remount (`<CycleWriteBody key={studentId} …/>`). Advisor re-ran gates (tsc 0-new/107, tests 65/65, targeted prettier+eslint clean, one file) AND browser-verified BOTH directions: A→B shows B's own comment (no carry-over — the exact v1 failure), B→A shows A's saved text intact (also fixes the stale-`cycle` read). Uncommitted in `worktree-sdp+hdp-report-builder-prototype`; awaiting user commit decision. v1 "resync effect" was BLOCKED at review (passed gates but Tiptap editor still carried over — focus-guarded sync). |
+| 020 | Associate labels with the term picker & comments editor (a11y, WCAG 1.3.1) | P2 | S | — | TODO — written at `077d669`; recommend a focused pass with browser AT verification (touches shared `TermSelector`/`RichTextEditor`). |
+| 021 | Characterization tests for `commitCycleReport` + `statusFor` | P2 | S | — | DONE (reviewer-verified) — `hdp-report-commit.test.ts` (3) + `cycle-student-table.test.ts` (7); advisor re-ran: 75/75 tests, 0 new tsc, eslint clean, tests read + assert real behavior. |
+| 022 | Remove dead exports (`classOptions`, `SECTION_FIELD_DEFS`) + rename template to primary-wide | P3 | S | — | DONE (reviewer-verified) — both dead exports gone (grep 0), template → "Primary Holistic Development" (3 literals). tsc 107 (0 new), 75 tests, prettier clean; the one `mock-students.ts` eslint `no-unnecessary-condition` is pre-existing (verified at HEAD, line just shifted). Minor follow-up: the template `description` still says "Lower-primary default". |
+| 023 | Write stage lands at the top, not scrolled into the comments editor (flow / A11Y-11) | P1 | S | — | DONE (reviewer-implemented + browser-verified 2026-07-06) — **Step 1 (autofocus prop) disproven & reverted**: `autofocus` was already `false`; the real cause, found via a focus-trap in-browser, is `@tiptap/react`'s own mount `focus` command, which (a) ran a redundant `setContent` (plain-text seed ≠ normalised HTML) that `scrollIntoView`'d the field −361px, and (b) deferred a `view.focus()` by one rAF. Fix = two parts: (1) shared `rich-text-editor.tsx` — guard the value-sync effect with a `lastSyncedValue` ref so it no longer fires the redundant mount `setContent` (kills the −361 scroll; Suggest/typing/announcements re-verified unaffected); (2) write route — `key`-remount already present, add `headingRef`+`tabIndex={-1}` on the `<h1>` and a **double-rAF** mount effect that focuses it after Tiptap's single-rAF grab. Verified fresh-load / SPA-nav / pager: `h1.top=72` (≥0) and `activeElement===h1` (not the editor) in all three. Gates: tsc 107 (0 new; the 2 editor errors are pre-existing baseline), 75 tests, targeted prettier+eslint clean, scope = 2 in-scope files. Uncommitted → committing now. |
+| 024 | Make the student list the hub's focal point — compact the summary strip + tidy the control row (SLP-11, layout #1/#4) | P2 | S | — | DONE (Step 1 only; reviewer-implemented + browser-verified 2026-07-06) — replaced the four `rounded-lg border bg-card p-4` metric boxes with one compact `text-sm` stat line ("N of M ready · N drafts · N sent · N not started"), reusing the existing not-started derivation verbatim. Browser: legacy metric boxes = 0, compact line present, **student table now wins the squint test** (screenshot `024-hub-final.png`). **Step 2 (drop the redundant "Term" label) reverted per the plan's own STOP-note**: the term picker is `role="combobox"` with no `aria-label`/`aria-labelledby`, so it's name-from-author — dropping the visible label left it with **no accessible name** (verified in-browser: no quoted name, only value "Term 2"). The `htmlFor="cycle-term"` was already non-functional (TermSelector doesn't forward the id — this is plan 020's finding). Fixing the term picker's name + label consistency is deferred to **plan 020** (edits the shared `TermSelector`). Gates: tsc 107 (0 new), 75 tests, prettier+eslint clean, scope = 1 file. |
+| 025 | Remove the nested card in the layout-stage preview (SLP-4) | P3 | S | — | DONE (reviewer-implemented + browser-verified 2026-07-06) — dropped `bg-card rounded-xl border shadow-sm` from the layout preview wrapper (kept `p-6` + the "Previewing with …" caption), so the "Term at a glance" hero is the single frame — no card-in-a-card. `report-preview.tsx`/`TermAtAGlance` untouched (`git diff` scope = layout.tsx only). Browser: layout preview shows one frame (`025-layout-preview.png`); parent guest view hero **still bordered / unchanged** (`025-parent-view.png`, via a real share of student 36). Gates: tsc 107 (0 new), 75 tests, prettier+eslint clean. |
+
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) |
 REJECTED (with one-line rationale).
 
+## Round 6 — HDP flow design critique (2026-07-06)
+
+Ran the `tfx:critique` skill over the HDP flow end-to-end (agent-browser capture at 1280,
+commit `85dd742`), graded against the standards catalog + layout patterns. Five ranked
+suggestions; the user accepted all. Turned into three plans:
+
+- **023** — critique #1 (write stage lands mid-document; the highest-frequency surface).
+- **024** — critique #2 (oversized summary cards demote the student list) + #3 (control-row
+  label inconsistency), combined since they're the same file/region.
+- **025** — critique #4 (nested card in the layout preview, SLP-4).
+
+## Findings considered and rejected (Round 6)
+
+- **Critique #5 — "parent-view Acknowledge bar is full-width vs the narrow content column"**:
+  rejected on vetting. The sticky bar is `fixed inset-x-0 bottom-0 mx-auto max-w-md`
+  (`_guest.report-view.$token.tsx:116,203`) — already capped at `max-w-md` and centred, so it
+  already tracks the content column. My critique mis-observed it as full-width; the code
+  disproves it. No plan.
+- **Copy nit (not layout)**: the flag-off empty state still reads "Turn on HDP Report Builder"
+  (`reports.cycle.*` off-state) after the flag consolidated to one "HDP Reports" flag — routes
+  to the `copy` skill, not this design pass. Recorded, not planned here.
+
+## Round 5 — HDP branch hardening audit (2026-07-06)
+
+Branch-scoped `/improve` over the whole HDP body of work (33 files, commit `a7c534b`),
+fanned out to three fresh-context audit agents (correctness/state, a11y/UI, tests/tech-debt)
+to counter author bias, then vetted against the code.
+
+**Planned & attempted:**
+- **019** — the one confirmed data-corruption bug: the Write-stage pager re-renders the route
+  rather than remounting it, so `useState` never reseeds and the previous student's
+  comments/parent-note get autosaved + committed under the next student.
+  - **v1 (resync effect) BLOCKED at review.** An executor implemented it faithfully; it passed
+    tsc/tests/lint but the **advisor's browser review caught** that it did NOT fix the visible
+    bug: the plain-textarea note reset, but the Tiptap comments editor kept the previous
+    student's text (its `value`→content sync is guarded by `!hasFocus()`, and the `cycle` memo
+    is stale after writes). Reverted.
+  - **v2 (keyed remount) written**, not yet executed: give the Write body `key={studentId}` so
+    it remounts per student — fresh editor content, fresh `loadCycle`. Focus-independent.
+
+**Vetted findings ready to plan on request (not yet written):**
+- **a11y batch** — form labels not associated (`TermSelector` and `RichTextEditor` receive an
+  `htmlFor` id they don't forward: `reports.index.tsx:820`, `report-preview.tsx:255`); plus
+  focus-move + `aria-live` on Write-stage student navigation.
+- **tests** — characterization tests for `commitCycleReport` (single commit point, untested) and
+  `statusFor` (`cycle-student-table.tsx:23`, pure, drives hub metrics).
+- **cleanup** — remove dead exports `classOptions` (`mock-students.ts:5427`) and
+  `SECTION_FIELD_DEFS` (`report-layouts.ts:87`); rename template `'P1 Holistic Development'`
+  → primary-wide (hub now covers P1–P6; `report-layouts.ts:168`).
+
+## Findings considered and rejected (Round 5)
+
+- **Bulk-share stale-closure "bug"** (`reports.index.tsx:789`): the share dialog is a modal
+  `AlertDialog` and `setShareOpen(false)` fires only inside the timeout, so no term/class switch
+  can interleave during the 600ms window. Not reproducible through the UI.
+- **Chip contrast below AA** (`report-preview.tsx:24`): already fixed — chips use step-12/twblue-11
+  (measured 5.0–10.5:1). Agent misread the explanatory code comment as a live failure.
+- **Unused `useFeatureFlags`/`isEnabled`** (`student-profile.tsx:718`): `isEnabled` is used at
+  line 1097. Not dead.
+- **`dangerouslySetInnerHTML` XSS** (`report-preview.tsx:280`) and **P3–P6 show LO descriptors,
+  not grades**: real but already decided/by-design for the prototype and filed as standards
+  ratchet issues #26 (sanitise shared HTML) and #27 (domain-content authenticity). Not re-planned.
+- **Assorted low/speculative edge cases** (empty-class term persistence, detail-vs-write pager
+  ordering, memo identity, dl/dd reading order, title-on-acknowledge, `as ClassItem` casts,
+  state-machine invariant doc): noted, below the leverage bar for a prototype.
+
+### Executor-tooling incident (2026-07-06)
+
+Two dispatch problems worth recording so the next run avoids them:
+1. `isolation: "worktree"` branches a fresh worktree from `main`, which does **not** contain this
+   feature branch's files — the isolated executor correctly stopped ("file not found on this
+   history"). Isolated execution isn't usable for a plan whose current-state lives only on the
+   feature branch; run the executor in-tree instead (and gate by leaving changes uncommitted).
+2. An in-tree executor ran `bun run check` (which is repo-wide `prettier --write .`), reformatting
+   ~45 unrelated files, then "restored scope" via `git checkout -- <files>` and **deleted this
+   session's untracked plan docs** (019 + reverted README). Fix applied here: plans now tell the
+   executor to use targeted `prettier --check`/`eslint` on the single file, never `bun run check`.
+
+## Round 4 — HDP report-builder prototype (2026-07-01)
+
+A **feature/direction** plan (not tech-debt like rounds 1–3), scoped by the `HDP Mid-Point Check-In
+Discussion Guide` and sharpened via an 11-question grilling. Full context in the plan header.
+
+- **One bet**: teachers would use this **over SC + Smart Compose**. **Kill-criterion**: they can't name
+  a concrete reason to prefer it. Everything in the test track (A0–A5) serves this; **inline Smart
+  Compose is therefore non-negotiable**.
+- **Two audiences, kept separate**: TEST TRACK (P1 teachers touch it) vs DEMO TRACK (STCI/CDC vision:
+  bulk, extended holistic view, gamified secondary sharing). **If AI-build velocity slips, cut the demo
+  track first; the test track is sacrosanct.**
+- **Locked calls**: P1 sharing = parents-first (not student-first); P1 content must come from a real P1
+  HDP artifact + HOD sign-off (blocking prerequisite); builder = sections toggle/reorder/viz, **no
+  field-level edits**; bulk built with P1-curated + secondary auto-hide; one entry door (Reports page);
+  extended holistic view uses **progression charts, NOT radar**.
+- Everything is flag-gated (`hdp-report-builder`, `hdp-extended-template`) and default-off, so it can't
+  regress the shipped surface. Consistent with the existing `_guest.report-view.$token.tsx`
+  "by-design mock, no real data" note under Findings-rejected.
 ## Round 5 — design-system re-audit: composition, tokens, React practices, deps (2026-07-02)
 
 Audit at commit `b01d78d` (baseline re-verified this run: `bunx tsc --noEmit` **41**

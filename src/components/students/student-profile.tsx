@@ -4,7 +4,6 @@ import {
   BookOpen,
   Calendar,
   ChevronRight,
-  Clock,
   Eye,
   EyeOff,
   FileText,
@@ -45,7 +44,6 @@ import { AgencyLogo } from '@/components/agency-logo'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { GenerateHdpWizard } from '@/components/reports/generate-hdp-wizard'
 import { InterventionBanner } from '@/components/students/intervention-banner'
 import { useFeatureFlags } from '@/lib/feature-flags'
 import {
@@ -503,17 +501,6 @@ const AGENCY_STATUS_CONFIG: Record<
   },
 }
 
-function addBusinessDaysSimple(from: Date, days: number): Date {
-  const d = new Date(from)
-  let added = 0
-  while (added < days) {
-    d.setDate(d.getDate() + 1)
-    const dow = d.getDay()
-    if (dow !== 0 && dow !== 6) added++
-  }
-  return d
-}
-
 function AgencyReportRow({ report }: { report: AgencyReport }) {
   const [showPw, setShowPw] = useState(false)
   // The mock store is mutable — we toggle the status here for the demo and
@@ -676,13 +663,12 @@ export function StudentProfile({
   student,
   headerControls,
 }: StudentProfileProps) {
-  const [wizardOpen, setWizardOpen] = useState(false)
   const [analyticsOpen, setAnalyticsOpen] = useState(false)
   const [academicAnalyticsOpen, setAcademicAnalyticsOpen] = useState(false)
   const [primaryContactOpen, setPrimaryContactOpen] = useState(false)
   const { isEnabled } = useFeatureFlags()
 
-  const holisticReportsEnabled = useFeatureFlag('holistic-reports')
+  const holisticReportsEnabled = useFeatureFlag('hdp-reports')
   const agencyReportsEnabled = useFeatureFlag('agency-reports')
   const reportGenerationEnabled = useFeatureFlag('report-generation')
   const studentAnalyticsEnabled = useFeatureFlag('student-analytics')
@@ -692,6 +678,8 @@ export function StudentProfile({
   const overallPercentageEnabled = useFeatureFlag('overall-percentage')
   const socialLinksEnabled = useFeatureFlag('social-links')
   const primaryContactEnabled = useFeatureFlag('primary-contact')
+  // HDP reporting is one flag now; keep the local name for the builder-entry check.
+  const reportBuilderEnabled = holisticReportsEnabled
   // Default "Student Insights" view — applies when both analytics flags are off
   const isStudentInsightsView =
     !studentAnalyticsEnabled && !studentAnalyticsBasicEnabled
@@ -1826,12 +1814,12 @@ export function StudentProfile({
                     </div>
                   )}
 
-                  {missingTerms.length > 0 && (
+                  {missingTerms.length > 0 && reportBuilderEnabled && (
                     <div className="mt-4 flex items-center gap-2 border-t pt-4">
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setWizardOpen(true)}
+                        render={<Link to="/reports" />}
                       >
                         <Plus className="mr-1 h-4 w-4" />
                         Generate HDP
@@ -1920,13 +1908,6 @@ export function StudentProfile({
           </nav>
         </div>
       </aside>
-
-      <GenerateHdpWizard
-        student={student}
-        missingTerms={missingTerms}
-        open={wizardOpen}
-        onOpenChange={setWizardOpen}
-      />
     </div>
   )
 }

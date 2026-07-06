@@ -51,10 +51,10 @@ const featureFlagConfigs: Array<FeatureFlagConfig> = [
     stage: 'Release 2',
   },
   {
-    key: 'holistic-reports',
-    label: 'Holistic Reports',
+    key: 'hdp-reports',
+    label: 'HDP Reports',
     description:
-      'Enable holistic development reports showing student progress across academic and character development',
+      'Show all Holistic Development reporting: the P1–P2 reporting-cycle hub (class + term picker, two-stage layout/write builder with inline Smart Compose), the parents-first share flow, template management via ?mode=template, and the Holistic Reports section on the student profile. Off hides all of it.',
     stage: 'Experiment',
   },
   {
@@ -96,7 +96,7 @@ const featureFlagConfigs: Array<FeatureFlagConfig> = [
     key: 'report-generation',
     label: 'Report Generation',
     description:
-      "Allow new agency reports to be generated. When off, existing reports stay visible on the student profile but the '+ New Agency Report' button and the wizard entry point are hidden",
+      "Agency reports only. Allow new agency reports to be generated. When off, existing reports stay visible on the student profile but the '+ New Agency Report' button and the wizard entry point are hidden",
     stage: 'Experiment',
   },
   {

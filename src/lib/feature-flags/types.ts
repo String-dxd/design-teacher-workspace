@@ -2,7 +2,7 @@ export type FeatureFlagKey =
   | 'posts'
   | 'forms'
   | 'notifications'
-  | 'holistic-reports'
+  | 'hdp-reports'
   | 'parents-gateway'
   | 'student-analytics'
   | 'student-analytics-basic'
