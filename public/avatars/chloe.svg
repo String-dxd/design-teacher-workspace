@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
   <!-- Flat illustration avatar for Chloe Tan Xin Yi (recreated from supplied artwork) -->
-  <rect width="200" height="200" fill="#ECECEC"/>
+  <rect width="200" height="200" fill="#F5F4F2"/>
   <!-- ponytail -->
   <g transform="rotate(18 152 80)">
     <ellipse cx="152" cy="82" rx="15" ry="30" fill="#1E1E1E"/>

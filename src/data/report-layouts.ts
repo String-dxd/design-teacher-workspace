@@ -54,8 +54,8 @@ export const P1_SECTION_DEFS: Array<SectionDef> = [
   },
   {
     key: 'conduct',
-    label: 'Conduct & comments',
-    description: 'Conduct rating and form-teacher comments',
+    label: 'Form teacher comments',
+    description: 'The form teacher’s written note on the term',
     applicableAtP1: true,
   },
   {

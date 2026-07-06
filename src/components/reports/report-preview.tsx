@@ -477,12 +477,12 @@ function PreviewBlock({
                 src={STUDENT_AVATARS.get(report.studentId)}
                 alt=""
                 aria-hidden
-                className="size-12 shrink-0 rounded-full object-cover"
+                className="size-12 shrink-0 rounded-xl object-cover"
               />
             ) : (
               <div
                 aria-hidden
-                className="bg-twblue-3 text-twblue-11 flex size-12 shrink-0 items-center justify-center rounded-full text-sm font-semibold"
+                className="bg-twblue-3 text-twblue-11 flex size-12 shrink-0 items-center justify-center rounded-xl text-sm font-semibold"
               >
                 {initials(report.studentName)}
               </div>
@@ -554,16 +554,16 @@ function PreviewBlock({
     }
 
     case 'conduct':
+      // Conduct itself lives in the "Term at a glance" bullet — this section
+      // is the form teacher's written note.
       return (
         <div className="flex flex-col gap-2">
-          {heading('Conduct & comments')}
-          <p className="text-sm">
-            <span className="font-medium">Conduct: </span>
-            {report.character.conduct}
-          </p>
+          {heading('Form teacher comments')}
           {editable && onCommentsChange ? (
             <div className="space-y-1.5">
-              <Label htmlFor="ft-comments">Form-teacher comments</Label>
+              <Label htmlFor="ft-comments" className="sr-only">
+                Form teacher comments
+              </Label>
               <RichTextEditor
                 value={comments}
                 onChange={onCommentsChange}
