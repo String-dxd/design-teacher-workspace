@@ -16,7 +16,6 @@ import type {
   ReviewStatus,
   Term,
 } from '@/types/report'
-import type { Student } from '@/types/student'
 import { TermSelector } from '@/components/reports/term-selector'
 import { ReportTable } from '@/components/reports/report-table'
 import { ClassSelector } from '@/components/students/class-selector'
@@ -40,8 +39,7 @@ import {
   SelectTrigger,
 } from '@/components/ui/select'
 import { CURRENT_ACADEMIC_YEAR, mockReports } from '@/data/mock-reports'
-import { getSchoolLevel, mockStudents } from '@/data/mock-students'
-import { GenerateHdpWizard } from '@/components/reports/generate-hdp-wizard'
+import { getSchoolLevel } from '@/data/mock-students'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
 import {
   Popover,
@@ -99,8 +97,6 @@ function HdpPrimaryPage() {
   const [reports, setReports] = useState<Array<HolisticReport>>(
     () => mockReports,
   )
-  const [wizardOpen, setWizardOpen] = useState(false)
-  const [wizardStudents, setWizardStudents] = useState<Array<Student>>([])
 
   useSetBreadcrumbs([{ label: 'HDP (Primary)', href: '/hdp-primary' }])
 
@@ -190,17 +186,6 @@ function HdpPrimaryPage() {
     )
     setSelectedIds(new Set())
   }
-
-  const handleQuickSendStudent = useCallback((id: string) => {
-    setReports((prev) =>
-      prev.map((r) =>
-        r.id === id && r.studentStatus === 'not_sent'
-          ? { ...r, studentStatus: 'sent' as const }
-          : r,
-      ),
-    )
-    toast.success('Report sent to student')
-  }, [])
 
   const handleQuickSendParent = useCallback((id: string) => {
     setReports((prev) =>
@@ -401,13 +386,6 @@ function HdpPrimaryPage() {
         onQuickSendParent={handleQuickSendParent}
       />
 
-      {/* Generate HDP Wizard */}
-      <GenerateHdpWizard
-        students={wizardStudents}
-        open={wizardOpen}
-        onOpenChange={setWizardOpen}
-      />
-
       {/* Floating Bulk Action Bar */}
       {selectedIds.size > 0 && (
         <div className="fixed inset-x-0 bottom-6 z-50 flex justify-center">
@@ -418,16 +396,7 @@ function HdpPrimaryPage() {
             <Button
               size="sm"
               className="rounded-full bg-orange-9 text-white hover:bg-orange-10"
-              onClick={() => {
-                const students = [...selectedIds]
-                  .map((id) => {
-                    const report = reports.find((r) => r.id === id)
-                    return mockStudents.find((s) => s.id === report?.studentId)
-                  })
-                  .filter((s): s is Student => s !== undefined)
-                setWizardStudents(students)
-                setWizardOpen(true)
-              }}
+              onClick={() => toast.info('Select students with ready data to generate their HDPs')}
             >
               <Sparkles className="mr-2 h-4 w-4" />
               Generate HDP

@@ -274,153 +274,25 @@ const SUBJECT_OUTCOMES: Record<
   ],
 }
 
-const P1_SUBJECT_OUTCOMES: Record<
-  string,
-  Array<{ name: string; description: string }>
-> = {
-  'English Language': [
-    {
-      name: 'Speaking',
-      description:
-        'Speak clearly to express their thoughts, feelings and ideas.',
-    },
-    {
-      name: 'Reading',
-      description:
-        'Demonstrate basic word recognition skills (e.g. know the letters of the alphabet; able to pronounce words accurately).',
-    },
-    {
-      name: 'Listening',
-      description: 'Listen attentively and follow simple instructions.',
-    },
-  ],
-  'Chinese Language': [
-    {
-      name: 'Listening',
-      description:
-        'Listen attentively to short, simple spoken content related to daily life.',
-    },
-    {
-      name: 'Speaking',
-      description:
-        'Speak with correct pronunciation using vocabulary and sentence structures from Primary 1 texts.',
-    },
-    {
-      name: 'Reading',
-      description: 'Recognise characters taught in Primary 1.',
-    },
-    {
-      name: 'Reading aloud',
-      description: 'Read aloud Primary 1 texts with accuracy.',
-    },
-  ],
-  Mathematics: [
-    {
-      name: 'Number sense',
-      description: 'Understand addition and subtraction.',
-    },
-    {
-      name: 'Computation',
-      description: 'Add and subtract numbers.',
-    },
-    {
-      name: 'Geometry',
-      description: 'Identify, name, describe and sort shapes.',
-    },
-    {
-      name: 'Data handling',
-      description: 'Read and interpret picture graphs.',
-    },
-  ],
-  'Social Studies': [
-    {
-      name: 'Identity',
-      description: 'Recognise that everyone is unique.',
-    },
-    {
-      name: 'Inquiry',
-      description: 'Ask questions to learn more about self, people and places.',
-    },
-    {
-      name: 'Roles & responsibilities',
-      description:
-        'Identify the different roles that students play at home, in class and in school.',
-    },
-  ],
-  Art: [
-    {
-      name: 'Visual observation',
-      description:
-        'Identify simple visual qualities in what they see around them.',
-    },
-    {
-      name: 'Drawing',
-      description: 'Draw from their imagination and observation.',
-    },
-    {
-      name: 'Exploration',
-      description: 'Play with a variety of materials and tools to make art.',
-    },
-    {
-      name: 'Expression',
-      description:
-        'Share their imagination, thoughts and feelings through art making.',
-    },
-    {
-      name: 'Appreciation',
-      description:
-        'Talk about what they see, feel and experience using basic art vocabulary of elements and principles of design.',
-    },
-  ],
-  Music: [
-    {
-      name: 'Singing',
-      description:
-        'Sing with accuracy and expression (e.g. appropriate tempo, dynamics, articulation and phrasing).',
-    },
-    {
-      name: 'Music appreciation',
-      description:
-        'Describe ways in which the elements of music are used for different purposes in the music they listen to, create and perform.',
-    },
-    {
-      name: 'Listening',
-      description:
-        'Describe the sound produced by instruments (e.g. low, high, jingling) and how they are played.',
-    },
-    {
-      name: 'Notation',
-      description: 'Use graphic or standard notation to record music ideas.',
-    },
-  ],
-  'Physical Education': [
-    {
-      name: 'Physical health & fitness',
-      description:
-        'Acquire a range of personal safety practices in school, at home and when using the road.',
-    },
-    {
-      name: 'Games & sports',
-      description:
-        'Demonstrate a range of motor skills in rolling, catching, and throwing a variety of objects.',
-    },
-    {
-      name: 'Outdoor education',
-      description:
-        'Move across a variety of ground surfaces in a familiar environment safely and confidently.',
-    },
-  ],
-}
+// Lower primary (P1–P2) reports grade LOs for languages and Maths only —
+// Science starts at P3, and Music/Art/PE are not graded LO subjects at P1.
+const LOWER_PRIMARY_SUBJECTS = [
+  'English Language',
+  'Chinese Language',
+  'Mathematics',
+]
 
 function generateSubjects(
   student: Student,
   seed: number,
 ): Array<SubjectPerformance> {
-  const isPrimary = getSchoolLevel(student.class) === 'primary'
-  const subjectMap = isPrimary ? P1_SUBJECT_OUTCOMES : SUBJECT_OUTCOMES
-  const statuses = isPrimary ? P1_OUTCOME_STATUSES : OUTCOME_STATUSES
-
-  return Object.entries(subjectMap).map(([name, outcomes], i) => {
+  const isLowerPrimary = /^P[12]/.test(student.class)
+  const subjectNames = isLowerPrimary
+    ? LOWER_PRIMARY_SUBJECTS
+    : Object.keys(SUBJECT_OUTCOMES)
+  const statuses = isLowerPrimary ? P1_OUTCOME_STATUSES : OUTCOME_STATUSES
+  return subjectNames.map((name, i) => {
+    const outcomes = SUBJECT_OUTCOMES[name]
     const learningOutcomes: Array<LearningOutcome> = outcomes.map((o, j) => {
       const statusSeed = seed + i * 7 + j * 3 + student.overallPercentage
       const statusIdx = statusSeed % statuses.length
@@ -1045,6 +917,20 @@ export function getStudentGradeCounts(
 export function addReport(report: HolisticReport): void {
   if (!mockReports.find((r) => r.id === report.id)) {
     mockReports.push(report)
+  }
+}
+
+/**
+ * Insert or replace a report by id. `generateAllReports` pre-generates deterministic
+ * ids for most students/terms, so `addReport`'s "push if absent" no-ops for them —
+ * this is the function committing a built report must use.
+ */
+export function upsertReport(report: HolisticReport): void {
+  const index = mockReports.findIndex((r) => r.id === report.id)
+  if (index === -1) {
+    mockReports.push(report)
+  } else {
+    mockReports[index] = report
   }
 }
 

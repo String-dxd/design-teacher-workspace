@@ -18,6 +18,7 @@ import { PgPreviewDialog } from '@/components/reports/pg-preview-dialog'
 import { HolisticTab } from '@/components/reports/holistic-tab'
 import { ParentPreviewDialog } from '@/components/reports/parent-preview-dialog'
 import { ReportOverviewTab } from '@/components/reports/report-overview-tab'
+import { ReportPreview } from '@/components/reports/report-preview'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button, buttonVariants } from '@/components/ui/button'
 import {
@@ -30,6 +31,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { getAdjacentReportIds, getReportById } from '@/data/mock-reports'
 import { getSchoolLevel } from '@/data/mock-students'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
+import { loadSharedReport } from '@/lib/hdp-template-store'
 import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/holistic-reports/$id')({
@@ -90,6 +92,15 @@ function ReportDetailPage() {
 
   const { prevId, nextId } = getAdjacentReportIds(id)
   const isPrimary = schoolLevel === 'primary'
+  // Reports built via the reporting-cycle carry a layout — prefer the localStorage
+  // shared record (in-memory mockReports resets on reload) so the document view
+  // survives a refresh, mirroring the guest view's branch.
+  const sharedRecord = isPrimary ? loadSharedReport(report.id) : null
+  const hasBuiltLayout =
+    isPrimary && (sharedRecord != null || report.layout != null)
+  const documentBlocks = sharedRecord?.blocks ?? report.layout?.blocks ?? []
+  const documentComments =
+    sharedRecord?.comments ?? report.teacherComments ?? ''
 
   const handlePreview = () => {
     setPreviewMode(isPrimary ? 'parent' : 'student')
@@ -185,47 +196,61 @@ function ReportDetailPage() {
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as string)}>
-        <TabsList variant="line">
-          <TabsTrigger
-            value="overview"
-            className="data-active:text-orange-9 data-active:after:bg-orange-9"
-          >
-            Overview
-          </TabsTrigger>
-          <TabsTrigger
-            value="academic"
-            className="data-active:text-orange-9 data-active:after:bg-orange-9"
-          >
-            Academic
-          </TabsTrigger>
-          <TabsTrigger
-            value="holistic"
-            className="data-active:text-orange-9 data-active:after:bg-orange-9"
-          >
-            Holistic
-          </TabsTrigger>
-        </TabsList>
-        <TabsContent value="overview">
-          <ReportOverviewTab
+      {hasBuiltLayout ? (
+        <div className="bg-card rounded-xl border p-6 shadow-sm">
+          <ReportPreview
             report={report}
-            onViewHolistic={() => setActiveTab('holistic')}
+            blocks={documentBlocks}
+            comments={documentComments}
+            compactPupilInfo
           />
-        </TabsContent>
-        <TabsContent value="academic">
-          <AcademicTab
-            data={report.academic}
-            secondaryData={report.secondaryAcademic}
-            schoolLevel={schoolLevel}
-          />
-        </TabsContent>
-        <TabsContent value="holistic">
-          <HolisticTab
-            data={report.holistic}
-            studentFirstName={getFirstName(report.studentName)}
-          />
-        </TabsContent>
-      </Tabs>
+        </div>
+      ) : (
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => setActiveTab(v as string)}
+        >
+          <TabsList variant="line">
+            <TabsTrigger
+              value="overview"
+              className="data-active:text-orange-9 data-active:after:bg-orange-9"
+            >
+              Overview
+            </TabsTrigger>
+            <TabsTrigger
+              value="academic"
+              className="data-active:text-orange-9 data-active:after:bg-orange-9"
+            >
+              Academic
+            </TabsTrigger>
+            <TabsTrigger
+              value="holistic"
+              className="data-active:text-orange-9 data-active:after:bg-orange-9"
+            >
+              Holistic
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="overview">
+            <ReportOverviewTab
+              report={report}
+              onViewHolistic={() => setActiveTab('holistic')}
+            />
+          </TabsContent>
+          <TabsContent value="academic">
+            <AcademicTab
+              data={report.academic}
+              secondaryData={report.secondaryAcademic}
+              schoolLevel={schoolLevel}
+            />
+          </TabsContent>
+          <TabsContent value="holistic">
+            <HolisticTab
+              data={report.holistic}
+              studentFirstName={getFirstName(report.studentName)}
+            />
+          </TabsContent>
+        </Tabs>
+      )}
 
       <div className="sticky bottom-0 flex gap-3 border-t bg-card py-4">
         <Button variant="outline" className="flex-1" onClick={handlePreview}>
