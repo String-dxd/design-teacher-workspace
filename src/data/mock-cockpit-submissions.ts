@@ -16,14 +16,13 @@ const P1_SUBJECT_TEACHERS = new Map<string, string>([
   ['English Language', 'Mrs. Lim Siew Bee'],
   ['Chinese Language', 'Mdm Lee Hui Fen'],
   ['Mathematics', 'Mr Tan Wei Ming'],
+  ['Social Studies', 'Mdm Siti Rahimah'],
 ])
 
-// Deliberate gaps so readiness states are visible in the demo:
-// Chloe (36) — Chinese not in yet; Ho Jia Min (48) — Mathematics not in yet.
-const MISSING_BY_STUDENT = new Map<string, Array<string>>([
-  ['36', ['Chinese Language']],
-  ['48', ['Mathematics']],
-])
+// All submissions are in for the current demo — the awaiting-data state was
+// judged too noisy inside the report document. Add entries here (studentId →
+// subject names) to demo the gap state again.
+const MISSING_BY_STUDENT = new Map<string, Array<string>>()
 
 const SUBMITTED_AT = '2026-07-03T09:00:00.000Z'
 

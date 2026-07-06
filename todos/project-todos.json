@@ -1,6 +1,6 @@
 {
   "project": "moe-teacher-workspace",
-  "lastUpdated": "2026-07-06T16:15:00.000Z",
+  "lastUpdated": "2026-07-06T16:45:00.000Z",
   "todos": [
     {
       "id": "tw-001",
@@ -321,6 +321,14 @@
       "status": "completed",
       "createdAt": "2026-07-06T16:05:00.000Z",
       "completedAt": "2026-07-06T16:15:00.000Z"
+    },
+    {
+      "id": "tw-036",
+      "title": "Declutter pass: flatten disclosure, 4 subjects, hero layout",
+      "description": "Report document declutter from design critique \u2014 all disclosure removed (LO statements always visible as sublabels, subject cards always open, no chevrons); Social Studies added as 4th P1 subject with authentic LOs; awaiting-data gaps cleared so every subject shows mock data; hero highlights moved to a full-width line; Write page uses compactPupilInfo to stop repeating student identity under the page header.",
+      "status": "completed",
+      "createdAt": "2026-07-06T16:30:00.000Z",
+      "completedAt": "2026-07-06T16:45:00.000Z"
     }
   ]
 }

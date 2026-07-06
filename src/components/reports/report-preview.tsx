@@ -1,9 +1,8 @@
-import { useState } from 'react'
 import {
   BookOpen,
   Calculator,
-  ChevronDown,
   FlaskConical,
+  Globe,
   Languages,
   Sparkles,
 } from 'lucide-react'
@@ -73,6 +72,7 @@ const SUBJECT_ICONS = new Map<string, LucideIcon>([
   ['Chinese Language', Languages],
   ['Mathematics', Calculator],
   ['Science', FlaskConical],
+  ['Social Studies', Globe],
 ])
 
 /** Join names conversationally: "Reading", "Reading and Listening",
@@ -114,8 +114,8 @@ function summarizeSubject(
   return `${first} is strongest in ${joinNames(top)}, and is building ${joinNames(bottom)}.`
 }
 
-/** Collapsible per-subject card: sentence first, LO detail on tap. Teachers
- * start expanded (their job is checking); parents start collapsed. */
+/** Per-subject card: sentence first, then every outcome with its statement in
+ * full view — no disclosure levels, the reader scrolls instead of tapping. */
 function SubjectCard({
   subj,
   studentFirstName,
@@ -129,16 +129,10 @@ function SubjectCard({
   audience: 'teacher' | 'parent'
   display?: BlockDisplay
 }) {
-  const [open, setOpen] = useState(audience === 'teacher')
   const SubjectIcon = SUBJECT_ICONS.get(subj.name) ?? BookOpen
   return (
     <div className="rounded-xl border px-3.5 py-3">
-      <button
-        type="button"
-        aria-expanded={open}
-        onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center gap-2 text-left"
-      >
+      <div className="flex w-full items-center gap-2">
         <SubjectIcon aria-hidden className="text-primary size-4 shrink-0" />
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm font-medium">
@@ -152,31 +146,22 @@ function SubjectCard({
             </span>
           )}
         </span>
-        <ChevronDown
-          aria-hidden
-          className={cn(
-            'text-muted-foreground size-4 shrink-0 transition-transform',
-            open && 'rotate-180',
-          )}
-        />
-      </button>
+      </div>
       <p className="pt-1.5 text-sm leading-relaxed">
         {summarizeSubject(studentFirstName, subj.learningOutcomes)}
       </p>
-      {open && (
-        <div className="mt-2 border-t pt-1.5">
-          {subj.learningOutcomes.map((lo) => (
-            <ScaleRow
-              key={lo.name}
-              label={lo.name}
-              expandableDescription={lo.description}
-              stageLabel={lo.status}
-              pillClass={LO_PILL_CLASS[lo.status]}
-              display={display}
-            />
-          ))}
-        </div>
-      )}
+      <div className="mt-2 border-t pt-1.5">
+        {subj.learningOutcomes.map((lo) => (
+          <ScaleRow
+            key={lo.name}
+            label={lo.name}
+            sublabel={lo.description}
+            stageLabel={lo.status}
+            pillClass={LO_PILL_CLASS[lo.status]}
+            display={display}
+          />
+        ))}
+      </div>
     </div>
   )
 }
@@ -199,7 +184,6 @@ function formatFullDay(iso: string): string {
 function ScaleRow({
   label,
   sublabel,
-  expandableDescription,
   stageLabel,
   pillClass,
   display = 'bars',
@@ -207,62 +191,34 @@ function ScaleRow({
   label: string
   /** Always-visible supporting line; wraps in full (never truncated). */
   sublabel?: string
-  /** Tap-to-reveal detail under the row — the full learning-outcome statement. */
-  expandableDescription?: string
   stageLabel: string
   pillClass: string
   /** 'bars' → soft stage pill (default); 'labels' → plain text word. */
   display?: BlockDisplay
 }) {
-  const [open, setOpen] = useState(false)
   return (
-    <div className="py-1">
-      <div className="flex items-center gap-3">
-        <div className="min-w-0 flex-1">
-          {expandableDescription ? (
-            <button
-              type="button"
-              aria-expanded={open}
-              onClick={() => setOpen((v) => !v)}
-              className="group flex items-center gap-1 text-left"
-            >
-              <span className="truncate text-sm">{label}</span>
-              <ChevronDown
-                aria-hidden
-                className={cn(
-                  'text-muted-foreground/60 group-hover:text-muted-foreground size-3.5 shrink-0 transition-transform',
-                  open && 'rotate-180',
-                )}
-              />
-            </button>
-          ) : (
-            <p className="truncate text-sm">{label}</p>
-          )}
-          {sublabel && (
-            <p className="text-muted-foreground text-xs leading-snug">
-              {sublabel}
-            </p>
-          )}
-        </div>
-        {display === 'bars' ? (
-          <span
-            className={cn(
-              'shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium',
-              pillClass,
-            )}
-          >
-            {stageLabel}
-          </span>
-        ) : (
-          <span className="text-twblue-11 shrink-0 text-right text-xs leading-tight font-medium">
-            {stageLabel}
-          </span>
+    <div className="flex items-start justify-between gap-3 py-1.5">
+      <div className="min-w-0 flex-1">
+        <p className="text-sm">{label}</p>
+        {sublabel && (
+          <p className="text-muted-foreground text-xs leading-snug">
+            {sublabel}
+          </p>
         )}
       </div>
-      {expandableDescription && open && (
-        <p className="text-muted-foreground pt-0.5 text-xs leading-snug">
-          {expandableDescription}
-        </p>
+      {display === 'bars' ? (
+        <span
+          className={cn(
+            'mt-0.5 shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium',
+            pillClass,
+          )}
+        >
+          {stageLabel}
+        </span>
+      ) : (
+        <span className="text-twblue-11 mt-1 shrink-0 text-right text-xs leading-tight font-medium">
+          {stageLabel}
+        </span>
       )}
     </div>
   )
@@ -311,58 +267,60 @@ function TermAtAGlance({ report }: { report: HolisticReport }) {
   const { strongest, growing } = deriveHighlights(report)
 
   return (
-    <div className="bg-card flex flex-col gap-4 rounded-xl border p-4 sm:flex-row sm:items-center sm:gap-6">
-      <div className="flex shrink-0 items-center gap-3">
-        <div aria-hidden className="text-primary">
-          <AttendanceRing
-            percentage={attendancePct}
-            size={88}
-            strokeWidth={8}
-            color="currentColor"
-          />
+    <div className="bg-card flex flex-col gap-3 rounded-xl border p-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
+        <div className="flex shrink-0 items-center gap-3">
+          <div aria-hidden className="text-primary">
+            <AttendanceRing
+              percentage={attendancePct}
+              size={88}
+              strokeWidth={8}
+              color="currentColor"
+            />
+          </div>
+          <div className="text-sm">
+            <p className="font-medium">Attendance</p>
+            <p className="text-muted-foreground">
+              {attendancePct}% · present {report.attendance.daysPresent} of{' '}
+              {report.attendance.totalSchoolDays} days
+              {report.attendance.daysLate > 0 && (
+                <>
+                  {' '}
+                  ·{' '}
+                  {report.attendance.daysLate === 1
+                    ? '1 day late'
+                    : `${report.attendance.daysLate} days late`}
+                </>
+              )}
+            </p>
+          </div>
         </div>
+        <div className="hidden h-12 w-px bg-border sm:block" aria-hidden />
         <div className="text-sm">
-          <p className="font-medium">Attendance</p>
-          <p className="text-muted-foreground">
-            {attendancePct}% · present {report.attendance.daysPresent} of{' '}
-            {report.attendance.totalSchoolDays} days
-            {report.attendance.daysLate > 0 && (
-              <>
-                {' '}
-                ·{' '}
-                {report.attendance.daysLate === 1
-                  ? '1 day late'
-                  : `${report.attendance.daysLate} days late`}
-              </>
-            )}
-          </p>
-        </div>
-      </div>
-      <div className="hidden h-12 w-px bg-border sm:block" aria-hidden />
-      <div className="flex flex-col gap-2 text-sm">
-        <div>
           <p className="font-medium">Conduct: {report.character.conduct}</p>
           <p className="text-muted-foreground">
             {firstName(report.studentName)} had a{' '}
             {report.character.conduct.toLowerCase()} term overall.
           </p>
         </div>
-        {strongest.length > 0 && (
-          <p className="text-muted-foreground text-xs">
-            <span className="text-foreground font-medium">Strongest in: </span>
-            {strongest.join(', ')}
-            {growing.length > 0 && (
-              <>
-                {' '}
-                <span className="text-foreground font-medium">
-                  · Growing in:{' '}
-                </span>
-                {growing.join(', ')}
-              </>
-            )}
-          </p>
-        )}
       </div>
+      {strongest.length > 0 && (
+        <p className="border-t pt-3 text-sm">
+          <span className="font-medium">Strongest in: </span>
+          <span className="text-muted-foreground">
+            {strongest.join(', ')}
+          </span>
+          {growing.length > 0 && (
+            <>
+              {' '}
+              <span className="font-medium">· Growing in: </span>
+              <span className="text-muted-foreground">
+                {growing.join(', ')}
+              </span>
+            </>
+          )}
+        </p>
+      )}
     </div>
   )
 }

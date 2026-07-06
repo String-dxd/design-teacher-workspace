@@ -295,6 +295,7 @@ function CycleWriteBody({ studentId }: { studentId: string }) {
             comments={comments}
             onCommentsChange={setComments}
             showMissingData
+            compactPupilInfo
           />
         </div>
 

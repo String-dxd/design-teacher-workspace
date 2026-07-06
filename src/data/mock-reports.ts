@@ -264,12 +264,37 @@ const SUBJECT_OUTCOMES: Record<
   ],
 }
 
-// Lower primary (P1–P2) reports grade LOs for languages and Maths only —
-// Science starts at P3, and Music/Art/PE are not graded LO subjects at P1.
+// P1-only subjects that don't appear in the shared (secondary) outcome set.
+const P1_ONLY_OUTCOMES: Record<
+  string,
+  Array<{ name: string; description: string }>
+> = {
+  'Social Studies': [
+    {
+      name: 'Identity',
+      description: 'Recognise that everyone is unique.',
+    },
+    {
+      name: 'Inquiry',
+      description: 'Ask questions to learn more about self, people and places.',
+    },
+    {
+      name: 'Roles & responsibilities',
+      description:
+        'Identify the different roles that students play at home, in class and in school.',
+    },
+  ],
+}
+
+const ALL_OUTCOMES = { ...SUBJECT_OUTCOMES, ...P1_ONLY_OUTCOMES }
+
+// Lower primary (P1–P2) reports grade LOs for languages, Maths and Social
+// Studies — Science starts at P3; Music/Art/PE are not graded LO subjects at P1.
 const LOWER_PRIMARY_SUBJECTS = [
   'English Language',
   'Chinese Language',
   'Mathematics',
+  'Social Studies',
 ]
 
 function generateSubjects(
@@ -280,7 +305,7 @@ function generateSubjects(
     ? LOWER_PRIMARY_SUBJECTS
     : Object.keys(SUBJECT_OUTCOMES)
   return subjectNames.map((name, i) => {
-    const outcomes = SUBJECT_OUTCOMES[name]
+    const outcomes = ALL_OUTCOMES[name]
     const learningOutcomes: Array<LearningOutcome> = outcomes.map((o, j) => {
       const statusSeed = seed + i * 7 + j * 3 + student.overallPercentage
       let statusIdx: number
