@@ -538,19 +538,19 @@ function TemplatePreviewModal({
           <DialogTitle className="text-base">{template.name}</DialogTitle>
           <DialogDescription>{template.agency}</DialogDescription>
         </DialogHeader>
-        <div className="min-h-[480px] flex-1 overflow-auto bg-muted/30 p-4">
+        <div className="min-h-[480px] flex-1 overflow-auto bg-muted/30 p-6">
           {pdf ? (
             <iframe
               src={pdf}
               title={`${template.name} preview`}
-              className="h-[68vh] w-full rounded-md bg-card shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.08)]"
+              className="h-[78vh] w-full bg-card"
             />
           ) : png ? (
             <div className="flex justify-center">
               <img
                 src={png}
                 alt={`${template.name} preview`}
-                className="max-w-full rounded-md bg-card shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.08)]"
+                className="max-w-full bg-card"
               />
             </div>
           ) : (
@@ -923,7 +923,15 @@ function TemplateSelection({
                         </p>
                       </div>
 
-                      {!locked && (
+                      {locked ? (
+                        <Lock className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      ) : (
+                        // Circular arrow now doubles as the Preview
+                        // trigger — the eye icon was redundant. Row-body
+                        // click still selects the template and advances
+                        // to Fill Report; the arrow's own click opens
+                        // the preview modal and stops propagation so it
+                        // doesn't also select.
                         <button
                           type="button"
                           onClick={(e) => {
@@ -932,17 +940,6 @@ function TemplateSelection({
                           }}
                           aria-label="Preview form"
                           title="Preview form"
-                          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </button>
-                      )}
-
-                      {locked ? (
-                        <Lock className="h-4 w-4 shrink-0 text-muted-foreground" />
-                      ) : (
-                        <span
-                          aria-hidden
                           className={cn(
                             'flex h-7 w-7 shrink-0 items-center justify-center rounded-full border transition-colors',
                             isSelected
@@ -955,7 +952,7 @@ function TemplateSelection({
                           ) : (
                             <ChevronRight className="h-3.5 w-3.5" />
                           )}
-                        </span>
+                        </button>
                       )}
                     </div>
                   )
@@ -1215,10 +1212,15 @@ function FieldRow({
   const selectedIds =
     selectedAiSourceIds ??
     new Set(MOCK_AI_SOURCES.filter((s) => s.defaultSelected).map((s) => s.id))
-  // Empty-state highlight for not-yet-filled fields (Change 4). Signature
-  // fields are stamped on export and never need user input — exempt them.
+  // Empty amber tint scope: only aiDraftable narrative fields that
+  // still need an AI Draft. Structural fields with a default value the
+  // system will fill (or a plain typed field) no longer get a marker —
+  // the yellow was reading as noise. Non-narrative fields keep neutral
+  // input styling regardless.
   const isEmpty = field.type !== 'signature' && value.trim() === ''
-  const emptyInputBorder = isEmpty
+  const needsAiDraft =
+    field.type === 'narrative' && field.aiDraftable === true && isEmpty
+  const emptyInputBorder = needsAiDraft
     ? 'border-amber-6 bg-amber-3/60'
     : isDrafted
       ? 'border-violet-6 bg-violet-3/40'
@@ -1359,12 +1361,7 @@ function FieldRow({
             )}
         </div>
       ) : field.type === 'radio' ? (
-        <div
-          className={cn(
-            'flex flex-wrap gap-3 rounded-lg px-2 py-1.5 transition-colors',
-            isEmpty && 'bg-amber-3/60',
-          )}
-        >
+        <div className="flex flex-wrap gap-3 rounded-lg px-2 py-1.5">
           {(field.options ?? []).map((opt) => (
             <label
               key={opt}
@@ -1388,12 +1385,7 @@ function FieldRow({
           )}
         </div>
       ) : field.type === 'yesnona' ? (
-        <div
-          className={cn(
-            'flex flex-wrap gap-3 rounded-lg px-2 py-1.5 transition-colors',
-            isEmpty && 'bg-amber-3/60',
-          )}
-        >
+        <div className="flex flex-wrap gap-3 rounded-lg px-2 py-1.5">
           {['Yes', 'No', 'NA'].map((opt) => (
             <label
               key={opt}
@@ -1427,11 +1419,7 @@ function FieldRow({
                 'w-full rounded-lg border px-3.5 py-2 text-sm outline-none transition-colors',
                 'focus:border-primary focus:ring-1 focus:ring-primary',
                 showSourceLink && 'pr-9',
-                field.stale
-                  ? 'border-amber-7 bg-amber-3'
-                  : isEmpty
-                    ? 'border-amber-6 bg-amber-3/60'
-                    : '',
+                field.stale && 'border-amber-7 bg-amber-3',
               )}
             />
             {showSourceLink && field.source && (
@@ -1462,7 +1450,6 @@ function SectionPanel({
   section,
   fieldValues,
   aiFlags,
-  autoFilled,
   prefilledFrom,
   aiSourceSelections,
   onAiSourceChange,
@@ -1470,16 +1457,10 @@ function SectionPanel({
   onAssignedChange: _onAssignedChange,
   onValueChange,
   onAiDraft,
-  onToggleReviewed,
-  isReviewed,
 }: {
   section: ReportSection
   fieldValues: Record<string, string>
   aiFlags: Record<string, boolean>
-  // When false the form is in its pristine pre-Auto-fill state — no
-  // source-system values (EduHub particulars, School Cockpit
-  // attendance, radio/checkbox defaults) are shown yet.
-  autoFilled: boolean
   prefilledFrom: Record<string, string>
   aiSourceSelections: Record<string, Set<string>>
   onAiSourceChange: (fieldId: string, next: Set<string>) => void
@@ -1487,37 +1468,38 @@ function SectionPanel({
   onAssignedChange: (s: Staff) => void
   onValueChange: (fieldId: string, v: string) => void
   onAiDraft: (fieldId: string) => void
-  onToggleReviewed: (sectionId: string) => void
-  isReviewed: boolean
 }) {
   const isMine = isSameStaff(assignedTo, CURRENT_USER)
   const completed = assignedTo.completed === true
   const completedDate = assignedTo.completedDate
 
   // Resolve a field's currently-displayed value. User edits always win;
-  // structural template defaults only surface after Auto-fill. Narrative
-  // fields never draw from f.value — their content comes from the
-  // per-field AI Draft flow, written into fieldValues.
+  // structural template defaults surface immediately (the auto-fill
+  // fetch is simulated by the initialLoading overlay in ReportForm).
+  // Narrative fields never draw from f.value — their content comes from
+  // the per-field AI Draft flow, written into fieldValues.
   const resolveValue = (f: ReportField): string => {
     const userVal = (fieldValues as Record<string, string | undefined>)[f.id]
     if (userVal !== undefined) return userVal
-    if (autoFilled && f.type !== 'narrative') return f.value ?? ''
+    if (f.type !== 'narrative') return f.value ?? ''
     return ''
   }
-  // Purple tint only for narrative fields that the YH has AI-drafted
-  // and not yet edited past / marked verified. Structural auto-filled
-  // fields keep their neutral appearance — they're system-of-record
-  // data, not AI content.
+  // Purple tint only for narrative fields that the YH has AI-drafted.
+  // Structural fields keep their neutral appearance — they're system-
+  // of-record data, not AI content.
   const isFieldDrafted = (f: ReportField): boolean =>
-    f.type === 'narrative' && !!aiFlags[f.id] && !isReviewed
+    f.type === 'narrative' && !!aiFlags[f.id]
 
-  // Live count of unfilled fields for the section header indicator.
-  // Signature fields are stamped on export and not counted as user input.
+  // Empty-field count in the section header only calls out fields that
+  // still need an AI Draft (empty + aiDraftable narrative). Structural
+  // fields that would be trivially filled by the YH do not count.
   const emptyCount = isMine
-    ? section.fields.filter((f) => {
-        if (f.type === 'signature') return false
-        return resolveValue(f).trim() === ''
-      }).length
+    ? section.fields.filter(
+        (f) =>
+          f.type === 'narrative' &&
+          f.aiDraftable === true &&
+          resolveValue(f).trim() === '',
+      ).length
     : 0
 
   // For the read-only rendering of a completed counsellor-role section, fall
@@ -1531,23 +1513,7 @@ function SectionPanel({
     return fieldValues[fieldId] ?? f?.value ?? '—'
   }
 
-  const reviewToggle = (
-    <Button
-      variant={isReviewed ? 'secondary' : 'outline'}
-      size="sm"
-      onClick={() => onToggleReviewed(section.id)}
-      className={cn(isReviewed && 'text-lime-11')}
-    >
-      {isReviewed ? (
-        <>
-          <Check className="mr-1.5 h-3.5 w-3.5 text-lime-11" />
-          Verified
-        </>
-      ) : (
-        <>Mark as verified</>
-      )}
-    </Button>
-  )
+  // Mark as verified was removed — progress tracks population now.
 
   // Counsellor's Input is restricted from the YH's view — the section is
   // visible in the form (so the YH knows it exists) but the contents are
@@ -1596,7 +1562,6 @@ function SectionPanel({
               onAiDraft={() => onAiDraft(field.id)}
             />
           ))}
-          <div className="flex justify-end border-t pt-4">{reviewToggle}</div>
         </div>
       ) : completed ? (
         <div className="space-y-4">
@@ -2737,9 +2702,6 @@ function ReportForm({
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({})
   const [aiFlags, setAiFlags] = useState<Record<string, boolean>>({})
   const [prefilledFrom, setPrefilledFrom] = useState<Record<string, string>>({})
-  const [completedSections, setCompletedSections] = useState<Set<string>>(
-    new Set(),
-  )
   const [previewOpen, setPreviewOpen] = useState(false)
   const [savedStatus, setSavedStatus] = useState<'saved' | 'saving'>('saved')
   const [submitOpen, setSubmitOpen] = useState(false)
@@ -2748,14 +2710,14 @@ function ReportForm({
   // YH can either return to the profile or stay on this page to view what
   // they sent. Cleared if the YH starts a new report (component unmounts).
   const [submitted, setSubmitted] = useState(false)
-  // Auto-fill: whether the YH has pressed the top-toolbar Auto-fill
-  // button. While false, the form renders as a pristine blank report
-  // — no source-system values are pre-filled. Once true, EduHub /
-  // School Cockpit / TCI-sourced particulars, attendance counts,
-  // radio/checkbox defaults etc surface. Narrative (qualitative)
-  // fields still stay empty until the YH triggers per-field AI Draft
-  // and picks sources — the top-bar button never writes prose.
-  const [autoFilled, setAutoFilled] = useState(false)
+  // Loading overlay for the initial auto-fill "fetch". Simulates the
+  // moment when source-system data (EduHub, School Cockpit, TCI) is
+  // being pulled into the fresh report after the YH picks a template.
+  const [initialLoading, setInitialLoading] = useState(true)
+  useEffect(() => {
+    const t = setTimeout(() => setInitialLoading(false), 1200)
+    return () => clearTimeout(t)
+  }, [])
   const [addCollaboratorsOpen, setAddCollaboratorsOpen] = useState(false)
   // Start empty — the YH invites collaborators after creating the report.
   // MOCK_COLLABORATORS is exposed in the modal as quick-pick suggestions.
@@ -2861,46 +2823,57 @@ function ReportForm({
     updateField(id, personalizeText(draft, studentName))
     setAiFlags((p) => ({ ...p, [id]: true }))
   }
-  const toggleReviewed = (sectionId: string) => {
-    setCompletedSections((p) => {
-      const next = new Set(p)
-      if (next.has(sectionId)) {
-        next.delete(sectionId)
-        return next
-      }
-      next.add(sectionId)
-      return next
-    })
-  }
   const saveDraft = () => {
     setSavedStatus('saving')
     setTimeout(() => setSavedStatus('saved'), 500)
   }
 
-  // Verified counter only counts sections assigned to the current user.
-  const reviewableSections = template.sections.filter((s) => {
-    const a = assignments[s.id]
-    return a && isSameStaff(a, CURRENT_USER)
-  })
-  const reviewedCount = reviewableSections.filter((s) =>
-    completedSections.has(s.id),
-  ).length
-
-  // Progress bar tracks VERIFIED sections, not population. 0% at fresh
-  // open → 100% once every YH-owned section is marked verified.
-  const progressPct = reviewableSections.length
-    ? Math.round((reviewedCount / reviewableSections.length) * 100)
+  // Progress bar tracks population, not verification. Every non-
+  // signature YH-owned field with a non-empty value counts as filled;
+  // structural fields are auto-filled on template selection (see the
+  // initialLoading overlay), so the bar starts at ~50–60% and advances
+  // as narrative AI Draft flows complete or the YH types in fields
+  // manually.
+  const populationFields = template.sections
+    .filter((s) => {
+      const a = assignments[s.id]
+      return a && isSameStaff(a, CURRENT_USER)
+    })
+    .flatMap((s) => s.fields)
+    .filter((f) => f.type !== 'signature')
+  const filledFieldCount = populationFields.filter((f) => {
+    const userVal = (fieldValues as Record<string, string | undefined>)[f.id]
+    if (userVal !== undefined) return userVal.trim() !== ''
+    // Non-narrative fields with a template default count as filled once
+    // the auto-fill "fetch" completes.
+    return f.type !== 'narrative' && !!f.value
+  }).length
+  const progressPct = populationFields.length
+    ? Math.round((filledFieldCount / populationFields.length) * 100)
     : 0
 
-  // Auto-fill only reveals the structural / auto-populated defaults
-  // (particulars, attendance counts, radio/checkbox picks). Narrative
-  // fields deliberately stay empty — those live behind the per-field
-  // AI Draft button + source picker so the YH stays in control of the
-  // qualitative content.
-  const autoFill = () => {
-    setAutoFilled(true)
-    setSavedStatus('saving')
-    setTimeout(() => setSavedStatus('saved'), 800)
+  if (initialLoading) {
+    return (
+      <div
+        className={cn(
+          'mx-auto flex h-[calc(100vh-120px)] max-w-5xl flex-col items-center justify-center gap-4 overflow-hidden rounded-xl border bg-white',
+        )}
+      >
+        <div className="relative flex h-14 w-14 items-center justify-center">
+          <div className="absolute inset-0 animate-ping rounded-full bg-primary/20" />
+          <div className="relative flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
+            <RefreshCw className="h-6 w-6 animate-spin text-primary" />
+          </div>
+        </div>
+        <div className="text-center">
+          <p className="text-sm font-medium">Auto-filling fields…</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Pulling {studentName}'s data from EduHub, School Cockpit, TCI &
+            Case Sync
+          </p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -2918,28 +2891,6 @@ function ReportForm({
             <span className="truncate text-sm font-semibold">
               {template.name}
             </span>
-            {(() => {
-              const days = template.turnaroundDays
-              const cls =
-                days < 0
-                  ? 'text-destructive'
-                  : days <= 2
-                    ? 'text-amber-11'
-                    : 'text-muted-foreground'
-              return (
-                <span
-                  className={cn(
-                    'flex items-center gap-1 text-xs font-medium',
-                    cls,
-                  )}
-                >
-                  <Clock className="h-3 w-3" />
-                  {days < 0
-                    ? `${Math.abs(days)} day${Math.abs(days) !== 1 ? 's' : ''} overdue`
-                    : `${days} day${days !== 1 ? 's' : ''}`}
-                </span>
-              )
-            })()}
           </div>
           <p className="truncate text-xs text-muted-foreground">
             {studentName} · {studentClass}
@@ -2981,11 +2932,6 @@ function ReportForm({
           )}
         </span>
         <div className="h-5 w-px bg-border" />
-        {!autoFilled && !submitted && (
-          <Button size="sm" onClick={autoFill}>
-            Auto-fill
-          </Button>
-        )}
         <Button
           variant="ghost"
           size="sm"
@@ -3007,15 +2953,9 @@ function ReportForm({
       <div className="flex min-h-0 flex-1 bg-muted/10">
         {/* Form cards — scrollable column */}
         <div className="min-w-0 flex-1 overflow-y-auto px-6 py-5">
-          {/* Progress chip + collaborators */}
+          {/* Collaborators row (verification indicator removed with
+              Mark as verified) */}
           <div className="mb-4 flex items-center gap-3 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1.5">
-              <ListChecks className="h-3.5 w-3.5" />
-              <span className="font-medium tabular-nums text-foreground">
-                {reviewedCount} of {reviewableSections.length} sections verified
-              </span>
-            </span>
-            <span className="h-3 w-px bg-border" />
             <CollaboratorAvatars collaborators={collaborators} />
             <Button
               variant="ghost"
@@ -3136,7 +3076,6 @@ function ReportForm({
                   section={s}
                   fieldValues={fieldValues}
                   aiFlags={aiFlags}
-                  autoFilled={autoFilled}
                   prefilledFrom={prefilledFrom}
                   aiSourceSelections={aiSourceSelections}
                   onAiSourceChange={(fieldId, next) =>
@@ -3149,8 +3088,6 @@ function ReportForm({
                   onAssignedChange={(staff) => reassignSection(s.id, staff)}
                   onValueChange={updateField}
                   onAiDraft={aiDraft}
-                  onToggleReviewed={toggleReviewed}
-                  isReviewed={completedSections.has(s.id)}
                 />
               ))}
             </div>
@@ -3260,7 +3197,6 @@ function ReportForm({
             </p>
             <nav className="flex flex-col gap-1">
               {template.sections.map((s) => {
-                const done = completedSections.has(s.id)
                 // Principal's Comments are never written by the YH — they
                 // sign off after submission. Lock the nav entry to match
                 // the Counsellor pattern for clarity.
@@ -3289,9 +3225,6 @@ function ReportForm({
                     href={`#sec-${s.id}`}
                     className="flex items-center gap-1.5 rounded-full bg-muted px-3 py-1.5 text-sm hover:bg-muted/80"
                   >
-                    {done && (
-                      <Check className="h-3 w-3 shrink-0 text-lime-11" />
-                    )}
                     <span className="truncate">{s.title}</span>
                   </a>
                 )
