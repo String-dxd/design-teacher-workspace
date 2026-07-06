@@ -130,9 +130,18 @@ export const RichTextEditor = memo(function RichTextEditor({
     },
   })
 
-  // Sync external value when not focused (e.g. loading a saved draft)
+  // Sync external value changes into the editor when it isn't focused (e.g. a
+  // saved draft loads, or a Suggest button appends text). Skip the initial
+  // mount: the editor is already seeded via `content`, so re-running setContent
+  // then is redundant — and because the seed is often plain text that
+  // normalises differently from getHTML(), it needlessly moves the selection
+  // into the editor, grabbing focus and scrolling it into view. Track the last
+  // external value so we only setContent on a genuine external change.
+  const lastSyncedValue = useRef(value)
   useEffect(() => {
     if (!editor) return
+    if (value === lastSyncedValue.current) return
+    lastSyncedValue.current = value
     if (value !== editor.getHTML() && !editor.view.hasFocus()) {
       editor.commands.setContent(value || '', false)
     }

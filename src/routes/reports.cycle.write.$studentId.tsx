@@ -91,6 +91,7 @@ function CycleWriteBody({ studentId }: { studentId: string }) {
     'idle',
   )
   const errorRef = useRef<HTMLDivElement>(null)
+  const headingRef = useRef<HTMLHeadingElement>(null)
 
   useSetBreadcrumbs([
     { label: 'Reports', href: '/reports' },
@@ -105,6 +106,26 @@ function CycleWriteBody({ studentId }: { studentId: string }) {
       ? `Write · ${student.name} · Reports`
       : 'Write · Reports'
   }, [student])
+
+  // On arriving at a pupil (initial load or pager step), land focus on the
+  // student heading so the teacher sees which pupil they're on, rather than
+  // being dropped into the comments editor (A11Y-11 focus-on-step-change). The
+  // Tiptap editor calls its focus command on mount, which defers a view.focus()
+  // by one animation frame; we focus the heading a frame later so it wins that
+  // one-time grab. The per-student remount (key={studentId}) runs this once per
+  // pupil. focus() also scrolls the heading's container to the top.
+  useEffect(() => {
+    let inner = 0
+    const outer = requestAnimationFrame(() => {
+      inner = requestAnimationFrame(() => {
+        headingRef.current?.focus()
+      })
+    })
+    return () => {
+      cancelAnimationFrame(outer)
+      cancelAnimationFrame(inner)
+    }
+  }, [])
 
   // Focus must move after the error banner renders (established focus-move pattern).
   useEffect(() => {
@@ -209,7 +230,13 @@ function CycleWriteBody({ studentId }: { studentId: string }) {
             <ArrowLeft className="size-4" />
           </Link>
           <div className="flex-1">
-            <h1 className="text-lg font-semibold">{student.name}</h1>
+            <h1
+              ref={headingRef}
+              tabIndex={-1}
+              className="text-lg font-semibold outline-none"
+            >
+              {student.name}
+            </h1>
             <p className="text-muted-foreground text-sm">
               {student.class} · {term}
             </p>

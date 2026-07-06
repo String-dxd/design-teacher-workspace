@@ -30,8 +30,34 @@ your row when done.
 | 021 | Characterization tests for `commitCycleReport` + `statusFor` | P2 | S | — | DONE (reviewer-verified) — `hdp-report-commit.test.ts` (3) + `cycle-student-table.test.ts` (7); advisor re-ran: 75/75 tests, 0 new tsc, eslint clean, tests read + assert real behavior. |
 | 022 | Remove dead exports (`classOptions`, `SECTION_FIELD_DEFS`) + rename template to primary-wide | P3 | S | — | DONE (reviewer-verified) — both dead exports gone (grep 0), template → "Primary Holistic Development" (3 literals). tsc 107 (0 new), 75 tests, prettier clean; the one `mock-students.ts` eslint `no-unnecessary-condition` is pre-existing (verified at HEAD, line just shifted). Minor follow-up: the template `description` still says "Lower-primary default". |
 
+| 023 | Write stage lands at the top, not scrolled into the comments editor (flow / A11Y-11) | P1 | S | — | DONE (reviewer-implemented + browser-verified 2026-07-06) — **Step 1 (autofocus prop) disproven & reverted**: `autofocus` was already `false`; the real cause, found via a focus-trap in-browser, is `@tiptap/react`'s own mount `focus` command, which (a) ran a redundant `setContent` (plain-text seed ≠ normalised HTML) that `scrollIntoView`'d the field −361px, and (b) deferred a `view.focus()` by one rAF. Fix = two parts: (1) shared `rich-text-editor.tsx` — guard the value-sync effect with a `lastSyncedValue` ref so it no longer fires the redundant mount `setContent` (kills the −361 scroll; Suggest/typing/announcements re-verified unaffected); (2) write route — `key`-remount already present, add `headingRef`+`tabIndex={-1}` on the `<h1>` and a **double-rAF** mount effect that focuses it after Tiptap's single-rAF grab. Verified fresh-load / SPA-nav / pager: `h1.top=72` (≥0) and `activeElement===h1` (not the editor) in all three. Gates: tsc 107 (0 new; the 2 editor errors are pre-existing baseline), 75 tests, targeted prettier+eslint clean, scope = 2 in-scope files. Uncommitted → committing now. |
+| 024 | Make the student list the hub's focal point — compact the summary strip + tidy the control row (SLP-11, layout #1/#4) | P2 | S | — | TODO — written at `85dd742`. |
+| 025 | Remove the nested card in the layout-stage preview (SLP-4) | P3 | S | — | TODO — written at `85dd742`. |
+
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) |
 REJECTED (with one-line rationale).
+
+## Round 6 — HDP flow design critique (2026-07-06)
+
+Ran the `tfx:critique` skill over the HDP flow end-to-end (agent-browser capture at 1280,
+commit `85dd742`), graded against the standards catalog + layout patterns. Five ranked
+suggestions; the user accepted all. Turned into three plans:
+
+- **023** — critique #1 (write stage lands mid-document; the highest-frequency surface).
+- **024** — critique #2 (oversized summary cards demote the student list) + #3 (control-row
+  label inconsistency), combined since they're the same file/region.
+- **025** — critique #4 (nested card in the layout preview, SLP-4).
+
+## Findings considered and rejected (Round 6)
+
+- **Critique #5 — "parent-view Acknowledge bar is full-width vs the narrow content column"**:
+  rejected on vetting. The sticky bar is `fixed inset-x-0 bottom-0 mx-auto max-w-md`
+  (`_guest.report-view.$token.tsx:116,203`) — already capped at `max-w-md` and centred, so it
+  already tracks the content column. My critique mis-observed it as full-width; the code
+  disproves it. No plan.
+- **Copy nit (not layout)**: the flag-off empty state still reads "Turn on HDP Report Builder"
+  (`reports.cycle.*` off-state) after the flag consolidated to one "HDP Reports" flag — routes
+  to the `copy` skill, not this design pass. Recorded, not planned here.
 
 ## Round 5 — HDP branch hardening audit (2026-07-06)
 
