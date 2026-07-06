@@ -16,6 +16,7 @@ import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as MeetingsRouteImport } from './routes/meetings'
 import { Route as InsightBuddyRouteImport } from './routes/insight-buddy'
 import { Route as HolisticReportsRouteImport } from './routes/holistic-reports'
+import { Route as HdpPrimaryRouteImport } from './routes/hdp-primary'
 import { Route as GroupsRouteImport } from './routes/groups'
 import { Route as FormsRouteImport } from './routes/forms'
 import { Route as FlagsRouteImport } from './routes/flags'
@@ -88,6 +89,11 @@ const InsightBuddyRoute = InsightBuddyRouteImport.update({
 const HolisticReportsRoute = HolisticReportsRouteImport.update({
   id: '/holistic-reports',
   path: '/holistic-reports',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HdpPrimaryRoute = HdpPrimaryRouteImport.update({
+  id: '/hdp-primary',
+  path: '/hdp-primary',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GroupsRoute = GroupsRouteImport.update({
@@ -292,6 +298,7 @@ export interface FileRoutesByFullPath {
   '/flags': typeof FlagsRoute
   '/forms': typeof FormsRouteWithChildren
   '/groups': typeof GroupsRouteWithChildren
+  '/hdp-primary': typeof HdpPrimaryRoute
   '/holistic-reports': typeof HolisticReportsRouteWithChildren
   '/insight-buddy': typeof InsightBuddyRoute
   '/meetings': typeof MeetingsRouteWithChildren
@@ -334,6 +341,7 @@ export interface FileRoutesByTo {
   '/attendance': typeof AttendanceRoute
   '/ds': typeof DsRoute
   '/flags': typeof FlagsRoute
+  '/hdp-primary': typeof HdpPrimaryRoute
   '/insight-buddy': typeof InsightBuddyRoute
   '/settings': typeof SettingsRoute
   '/student-analytics': typeof StudentAnalyticsRoute
@@ -378,6 +386,7 @@ export interface FileRoutesById {
   '/flags': typeof FlagsRoute
   '/forms': typeof FormsRouteWithChildren
   '/groups': typeof GroupsRouteWithChildren
+  '/hdp-primary': typeof HdpPrimaryRoute
   '/holistic-reports': typeof HolisticReportsRouteWithChildren
   '/insight-buddy': typeof InsightBuddyRoute
   '/meetings': typeof MeetingsRouteWithChildren
@@ -426,6 +435,7 @@ export interface FileRouteTypes {
     | '/flags'
     | '/forms'
     | '/groups'
+    | '/hdp-primary'
     | '/holistic-reports'
     | '/insight-buddy'
     | '/meetings'
@@ -468,6 +478,7 @@ export interface FileRouteTypes {
     | '/attendance'
     | '/ds'
     | '/flags'
+    | '/hdp-primary'
     | '/insight-buddy'
     | '/settings'
     | '/student-analytics'
@@ -511,6 +522,7 @@ export interface FileRouteTypes {
     | '/flags'
     | '/forms'
     | '/groups'
+    | '/hdp-primary'
     | '/holistic-reports'
     | '/insight-buddy'
     | '/meetings'
@@ -559,6 +571,7 @@ export interface RootRouteChildren {
   FlagsRoute: typeof FlagsRoute
   FormsRoute: typeof FormsRouteWithChildren
   GroupsRoute: typeof GroupsRouteWithChildren
+  HdpPrimaryRoute: typeof HdpPrimaryRoute
   HolisticReportsRoute: typeof HolisticReportsRouteWithChildren
   InsightBuddyRoute: typeof InsightBuddyRoute
   MeetingsRoute: typeof MeetingsRouteWithChildren
@@ -619,6 +632,13 @@ declare module '@tanstack/react-router' {
       path: '/holistic-reports'
       fullPath: '/holistic-reports'
       preLoaderRoute: typeof HolisticReportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hdp-primary': {
+      id: '/hdp-primary'
+      path: '/hdp-primary'
+      fullPath: '/hdp-primary'
+      preLoaderRoute: typeof HdpPrimaryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/groups': {
@@ -1036,6 +1056,7 @@ const rootRouteChildren: RootRouteChildren = {
   FlagsRoute: FlagsRoute,
   FormsRoute: FormsRouteWithChildren,
   GroupsRoute: GroupsRouteWithChildren,
+  HdpPrimaryRoute: HdpPrimaryRoute,
   HolisticReportsRoute: HolisticReportsRouteWithChildren,
   InsightBuddyRoute: InsightBuddyRoute,
   MeetingsRoute: MeetingsRouteWithChildren,
