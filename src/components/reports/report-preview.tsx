@@ -72,6 +72,9 @@ const QUALITY_PILL_CLASS: Record<CoreValueLevel, string> = {
   Beginning: 'text-muted-foreground border bg-transparent',
 }
 
+/** Illustrated avatars by student id — falls back to initials when absent. */
+const STUDENT_AVATARS = new Map<string, string>([['36', '/avatars/chloe.svg']])
+
 const SUBJECT_ICONS = new Map<string, LucideIcon>([
   ['English Language', BookOpen],
   ['Chinese Language', Languages],
@@ -469,12 +472,21 @@ function PreviewBlock({
       return (
         <div className="flex flex-col gap-3 border-b pb-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
-            <div
-              aria-hidden
-              className="bg-twblue-3 text-twblue-11 flex size-12 shrink-0 items-center justify-center rounded-full text-sm font-semibold"
-            >
-              {initials(report.studentName)}
-            </div>
+            {STUDENT_AVATARS.has(report.studentId) ? (
+              <img
+                src={STUDENT_AVATARS.get(report.studentId)}
+                alt=""
+                aria-hidden
+                className="size-12 shrink-0 rounded-full object-cover"
+              />
+            ) : (
+              <div
+                aria-hidden
+                className="bg-twblue-3 text-twblue-11 flex size-12 shrink-0 items-center justify-center rounded-full text-sm font-semibold"
+              >
+                {initials(report.studentName)}
+              </div>
+            )}
             <div>
               <h2 className="text-lg font-semibold">{report.studentName}</h2>
               <p className="text-muted-foreground text-sm">

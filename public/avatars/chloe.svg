@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- Flat illustration avatar for Chloe Tan Xin Yi (recreated from supplied artwork) -->
+  <rect width="200" height="200" fill="#ECECEC"/>
+  <!-- ponytail -->
+  <g transform="rotate(18 152 80)">
+    <ellipse cx="152" cy="82" rx="15" ry="30" fill="#1E1E1E"/>
+  </g>
+  <rect x="140" y="48" width="16" height="10" rx="5" fill="#F27EA9" transform="rotate(24 148 53)"/>
+  <!-- back hair -->
+  <ellipse cx="100" cy="96" rx="62" ry="58" fill="#1E1E1E"/>
+  <ellipse cx="52" cy="128" rx="17" ry="30" fill="#1E1E1E"/>
+  <ellipse cx="148" cy="128" rx="17" ry="30" fill="#1E1E1E"/>
+  <!-- ears -->
+  <circle cx="55" cy="108" r="10" fill="#F7C89B"/>
+  <circle cx="145" cy="108" r="10" fill="#F7C89B"/>
+  <!-- neck + shoulders -->
+  <rect x="88" y="128" width="24" height="30" fill="#F7C89B"/>
+  <path d="M38 200 Q40 158 74 152 L126 152 Q160 158 162 200 Z" fill="#2C51CE"/>
+  <!-- straps -->
+  <path d="M60 156 L74 152 L86 200 L70 200 Z" fill="#F27EA9"/>
+  <path d="M140 156 L126 152 L114 200 L130 200 Z" fill="#F27EA9"/>
+  <!-- collar -->
+  <path d="M78 150 Q100 168 122 150 Q112 144 100 144 Q88 144 78 150 Z" fill="#FFFFFF"/>
+  <circle cx="100" cy="160" r="3" fill="#2343B8"/>
+  <!-- face -->
+  <ellipse cx="100" cy="106" rx="45" ry="43" fill="#F7C89B"/>
+  <!-- fringe -->
+  <path d="M55 100 Q55 58 100 56 Q145 58 145 100 Q140 74 118 70 Q125 88 112 84 Q96 78 82 86 Q66 96 62 108 Q57 106 55 100 Z" fill="#1E1E1E"/>
+  <!-- brows -->
+  <path d="M72 90 Q81 85 90 89" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" fill="none"/>
+  <path d="M110 89 Q119 85 128 90" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" fill="none"/>
+  <!-- eyes -->
+  <ellipse cx="82" cy="110" rx="13" ry="15" fill="#FFFFFF"/>
+  <ellipse cx="118" cy="110" rx="13" ry="15" fill="#FFFFFF"/>
+  <ellipse cx="84" cy="111" rx="6" ry="8" fill="#141414"/>
+  <ellipse cx="116" cy="111" rx="6" ry="8" fill="#141414"/>
+  <!-- nose -->
+  <path d="M100 112 Q97 119 101 121" stroke="#E8935F" stroke-width="4" stroke-linecap="round" fill="none"/>
+  <!-- smile -->
+  <path d="M92 130 Q100 137 108 130" stroke="#E2572B" stroke-width="5" stroke-linecap="round" fill="none"/>
+</svg>
