@@ -29,7 +29,7 @@ import {
   getCockpitSubmissions,
   isSubjectSubmitted,
 } from '@/data/mock-cockpit-submissions'
-import { cn } from '@/lib/utils'
+import { cn, stripSalutation } from '@/lib/utils'
 
 // Shared P1 report renderer — used by the builder's live preview (editable) and the
 // parent-facing guest view (read-only). Renders the ordered, enabled blocks of a
@@ -147,7 +147,7 @@ function SubjectCard({
         </span>
         {submission?.submittedAt && (
           <span className="text-muted-foreground shrink-0 text-xs whitespace-nowrap">
-            {submission.teacherName}
+            {stripSalutation(submission.teacherName)}
           </span>
         )}
       </div>
@@ -285,47 +285,15 @@ function deriveHighlights(report: HolisticReport): {
 }
 
 /** "Term at a glance" — the document's single designed visual moment. */
-function TermAtAGlance({
-  report,
-  comments,
-  editable,
-}: {
-  report: HolisticReport
-  comments: string
-  editable: boolean
-}) {
+function TermAtAGlance({ report }: { report: HolisticReport }) {
   const attendancePct = Math.round(
     (report.attendance.daysPresent / report.attendance.totalSchoolDays) * 100,
   )
   const { strongest, growing } = deriveHighlights(report)
   const first = firstName(report.studentName)
-  // In write mode the teacher edits the comment in its own section below, so
-  // the hero doesn't echo it; read views lead with the teacher's words.
-  const quote = !editable ? stripHtml(comments) : ''
-  const [beforeName, ...afterName] = quote.split(first)
 
   return (
     <div className="bg-card flex flex-col gap-3 rounded-xl border p-4">
-      {/* The teacher's words lead the report. */}
-      {quote && (
-        <div className="bg-amber-2 rounded-lg p-4">
-          <p className="mb-1.5 text-sm font-semibold">Teacher comments</p>
-          <p className="text-sm leading-relaxed">
-            “
-            {afterName.length > 0 ? (
-              <>
-                {beforeName}
-                <strong>{first}</strong>
-                {afterName.join(first)}
-              </>
-            ) : (
-              quote
-            )}
-            ”
-          </p>
-        </div>
-      )}
-
       {/* Where the child shines and where she's growing. */}
       {strongest.length > 0 && (
         <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
@@ -474,9 +442,43 @@ export function ReportPreview({
           />
         </div>
       )}
-      {pupilInfoBlock && (
-        <TermAtAGlance report={report} comments={comments} editable={editable} />
-      )}
+      {/* The teacher's words lead the document — a standalone block quote in
+          read views. Write mode keeps the editor section instead, and the
+          quote respects the "Form teacher comments" layout toggle. */}
+      {!editable &&
+        ordered.some((b) => b.key === 'conduct') &&
+        (() => {
+          const quote = stripHtml(comments)
+          if (!quote) return null
+          const first = firstName(report.studentName)
+          const [beforeName, ...afterName] = quote.split(first)
+          return (
+            <div className="flex flex-col gap-2">
+              <h3 className="text-sm font-semibold tracking-tight">
+                Teacher comments
+              </h3>
+              <blockquote className="border-amber-8 border-l-4 py-0.5 pl-4">
+                <p className="text-sm leading-relaxed">
+                  “
+                  {afterName.length > 0 ? (
+                    <>
+                      {beforeName}
+                      <strong>{first}</strong>
+                      {afterName.join(first)}
+                    </>
+                  ) : (
+                    quote
+                  )}
+                  ”
+                </p>
+                <footer className="text-muted-foreground mt-2 text-xs">
+                  — {stripSalutation(report.formTeacher)}, Form Teacher
+                </footer>
+              </blockquote>
+            </div>
+          )
+        })()}
+      {pupilInfoBlock && <TermAtAGlance report={report} />}
       {restBlocks.map((block) => (
         <div key={block.key} data-section-key={block.key}>
           <PreviewBlock
@@ -526,7 +528,7 @@ function PreviewBlock({
               <span className="text-foreground font-medium">
                 Form teacher:{' '}
               </span>
-              {report.formTeacher}
+              {stripSalutation(report.formTeacher)}
             </p>
           </div>
         )
@@ -568,7 +570,7 @@ function PreviewBlock({
                 Form teacher:{' '}
               </span>
               <span className="text-muted-foreground">
-                {report.formTeacher}
+                {stripSalutation(report.formTeacher)}
               </span>
             </p>
             {report.coFormTeacher && (
@@ -577,7 +579,7 @@ function PreviewBlock({
                   Co-form teacher:{' '}
                 </span>
                 <span className="text-muted-foreground">
-                  {report.coFormTeacher}
+                  {stripSalutation(report.coFormTeacher)}
                 </span>
               </p>
             )}
@@ -611,7 +613,7 @@ function PreviewBlock({
                     <p className="text-sm font-medium">{subj.name}</p>
                     <p className="text-muted-foreground text-sm">
                       Awaiting data from School Cockpit
-                      {submission ? ` — ${submission.teacherName}` : ''}
+                      {submission ? ` — ${stripSalutation(submission.teacherName)}` : ''}
                     </p>
                   </div>
                 )

@@ -7,5 +7,8 @@ export function cn(...inputs: Array<ClassValue>) {
 }
 
 export function stripSalutation(name: string): string {
-  return name.replace(/^(Mrs?\.|Mrs?|Ms\.|Ms|Dr\.|Dr|Prof\.|Prof)\s+/i, '')
+  return name.replace(
+    /^(Mrs?\.?|Ms\.?|Miss|Mdm\.?|Dr\.?|Prof\.?)\s+/i,
+    '',
+  )
 }
