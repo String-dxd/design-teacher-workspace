@@ -1,48 +1,54 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
-  <!-- Chloe avatar — hand-drawn editorial style: black ink, paper-white face,
-       solid blue pinafore, one warm accent. Turbulence filter adds the
-       crayon-line wobble. -->
+  <!-- Chloe avatar — crayon-doodle style after the supplied artwork: black
+       outlined face, swooping fringe with high side ponytail and orange
+       scrunchie, blue vest over white collar with striped tie. -->
   <defs>
     <filter id="rough" x="-10%" y="-10%" width="120%" height="120%">
-      <feTurbulence type="fractalNoise" baseFrequency="0.085" numOctaves="2" seed="7" result="n"/>
-      <feDisplacementMap in="SourceGraphic" in2="n" scale="3.2"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.09" numOctaves="2" seed="11" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="2.6"/>
     </filter>
   </defs>
-  <rect width="200" height="200" fill="#FFFFFF"/>
+  <rect width="200" height="200" fill="#F1F1F0"/>
   <g filter="url(#rough)">
-    <!-- pinafore -->
-    <path d="M42 200 Q46 156 78 150 L122 150 Q154 156 158 200 Z" fill="#3E63F0"/>
-    <!-- collar -->
-    <path d="M80 149 Q100 165 120 149" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round"/>
+    <!-- shirt / arms -->
+    <path d="M28 200 Q32 170 60 159 L132 159 Q160 170 164 200 Z" fill="#FFFFFF" stroke="#151515" stroke-width="3.5" stroke-linejoin="round"/>
+    <!-- vest -->
+    <path d="M56 200 L56 176 Q58 162 70 159 L96 182 L122 159 Q134 162 136 176 L136 200 Z" fill="#2F6BEA" stroke="#151515" stroke-width="3" stroke-linejoin="round"/>
     <!-- neck -->
-    <path d="M90 132 L90 152 M110 132 L110 152" stroke="#1B1B1B" stroke-width="3" stroke-linecap="round"/>
-    <rect x="90" y="130" width="20" height="22" fill="#FFFFFF"/>
+    <rect x="87" y="138" width="18" height="24" fill="#FFFFFF"/>
+    <path d="M87 140 L87 160 M105 140 L105 160" stroke="#151515" stroke-width="3" stroke-linecap="round"/>
+    <!-- collar -->
+    <path d="M78 154 L96 176 L86 150 Z" fill="#FFFFFF" stroke="#151515" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M114 154 L96 176 L106 150 Z" fill="#FFFFFF" stroke="#151515" stroke-width="2.5" stroke-linejoin="round"/>
+    <!-- tie -->
+    <path d="M91 170 L101 170 L105 190 L96 199 L87 190 Z" fill="#F0662E" stroke="#151515" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M90 178 L102 174 M92 187 L104 183" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round"/>
     <!-- ponytail -->
-    <g transform="rotate(16 150 78)">
-      <ellipse cx="150" cy="80" rx="14" ry="28" fill="#1B1B1B"/>
-    </g>
-    <rect x="139" y="49" width="15" height="9" rx="4.5" fill="#E8622C" transform="rotate(22 146 53)"/>
-    <!-- hair mass -->
-    <path d="M42 108 Q38 52 100 48 Q162 52 158 108 Q160 128 148 138 Q154 112 150 96 L50 96 Q46 112 52 138 Q40 128 42 108 Z" fill="#1B1B1B"/>
+    <path d="M130 60 Q172 42 174 92 Q175 128 160 152 Q152 158 150 148 Q162 116 154 86 Q149 66 128 64 Z" fill="#151515"/>
+    <!-- scrunchie -->
+    <rect x="123" y="42" width="13" height="22" rx="6.5" fill="#F0662E" transform="rotate(-24 129 53)"/>
+    <!-- ears -->
+    <circle cx="49" cy="106" r="9" fill="#FFFFFF" stroke="#151515" stroke-width="3"/>
+    <circle cx="143" cy="106" r="9" fill="#FFFFFF" stroke="#151515" stroke-width="3"/>
     <!-- face -->
-    <path d="M58 100 Q58 62 100 60 Q142 62 142 100 Q142 136 100 140 Q58 136 58 100 Z" fill="#FFFFFF" stroke="#1B1B1B" stroke-width="3"/>
-    <!-- fringe over face -->
-    <path d="M60 96 Q60 62 100 60 Q140 62 140 96 Q136 74 116 70 Q122 84 108 80 Q94 76 82 84 Q68 92 64 104 Q60 100 60 96 Z" fill="#1B1B1B"/>
-    <!-- side locks -->
-    <path d="M56 92 Q50 116 58 134 Q64 138 66 132 Q58 116 62 96 Z" fill="#1B1B1B"/>
-    <path d="M144 92 Q150 116 142 134 Q136 138 134 132 Q142 116 138 96 Z" fill="#1B1B1B"/>
+    <path d="M50 102 Q50 58 96 56 Q142 58 142 102 Q142 144 96 148 Q50 144 50 102 Z" fill="#FFFFFF" stroke="#151515" stroke-width="3.5"/>
+    <!-- fringe -->
+    <path d="M48 110 Q40 50 96 44 Q142 46 146 92 Q147 102 144 110 Q144 80 120 70 Q128 88 110 82 Q86 72 70 88 Q56 98 54 116 Q50 116 48 110 Z" fill="#151515"/>
+    <!-- side strands -->
+    <path d="M50 100 Q44 128 52 148 Q57 152 58 145 Q52 124 56 104 Z" fill="#151515"/>
+    <path d="M142 100 Q148 126 141 146 Q136 151 135 143 Q141 122 137 104 Z" fill="#151515"/>
     <!-- brows -->
-    <path d="M76 96 Q84 92 92 95" fill="none" stroke="#1B1B1B" stroke-width="2.5" stroke-linecap="round"/>
-    <path d="M108 95 Q116 92 124 96" fill="none" stroke="#1B1B1B" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M72 92 Q80 87 89 91" fill="none" stroke="#151515" stroke-width="3" stroke-linecap="round"/>
+    <path d="M104 91 Q112 87 121 92" fill="none" stroke="#151515" stroke-width="3" stroke-linecap="round"/>
     <!-- eyes -->
-    <ellipse cx="84" cy="107" rx="3.4" ry="4.4" fill="#1B1B1B"/>
-    <ellipse cx="116" cy="107" rx="3.4" ry="4.4" fill="#1B1B1B"/>
+    <circle cx="80" cy="106" r="4.5" fill="#151515"/>
+    <circle cx="114" cy="106" r="4.5" fill="#151515"/>
     <!-- nose -->
-    <path d="M100 110 Q98 117 101 119" fill="none" stroke="#1B1B1B" stroke-width="2" stroke-linecap="round"/>
-    <!-- mouth -->
-    <path d="M93 127 Q100 132 107 127" fill="none" stroke="#D9452B" stroke-width="3.5" stroke-linecap="round"/>
-    <!-- blush accents -->
-    <path d="M74 118 Q78 116 81 118" fill="none" stroke="#E8622C" stroke-width="2" stroke-linecap="round" opacity="0.7"/>
-    <path d="M119 118 Q122 116 126 118" fill="none" stroke="#E8622C" stroke-width="2" stroke-linecap="round" opacity="0.7"/>
+    <path d="M97 108 L96 117" stroke="#151515" stroke-width="3" stroke-linecap="round"/>
+    <!-- blush -->
+    <path d="M64 118 Q69 115 74 118" fill="none" stroke="#F2997E" stroke-width="4" stroke-linecap="round"/>
+    <path d="M118 118 Q123 115 128 118" fill="none" stroke="#F2997E" stroke-width="4" stroke-linecap="round"/>
+    <!-- smile -->
+    <path d="M87 127 Q96 135 106 127" fill="none" stroke="#D9432A" stroke-width="4" stroke-linecap="round"/>
   </g>
 </svg>
