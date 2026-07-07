@@ -16,7 +16,6 @@ import type {
   BlockDisplay,
   CoreValueLevel,
   HolisticReport,
-  LearningOutcome,
   LearningOutcomeStatus,
   ReportBlock,
   SubjectPerformance,
@@ -73,9 +72,6 @@ const QUALITY_PILL_CLASS: Record<CoreValueLevel, string> = {
   Beginning: 'text-muted-foreground border bg-transparent',
 }
 
-/** Illustrated avatars by student id — falls back to initials when absent. */
-const STUDENT_AVATARS = new Map<string, string>([['36', '/avatars/chloe.svg']])
-
 const SUBJECT_ICONS = new Map<string, LucideIcon>([
   ['English Language', BookOpen],
   ['Chinese Language', Languages],
@@ -84,56 +80,14 @@ const SUBJECT_ICONS = new Map<string, LucideIcon>([
   ['Social Studies', Globe],
 ])
 
-/** Join names conversationally: "Reading", "Reading and Listening",
- * "Reading, Listening and Writing". */
-function joinNames(names: Array<string>): string {
-  if (names.length <= 1) return names.join('')
-  return `${names.slice(0, -1).join(', ')} and ${names.at(-1) ?? ''}`
-}
-
-/** One deterministic sentence per subject, built from the LO stages — the
- * parent's entry point before any bars or stage words. */
-function summarizeSubject(
-  first: string,
-  learningOutcomes: Array<LearningOutcome>,
-): string {
-  const staged = learningOutcomes.map((lo) => ({
-    name: lo.name,
-    stage: LO_STAGE_ORDER.indexOf(lo.status),
-  }))
-  const max = Math.max(...staged.map((s) => s.stage))
-  const min = Math.min(...staged.map((s) => s.stage))
-  if (max === min) {
-    const uniform: Record<LearningOutcomeStatus, string> = {
-      Exceeding: `${first} is exceeding the learning outcomes across all areas.`,
-      Accomplished: `${first} is working confidently and independently across all areas.`,
-      Competent: `${first} is meeting the learning outcomes confidently across all areas.`,
-      Developing: `${first} is making steady progress across all areas.`,
-      Beginning: `${first} is starting out and building foundations.`,
-    }
-    return uniform[LO_STAGE_ORDER[max]]
-  }
-  const top = staged
-    .filter((s) => s.stage === max)
-    .map((s) => s.name)
-    .slice(0, 2)
-  const bottom = staged
-    .filter((s) => s.stage === min)
-    .map((s) => s.name)
-    .slice(0, 2)
-  return `${first} is strongest in ${joinNames(top)}, and is building ${joinNames(bottom)}.`
-}
-
 /** Per-subject card: sentence first, then every outcome with its statement in
  * full view — no disclosure levels, the reader scrolls instead of tapping. */
 function SubjectCard({
   subj,
-  studentFirstName,
   submission,
   display,
 }: {
   subj: SubjectPerformance
-  studentFirstName: string
   submission?: CockpitSubjectSubmission
   display?: BlockDisplay
 }) {
@@ -151,13 +105,6 @@ function SubjectCard({
           </span>
         )}
       </div>
-      {/* Language subjects skip the summary sentence — their LO names repeat
-          across both languages, so the sentence reads as noise there. */}
-      {!subj.name.includes('Language') && (
-        <p className="pt-1.5 text-sm leading-relaxed">
-          {summarizeSubject(studentFirstName, subj.learningOutcomes)}
-        </p>
-      )}
       <div className="mt-2 border-t pt-1.5">
         {subj.learningOutcomes.map((lo) => (
           <ScaleRow
@@ -238,15 +185,6 @@ function spellOutClass(classLabel: string): string {
 function maskNric(nric: string): string {
   if (nric.length < 6) return nric
   return `${nric.slice(0, 1)}XXXX${nric.slice(5)}`
-}
-
-function initials(name: string): string {
-  return name
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part.charAt(0).toUpperCase())
-    .join('')
 }
 
 /** Subject-level highlights: each submitted subject is profiled by its LO
@@ -453,11 +391,7 @@ export function ReportPreview({
           const first = firstName(report.studentName)
           const [beforeName, ...afterName] = quote.split(first)
           return (
-            <div className="flex flex-col gap-2">
-              <h3 className="text-sm font-semibold tracking-tight">
-                Teacher comments
-              </h3>
-              <blockquote className="border-amber-8 border-l-4 py-0.5 pl-4">
+            <blockquote className="border-amber-8 border-l-4 py-0.5 pl-4">
                 <p className="text-sm leading-relaxed">
                   “
                   {afterName.length > 0 ? (
@@ -471,11 +405,10 @@ export function ReportPreview({
                   )}
                   ”
                 </p>
-                <footer className="text-muted-foreground mt-2 text-xs">
-                  — {stripSalutation(report.formTeacher)}, Form Teacher
-                </footer>
-              </blockquote>
-            </div>
+              <footer className="text-muted-foreground mt-2 text-xs">
+                — {stripSalutation(report.formTeacher)}, Form Teacher
+              </footer>
+            </blockquote>
           )
         })()}
       {pupilInfoBlock && <TermAtAGlance report={report} />}
@@ -538,21 +471,6 @@ function PreviewBlock({
       return (
         <div className="flex flex-col gap-3 border-b pb-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
-            {STUDENT_AVATARS.has(report.studentId) ? (
-              <img
-                src={STUDENT_AVATARS.get(report.studentId)}
-                alt=""
-                aria-hidden
-                className="size-12 shrink-0 rounded-xl object-cover"
-              />
-            ) : (
-              <div
-                aria-hidden
-                className="bg-twblue-3 text-twblue-11 flex size-12 shrink-0 items-center justify-center rounded-xl text-sm font-semibold"
-              >
-                {initials(report.studentName)}
-              </div>
-            )}
             <div>
               <h2 className="text-lg font-semibold">{report.studentName}</h2>
               <p className="text-muted-foreground text-sm">
@@ -622,7 +540,6 @@ function PreviewBlock({
                 <SubjectCard
                   key={subj.name}
                   subj={subj}
-                  studentFirstName={firstName(report.studentName)}
                   submission={submission}
                   display={block.display}
                 />
