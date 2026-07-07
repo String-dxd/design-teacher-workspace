@@ -304,7 +304,7 @@ function TermAtAGlance({
     <div className="bg-card flex flex-col gap-3 rounded-xl border p-4">
       {/* The teacher's words lead the report. */}
       {quote && (
-        <div className="bg-twblue-1 rounded-lg border p-4">
+        <div className="bg-amber-2 rounded-lg p-4">
           <p className="mb-1.5 text-sm font-semibold">Teacher comments</p>
           <p className="text-sm leading-relaxed">
             “

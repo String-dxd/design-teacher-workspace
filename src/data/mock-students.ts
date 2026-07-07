@@ -1740,8 +1740,10 @@ export const mockStudents: Array<Student> = [
     promotionStatus: 'Promoted',
     daysPresent: 45,
     totalSchoolDays: 47,
-    teacherObservations: 'Enthusiastic learner, adapting well.',
-    nextSteps: 'Continue nurturing reading habits',
+    teacherObservations:
+      'Chloe is an enthusiastic and cheerful learner who approaches classroom activities with curiosity and a positive attitude. She has adapted well to the routines and is becoming more confident in her learning. She participates willingly and is making steady progress across different areas.',
+    nextSteps:
+      'Continue nurturing her reading habits at home, as regular reading will further strengthen her language skills and support her overall.',
   },
   {
     id: '37',
