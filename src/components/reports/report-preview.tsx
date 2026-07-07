@@ -49,7 +49,7 @@ const LO_STAGE_ORDER: Array<LearningOutcomeStatus> = [
   'Beginning',
   'Developing',
   'Competent',
-  'Accomplished',
+  'Exceeding',
 ]
 
 // Stage pills — growth ramp, seed to bloom: Beginning is a quiet outlined
@@ -58,6 +58,7 @@ const LO_STAGE_ORDER: Array<LearningOutcomeStatus> = [
 // it reads as growth, not grading — and it leaves blue to the app's
 // interactive elements.
 const LO_PILL_CLASS: Record<LearningOutcomeStatus, string> = {
+  Exceeding: 'bg-lime-9 text-lime-12',
   Accomplished: 'bg-lime-9 text-lime-12',
   Competent: 'bg-lime-3 text-lime-12',
   Developing: 'bg-amber-3 text-amber-12',
@@ -72,8 +73,9 @@ const QUALITY_PILL_CLASS: Record<CoreValueLevel, string> = {
   Beginning: 'text-muted-foreground border bg-transparent',
 }
 
-/** Illustrated avatars by student id — falls back to initials when absent. */
-const STUDENT_AVATARS = new Map<string, string>([['36', '/avatars/chloe.svg']])
+/** Avatars by student id — photo first (drop the file into public/avatars/),
+ * with the illustration as the onError fallback and initials when unmapped. */
+const STUDENT_AVATARS = new Map<string, string>([['36', '/avatars/chloe.jpg']])
 
 const SUBJECT_ICONS = new Map<string, LucideIcon>([
   ['English Language', BookOpen],
@@ -104,6 +106,7 @@ function summarizeSubject(
   const min = Math.min(...staged.map((s) => s.stage))
   if (max === min) {
     const uniform: Record<LearningOutcomeStatus, string> = {
+      Exceeding: `${first} is exceeding the learning outcomes across all areas.`,
       Accomplished: `${first} is working confidently and independently across all areas.`,
       Competent: `${first} is meeting the learning outcomes confidently across all areas.`,
       Developing: `${first} is making steady progress across all areas.`,
@@ -213,6 +216,18 @@ function ScaleRow({
 
 function firstName(name: string): string {
   return name.split(' ').filter(Boolean)[0] ?? name
+}
+
+/** 'P1-A' → 'Primary 1A' — the report spells the class out in full. */
+function spellOutClass(classLabel: string): string {
+  const match = /^P(\d)-([A-Z])$/.exec(classLabel)
+  return match ? `Primary ${match[1]}${match[2]}` : classLabel
+}
+
+/** Mask the identification number the way the printed HDP does: TXXXX712D. */
+function maskNric(nric: string): string {
+  if (nric.length < 6) return nric
+  return `${nric.slice(0, 1)}XXXX${nric.slice(5)}`
 }
 
 function initials(name: string): string {
@@ -478,6 +493,10 @@ function PreviewBlock({
                 alt=""
                 aria-hidden
                 className="size-12 shrink-0 rounded-xl object-cover"
+                onError={(e) => {
+                  // Photo not dropped in yet — fall back to the illustration.
+                  e.currentTarget.src = '/avatars/chloe.svg'
+                }}
               />
             ) : (
               <div
@@ -490,11 +509,15 @@ function PreviewBlock({
             <div>
               <h2 className="text-lg font-semibold">{report.studentName}</h2>
               <p className="text-muted-foreground text-sm">
-                {report.studentClass} · {report.term} {report.academicYear}
+                {spellOutClass(report.studentClass)} · {report.term}{' '}
+                {report.academicYear}
+              </p>
+              <p className="text-muted-foreground text-xs">
+                ID: {maskNric(report.nric)}
               </p>
             </div>
           </div>
-          <div className="text-sm sm:text-right">
+          <div className="flex flex-col gap-0.5 text-sm sm:text-right">
             <p>
               <span className="text-foreground font-medium">
                 Form teacher:{' '}
@@ -503,6 +526,16 @@ function PreviewBlock({
                 {report.formTeacher}
               </span>
             </p>
+            {report.coFormTeacher && (
+              <p>
+                <span className="text-foreground font-medium">
+                  Co-form teacher:{' '}
+                </span>
+                <span className="text-muted-foreground">
+                  {report.coFormTeacher}
+                </span>
+              </p>
+            )}
           </div>
         </div>
       )

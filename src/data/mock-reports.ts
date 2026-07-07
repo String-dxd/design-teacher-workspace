@@ -372,10 +372,14 @@ function generateSubjects(
       } else {
         statusIdx = 1 + (statusSeed % 3) // Competent, Developing, or Beginning
       }
+      const status = OUTCOME_STATUSES[statusIdx]
       return {
         name: o.name,
         description: o.description,
-        status: OUTCOME_STATUSES[statusIdx],
+        // P1 policy vocabulary tops out at "Exceeding"; secondary keeps
+        // "Accomplished".
+        status:
+          isLowerPrimary && status === 'Accomplished' ? 'Exceeding' : status,
       }
     })
     return { name, learningOutcomes }

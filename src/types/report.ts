@@ -13,7 +13,10 @@ export type StudentStatus =
 export type SchoolLevel = 'primary' | 'secondary'
 
 // Academic types
+// 'Exceeding' is the P1 HDP's top descriptor (policy wording); 'Accomplished'
+// remains the top stage in the secondary outcome vocabulary.
 export type LearningOutcomeStatus =
+  | 'Exceeding'
   | 'Accomplished'
   | 'Competent'
   | 'Developing'
