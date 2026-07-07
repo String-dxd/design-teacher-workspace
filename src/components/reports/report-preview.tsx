@@ -245,34 +245,38 @@ function initials(name: string): string {
     .join('')
 }
 
-/** Learning highlights derived from the packaged LO stages: the areas at the
- * highest stage, and (framed positively) the areas still climbing. */
+/** Subject-level highlights: each submitted subject is profiled by its LO
+ * stages, and the panels name whole subjects — the strongest overall, and
+ * (framed positively) the ones still climbing. */
 function deriveHighlights(report: HolisticReport): {
   strongest: Array<string>
   growing: Array<string>
 } {
   // Only draw on subjects whose School Cockpit data has actually arrived —
-  // highlights must never cite an outcome the teacher can't see yet.
-  const staged = report.academic.subjects
+  // highlights must never cite data the teacher can't see yet.
+  const scored = report.academic.subjects
     .filter((subj) => isSubjectSubmitted(report.studentId, subj.name))
-    .flatMap((subj) =>
-      subj.learningOutcomes.map((lo) => ({
-        name: lo.name,
-        stage: LO_STAGE_ORDER.indexOf(lo.status),
-      })),
-    )
-  if (staged.length === 0) return { strongest: [], growing: [] }
-  const max = Math.max(...staged.map((s) => s.stage))
-  const min = Math.min(...staged.map((s) => s.stage))
+    .map((subj) => ({
+      name: subj.name,
+      score:
+        subj.learningOutcomes.reduce(
+          (sum, lo) => sum + LO_STAGE_ORDER.indexOf(lo.status),
+          0,
+        ) / Math.max(subj.learningOutcomes.length, 1),
+    }))
+  if (scored.length < 2) return { strongest: [], growing: [] }
+  const max = Math.max(...scored.map((s) => s.score))
+  const min = Math.min(...scored.map((s) => s.score))
   if (max === min) return { strongest: [], growing: [] }
-  const dedupe = (names: Array<string>) => [...new Set(names)]
   return {
-    strongest: dedupe(
-      staged.filter((s) => s.stage === max).map((s) => s.name),
-    ).slice(0, 3),
-    growing: dedupe(
-      staged.filter((s) => s.stage === min).map((s) => s.name),
-    ).slice(0, 2),
+    strongest: scored
+      .filter((s) => s.score === max)
+      .map((s) => s.name)
+      .slice(0, 2),
+    growing: scored
+      .filter((s) => s.score === min)
+      .map((s) => s.name)
+      .slice(0, 2),
   }
 }
 
