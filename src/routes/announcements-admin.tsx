@@ -114,7 +114,7 @@ function AdminBanner({ scope }: { scope: 'my' | 'school' }) {
           >
             {isSchool
               ? 'Viewing all posts across your school.'
-              : "You're viewing your own posts. Switch to see all school posts."}
+              : 'To view school posts, switch views on the right.'}
           </p>
         </div>
       </div>
