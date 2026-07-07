@@ -70,7 +70,8 @@ const CREATE_OPTIONS: Array<CreateOption> = [
   },
   {
     title: 'Response Required',
-    description: 'Parents acknowledge or answer yes/no on Parents Gateway.',
+    description:
+      'Parents acknowledge the post or give consent (yes/no) on Parents Gateway.',
     to: '/announcements/new',
     search: { responseType: 'acknowledge' },
     mockup: <ResponseMockup />,

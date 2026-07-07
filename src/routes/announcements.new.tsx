@@ -2516,14 +2516,14 @@ function NewAnnouncementPage() {
                     [
                       {
                         value: 'acknowledge' as ResponseType,
-                        label: 'Acknowledge',
+                        label: 'Acknowledgement',
                         hint: 'Parents tap a button to acknowledge.',
                         mockup: <AcknowledgeMockup />,
                       },
                       {
                         value: 'yes-no' as ResponseType,
-                        label: 'Yes or No',
-                        hint: 'Parents tap Yes or No. Supports follow-up questions.',
+                        label: 'Consent (Yes/No)',
+                        hint: 'Parents tap Yes or No to give or decline consent. Supports follow-up questions.',
                         mockup: <YesNoMockup />,
                       },
                     ] as const

@@ -314,7 +314,7 @@ function AdminPostsExperiment() {
                           )}
                           {post.responseType === 'yes-no' && (
                             <span className="shrink-0 rounded-full bg-violet-3 px-1.5 py-0.5 text-[10px] font-medium text-violet-11 ring-1 ring-inset ring-violet-6">
-                              Yes/No
+                              Consent
                             </span>
                           )}
                         </div>
