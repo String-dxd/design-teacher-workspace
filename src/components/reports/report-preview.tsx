@@ -217,6 +217,13 @@ function firstName(name: string): string {
   return name.split(' ').filter(Boolean)[0] ?? name
 }
 
+function stripHtml(html: string): string {
+  return html
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 /** 'P1-A' → 'Primary 1A' — the report spells the class out in full. */
 function spellOutClass(classLabel: string): string {
   const match = /^P(\d)-([A-Z])$/.exec(classLabel)
@@ -270,15 +277,48 @@ function deriveHighlights(report: HolisticReport): {
 }
 
 /** "Term at a glance" — the document's single designed visual moment. */
-function TermAtAGlance({ report }: { report: HolisticReport }) {
+function TermAtAGlance({
+  report,
+  comments,
+  editable,
+}: {
+  report: HolisticReport
+  comments: string
+  editable: boolean
+}) {
   const attendancePct = Math.round(
     (report.attendance.daysPresent / report.attendance.totalSchoolDays) * 100,
   )
   const { strongest, growing } = deriveHighlights(report)
+  const first = firstName(report.studentName)
+  // In write mode the teacher edits the comment in its own section below, so
+  // the hero doesn't echo it; read views lead with the teacher's words.
+  const quote = !editable ? stripHtml(comments) : ''
+  const [beforeName, ...afterName] = quote.split(first)
 
   return (
     <div className="bg-card flex flex-col gap-3 rounded-xl border p-4">
-      {/* The lead insight: where the child shines and where she's growing. */}
+      {/* The teacher's words lead the report. */}
+      {quote && (
+        <div className="bg-twblue-1 rounded-lg border p-4">
+          <p className="mb-1.5 text-sm font-semibold">Teacher comments</p>
+          <p className="text-sm leading-relaxed">
+            “
+            {afterName.length > 0 ? (
+              <>
+                {beforeName}
+                <strong>{first}</strong>
+                {afterName.join(first)}
+              </>
+            ) : (
+              quote
+            )}
+            ”
+          </p>
+        </div>
+      )}
+
+      {/* Where the child shines and where she's growing. */}
       {strongest.length > 0 && (
         <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
           <div className="bg-twblue-2 flex-1 rounded-lg p-3">
@@ -336,6 +376,21 @@ function TermAtAGlance({ report }: { report: HolisticReport }) {
             aria-hidden
             className="bg-muted text-muted-foreground flex size-7 shrink-0 items-center justify-center rounded-full"
           >
+            <Smile className="size-3.5" />
+          </span>
+          <span className="text-muted-foreground">
+            <span className="text-foreground font-medium">
+              Conduct: {report.character.conduct}
+            </span>{' '}
+            · {first} had a {report.character.conduct.toLowerCase()} term
+            overall
+          </span>
+        </div>
+        <div className="flex items-center gap-2.5 text-sm">
+          <span
+            aria-hidden
+            className="bg-muted text-muted-foreground flex size-7 shrink-0 items-center justify-center rounded-full"
+          >
             <CalendarCheck className="size-3.5" />
           </span>
           <span className="text-muted-foreground">
@@ -353,21 +408,6 @@ function TermAtAGlance({ report }: { report: HolisticReport }) {
                   : `${report.attendance.daysLate} days late`}
               </>
             )}
-          </span>
-        </div>
-        <div className="flex items-center gap-2.5 text-sm">
-          <span
-            aria-hidden
-            className="bg-muted text-muted-foreground flex size-7 shrink-0 items-center justify-center rounded-full"
-          >
-            <Smile className="size-3.5" />
-          </span>
-          <span className="text-muted-foreground">
-            <span className="text-foreground font-medium">
-              Conduct: {report.character.conduct}
-            </span>{' '}
-            · {firstName(report.studentName)} had a{' '}
-            {report.character.conduct.toLowerCase()} term overall
           </span>
         </div>
       </div>
@@ -426,7 +466,9 @@ export function ReportPreview({
           />
         </div>
       )}
-      {pupilInfoBlock && <TermAtAGlance report={report} />}
+      {pupilInfoBlock && (
+        <TermAtAGlance report={report} comments={comments} editable={editable} />
+      )}
       {restBlocks.map((block) => (
         <div key={block.key} data-section-key={block.key}>
           <PreviewBlock
@@ -582,52 +624,37 @@ function PreviewBlock({
     }
 
     case 'conduct':
-      // Conduct itself lives in the "Term at a glance" bullet — this section
-      // is the form teacher's written note.
+      // Conduct lives in the at-a-glance bullet, and read views surface the
+      // written note as the quote at the top of that card — this section only
+      // renders where the teacher edits the comment.
+      if (!editable || !onCommentsChange) return null
       return (
         <div className="flex flex-col gap-2">
           {heading('Form teacher comments')}
-          {editable && onCommentsChange ? (
-            <div className="space-y-1.5">
-              <Label htmlFor="ft-comments" className="sr-only">
-                Form teacher comments
-              </Label>
-              <RichTextEditor
-                value={comments}
-                onChange={onCommentsChange}
-                toolbar="simple"
-                placeholder="Write a short comment about this pupil…"
-              />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  onCommentsChange(
-                    (comments ? comments + ' ' : '') +
-                      `${firstName(report.studentName)} has settled well into Primary 1, shows curiosity in class, and is building confidence with friends.`,
-                  )
-                }
-              >
-                <Sparkles className="mr-2 size-4" />
-                Suggest
-              </Button>
-            </div>
-          ) : comments ? (
-            <>
-              <div
-                className="text-sm leading-relaxed [&_p]:mb-2"
-                // Teacher's own schema-constrained Tiptap output (prototype).
-                dangerouslySetInnerHTML={{ __html: comments }}
-              />
-              <p className="text-muted-foreground text-xs">
-                — {report.formTeacher}, Form Teacher
-              </p>
-            </>
-          ) : (
-            <p className="text-muted-foreground text-sm italic">
-              No comments yet.
-            </p>
-          )}
+          <div className="space-y-1.5">
+            <Label htmlFor="ft-comments" className="sr-only">
+              Form teacher comments
+            </Label>
+            <RichTextEditor
+              value={comments}
+              onChange={onCommentsChange}
+              toolbar="simple"
+              placeholder="Write a short comment about this pupil…"
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                onCommentsChange(
+                  (comments ? comments + ' ' : '') +
+                    `${firstName(report.studentName)} has settled well into Primary 1, shows curiosity in class, and is building confidence with friends.`,
+                )
+              }
+            >
+              <Sparkles className="mr-2 size-4" />
+              Suggest
+            </Button>
+          </div>
         </div>
       )
 
