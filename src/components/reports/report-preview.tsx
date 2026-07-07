@@ -673,7 +673,7 @@ function PreviewBlock({
       return (
         <div className="flex flex-col gap-2">
           {heading('Personal qualities')}
-          <div className="flex flex-col gap-1">
+          <div className="rounded-xl border px-3.5 py-2">
             {report.holistic.coreValues.map((cv) => (
               <ScaleRow
                 key={cv.name}
