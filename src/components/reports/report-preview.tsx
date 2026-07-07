@@ -58,15 +58,15 @@ const LO_STAGE_ORDER: Array<LearningOutcomeStatus> = [
 // it reads as growth, not grading — and it leaves blue to the app's
 // interactive elements.
 const LO_PILL_CLASS: Record<LearningOutcomeStatus, string> = {
-  Exceeding: 'bg-lime-9 text-lime-12',
-  Accomplished: 'bg-lime-9 text-lime-12',
+  Exceeding: 'bg-lime-4 text-lime-12',
+  Accomplished: 'bg-lime-4 text-lime-12',
   Competent: 'bg-lime-3 text-lime-12',
   Developing: 'bg-amber-3 text-amber-12',
   Beginning: 'text-muted-foreground border bg-transparent',
 }
 
 const QUALITY_PILL_CLASS: Record<CoreValueLevel, string> = {
-  'Demonstrates Very Strongly': 'bg-lime-9 text-lime-12',
+  'Demonstrates Very Strongly': 'bg-lime-5 text-lime-12',
   'Demonstrates Strongly': 'bg-lime-4 text-lime-12',
   Demonstrates: 'bg-lime-3 text-lime-12',
   'Regularly Shows': 'bg-amber-3 text-amber-12',
