@@ -73,9 +73,8 @@ const QUALITY_PILL_CLASS: Record<CoreValueLevel, string> = {
   Beginning: 'text-muted-foreground border bg-transparent',
 }
 
-/** Avatars by student id — photo first (drop the file into public/avatars/),
- * with the illustration as the onError fallback and initials when unmapped. */
-const STUDENT_AVATARS = new Map<string, string>([['36', '/avatars/chloe.jpg']])
+/** Illustrated avatars by student id — falls back to initials when absent. */
+const STUDENT_AVATARS = new Map<string, string>([['36', '/avatars/chloe.svg']])
 
 const SUBJECT_ICONS = new Map<string, LucideIcon>([
   ['English Language', BookOpen],
@@ -493,10 +492,6 @@ function PreviewBlock({
                 alt=""
                 aria-hidden
                 className="size-12 shrink-0 rounded-xl object-cover"
-                onError={(e) => {
-                  // Photo not dropped in yet — fall back to the illustration.
-                  e.currentTarget.src = '/avatars/chloe.svg'
-                }}
               />
             ) : (
               <div

@@ -1,41 +1,48 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
-  <!-- Flat illustration avatar for Chloe Tan Xin Yi (recreated from supplied artwork) -->
-  <rect width="200" height="200" fill="#F5F4F2"/>
-  <!-- ponytail -->
-  <g transform="rotate(18 152 80)">
-    <ellipse cx="152" cy="82" rx="15" ry="30" fill="#1E1E1E"/>
+  <!-- Chloe avatar — hand-drawn editorial style: black ink, paper-white face,
+       solid blue pinafore, one warm accent. Turbulence filter adds the
+       crayon-line wobble. -->
+  <defs>
+    <filter id="rough" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.085" numOctaves="2" seed="7" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="3.2"/>
+    </filter>
+  </defs>
+  <rect width="200" height="200" fill="#FFFFFF"/>
+  <g filter="url(#rough)">
+    <!-- pinafore -->
+    <path d="M42 200 Q46 156 78 150 L122 150 Q154 156 158 200 Z" fill="#3E63F0"/>
+    <!-- collar -->
+    <path d="M80 149 Q100 165 120 149" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round"/>
+    <!-- neck -->
+    <path d="M90 132 L90 152 M110 132 L110 152" stroke="#1B1B1B" stroke-width="3" stroke-linecap="round"/>
+    <rect x="90" y="130" width="20" height="22" fill="#FFFFFF"/>
+    <!-- ponytail -->
+    <g transform="rotate(16 150 78)">
+      <ellipse cx="150" cy="80" rx="14" ry="28" fill="#1B1B1B"/>
+    </g>
+    <rect x="139" y="49" width="15" height="9" rx="4.5" fill="#E8622C" transform="rotate(22 146 53)"/>
+    <!-- hair mass -->
+    <path d="M42 108 Q38 52 100 48 Q162 52 158 108 Q160 128 148 138 Q154 112 150 96 L50 96 Q46 112 52 138 Q40 128 42 108 Z" fill="#1B1B1B"/>
+    <!-- face -->
+    <path d="M58 100 Q58 62 100 60 Q142 62 142 100 Q142 136 100 140 Q58 136 58 100 Z" fill="#FFFFFF" stroke="#1B1B1B" stroke-width="3"/>
+    <!-- fringe over face -->
+    <path d="M60 96 Q60 62 100 60 Q140 62 140 96 Q136 74 116 70 Q122 84 108 80 Q94 76 82 84 Q68 92 64 104 Q60 100 60 96 Z" fill="#1B1B1B"/>
+    <!-- side locks -->
+    <path d="M56 92 Q50 116 58 134 Q64 138 66 132 Q58 116 62 96 Z" fill="#1B1B1B"/>
+    <path d="M144 92 Q150 116 142 134 Q136 138 134 132 Q142 116 138 96 Z" fill="#1B1B1B"/>
+    <!-- brows -->
+    <path d="M76 96 Q84 92 92 95" fill="none" stroke="#1B1B1B" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M108 95 Q116 92 124 96" fill="none" stroke="#1B1B1B" stroke-width="2.5" stroke-linecap="round"/>
+    <!-- eyes -->
+    <ellipse cx="84" cy="107" rx="3.4" ry="4.4" fill="#1B1B1B"/>
+    <ellipse cx="116" cy="107" rx="3.4" ry="4.4" fill="#1B1B1B"/>
+    <!-- nose -->
+    <path d="M100 110 Q98 117 101 119" fill="none" stroke="#1B1B1B" stroke-width="2" stroke-linecap="round"/>
+    <!-- mouth -->
+    <path d="M93 127 Q100 132 107 127" fill="none" stroke="#D9452B" stroke-width="3.5" stroke-linecap="round"/>
+    <!-- blush accents -->
+    <path d="M74 118 Q78 116 81 118" fill="none" stroke="#E8622C" stroke-width="2" stroke-linecap="round" opacity="0.7"/>
+    <path d="M119 118 Q122 116 126 118" fill="none" stroke="#E8622C" stroke-width="2" stroke-linecap="round" opacity="0.7"/>
   </g>
-  <rect x="140" y="48" width="16" height="10" rx="5" fill="#F27EA9" transform="rotate(24 148 53)"/>
-  <!-- back hair -->
-  <ellipse cx="100" cy="96" rx="62" ry="58" fill="#1E1E1E"/>
-  <ellipse cx="52" cy="128" rx="17" ry="30" fill="#1E1E1E"/>
-  <ellipse cx="148" cy="128" rx="17" ry="30" fill="#1E1E1E"/>
-  <!-- ears -->
-  <circle cx="55" cy="108" r="10" fill="#F7C89B"/>
-  <circle cx="145" cy="108" r="10" fill="#F7C89B"/>
-  <!-- neck + shoulders -->
-  <rect x="88" y="128" width="24" height="30" fill="#F7C89B"/>
-  <path d="M38 200 Q40 158 74 152 L126 152 Q160 158 162 200 Z" fill="#2C51CE"/>
-  <!-- straps -->
-  <path d="M60 156 L74 152 L86 200 L70 200 Z" fill="#F27EA9"/>
-  <path d="M140 156 L126 152 L114 200 L130 200 Z" fill="#F27EA9"/>
-  <!-- collar -->
-  <path d="M78 150 Q100 168 122 150 Q112 144 100 144 Q88 144 78 150 Z" fill="#FFFFFF"/>
-  <circle cx="100" cy="160" r="3" fill="#2343B8"/>
-  <!-- face -->
-  <ellipse cx="100" cy="106" rx="45" ry="43" fill="#F7C89B"/>
-  <!-- fringe -->
-  <path d="M55 100 Q55 58 100 56 Q145 58 145 100 Q140 74 118 70 Q125 88 112 84 Q96 78 82 86 Q66 96 62 108 Q57 106 55 100 Z" fill="#1E1E1E"/>
-  <!-- brows -->
-  <path d="M72 90 Q81 85 90 89" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" fill="none"/>
-  <path d="M110 89 Q119 85 128 90" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" fill="none"/>
-  <!-- eyes -->
-  <ellipse cx="82" cy="110" rx="13" ry="15" fill="#FFFFFF"/>
-  <ellipse cx="118" cy="110" rx="13" ry="15" fill="#FFFFFF"/>
-  <ellipse cx="84" cy="111" rx="6" ry="8" fill="#141414"/>
-  <ellipse cx="116" cy="111" rx="6" ry="8" fill="#141414"/>
-  <!-- nose -->
-  <path d="M100 112 Q97 119 101 121" stroke="#E8935F" stroke-width="4" stroke-linecap="round" fill="none"/>
-  <!-- smile -->
-  <path d="M92 130 Q100 137 108 130" stroke="#E2572B" stroke-width="5" stroke-linecap="round" fill="none"/>
 </svg>
