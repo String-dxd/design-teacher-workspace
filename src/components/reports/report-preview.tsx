@@ -151,9 +151,13 @@ function SubjectCard({
           </span>
         )}
       </div>
-      <p className="pt-1.5 text-sm leading-relaxed">
-        {summarizeSubject(studentFirstName, subj.learningOutcomes)}
-      </p>
+      {/* Language subjects skip the summary sentence — their LO names repeat
+          across both languages, so the sentence reads as noise there. */}
+      {!subj.name.includes('Language') && (
+        <p className="pt-1.5 text-sm leading-relaxed">
+          {summarizeSubject(studentFirstName, subj.learningOutcomes)}
+        </p>
+      )}
       <div className="mt-2 border-t pt-1.5">
         {subj.learningOutcomes.map((lo) => (
           <ScaleRow
