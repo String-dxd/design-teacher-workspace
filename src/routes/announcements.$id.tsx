@@ -838,16 +838,6 @@ function AnnouncementDetailPage() {
                           >
                             <User className="h-3.5 w-3.5 shrink-0 text-slate-400" />
                             <span className="flex-1 truncate">{m.name}</span>
-                            <span
-                              className={cn(
-                                'ml-2 shrink-0 rounded border px-1.5 py-0.5 text-[10px] font-semibold',
-                                m.role === 'editor'
-                                  ? 'border-blue-200 bg-blue-50 text-blue-700'
-                                  : 'border-slate-200 bg-slate-50 text-slate-500',
-                              )}
-                            >
-                              {m.role === 'editor' ? 'Editor' : 'Viewer'}
-                            </span>
                           </span>
                         ))}
                       </div>
