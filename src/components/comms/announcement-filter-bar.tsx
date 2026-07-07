@@ -40,7 +40,7 @@ function countActiveFilters(filters: AnnouncementFilters): number {
 }
 
 const RESPONSE_TYPE_OPTIONS: Array<{ value: ResponseType; label: string }> = [
-  { value: 'view-only', label: 'Read-only' },
+  { value: 'view-only', label: 'Read Only' },
   { value: 'acknowledge', label: 'Acknowledge' },
   { value: 'yes-no', label: 'Yes / no' },
 ]
