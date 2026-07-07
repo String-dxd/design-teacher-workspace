@@ -11,12 +11,14 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as StudentsRouteImport } from './routes/students'
 import { Route as StudentAnalyticsRouteImport } from './routes/student-analytics'
+import { Route as SkeletonPreviewRouteImport } from './routes/skeleton-preview'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as InsightBuddyRouteImport } from './routes/insight-buddy'
 import { Route as GroupsRouteImport } from './routes/groups'
 import { Route as FormsRouteImport } from './routes/forms'
 import { Route as FlagsRouteImport } from './routes/flags'
+import { Route as ErrorPreviewRouteImport } from './routes/error-preview'
 import { Route as DsRouteImport } from './routes/ds'
 import { Route as AttendanceRouteImport } from './routes/attendance'
 import { Route as AnnouncementsRouteImport } from './routes/announcements'
@@ -59,6 +61,11 @@ const StudentAnalyticsRoute = StudentAnalyticsRouteImport.update({
   path: '/student-analytics',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SkeletonPreviewRoute = SkeletonPreviewRouteImport.update({
+  id: '/skeleton-preview',
+  path: '/skeleton-preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -87,6 +94,11 @@ const FormsRoute = FormsRouteImport.update({
 const FlagsRoute = FlagsRouteImport.update({
   id: '/flags',
   path: '/flags',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ErrorPreviewRoute = ErrorPreviewRouteImport.update({
+  id: '/error-preview',
+  path: '/error-preview',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DsRoute = DsRouteImport.update({
@@ -252,12 +264,14 @@ export interface FileRoutesByFullPath {
   '/announcements': typeof AnnouncementsRouteWithChildren
   '/attendance': typeof AttendanceRoute
   '/ds': typeof DsRoute
+  '/error-preview': typeof ErrorPreviewRoute
   '/flags': typeof FlagsRoute
   '/forms': typeof FormsRouteWithChildren
   '/groups': typeof GroupsRouteWithChildren
   '/insight-buddy': typeof InsightBuddyRoute
   '/reports': typeof ReportsRouteWithChildren
   '/settings': typeof SettingsRoute
+  '/skeleton-preview': typeof SkeletonPreviewRoute
   '/student-analytics': typeof StudentAnalyticsRoute
   '/students': typeof StudentsRouteWithChildren
   '/create': typeof GuestCreateRoute
@@ -291,9 +305,11 @@ export interface FileRoutesByTo {
   '/$': typeof SplatRoute
   '/attendance': typeof AttendanceRoute
   '/ds': typeof DsRoute
+  '/error-preview': typeof ErrorPreviewRoute
   '/flags': typeof FlagsRoute
   '/insight-buddy': typeof InsightBuddyRoute
   '/settings': typeof SettingsRoute
+  '/skeleton-preview': typeof SkeletonPreviewRoute
   '/student-analytics': typeof StudentAnalyticsRoute
   '/create': typeof GuestCreateRoute
   '/login': typeof GuestLoginRoute
@@ -329,12 +345,14 @@ export interface FileRoutesById {
   '/announcements': typeof AnnouncementsRouteWithChildren
   '/attendance': typeof AttendanceRoute
   '/ds': typeof DsRoute
+  '/error-preview': typeof ErrorPreviewRoute
   '/flags': typeof FlagsRoute
   '/forms': typeof FormsRouteWithChildren
   '/groups': typeof GroupsRouteWithChildren
   '/insight-buddy': typeof InsightBuddyRoute
   '/reports': typeof ReportsRouteWithChildren
   '/settings': typeof SettingsRoute
+  '/skeleton-preview': typeof SkeletonPreviewRoute
   '/student-analytics': typeof StudentAnalyticsRoute
   '/students': typeof StudentsRouteWithChildren
   '/_guest/create': typeof GuestCreateRoute
@@ -371,12 +389,14 @@ export interface FileRouteTypes {
     | '/announcements'
     | '/attendance'
     | '/ds'
+    | '/error-preview'
     | '/flags'
     | '/forms'
     | '/groups'
     | '/insight-buddy'
     | '/reports'
     | '/settings'
+    | '/skeleton-preview'
     | '/student-analytics'
     | '/students'
     | '/create'
@@ -410,9 +430,11 @@ export interface FileRouteTypes {
     | '/$'
     | '/attendance'
     | '/ds'
+    | '/error-preview'
     | '/flags'
     | '/insight-buddy'
     | '/settings'
+    | '/skeleton-preview'
     | '/student-analytics'
     | '/create'
     | '/login'
@@ -447,12 +469,14 @@ export interface FileRouteTypes {
     | '/announcements'
     | '/attendance'
     | '/ds'
+    | '/error-preview'
     | '/flags'
     | '/forms'
     | '/groups'
     | '/insight-buddy'
     | '/reports'
     | '/settings'
+    | '/skeleton-preview'
     | '/student-analytics'
     | '/students'
     | '/_guest/create'
@@ -489,12 +513,14 @@ export interface RootRouteChildren {
   AnnouncementsRoute: typeof AnnouncementsRouteWithChildren
   AttendanceRoute: typeof AttendanceRoute
   DsRoute: typeof DsRoute
+  ErrorPreviewRoute: typeof ErrorPreviewRoute
   FlagsRoute: typeof FlagsRoute
   FormsRoute: typeof FormsRouteWithChildren
   GroupsRoute: typeof GroupsRouteWithChildren
   InsightBuddyRoute: typeof InsightBuddyRoute
   ReportsRoute: typeof ReportsRouteWithChildren
   SettingsRoute: typeof SettingsRoute
+  SkeletonPreviewRoute: typeof SkeletonPreviewRoute
   StudentAnalyticsRoute: typeof StudentAnalyticsRoute
   StudentsRoute: typeof StudentsRouteWithChildren
   GlowStudentIdRoute: typeof GlowStudentIdRoute
@@ -515,6 +541,13 @@ declare module '@tanstack/react-router' {
       path: '/student-analytics'
       fullPath: '/student-analytics'
       preLoaderRoute: typeof StudentAnalyticsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/skeleton-preview': {
+      id: '/skeleton-preview'
+      path: '/skeleton-preview'
+      fullPath: '/skeleton-preview'
+      preLoaderRoute: typeof SkeletonPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings': {
@@ -557,6 +590,13 @@ declare module '@tanstack/react-router' {
       path: '/flags'
       fullPath: '/flags'
       preLoaderRoute: typeof FlagsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/error-preview': {
+      id: '/error-preview'
+      path: '/error-preview'
+      fullPath: '/error-preview'
+      preLoaderRoute: typeof ErrorPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ds': {
@@ -886,12 +926,14 @@ const rootRouteChildren: RootRouteChildren = {
   AnnouncementsRoute: AnnouncementsRouteWithChildren,
   AttendanceRoute: AttendanceRoute,
   DsRoute: DsRoute,
+  ErrorPreviewRoute: ErrorPreviewRoute,
   FlagsRoute: FlagsRoute,
   FormsRoute: FormsRouteWithChildren,
   GroupsRoute: GroupsRouteWithChildren,
   InsightBuddyRoute: InsightBuddyRoute,
   ReportsRoute: ReportsRouteWithChildren,
   SettingsRoute: SettingsRoute,
+  SkeletonPreviewRoute: SkeletonPreviewRoute,
   StudentAnalyticsRoute: StudentAnalyticsRoute,
   StudentsRoute: StudentsRouteWithChildren,
   GlowStudentIdRoute: GlowStudentIdRoute,
