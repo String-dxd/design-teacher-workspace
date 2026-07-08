@@ -103,9 +103,11 @@ function SubjectCard({
         )}
       </div>
       <div className="mt-2 border-t pt-1.5">
-        {subj.learningOutcomes.map((lo) => (
+        {/* Index keys: the artifact repeats outcome names (Chinese lists
+            "Reading" twice), so names aren't unique. */}
+        {subj.learningOutcomes.map((lo, i) => (
           <ScaleRow
-            key={lo.name}
+            key={`${i}-${lo.name}`}
             label={lo.name}
             sublabel={lo.description}
             stageLabel={lo.status}

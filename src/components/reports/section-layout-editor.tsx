@@ -41,16 +41,22 @@ export function SectionLayoutEditor({
         if (!def) return null
         const naAtP1 = def.applicableAtP1 === false
         const isDragging = draggingKey === b.key
+        // Required sections are pinned: no dragging, no arrows, and other
+        // rows can't be dropped above them.
+        const pinned = def.required === true
+        const rowAboveIsPinned =
+          i > 0 &&
+          defById.get(orderedBlocks[i - 1].key)?.required === true
         return (
           <li
             key={b.key}
-            draggable={armedKey === b.key || isDragging}
+            draggable={!pinned && (armedKey === b.key || isDragging)}
             onDragStart={(e) => {
               e.dataTransfer.effectAllowed = 'move'
               setDraggingKey(b.key)
             }}
             onDragEnter={() => {
-              if (draggingKey && draggingKey !== b.key) {
+              if (draggingKey && draggingKey !== b.key && !pinned) {
                 onReorder(draggingKey, i)
               }
             }}
@@ -68,11 +74,15 @@ export function SectionLayoutEditor({
             <div className="flex items-center gap-2">
               <GripVertical
                 aria-hidden
-                onPointerDown={() => setArmedKey(b.key)}
+                onPointerDown={() => !pinned && setArmedKey(b.key)}
                 onPointerUp={() => setArmedKey(null)}
                 className={cn(
-                  'text-muted-foreground/60 size-4 shrink-0 cursor-grab touch-none',
-                  isDragging && 'cursor-grabbing',
+                  'text-muted-foreground/60 size-4 shrink-0 touch-none',
+                  pinned
+                    ? 'opacity-30'
+                    : isDragging
+                      ? 'cursor-grabbing'
+                      : 'cursor-grab',
                 )}
               />
               <Checkbox
@@ -106,7 +116,7 @@ export function SectionLayoutEditor({
                   variant="ghost"
                   size="icon-sm"
                   aria-label={`Move ${def.label} up`}
-                  disabled={i === 0}
+                  disabled={pinned || i === 0 || rowAboveIsPinned}
                   onClick={() => onMove(i, -1)}
                 >
                   <ArrowUp className="size-4" />
@@ -115,7 +125,7 @@ export function SectionLayoutEditor({
                   variant="ghost"
                   size="icon-sm"
                   aria-label={`Move ${def.label} down`}
-                  disabled={i === orderedBlocks.length - 1}
+                  disabled={pinned || i === orderedBlocks.length - 1}
                   onClick={() => onMove(i, 1)}
                 >
                   <ArrowDown className="size-4" />

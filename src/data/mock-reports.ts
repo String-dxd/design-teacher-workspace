@@ -303,26 +303,28 @@ const P1_OUTCOMES: Record<
       description: 'Recognise characters taught in Primary 1.',
     },
     {
-      name: 'Reading aloud',
+      name: 'Reading',
       description: 'Read aloud Primary 1 texts with accuracy.',
     },
   ],
+  // The artifact lists Mathematics outcomes as bare statements — no outcome
+  // names — so the statement is the row.
   Mathematics: [
     {
-      name: 'Number sense',
-      description: 'Understand addition and subtraction.',
+      name: 'Understand addition and subtraction.',
+      description: '',
     },
     {
-      name: 'Computation',
-      description: 'Add and subtract numbers.',
+      name: 'Add and subtract numbers.',
+      description: '',
     },
     {
-      name: 'Geometry',
-      description: 'Identify, name, describe and sort shapes.',
+      name: 'Identify, name, describe and sort shapes.',
+      description: '',
     },
     {
-      name: 'Data handling',
-      description: 'Read and interpret picture graphs.',
+      name: 'Read and interpret picture graphs.',
+      description: '',
     },
   ],
   'Social Studies': [

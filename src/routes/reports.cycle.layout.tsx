@@ -7,6 +7,7 @@ import type { ReportBlock, ReportLayout, Term } from '@/types/report'
 import type { CustomTemplate } from '@/lib/hdp-template-store'
 import {
   BUILT_IN_TEMPLATES,
+  P1_SECTION_DEFS,
   defaultP1Layout,
   getTemplateById,
 } from '@/data/report-layouts'
@@ -165,10 +166,22 @@ function CycleLayoutPage() {
     )
   }
 
+  // Required sections (pupil particulars) are pinned in place — neither they
+  // nor their neighbours may move across them.
+  const requiredKeys = new Set(
+    P1_SECTION_DEFS.filter((d) => d.required).map((d) => d.key),
+  )
+
   function move(index: number, dir: -1 | 1) {
     const ordered = [...blocks].sort((a, b) => a.order - b.order)
     const target = index + dir
     if (target < 0 || target >= ordered.length) return
+    if (
+      requiredKeys.has(ordered[index].key) ||
+      requiredKeys.has(ordered[target].key)
+    ) {
+      return
+    }
     ;[ordered[index], ordered[target]] = [ordered[target], ordered[index]]
     setBlocks(ordered.map((b, i) => ({ ...b, order: i })))
   }
@@ -202,10 +215,12 @@ function CycleLayoutPage() {
   }
 
   function reorder(key: string, toIndex: number) {
+    if (requiredKeys.has(key)) return
     setBlocks((prev) => {
       const ordered = [...prev].sort((a, b) => a.order - b.order)
       const fromIndex = ordered.findIndex((b) => b.key === key)
       if (fromIndex === -1 || fromIndex === toIndex) return prev
+      if (toIndex <= 0 && requiredKeys.has(ordered[0].key)) return prev
       const [moved] = ordered.splice(fromIndex, 1)
       ordered.splice(toIndex, 0, moved)
       return ordered.map((b, i) => ({ ...b, order: i }))
