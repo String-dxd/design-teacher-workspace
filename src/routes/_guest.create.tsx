@@ -62,14 +62,14 @@ interface CreateOption {
 
 const CREATE_OPTIONS: Array<CreateOption> = [
   {
-    title: 'Read Only',
+    title: 'No response needed',
     description:
       'Parents read the post on Parents Gateway. No action required.',
     to: '/announcements/new',
     mockup: <AnnouncementMockup />,
   },
   {
-    title: 'Response Required',
+    title: 'Collect responses',
     description: 'Parents acknowledge or answer yes/no on Parents Gateway.',
     to: '/announcements/new',
     search: { responseType: 'acknowledge' },
