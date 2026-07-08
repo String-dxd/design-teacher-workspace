@@ -343,7 +343,7 @@ function GlanceTile({
           tint.label,
         )}
       >
-        <Icon aria-hidden className="size-3.5 shrink-0" />
+        <Icon aria-hidden className="size-4.5 shrink-0" />
         {label}
       </p>
       <div className="mt-1.5 flex items-center gap-3">
