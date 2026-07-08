@@ -97,12 +97,13 @@ function ReportsPage() {
     term: initialTerm,
     groupBy: initialGroupBy,
   } = Route.useSearch()
+  // Default landing: the P1 cycle hub (P1-A) unless the URL names a class.
   const [schoolLevel, setSchoolLevel] = useState<SchoolLevel>(
-    initialClassId?.startsWith('P') ? 'primary' : 'secondary',
+    initialClassId == null || initialClassId.startsWith('P')
+      ? 'primary'
+      : 'secondary',
   )
-  const [selectedClass, setSelectedClass] = useState(
-    initialClassId ?? 'Secondary 3',
-  )
+  const [selectedClass, setSelectedClass] = useState(initialClassId ?? 'P1-A')
   const [selectedTerm, setSelectedTerm] = useState<Term | ''>(initialTerm || '')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedReviewStatus, setSelectedReviewStatus] = useState<
