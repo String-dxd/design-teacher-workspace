@@ -332,18 +332,19 @@ function ReportsPage() {
           </div>
         </div>
 
-        {/* Class Selector */}
-        <div className="px-6">
-          <ClassSelector
-            value={selectedClass}
-            onValueChange={handleClassChange}
-          />
-        </div>
       </div>
 
       {showCycleHub ? (
-        <CycleHub classId={selectedClass} />
+        <CycleHub classId={selectedClass} onClassChange={handleClassChange} />
       ) : (
+        <>
+          {/* Class Selector */}
+          <div className="px-6 pb-6">
+            <ClassSelector
+              value={selectedClass}
+              onValueChange={handleClassChange}
+            />
+          </div>
         <LegacyReportsView
           metrics={metrics}
           searchQuery={searchQuery}
@@ -372,6 +373,7 @@ function ReportsPage() {
           reviewableCount={reviewableCount}
           handleRequestReview={handleRequestReview}
         />
+        </>
       )}
     </div>
   )
@@ -737,7 +739,13 @@ function LegacyReportsView({
 
 // ── Cycle hub: P1–P2 + flag on. Reporting-cycle for "~30 reports due this week". ──
 
-function CycleHub({ classId }: { classId: string }) {
+function CycleHub({
+  classId,
+  onClassChange,
+}: {
+  classId: string
+  onClassChange: (classId: string) => void
+}) {
   const navigate = useNavigate()
   const [term, setTerm] = useState<Term>('Term 2')
   const [shareOpen, setShareOpen] = useState(false)
@@ -816,14 +824,15 @@ function CycleHub({ classId }: { classId: string }) {
   return (
     <div className="flex flex-col gap-6 px-6 pb-10">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="space-y-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <ClassSelector value={classId} onValueChange={onClassChange} />
           <Label htmlFor="cycle-term" className="sr-only">
             Term
           </Label>
           <TermSelector
             value={term}
             onValueChange={(v) => v && setTerm(v)}
-            className="w-56"
+            className="w-40"
           />
         </div>
         <div className="flex flex-wrap items-center gap-2">
