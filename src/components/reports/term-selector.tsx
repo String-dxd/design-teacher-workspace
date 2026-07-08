@@ -1,4 +1,5 @@
 import type { Term } from '@/types/report'
+import { cn } from '@/lib/utils'
 import {
   Select,
   SelectContent,
@@ -10,9 +11,14 @@ import { TERMS } from '@/data/mock-reports'
 interface TermSelectorProps {
   value: Term | ''
   onValueChange: (value: Term | '') => void
+  className?: string
 }
 
-export function TermSelector({ value, onValueChange }: TermSelectorProps) {
+export function TermSelector({
+  value,
+  onValueChange,
+  className,
+}: TermSelectorProps) {
   const displayValue = value || 'All terms'
 
   return (
@@ -20,7 +26,9 @@ export function TermSelector({ value, onValueChange }: TermSelectorProps) {
       value={value || 'all'}
       onValueChange={(val) => onValueChange(val === 'all' ? '' : (val as Term))}
     >
-      <SelectTrigger className="w-[140px]">{displayValue}</SelectTrigger>
+      <SelectTrigger className={cn('w-[140px]', className)}>
+        {displayValue}
+      </SelectTrigger>
       <SelectContent>
         <SelectItem value="all">All terms</SelectItem>
         {TERMS.map((term) => (

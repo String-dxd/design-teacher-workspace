@@ -820,7 +820,11 @@ function CycleHub({ classId }: { classId: string }) {
           <Label htmlFor="cycle-term" className="sr-only">
             Term
           </Label>
-          <TermSelector value={term} onValueChange={(v) => v && setTerm(v)} />
+          <TermSelector
+            value={term}
+            onValueChange={(v) => v && setTerm(v)}
+            className="w-56"
+          />
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button
