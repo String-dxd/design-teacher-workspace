@@ -17,45 +17,17 @@ export type DraftSource =
 export const DRAFT_SOURCE_DEFS: Array<{
   id: DraftSource
   label: string
-  /** Where the data comes from, shown as a hint in the source menu. */
-  origin?: string
-  /** Short word used to compose the "Drafts from …" summary line. */
-  summary: string
 }> = [
-  {
-    id: 'results',
-    label: 'Subject results',
-    origin: 'School Cockpit',
-    summary: 'results',
-  },
-  { id: 'attendance', label: 'Attendance', summary: 'attendance' },
-  { id: 'conduct', label: 'Conduct', summary: 'conduct' },
-  {
-    id: 'qualities',
-    label: 'Personal qualities',
-    summary: 'personal qualities',
-  },
-  {
-    id: 'cca',
-    label: 'CCA',
-    origin: 'Student Insights',
-    summary: 'CCA',
-  },
+  { id: 'results', label: 'Subject results' },
+  { id: 'attendance', label: 'Attendance' },
+  { id: 'conduct', label: 'Conduct' },
+  { id: 'qualities', label: 'Personal qualities' },
+  { id: 'cca', label: 'CCA' },
 ]
 
 export const ALL_DRAFT_SOURCES: Array<DraftSource> = DRAFT_SOURCE_DEFS.map(
   (def) => def.id,
 )
-
-/** "Drafts from results, attendance and CCA" — mirrors the current selection. */
-export function draftSourcesSummary(sources: ReadonlyArray<DraftSource>): string {
-  const words = DRAFT_SOURCE_DEFS.filter((def) =>
-    sources.includes(def.id),
-  ).map((def) => def.summary)
-  if (words.length === 0) return 'Pick at least one source to draft from'
-  if (words.length === 1) return `Drafts from ${words[0]}`
-  return `Drafts from ${words.slice(0, -1).join(', ')} and ${words.at(-1)}`
-}
 
 const STAGE_ORDER: Array<LearningOutcomeStatus> = [
   'Beginning',

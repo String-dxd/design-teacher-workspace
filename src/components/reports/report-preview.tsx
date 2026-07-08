@@ -30,7 +30,6 @@ import { Textarea } from '@/components/ui/textarea'
 import {
   ALL_DRAFT_SOURCES,
   DRAFT_SOURCE_DEFS,
-  draftSourcesSummary,
   draftTeacherComment,
 } from '@/lib/hdp-comment-draft'
 import {
@@ -266,7 +265,7 @@ function CommentField({
             >
               <ChevronDown className="size-4" />
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="min-w-64">
+            <DropdownMenuContent align="start">
               <DropdownMenuGroup>
                 <DropdownMenuLabel>Draft from</DropdownMenuLabel>
                 {DRAFT_SOURCE_DEFS.map((def) => (
@@ -278,21 +277,13 @@ function CommentField({
                     }
                     closeOnClick={false}
                   >
-                    <span className="whitespace-nowrap">{def.label}</span>
-                    {def.origin ? (
-                      <span className="text-muted-foreground ml-auto pl-4 text-xs whitespace-nowrap">
-                        {def.origin}
-                      </span>
-                    ) : null}
+                    {def.label}
                   </DropdownMenuCheckboxItem>
                 ))}
               </DropdownMenuGroup>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        <span className="text-muted-foreground text-xs">
-          {draftSourcesSummary(sources)}
-        </span>
       </div>
     </div>
   )

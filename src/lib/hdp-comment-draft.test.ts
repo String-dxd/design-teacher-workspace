@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { draftSourcesSummary, draftTeacherComment } from './hdp-comment-draft'
+import { draftTeacherComment } from './hdp-comment-draft'
 import type { HolisticReport } from '@/types/report'
 import {
   CURRENT_ACADEMIC_YEAR,
@@ -31,15 +31,5 @@ describe('draftTeacherComment', () => {
     const attendanceOnly = draftTeacherComment(report, ['attendance'])
     expect(attendanceOnly).toMatch(/% of school days/)
     expect(attendanceOnly).not.toContain('strength in')
-  })
-
-  it('summarises the selection for the hint line', () => {
-    expect(draftSourcesSummary(['results'])).toBe('Drafts from results')
-    expect(draftSourcesSummary(['results', 'attendance', 'cca'])).toBe(
-      'Drafts from results, attendance and CCA',
-    )
-    expect(draftSourcesSummary([])).toBe(
-      'Pick at least one source to draft from',
-    )
   })
 })
