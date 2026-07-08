@@ -124,7 +124,7 @@ function AnnouncementsLayout() {
                 <h1 className="text-2xl font-semibold">My Posts</h1>
               )}
             </div>
-            <p className="mt-1 hidden text-sm text-muted-foreground lg:block">
+            <p className="mt-1 text-sm text-muted-foreground">
               Send posts to parents via Parents Gateway. Choose whether parents
               need to respond.
             </p>
