@@ -72,6 +72,17 @@ const QUALITY_PILL_CLASS: Record<CoreValueLevel, string> = {
   Beginning: 'text-muted-foreground border bg-transparent',
 }
 
+/** Section keys PreviewBlock can actually render (pupilInfo handled apart). */
+const RENDERED_SECTIONS = new Set([
+  'termAtAGlance',
+  'subjects',
+  'conduct',
+  'personalQualities',
+  'cca',
+  'via',
+  'physicalFitness',
+])
+
 const SUBJECT_ICONS = new Map<string, LucideIcon>([
   ['English Language', BookOpen],
   ['Chinese Language', Languages],
@@ -453,7 +464,18 @@ export function ReportPreview({
             </blockquote>
           )
         })()}
-      {restBlocks.map((block) => (
+      {restBlocks
+        .filter(
+          (block) =>
+            // Skip blocks that would render nothing — an empty wrapper still
+            // occupies a flex slot and doubles the section gap. The comments
+            // section only renders where the teacher edits it (read views
+            // quote the comment in the hero), and stored layouts may carry
+            // keys with no renderer (e.g. the retired attendance section).
+            RENDERED_SECTIONS.has(block.key) &&
+            (block.key !== 'conduct' || (editable && !!onCommentsChange)),
+        )
+        .map((block) => (
         <div key={block.key} data-section-key={block.key}>
           <PreviewBlock
             block={block}
