@@ -204,7 +204,8 @@ function CommentField({
           value={comments}
           onChange={(e) => onCommentsChange(e.target.value)}
           placeholder="Write a short comment about this pupil…"
-          className="min-h-24 rounded-none border-0 bg-transparent p-0 text-sm leading-relaxed shadow-none field-sizing-content focus-visible:ring-0"
+          rows={2}
+          className="field-sizing-content min-h-0 resize-none rounded-none border-0 bg-transparent p-0 text-sm leading-relaxed shadow-none focus-visible:ring-0"
         />
         <footer className="text-muted-foreground mt-2 text-xs">
           — {stripSalutation(report.formTeacher)}, Form Teacher
