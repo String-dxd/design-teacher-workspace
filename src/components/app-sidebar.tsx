@@ -430,7 +430,7 @@ export function AppSidebar() {
                       New! Parents Gateway posts are here
                     </PopoverTitle>
                     <PopoverDescription>
-                      Send posts, track responses, and manage all parent
+                      Send posts, collect responses, and manage all parent
                       communications in one place.
                     </PopoverDescription>
                   </PopoverHeader>

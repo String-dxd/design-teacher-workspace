@@ -212,8 +212,8 @@ function AdminPostsExperiment() {
               {isSchoolWide ? 'School posts' : 'My posts'}
             </h1>
             <p className="mt-1 hidden text-sm text-muted-foreground lg:block">
-              Send posts to parents via Parents Gateway. Choose whether
-              parents need to respond.
+              Send a read-only post or collect responses from parents via
+              Parents Gateway.
             </p>
           </div>
           <Button size="sm" render={<Link to="/create" />}>
@@ -238,7 +238,7 @@ function AdminPostsExperiment() {
                   : 'text-muted-foreground hover:text-foreground',
               )}
             >
-              {t === 'with-responses' ? 'Response Required' : 'Read Only'}
+              {t === 'with-responses' ? 'With responses' : 'Read-only'}
             </button>
           ))}
         </div>
