@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   Award,
   BookOpen,
@@ -6,6 +7,7 @@ import {
   FlaskConical,
   Globe,
   Languages,
+  Loader2,
   Smile,
   Sparkles,
   Sprout,
@@ -20,9 +22,10 @@ import type {
   SubjectPerformance,
 } from '@/types/report'
 import type { CockpitSubjectSubmission } from '@/data/mock-cockpit-submissions'
-import { RichTextEditor } from '@/components/comms/rich-text-editor'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { draftTeacherComment } from '@/lib/hdp-comment-draft'
 import { AttendanceRing } from '@/components/reports/attendance-ring'
 import {
   getCockpitSubmissions,
@@ -161,6 +164,70 @@ function ScaleRow({
       >
         {stageLabel}
       </span>
+    </div>
+  )
+}
+
+/**
+ * The comments field wears the exact chrome of the final parent-facing quote
+ * (amber rule + attribution) so what the teacher types is what parents see.
+ * Plain text only — no rich text for report prose. "Generate draft" composes
+ * a comment from results, attendance, conduct and Student-Insights data.
+ */
+function CommentField({
+  report,
+  comments,
+  onCommentsChange,
+}: {
+  report: HolisticReport
+  comments: string
+  onCommentsChange: (value: string) => void
+}) {
+  const [drafting, setDrafting] = useState(false)
+
+  function handleGenerate() {
+    setDrafting(true)
+    window.setTimeout(() => {
+      onCommentsChange(draftTeacherComment(report))
+      setDrafting(false)
+    }, 800)
+  }
+
+  return (
+    <div className="space-y-2">
+      <Label htmlFor="ft-comments" className="sr-only">
+        Form teacher comments
+      </Label>
+      <blockquote className="border-amber-6 border-l-4 py-0.5 pl-4">
+        <Textarea
+          id="ft-comments"
+          value={comments}
+          onChange={(e) => onCommentsChange(e.target.value)}
+          placeholder="Write a short comment about this pupil…"
+          className="min-h-24 rounded-none border-0 bg-transparent p-0 text-sm leading-relaxed shadow-none field-sizing-content focus-visible:ring-0"
+        />
+        <footer className="text-muted-foreground mt-2 text-xs">
+          — {stripSalutation(report.formTeacher)}, Form Teacher
+        </footer>
+      </blockquote>
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleGenerate}
+          disabled={drafting}
+        >
+          {drafting ? (
+            <Loader2 className="mr-2 size-4 animate-spin" />
+          ) : (
+            <Sparkles className="mr-2 size-4" />
+          )}
+          {drafting ? 'Drafting…' : 'Generate draft'}
+        </Button>
+        <span className="text-muted-foreground text-xs">
+          Drafts from results, attendance, conduct and Student Insights
+        </span>
+      </div>
     </div>
   )
 }
@@ -636,30 +703,11 @@ function PreviewBlock({
             Your written note on {firstName(report.studentName)}'s term —
             parents read this word for word.
           </p>
-          <div className="space-y-1.5">
-            <Label htmlFor="ft-comments" className="sr-only">
-              Form teacher comments
-            </Label>
-            <RichTextEditor
-              value={comments}
-              onChange={onCommentsChange}
-              toolbar="simple"
-              placeholder="Write a short comment about this pupil…"
-            />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                onCommentsChange(
-                  (comments ? comments + ' ' : '') +
-                    `${firstName(report.studentName)} has settled well into Primary 1, shows curiosity in class, and is building confidence with friends.`,
-                )
-              }
-            >
-              <Sparkles className="mr-2 size-4" />
-              Suggest
-            </Button>
-          </div>
+          <CommentField
+            report={report}
+            comments={comments}
+            onCommentsChange={onCommentsChange}
+          />
         </div>
       )
 

@@ -90,8 +90,13 @@ function CycleWriteBody({ studentId }: { studentId: string }) {
   }, [student, term])
 
   const draft = cycle?.perStudent[studentId]
-  const [comments, setComments] = useState(
-    () => draft?.comments ?? report?.teacherComments ?? '',
+  const [comments, setComments] = useState(() =>
+    // The comment is plain text now; strip tags so drafts saved by the old
+    // rich-text editor load clean.
+    (draft?.comments ?? report?.teacherComments ?? '')
+      .replace(/<[^>]*>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim(),
   )
   const [parentMessage, setParentMessage] = useState(
     () => draft?.parentMessage ?? '',
