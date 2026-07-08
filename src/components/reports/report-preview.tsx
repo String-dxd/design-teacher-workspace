@@ -23,6 +23,7 @@ import type { CockpitSubjectSubmission } from '@/data/mock-cockpit-submissions'
 import { RichTextEditor } from '@/components/comms/rich-text-editor'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
+import { AttendanceRing } from '@/components/reports/attendance-ring'
 import {
   getCockpitSubmissions,
   isSubjectSubmitted,
@@ -211,108 +212,160 @@ function deriveHighlights(report: HolisticReport): {
   }
 }
 
-/** "Term at a glance" — the document's single designed visual moment. */
+/** Count the dominant descriptor stage within one subject, for an honest
+ * tile caption like "2 of 3 outcomes at Exceeding". */
+function subjectStageCaption(
+  report: HolisticReport,
+  subjectName: string,
+): string | null {
+  const subj = report.academic.subjects.find((x) => x.name === subjectName)
+  if (!subj || subj.learningOutcomes.length === 0) return null
+  const counts = new Map<LearningOutcomeStatus, number>()
+  for (const lo of subj.learningOutcomes) {
+    counts.set(lo.status, (counts.get(lo.status) ?? 0) + 1)
+  }
+  let best: LearningOutcomeStatus | null = null
+  let bestCount = 0
+  for (const [status, count] of counts) {
+    const higherStage =
+      best === null ||
+      LO_STAGE_ORDER.indexOf(status) > LO_STAGE_ORDER.indexOf(best)
+    if (count > bestCount || (count === bestCount && higherStage)) {
+      best = status
+      bestCount = count
+    }
+  }
+  if (best === null) return null
+  return `${bestCount} of ${subj.learningOutcomes.length} outcomes at ${best}`
+}
+
+/** One metric tile — health-app anatomy: icon + label, big value, caption. */
+function GlanceTile({
+  icon,
+  label,
+  value,
+  caption,
+  tint,
+  ring,
+}: {
+  icon: LucideIcon
+  label: string
+  value: string
+  caption?: string | null
+  tint: { bg: string; label: string; value: string }
+  ring?: number
+}) {
+  const Icon = icon
+  return (
+    <div className={cn('rounded-lg p-3', tint.bg)}>
+      <p
+        className={cn(
+          'flex items-center gap-1.5 text-xs font-medium',
+          tint.label,
+        )}
+      >
+        <Icon aria-hidden className="size-3.5 shrink-0" />
+        {label}
+      </p>
+      <div className="mt-1.5 flex items-center gap-3">
+        {ring !== undefined && (
+          <div aria-hidden className={cn('shrink-0', tint.label)}>
+            <AttendanceRing
+              percentage={ring}
+              size={40}
+              strokeWidth={5}
+              color="currentColor"
+              label=""
+            />
+          </div>
+        )}
+        <div className="min-w-0">
+          <p className={cn('text-lg leading-tight font-semibold', tint.value)}>
+            {value}
+          </p>
+          {caption && (
+            <p className={cn('mt-0.5 text-[11px] leading-snug', tint.label)}>
+              {caption}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/** "Term at a glance" — four soft metric tiles, health-app style: each fact
+ * in its own gentle colour family. */
 function TermAtAGlance({ report }: { report: HolisticReport }) {
   const attendancePct = Math.round(
     (report.attendance.daysPresent / report.attendance.totalSchoolDays) * 100,
   )
   const { strongest, growing } = deriveHighlights(report)
-  const first = firstName(report.studentName)
 
   return (
-    <div className="bg-card flex flex-col gap-3 rounded-xl border p-4">
-      {/* Where the child shines and where she's growing. */}
-      {strongest.length > 0 && (
-        <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
-          <div className="bg-lime-2 flex-1 rounded-lg p-3">
-            <p className="text-lime-12 flex items-center gap-2 text-xs font-medium">
-              <span
-                aria-hidden
-                className="bg-card flex size-7 shrink-0 items-center justify-center rounded-full"
-              >
-                <Award className="text-lime-11 size-3.5" />
-              </span>
-              Strongest in
-            </p>
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {strongest.map((name) => (
-                <span
-                  key={name}
-                  className="bg-card text-foreground rounded-full border px-2.5 py-0.5 text-xs font-medium"
-                >
-                  {name}
-                </span>
-              ))}
-            </div>
-          </div>
-          {growing.length > 0 && (
-            <div className="bg-amber-2 flex-1 rounded-lg p-3">
-              <p className="text-amber-12 flex items-center gap-2 text-xs font-medium">
-                <span
-                  aria-hidden
-                  className="bg-card flex size-7 shrink-0 items-center justify-center rounded-full"
-                >
-                  <Sprout className="text-amber-11 size-3.5" />
-                </span>
-                Growing in
-              </p>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {growing.map((name) => (
-                  <span
-                    key={name}
-                    className="bg-card text-foreground rounded-full border px-2.5 py-0.5 text-xs font-medium"
-                  >
-                    {name}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Attendance and conduct — supporting facts as icon-chip bullet rows
-          (Duolingo-certificate style), deliberately quieter than the panels. */}
-      <div className="flex flex-col gap-2 border-t pt-3">
-        <div className="flex items-center gap-2.5 text-sm">
-          <span
-            aria-hidden
-            className="bg-muted text-muted-foreground flex size-7 shrink-0 items-center justify-center rounded-full"
-          >
-            <Smile className="size-3.5" />
-          </span>
-          <span className="text-muted-foreground">
-            <span className="text-foreground font-medium">
-              Conduct: {report.character.conduct}
-            </span>{' '}
-            · {first} had a {report.character.conduct.toLowerCase()} term
-            overall
-          </span>
-        </div>
-        <div className="flex items-center gap-2.5 text-sm">
-          <span
-            aria-hidden
-            className="bg-muted text-muted-foreground flex size-7 shrink-0 items-center justify-center rounded-full"
-          >
-            <CalendarCheck className="size-3.5" />
-          </span>
-          <span className="text-muted-foreground">
-            <span className="text-foreground font-medium">
-              {attendancePct}% attendance
-            </span>{' '}
-            · present {report.attendance.daysPresent} of{' '}
-            {report.attendance.totalSchoolDays} days
-            {report.attendance.daysLate > 0 && (
-              <>
-                {' '}
-                ·{' '}
-                {report.attendance.daysLate === 1
-                  ? '1 day late'
-                  : `${report.attendance.daysLate} days late`}
-              </>
-            )}
-          </span>
-        </div>
+    <div className="bg-card rounded-xl border p-3.5">
+      <div className="grid grid-cols-2 gap-2.5">
+        {strongest.length > 0 && (
+          <GlanceTile
+            icon={Award}
+            label="Strongest in"
+            value={strongest.join(', ')}
+            caption={
+              strongest.length === 1
+                ? subjectStageCaption(report, strongest[0])
+                : null
+            }
+            tint={{
+              bg: 'bg-lime-2',
+              label: 'text-lime-11',
+              value: 'text-lime-12',
+            }}
+          />
+        )}
+        {growing.length > 0 && (
+          <GlanceTile
+            icon={Sprout}
+            label="Growing in"
+            value={growing.join(', ')}
+            caption={
+              growing.length === 1
+                ? subjectStageCaption(report, growing[0])
+                : null
+            }
+            tint={{
+              bg: 'bg-amber-2',
+              label: 'text-amber-11',
+              value: 'text-amber-12',
+            }}
+          />
+        )}
+        <GlanceTile
+          icon={CalendarCheck}
+          label="Attendance"
+          value={`${attendancePct}%`}
+          caption={`${report.attendance.daysPresent} of ${report.attendance.totalSchoolDays} days${
+            report.attendance.daysLate > 0
+              ? ` · ${report.attendance.daysLate} day${report.attendance.daysLate === 1 ? '' : 's'} late`
+              : ''
+          }`}
+          tint={{
+            bg: 'bg-twblue-2',
+            label: 'text-twblue-11',
+            value: 'text-twblue-12',
+          }}
+          ring={attendancePct}
+        />
+        <GlanceTile
+          icon={Smile}
+          label="Conduct"
+          value={report.character.conduct}
+          caption={`A ${report.character.conduct.toLowerCase()} term overall`}
+          tint={{
+            bg: 'bg-violet-2',
+            label: 'text-violet-11',
+            value: 'text-violet-12',
+          }}
+        />
       </div>
     </div>
   )
