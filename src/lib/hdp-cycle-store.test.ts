@@ -138,3 +138,30 @@ describe('loadCycle with corrupted storage', () => {
     })
   })
 })
+
+describe('review pipeline fields', () => {
+  it('round-trips reviewStatus and submittedAt through patchStudent', () => {
+    saveCycle(makeCycle())
+    patchStudent('P1-A', 'Term 2', '36', {
+      reviewStatus: 'in_review',
+      submittedAt: '2026-07-08T01:00:00.000Z',
+    })
+    const loaded = loadCycle('P1-A', 'Term 2')
+    expect(loaded?.perStudent['36'].reviewStatus).toBe('in_review')
+    expect(loaded?.perStudent['36'].submittedAt).toBe(
+      '2026-07-08T01:00:00.000Z',
+    )
+  })
+
+  it('maps legacy ready:true drafts to reviewStatus in_review on load', () => {
+    saveCycle(
+      makeCycle({
+        perStudent: {
+          '36': { comments: '', parentMessage: '', ready: true },
+        },
+      }),
+    )
+    const loaded = loadCycle('P1-A', 'Term 2')
+    expect(loaded?.perStudent['36'].reviewStatus).toBe('in_review')
+  })
+})

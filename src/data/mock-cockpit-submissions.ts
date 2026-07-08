@@ -19,10 +19,11 @@ const P1_SUBJECT_TEACHERS = new Map<string, string>([
   ['Social Studies', 'Mdm Siti Rahimah'],
 ])
 
-// All submissions are in for the current demo — the awaiting-data state was
-// judged too noisy inside the report document. Add entries here (studentId →
-// subject names) to demo the gap state again.
-const MISSING_BY_STUDENT = new Map<string, Array<string>>()
+// One deliberate gap so the hub's "Awaiting results" stage is demonstrable:
+// Ho Jia Min (48) — Mathematics not yet entered in School Cockpit.
+const MISSING_BY_STUDENT = new Map<string, Array<string>>([
+  ['48', ['Mathematics']],
+])
 
 const SUBMITTED_AT = '2026-07-03T09:00:00.000Z'
 
@@ -49,6 +50,13 @@ export function isSubjectSubmitted(
   if (!P1_SUBJECT_TEACHERS.has(subject)) return true
   const missing = MISSING_BY_STUDENT.get(studentId) ?? []
   return !missing.includes(subject)
+}
+
+/** True when every School Cockpit subject for this pupil has results in. */
+export function hasAllResults(studentId: string): boolean {
+  return getCockpitSubmissions(studentId).every(
+    (s) => s.submittedAt !== undefined,
+  )
 }
 
 export function getSubjectTeacher(subject: string): string | undefined {

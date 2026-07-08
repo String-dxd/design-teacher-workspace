@@ -6,6 +6,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
+  Smartphone,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -21,6 +22,14 @@ import { Button, buttonVariants } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { ReportPreview } from '@/components/reports/report-preview'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { hasAllResults } from '@/data/mock-cockpit-submissions'
 import { loadCycle, patchStudent } from '@/lib/hdp-cycle-store'
 import { commitCycleReport } from '@/lib/hdp-report-commit'
 import { cn } from '@/lib/utils'
@@ -90,6 +99,11 @@ function CycleWriteBody({ studentId }: { studentId: string }) {
   const [markState, setMarkState] = useState<'idle' | 'loading' | 'error'>(
     'idle',
   )
+  const [parentPreviewOpen, setParentPreviewOpen] = useState(false)
+  // P1-A pilots the pipeline: School Cockpit results gate writing, and the
+  // report goes to school leaders for review instead of self-marked ready.
+  const pipeline = classId === 'P1-A'
+  const resultsIn = !pipeline || !student || hasAllResults(student.id)
   const errorRef = useRef<HTMLDivElement>(null)
   const headingRef = useRef<HTMLHeadingElement>(null)
 
@@ -208,12 +222,22 @@ function CycleWriteBody({ studentId }: { studentId: string }) {
         comments,
         parentMessage,
         ready: true,
+        ...(pipeline
+          ? {
+              reviewStatus: 'in_review' as const,
+              submittedAt: new Date().toISOString(),
+            }
+          : {}),
       })
       if (updatedCycle) {
         commitCycleReport(currentStudent, term, updatedCycle)
       }
       setMarkState('idle')
-      toast.success(`${currentStudent.name}’s report marked ready`)
+      toast.success(
+        pipeline
+          ? `${currentStudent.name}’s report sent to school leaders for review`
+          : `${currentStudent.name}’s report marked ready`,
+      )
       navigate({ to: '/reports', search: { classId, term } as never })
     }, 600)
   }
@@ -260,14 +284,34 @@ function CycleWriteBody({ studentId }: { studentId: string }) {
             >
               <ChevronRight className="size-4" />
             </Button>
+            {resultsIn && (
+              <Button
+                variant="outline"
+                onClick={() => setParentPreviewOpen(true)}
+              >
+                <Smartphone className="mr-2 size-4" />
+                Preview as parent
+              </Button>
+            )}
             <Button
               onClick={handleMarkReady}
-              disabled={markState === 'loading'}
+              disabled={markState === 'loading' || !resultsIn}
+              title={
+                resultsIn
+                  ? undefined
+                  : 'Waiting on results from School Cockpit'
+              }
             >
               {markState === 'loading' && (
                 <Loader2 className="mr-2 size-4 animate-spin" />
               )}
-              {markState === 'loading' ? 'Marking ready…' : 'Mark ready'}
+              {markState === 'loading'
+                ? pipeline
+                  ? 'Sending…'
+                  : 'Marking ready…'
+                : pipeline
+                  ? 'Send for review'
+                  : 'Mark ready'}
             </Button>
           </div>
         </div>
@@ -287,6 +331,18 @@ function CycleWriteBody({ studentId }: { studentId: string }) {
       </header>
 
       <div className="mx-auto w-full max-w-2xl flex-1 p-6">
+        {!resultsIn ? (
+          <div className="bg-card flex flex-col items-center gap-2 rounded-xl border p-10 text-center shadow-sm">
+            <AlertCircle className="text-muted-foreground size-8" />
+            <p className="text-sm font-medium">Results not in yet</p>
+            <p className="text-muted-foreground max-w-sm text-sm">
+              School Cockpit hasn’t received all subject results for{' '}
+              {student.name}. You can write this report once the results are
+              in.
+            </p>
+          </div>
+        ) : (
+        <>
         <div className="bg-card rounded-xl border p-6 shadow-sm">
           <ReportPreview
             report={report}
@@ -308,7 +364,37 @@ function CycleWriteBody({ studentId }: { studentId: string }) {
             rows={3}
           />
         </div>
+        </>
+        )}
       </div>
+
+      {/* How the report reads on a parent's phone in Parents Gateway. */}
+      <Dialog open={parentPreviewOpen} onOpenChange={setParentPreviewOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Parent preview</DialogTitle>
+            <DialogDescription>
+              How {student.name}’s report reads on a phone in Parents Gateway.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mx-auto max-h-[70vh] w-[375px] max-w-full overflow-y-auto rounded-2xl border p-4">
+            {parentMessage.trim() && (
+              <div className="bg-muted/50 mb-4 rounded-xl border p-3">
+                <p className="text-muted-foreground mb-1 text-xs font-medium">
+                  A note from your form teacher
+                </p>
+                <p className="text-sm leading-relaxed">{parentMessage}</p>
+              </div>
+            )}
+            <ReportPreview
+              report={report}
+              blocks={cycle.layout.blocks}
+              comments={comments}
+              compactPupilInfo
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

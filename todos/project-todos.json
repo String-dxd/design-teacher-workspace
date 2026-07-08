@@ -1,6 +1,6 @@
 {
   "project": "moe-teacher-workspace",
-  "lastUpdated": "2026-07-06T17:55:00.000Z",
+  "lastUpdated": "2026-07-08T10:40:00.000Z",
   "todos": [
     {
       "id": "tw-001",
@@ -353,6 +353,14 @@
       "status": "completed",
       "createdAt": "2026-07-06T17:45:00.000Z",
       "completedAt": "2026-07-06T17:55:00.000Z"
+    },
+    {
+      "id": "tw-038",
+      "title": "P1-A hub: full pipeline console",
+      "description": "Six-state pipeline for P1-A only (awaiting results / pending comments / draft / pending approval / approved / sent to parents) with posts-palette badges; legacy-style metric cards (Students, Results in, Pending comments, Pending review, Sent to parents); School Cockpit results gate Write; Mark ready becomes Send for review with a quiet demo auto-approval; parent phone-frame preview dialog on the write page; Share sends approved reports only. Other classes keep the original hub.",
+      "status": "completed",
+      "createdAt": "2026-07-08T10:00:00.000Z",
+      "completedAt": "2026-07-08T10:40:00.000Z"
     }
   ]
 }

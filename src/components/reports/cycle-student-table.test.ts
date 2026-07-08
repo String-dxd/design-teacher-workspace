@@ -82,3 +82,62 @@ describe('statusFor', () => {
     expect(statusFor(cycle, 'stu-1')).toBe('sent')
   })
 })
+
+describe('statusFor — P1-A pipeline', () => {
+  const draftBase = { comments: '', parentMessage: '', ready: false }
+
+  it('returns awaiting_results when School Cockpit results are missing', () => {
+    // Student 48 (Ho Jia Min) has a seeded Mathematics gap in the cockpit mock.
+    const cycle = makeCycle()
+    expect(statusFor(cycle, '48', true)).toBe('awaiting_results')
+  })
+
+  it('returns pending_comments when results are in and nothing is written', () => {
+    const cycle = makeCycle()
+    expect(statusFor(cycle, '36', true)).toBe('pending_comments')
+  })
+
+  it('returns draft once comments exist', () => {
+    const cycle = makeCycle({
+      perStudent: { '36': { ...draftBase, comments: '<p>Hi</p>' } },
+    })
+    expect(statusFor(cycle, '36', true)).toBe('draft')
+  })
+
+  it('returns in_review after submission to school leaders', () => {
+    const cycle = makeCycle({
+      perStudent: {
+        '36': {
+          ...draftBase,
+          comments: '<p>Hi</p>',
+          reviewStatus: 'in_review',
+          submittedAt: '2026-07-08T00:00:00.000Z',
+        },
+      },
+    })
+    expect(statusFor(cycle, '36', true)).toBe('in_review')
+  })
+
+  it('returns approved once leaders approve', () => {
+    const cycle = makeCycle({
+      perStudent: {
+        '36': { ...draftBase, comments: '<p>Hi</p>', reviewStatus: 'approved' },
+      },
+    })
+    expect(statusFor(cycle, '36', true)).toBe('approved')
+  })
+
+  it('returns sent once shared with parents (precedence over approved)', () => {
+    const cycle = makeCycle({
+      perStudent: {
+        '36': {
+          ...draftBase,
+          comments: '<p>Hi</p>',
+          reviewStatus: 'approved',
+          sentAt: '2026-07-08T00:00:00.000Z',
+        },
+      },
+    })
+    expect(statusFor(cycle, '36', true)).toBe('sent')
+  })
+})

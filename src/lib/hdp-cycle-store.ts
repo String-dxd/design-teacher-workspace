@@ -13,6 +13,9 @@ export interface PerStudentDraft {
   comments: string
   parentMessage: string
   ready: boolean
+  /** P1-A pipeline: submitted to school leaders / approved by them. */
+  reviewStatus?: 'in_review' | 'approved'
+  submittedAt?: string
   sentAt?: string
 }
 
@@ -57,11 +60,22 @@ export function loadCycle(classId: string, term: Term): CycleState | null {
     for (const [studentId, draft] of Object.entries(rawPerStudent)) {
       if (typeof draft !== 'object' || draft === null) continue
       const d = draft as Record<string, unknown>
+      const ready = typeof d.ready === 'boolean' ? d.ready : false
       perStudent[studentId] = {
         comments: typeof d.comments === 'string' ? d.comments : '',
         parentMessage:
           typeof d.parentMessage === 'string' ? d.parentMessage : '',
-        ready: typeof d.ready === 'boolean' ? d.ready : false,
+        ready,
+        reviewStatus:
+          d.reviewStatus === 'in_review' || d.reviewStatus === 'approved'
+            ? d.reviewStatus
+            : // Legacy drafts marked ready pre-date the review pipeline —
+              // treat them as already submitted for review.
+              ready
+              ? 'in_review'
+              : undefined,
+        submittedAt:
+          typeof d.submittedAt === 'string' ? d.submittedAt : undefined,
         sentAt: typeof d.sentAt === 'string' ? d.sentAt : undefined,
       }
     }

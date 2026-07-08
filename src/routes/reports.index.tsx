@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import {
   ClipboardCheck,
@@ -65,6 +65,7 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { hasAllResults } from '@/data/mock-cockpit-submissions'
 import { loadCycle, patchStudent } from '@/lib/hdp-cycle-store'
 import { commitCycleReport } from '@/lib/hdp-report-commit'
 import { saveShareMessage } from '@/lib/hdp-template-store'
@@ -755,6 +756,10 @@ function CycleHub({
   // Bump this to force re-reads from localStorage after a mutation.
   const [refreshKey, setRefreshKey] = useState(0)
 
+  // P1-A pilots the six-state pipeline (results gate + leader review);
+  // other classes keep the original hub until the design is proven.
+  const pipeline = classId === 'P1-A'
+
   const classStudents = useMemo(
     () => mockStudents.filter((s) => s.class === classId),
     [classId],
@@ -771,19 +776,69 @@ function CycleHub({
     let ready = 0
     let drafts = 0
     let sent = 0
+    let resultsIn = 0
+    let pendingComments = 0
+    let pendingReview = 0
     for (const student of classStudents) {
-      const status = statusFor(cycle, student.id)
+      const status = statusFor(cycle, student.id, pipeline)
       if (status === 'ready') ready += 1
       else if (status === 'draft') drafts += 1
-      else if (status === 'sent') sent += 1
+      if (status === 'sent') sent += 1
+      if (hasAllResults(student.id)) resultsIn += 1
+      if (status === 'pending_comments' || status === 'draft')
+        pendingComments += 1
+      if (status === 'in_review') pendingReview += 1
     }
-    return { ready, drafts, sent, total: classStudents.length }
-  }, [classStudents, cycle])
+    return {
+      ready,
+      drafts,
+      sent,
+      resultsIn,
+      pendingComments,
+      pendingReview,
+      total: classStudents.length,
+    }
+  }, [classStudents, cycle, pipeline])
 
-  const readyStudents = useMemo(
-    () => classStudents.filter((s) => statusFor(cycle, s.id) === 'ready'),
-    [classStudents, cycle],
+  // Reports the teacher can send to parents: leader-approved in the pipeline,
+  // self-marked ready elsewhere.
+  const sendableStudents = useMemo(
+    () =>
+      classStudents.filter(
+        (s) =>
+          statusFor(cycle, s.id, pipeline) ===
+          (pipeline ? 'approved' : 'ready'),
+      ),
+    [classStudents, cycle, pipeline],
   )
+
+  // Demo stand-in for the school leaders' side: reports submitted for review
+  // get approved shortly after, so the teacher-facing flow can complete.
+  useEffect(() => {
+    if (!pipeline) return
+    const tick = () => {
+      const current = loadCycle(classId, term)
+      if (!current) return
+      let approvedAny = false
+      for (const [studentId, draft] of Object.entries(current.perStudent)) {
+        if (
+          draft.reviewStatus === 'in_review' &&
+          draft.submittedAt &&
+          Date.now() - new Date(draft.submittedAt).getTime() > 15_000
+        ) {
+          patchStudent(classId, term, studentId, { reviewStatus: 'approved' })
+          approvedAny = true
+        }
+      }
+      if (approvedAny) {
+        toast.success('Report approved by school leaders')
+        setRefreshKey((k) => k + 1)
+      }
+    }
+    tick()
+    const id = window.setInterval(tick, 5000)
+    return () => window.clearInterval(id)
+  }, [pipeline, classId, term])
 
   if (classStudents.length === 0) {
     return (
@@ -799,7 +854,7 @@ function CycleHub({
     setShareState('loading')
     window.setTimeout(() => {
       if (!cycle) return
-      for (const student of readyStudents) {
+      for (const student of sendableStudents) {
         const built = commitCycleReport(student, term, cycle)
         const hasDraft = Object.prototype.hasOwnProperty.call(
           cycle.perStudent,
@@ -816,14 +871,14 @@ function CycleHub({
       setShareState('idle')
       setShareOpen(false)
       setRefreshKey((k) => k + 1)
-      const message = `Shared ${readyStudents.length} report${readyStudents.length !== 1 ? 's' : ''} with parents`
+      const message = `Shared ${sendableStudents.length} report${sendableStudents.length !== 1 ? 's' : ''} with parents`
       toast.success(message)
       setAnnouncement(message)
     }, 600)
   }
 
   return (
-    <div className="flex flex-col gap-6 px-6 pb-10">
+    <div className="flex flex-col gap-6 px-6 pt-6 pb-10">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
           <ClassSelector value={classId} onValueChange={onClassChange} />
@@ -852,9 +907,9 @@ function CycleHub({
           <AlertDialog open={shareOpen} onOpenChange={setShareOpen}>
             <AlertDialogTrigger
               render={
-                <Button disabled={!cycle || summary.ready === 0}>
+                <Button disabled={!cycle || sendableStudents.length === 0}>
                   <Send className="mr-2 size-4" />
-                  Share with parents ({summary.ready})
+                  Share with parents ({sendableStudents.length})
                 </Button>
               }
             />
@@ -862,8 +917,10 @@ function CycleHub({
               <AlertDialogHeader>
                 <AlertDialogTitle>Share with parents</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Send {summary.ready} ready report
-                  {summary.ready !== 1 ? 's' : ''} to parents via Parents
+                  Send {sendableStudents.length}{' '}
+                  {pipeline ? 'approved' : 'ready'} report
+                  {sendableStudents.length !== 1 ? 's' : ''} to parents via
+                  Parents
                   Gateway? Each parent will see the note you wrote for their
                   child, if any.
                 </AlertDialogDescription>
@@ -882,32 +939,77 @@ function CycleHub({
         </div>
       </div>
 
-      {/* Cycle summary — compact, so the student list stays the focal point */}
-      <div className="text-muted-foreground flex flex-wrap items-center gap-x-6 gap-y-1 text-sm">
-        <span>
-          <span className="text-foreground font-semibold">{summary.ready}</span>{' '}
-          of {summary.total} ready
-        </span>
-        <span>
-          <span className="text-foreground font-semibold">
-            {summary.drafts}
-          </span>{' '}
-          drafts
-        </span>
-        <span>
-          <span className="text-foreground font-semibold">{summary.sent}</span>{' '}
-          sent
-        </span>
-        <span>
-          <span className="text-foreground font-semibold">
-            {summary.total - summary.ready - summary.drafts - summary.sent}
-          </span>{' '}
-          not started
-        </span>
-      </div>
+      {pipeline ? (
+        /* Pipeline metrics — one card per stage of the reporting flow. */
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+          <div className="rounded-lg border bg-card p-4">
+            <div className="text-muted-foreground text-sm">Students</div>
+            <div className="text-2xl font-semibold">{summary.total}</div>
+          </div>
+          <div className="rounded-lg border bg-card p-4">
+            <div className="text-muted-foreground text-sm">Results in</div>
+            <div className="text-2xl font-semibold">
+              {summary.resultsIn}
+              <span className="text-muted-foreground text-base font-normal">
+                {' '}
+                of {summary.total}
+              </span>
+            </div>
+          </div>
+          <div className="rounded-lg border bg-card p-4">
+            <div className="text-muted-foreground text-sm">
+              Pending comments
+            </div>
+            <div className="text-2xl font-semibold">
+              {summary.pendingComments}
+            </div>
+          </div>
+          <div className="rounded-lg border bg-card p-4">
+            <div className="text-muted-foreground text-sm">Pending review</div>
+            <div className="text-2xl font-semibold">
+              {summary.pendingReview}
+            </div>
+          </div>
+          <div className="rounded-lg border bg-card p-4">
+            <div className="text-muted-foreground text-sm">
+              Sent to parents
+            </div>
+            <div className="text-2xl font-semibold">{summary.sent}</div>
+          </div>
+        </div>
+      ) : (
+        /* Cycle summary — compact, so the student list stays the focal point */
+        <div className="text-muted-foreground flex flex-wrap items-center gap-x-6 gap-y-1 text-sm">
+          <span>
+            <span className="text-foreground font-semibold">
+              {summary.ready}
+            </span>{' '}
+            of {summary.total} ready
+          </span>
+          <span>
+            <span className="text-foreground font-semibold">
+              {summary.drafts}
+            </span>{' '}
+            drafts
+          </span>
+          <span>
+            <span className="text-foreground font-semibold">
+              {summary.sent}
+            </span>{' '}
+            sent
+          </span>
+          <span>
+            <span className="text-foreground font-semibold">
+              {summary.total - summary.ready - summary.drafts - summary.sent}
+            </span>{' '}
+            not started
+          </span>
+        </div>
+      )}
 
       <CycleStudentTable
         students={classStudents}
+        pipeline={pipeline}
         cycle={cycle}
         classId={classId}
         term={term}
