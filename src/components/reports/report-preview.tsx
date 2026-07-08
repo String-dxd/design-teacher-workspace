@@ -701,8 +701,8 @@ function PreviewBlock({
         <div className="flex flex-col gap-2">
           {heading('Form teacher comments')}
           <p className="text-muted-foreground text-xs">
-            Your written note on {firstName(report.studentName)}'s term —
-            parents read this word for word.
+            A note from the form teacher on{' '}
+            {firstName(report.studentName)}'s term.
           </p>
           <CommentField
             report={report}
