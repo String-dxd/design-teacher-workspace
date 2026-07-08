@@ -547,7 +547,16 @@ function PreviewBlock({
       )
 
     case 'termAtAGlance':
-      return <TermAtAGlance report={report} />
+      return (
+        <div className="flex flex-col gap-2">
+          {heading('Term at a glance')}
+          <p className="text-muted-foreground text-xs">
+            A quick snapshot of {firstName(report.studentName)}'s term —
+            strengths, growth areas, attendance, and conduct.
+          </p>
+          <TermAtAGlance report={report} />
+        </div>
+      )
 
     case 'subjects': {
       const submissions = getCockpitSubmissions(report.studentId)
@@ -601,6 +610,10 @@ function PreviewBlock({
       return (
         <div className="flex flex-col gap-2">
           {heading('Form teacher comments')}
+          <p className="text-muted-foreground text-xs">
+            Your written note on {firstName(report.studentName)}'s term —
+            parents read this word for word.
+          </p>
           <div className="space-y-1.5">
             <Label htmlFor="ft-comments" className="sr-only">
               Form teacher comments
@@ -635,6 +648,10 @@ function PreviewBlock({
       return (
         <div className="flex flex-col gap-2">
           {heading('Personal qualities')}
+          <p className="text-muted-foreground text-xs">
+            How {firstName(report.studentName)} shows the school's personal
+            qualities day to day.
+          </p>
           <div className="rounded-xl border px-3.5 py-2">
             {report.holistic.coreValues.map((cv) => (
               <ScaleRow
