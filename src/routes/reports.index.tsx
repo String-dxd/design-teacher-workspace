@@ -817,7 +817,9 @@ function CycleHub({ classId }: { classId: string }) {
     <div className="flex flex-col gap-6 px-6 pb-10">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="space-y-1">
-          <Label htmlFor="cycle-term">Term</Label>
+          <Label htmlFor="cycle-term" className="sr-only">
+            Term
+          </Label>
           <TermSelector value={term} onValueChange={(v) => v && setTerm(v)} />
         </div>
         <div className="flex flex-wrap items-center gap-2">

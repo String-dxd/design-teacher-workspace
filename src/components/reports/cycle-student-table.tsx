@@ -39,14 +39,13 @@ const STATUS_LABEL: Record<CycleStudentStatus, string> = {
   sent: 'Sent',
 }
 
-const STATUS_VARIANT: Record<
-  CycleStudentStatus,
-  'secondary' | 'outline' | 'default'
-> = {
-  not_started: 'outline',
-  draft: 'secondary',
-  ready: 'default',
-  sent: 'secondary',
+// Badge palette follows the Posts table: Sent = lime (like Posted),
+// Ready = amber (like Scheduled), Draft = muted, Not started = outlined.
+const STATUS_CLASS: Record<CycleStudentStatus, string> = {
+  not_started: '',
+  draft: 'bg-muted text-muted-foreground hover:bg-muted',
+  ready: 'bg-amber-100 text-amber-800 hover:bg-amber-100',
+  sent: 'bg-lime-3 text-lime-11 hover:bg-lime-3',
 }
 
 function excerpt(html: string, max = 60): string {
@@ -73,8 +72,8 @@ export function CycleStudentTable({
 }: CycleStudentTableProps) {
   return (
     <Table>
-      <TableHeader>
-        <TableRow>
+      <TableHeader className="border-b bg-background">
+        <TableRow className="border-0 hover:bg-transparent">
           <TableHead>Student</TableHead>
           <TableHead>Status</TableHead>
           <TableHead>Comments</TableHead>
@@ -89,7 +88,10 @@ export function CycleStudentTable({
             <TableRow key={student.id}>
               <TableCell className="font-medium">{student.name}</TableCell>
               <TableCell>
-                <Badge variant={STATUS_VARIANT[status]}>
+                <Badge
+                  variant={status === 'not_started' ? 'outline' : 'default'}
+                  className={STATUS_CLASS[status]}
+                >
                   {STATUS_LABEL[status]}
                 </Badge>
               </TableCell>
