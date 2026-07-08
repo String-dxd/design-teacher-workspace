@@ -1,4 +1,5 @@
 import type { ReportBlock, ReportLayout } from '@/types/report'
+import { withDefaultBlocks } from '@/data/report-layouts'
 
 // Prototype persistence for the Report Builder.
 // - Template layouts: an admin/HOD "Save template" writes the shared definition here,
@@ -25,7 +26,9 @@ export function loadTemplateLayout(templateId: string): ReportLayout | null {
   if (typeof window === 'undefined') return null
   try {
     const raw = localStorage.getItem(templateKey(templateId))
-    return raw ? (JSON.parse(raw) as ReportLayout) : null
+    if (!raw) return null
+    const layout = JSON.parse(raw) as ReportLayout
+    return { blocks: withDefaultBlocks(layout.blocks) }
   } catch {
     return null
   }
@@ -45,7 +48,11 @@ export function listCustomTemplates(): Array<CustomTemplate> {
   if (typeof window === 'undefined') return []
   try {
     const raw = localStorage.getItem(CUSTOM_TEMPLATES_KEY)
-    return raw ? (JSON.parse(raw) as Array<CustomTemplate>) : []
+    if (!raw) return []
+    return (JSON.parse(raw) as Array<CustomTemplate>).map((t) => ({
+      ...t,
+      layout: { blocks: withDefaultBlocks(t.layout.blocks) },
+    }))
   } catch {
     return []
   }

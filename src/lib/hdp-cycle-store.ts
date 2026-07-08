@@ -1,4 +1,5 @@
 import type { ReportLayout, Term } from '@/types/report'
+import { withDefaultBlocks } from '@/data/report-layouts'
 
 // Prototype persistence for the reporting-cycle hub: one record per class+term,
 // holding the layout chosen in Stage 1 and each student's in-progress draft from
@@ -70,7 +71,11 @@ export function loadCycle(classId: string, term: Term): CycleState | null {
       academicYear:
         typeof state.academicYear === 'number' ? state.academicYear : 0,
       templateId: state.templateId,
-      layout: layout as unknown as ReportLayout,
+      // Older saved cycles pre-date newer sections — merge in any missing
+      // default blocks so they show up in the editor and the document.
+      layout: {
+        blocks: withDefaultBlocks((layout as unknown as ReportLayout).blocks),
+      },
       perStudent,
       updatedAt: state.updatedAt,
     }

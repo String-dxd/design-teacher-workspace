@@ -36,6 +36,12 @@ export const P1_SECTION_DEFS: Array<SectionDef> = [
     applicableAtP1: true,
   },
   {
+    key: 'termAtAGlance',
+    label: 'Term at a glance',
+    description: 'Strongest and growing subjects, conduct, and attendance',
+    applicableAtP1: true,
+  },
+  {
     key: 'subjects',
     label: 'Subjects',
     description:
@@ -85,22 +91,43 @@ function block(key: string, order: number): ReportBlock {
 export const P1_DEFAULT_LAYOUT: ReportLayout = {
   blocks: [
     block('pupilInfo', 0),
-    block('subjects', 1),
-    block('personalQualities', 2),
-    // Attendance lives in the "Term at a glance" hero — no separate section,
-    // so the report never states attendance twice.
-    block('conduct', 3),
+    // Attendance and conduct live inside "Term at a glance" — no separate
+    // sections, so the report never states them twice.
+    block('termAtAGlance', 1),
+    block('subjects', 2),
+    block('personalQualities', 3),
+    block('conduct', 4),
     // "Where applicable" sections — present but OFF by default at P1, so a teacher
     // can turn one on if it applies, and sees it's not typical at this level.
-    { key: 'cca', enabled: false, order: 4 },
-    { key: 'via', enabled: false, order: 5 },
-    { key: 'physicalFitness', enabled: false, order: 6 },
+    { key: 'cca', enabled: false, order: 5 },
+    { key: 'via', enabled: false, order: 6 },
+    { key: 'physicalFitness', enabled: false, order: 7 },
   ],
 }
 
 /** A fresh, mutable copy of the P1 default layout for a new build. */
 export function defaultP1Layout(): ReportLayout {
   return { blocks: P1_DEFAULT_LAYOUT.blocks.map((b) => ({ ...b })) }
+}
+
+/**
+ * Append any default blocks missing from a stored layout — older saved
+ * layouts pre-date newer sections (e.g. "Term at a glance"). Missing blocks
+ * slot in near their default position, then orders are re-indexed.
+ */
+export function withDefaultBlocks(
+  blocks: Array<ReportBlock>,
+): Array<ReportBlock> {
+  const present = new Set(blocks.map((b) => b.key))
+  const merged = blocks.map((b) => ({ ...b }))
+  for (const def of P1_DEFAULT_LAYOUT.blocks) {
+    if (!present.has(def.key)) {
+      merged.push({ ...def, order: def.order - 0.5 })
+    }
+  }
+  return merged
+    .sort((a, b) => a.order - b.order)
+    .map((b, i) => ({ ...b, order: i }))
 }
 
 /** Built-in templates a teacher can start from (definitions are not teacher-editable). */

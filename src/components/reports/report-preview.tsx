@@ -398,7 +398,6 @@ export function ReportPreview({
             </blockquote>
           )
         })()}
-      {pupilInfoBlock && <TermAtAGlance report={report} />}
       {restBlocks.map((block) => (
         <div key={block.key} data-section-key={block.key}>
           <PreviewBlock
@@ -491,6 +490,9 @@ function PreviewBlock({
           </div>
         </div>
       )
+
+    case 'termAtAGlance':
+      return <TermAtAGlance report={report} />
 
     case 'subjects': {
       const submissions = getCockpitSubmissions(report.studentId)

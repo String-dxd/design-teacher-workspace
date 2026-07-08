@@ -38,7 +38,13 @@ describe('saveCycle / loadCycle', () => {
     expect(loaded).not.toBeNull()
     expect(loaded?.classId).toBe('P1-A')
     expect(loaded?.templateId).toBe('p1-default')
-    expect(loaded?.layout.blocks).toHaveLength(1)
+    // loadCycle merges in any default blocks missing from the stored layout
+    // (older cycles pre-date newer sections), so the saved single block comes
+    // back alongside the full default set.
+    const keys = loaded?.layout.blocks.map((b) => b.key) ?? []
+    expect(keys).toContain('pupilInfo')
+    expect(keys).toContain('termAtAGlance')
+    expect(new Set(keys).size).toBe(keys.length)
   })
 
   it('keys storage per class + term, not sharing state across them', () => {
