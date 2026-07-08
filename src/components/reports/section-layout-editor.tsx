@@ -1,17 +1,15 @@
 import { useState } from 'react'
 import { ArrowDown, ArrowUp, GripVertical } from 'lucide-react'
 
-import type { BlockDisplay, ReportBlock } from '@/types/report'
+import type { ReportBlock } from '@/types/report'
 import type { SectionDef } from '@/data/report-layouts'
 import { P1_SECTION_DEFS } from '@/data/report-layouts'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { cn } from '@/lib/utils'
 
 // Section toggle/reorder list for the layout stage. Reorder is drag-first (grip
-// handle) with the arrow buttons kept as the keyboard-accessible path. Sections
-// that carry a descriptor scale expose a bars/labels display choice inline.
+// handle) with the arrow buttons kept as the keyboard-accessible path.
 
 export interface SectionLayoutEditorProps {
   blocks: Array<ReportBlock>
@@ -19,7 +17,6 @@ export interface SectionLayoutEditorProps {
   onMove: (index: number, dir: -1 | 1) => void
   /** Move the block with `key` to position `toIndex` (drag reorder). */
   onReorder: (key: string, toIndex: number) => void
-  onDisplayChange: (key: string, display: BlockDisplay) => void
 }
 
 export function SectionLayoutEditor({
@@ -27,7 +24,6 @@ export function SectionLayoutEditor({
   onToggle,
   onMove,
   onReorder,
-  onDisplayChange,
 }: SectionLayoutEditorProps) {
   const orderedBlocks = [...blocks].sort((a, b) => a.order - b.order)
   const defById = new Map<string, SectionDef>(
@@ -126,34 +122,6 @@ export function SectionLayoutEditor({
                 </Button>
               </div>
             </div>
-            {b.enabled && def.supportsDisplay && (
-              <div className="mt-2 ml-12 flex items-center gap-2">
-                <span className="text-muted-foreground text-xs">
-                  Show progress as
-                </span>
-                <ToggleGroup
-                  value={[b.display ?? 'bars']}
-                  onValueChange={(vals) => {
-                    const next = vals[0] as BlockDisplay | undefined
-                    if (next) onDisplayChange(b.key, next)
-                  }}
-                  aria-label={`Display style for ${def.label}`}
-                >
-                  <ToggleGroupItem
-                    value="bars"
-                    className="h-7 px-2.5 text-xs aria-pressed:bg-twblue-3 aria-pressed:text-twblue-11"
-                  >
-                    Pills
-                  </ToggleGroupItem>
-                  <ToggleGroupItem
-                    value="labels"
-                    className="h-7 px-2.5 text-xs aria-pressed:bg-twblue-3 aria-pressed:text-twblue-11"
-                  >
-                    Text
-                  </ToggleGroupItem>
-                </ToggleGroup>
-              </div>
-            )}
           </li>
         )
       })}

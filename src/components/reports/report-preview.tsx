@@ -13,7 +13,6 @@ import {
 
 import type { LucideIcon } from 'lucide-react'
 import type {
-  BlockDisplay,
   CoreValueLevel,
   HolisticReport,
   LearningOutcomeStatus,
@@ -85,11 +84,9 @@ const SUBJECT_ICONS = new Map<string, LucideIcon>([
 function SubjectCard({
   subj,
   submission,
-  display,
 }: {
   subj: SubjectPerformance
   submission?: CockpitSubjectSubmission
-  display?: BlockDisplay
 }) {
   const SubjectIcon = SUBJECT_ICONS.get(subj.name) ?? BookOpen
   return (
@@ -113,7 +110,6 @@ function SubjectCard({
             sublabel={lo.description}
             stageLabel={lo.status}
             pillClass={LO_PILL_CLASS[lo.status]}
-            display={display}
           />
         ))}
       </div>
@@ -126,15 +122,12 @@ function ScaleRow({
   sublabel,
   stageLabel,
   pillClass,
-  display = 'bars',
 }: {
   label: string
   /** Always-visible supporting line; wraps in full (never truncated). */
   sublabel?: string
   stageLabel: string
   pillClass: string
-  /** 'bars' → soft stage pill (default); 'labels' → plain text word. */
-  display?: BlockDisplay
 }) {
   return (
     <div className="flex items-start justify-between gap-3 py-1.5">
@@ -146,20 +139,14 @@ function ScaleRow({
           </p>
         )}
       </div>
-      {display === 'bars' ? (
-        <span
-          className={cn(
-            'mt-0.5 shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium',
-            pillClass,
-          )}
-        >
-          {stageLabel}
-        </span>
-      ) : (
-        <span className="text-twblue-11 mt-1 shrink-0 text-right text-xs leading-tight font-medium">
-          {stageLabel}
-        </span>
-      )}
+      <span
+        className={cn(
+          'mt-0.5 shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium',
+          pillClass,
+        )}
+      >
+        {stageLabel}
+      </span>
     </div>
   )
 }
@@ -541,7 +528,6 @@ function PreviewBlock({
                   key={subj.name}
                   subj={subj}
                   submission={submission}
-                  display={block.display}
                 />
               )
             })}
@@ -600,7 +586,6 @@ function PreviewBlock({
                 sublabel={cv.description}
                 stageLabel={cv.level}
                 pillClass={QUALITY_PILL_CLASS[cv.level]}
-                display={block.display}
               />
             ))}
           </div>

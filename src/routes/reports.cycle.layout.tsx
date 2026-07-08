@@ -3,12 +3,7 @@ import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 import { ArrowLeft, Bookmark } from 'lucide-react'
 import { toast } from 'sonner'
 
-import type {
-  BlockDisplay,
-  ReportBlock,
-  ReportLayout,
-  Term,
-} from '@/types/report'
+import type { ReportBlock, ReportLayout, Term } from '@/types/report'
 import type { CustomTemplate } from '@/lib/hdp-template-store'
 import {
   BUILT_IN_TEMPLATES,
@@ -127,11 +122,7 @@ function CycleLayoutPage() {
     JSON.stringify(
       [...list]
         .sort((a, b) => a.order - b.order)
-        .map((b) => ({
-          key: b.key,
-          enabled: b.enabled,
-          display: b.display ?? 'bars',
-        })),
+        .map((b) => ({ key: b.key, enabled: b.enabled })),
     )
   const isEdited =
     normalize(blocks) !== normalize(resolveTemplateLayout(templateId).blocks)
@@ -219,12 +210,6 @@ function CycleLayoutPage() {
       ordered.splice(toIndex, 0, moved)
       return ordered.map((b, i) => ({ ...b, order: i }))
     })
-  }
-
-  function changeDisplay(key: string, display: BlockDisplay) {
-    setBlocks((prev) =>
-      prev.map((b) => (b.key === key ? { ...b, display } : b)),
-    )
   }
 
   function handleTemplateChange(id: string) {
@@ -370,7 +355,6 @@ function CycleLayoutPage() {
             onToggle={toggle}
             onMove={move}
             onReorder={reorder}
-            onDisplayChange={changeDisplay}
           />
 
           <div className="flex gap-2">

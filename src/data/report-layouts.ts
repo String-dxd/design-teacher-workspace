@@ -24,8 +24,6 @@ export interface SectionDef {
    * "Not applicable at P1" in the builder.
    */
   applicableAtP1?: boolean
-  /** Section renders a descriptor scale and offers a bars/labels display choice. */
-  supportsDisplay?: boolean
 }
 
 /** The authentic HDP section set, scoped to P1. Order is the default report order. */
@@ -43,14 +41,12 @@ export const P1_SECTION_DEFS: Array<SectionDef> = [
     description:
       'Learning outcomes and qualitative descriptors for each subject',
     applicableAtP1: true,
-    supportsDisplay: true,
   },
   {
     key: 'personalQualities',
     label: 'Personal qualities',
     description: 'School-set qualities with descriptors',
     applicableAtP1: true,
-    supportsDisplay: true,
   },
   {
     key: 'conduct',
