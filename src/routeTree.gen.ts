@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as StudentsRouteImport } from './routes/students'
 import { Route as StudentAnalyticsRouteImport } from './routes/student-analytics'
+import { Route as SkeletonPreviewRouteImport } from './routes/skeleton-preview'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as MeetingsRouteImport } from './routes/meetings'
@@ -19,6 +20,7 @@ import { Route as HolisticReportsRouteImport } from './routes/holistic-reports'
 import { Route as GroupsRouteImport } from './routes/groups'
 import { Route as FormsRouteImport } from './routes/forms'
 import { Route as FlagsRouteImport } from './routes/flags'
+import { Route as ErrorPreviewRouteImport } from './routes/error-preview'
 import { Route as DsRouteImport } from './routes/ds'
 import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as AttendanceRouteImport } from './routes/attendance'
@@ -67,6 +69,11 @@ const StudentAnalyticsRoute = StudentAnalyticsRouteImport.update({
   path: '/student-analytics',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SkeletonPreviewRoute = SkeletonPreviewRouteImport.update({
+  id: '/skeleton-preview',
+  path: '/skeleton-preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -105,6 +112,11 @@ const FormsRoute = FormsRouteImport.update({
 const FlagsRoute = FlagsRouteImport.update({
   id: '/flags',
   path: '/flags',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ErrorPreviewRoute = ErrorPreviewRouteImport.update({
+  id: '/error-preview',
+  path: '/error-preview',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DsRoute = DsRouteImport.update({
@@ -302,6 +314,7 @@ export interface FileRoutesByFullPath {
   '/attendance': typeof AttendanceRoute
   '/calendar': typeof CalendarRouteWithChildren
   '/ds': typeof DsRoute
+  '/error-preview': typeof ErrorPreviewRoute
   '/flags': typeof FlagsRoute
   '/forms': typeof FormsRouteWithChildren
   '/groups': typeof GroupsRouteWithChildren
@@ -310,6 +323,7 @@ export interface FileRoutesByFullPath {
   '/meetings': typeof MeetingsRouteWithChildren
   '/reports': typeof ReportsRouteWithChildren
   '/settings': typeof SettingsRoute
+  '/skeleton-preview': typeof SkeletonPreviewRoute
   '/student-analytics': typeof StudentAnalyticsRoute
   '/students': typeof StudentsRouteWithChildren
   '/create': typeof GuestCreateRoute
@@ -348,9 +362,11 @@ export interface FileRoutesByTo {
   '/announcements-admin': typeof AnnouncementsAdminRoute
   '/attendance': typeof AttendanceRoute
   '/ds': typeof DsRoute
+  '/error-preview': typeof ErrorPreviewRoute
   '/flags': typeof FlagsRoute
   '/insight-buddy': typeof InsightBuddyRoute
   '/settings': typeof SettingsRoute
+  '/skeleton-preview': typeof SkeletonPreviewRoute
   '/student-analytics': typeof StudentAnalyticsRoute
   '/create': typeof GuestCreateRoute
   '/login': typeof GuestLoginRoute
@@ -392,6 +408,7 @@ export interface FileRoutesById {
   '/attendance': typeof AttendanceRoute
   '/calendar': typeof CalendarRouteWithChildren
   '/ds': typeof DsRoute
+  '/error-preview': typeof ErrorPreviewRoute
   '/flags': typeof FlagsRoute
   '/forms': typeof FormsRouteWithChildren
   '/groups': typeof GroupsRouteWithChildren
@@ -400,6 +417,7 @@ export interface FileRoutesById {
   '/meetings': typeof MeetingsRouteWithChildren
   '/reports': typeof ReportsRouteWithChildren
   '/settings': typeof SettingsRoute
+  '/skeleton-preview': typeof SkeletonPreviewRoute
   '/student-analytics': typeof StudentAnalyticsRoute
   '/students': typeof StudentsRouteWithChildren
   '/_guest/create': typeof GuestCreateRoute
@@ -442,6 +460,7 @@ export interface FileRouteTypes {
     | '/attendance'
     | '/calendar'
     | '/ds'
+    | '/error-preview'
     | '/flags'
     | '/forms'
     | '/groups'
@@ -450,6 +469,7 @@ export interface FileRouteTypes {
     | '/meetings'
     | '/reports'
     | '/settings'
+    | '/skeleton-preview'
     | '/student-analytics'
     | '/students'
     | '/create'
@@ -488,9 +508,11 @@ export interface FileRouteTypes {
     | '/announcements-admin'
     | '/attendance'
     | '/ds'
+    | '/error-preview'
     | '/flags'
     | '/insight-buddy'
     | '/settings'
+    | '/skeleton-preview'
     | '/student-analytics'
     | '/create'
     | '/login'
@@ -531,6 +553,7 @@ export interface FileRouteTypes {
     | '/attendance'
     | '/calendar'
     | '/ds'
+    | '/error-preview'
     | '/flags'
     | '/forms'
     | '/groups'
@@ -539,6 +562,7 @@ export interface FileRouteTypes {
     | '/meetings'
     | '/reports'
     | '/settings'
+    | '/skeleton-preview'
     | '/student-analytics'
     | '/students'
     | '/_guest/create'
@@ -581,6 +605,7 @@ export interface RootRouteChildren {
   AttendanceRoute: typeof AttendanceRoute
   CalendarRoute: typeof CalendarRouteWithChildren
   DsRoute: typeof DsRoute
+  ErrorPreviewRoute: typeof ErrorPreviewRoute
   FlagsRoute: typeof FlagsRoute
   FormsRoute: typeof FormsRouteWithChildren
   GroupsRoute: typeof GroupsRouteWithChildren
@@ -589,6 +614,7 @@ export interface RootRouteChildren {
   MeetingsRoute: typeof MeetingsRouteWithChildren
   ReportsRoute: typeof ReportsRouteWithChildren
   SettingsRoute: typeof SettingsRoute
+  SkeletonPreviewRoute: typeof SkeletonPreviewRoute
   StudentAnalyticsRoute: typeof StudentAnalyticsRoute
   StudentsRoute: typeof StudentsRouteWithChildren
   GlowStudentIdRoute: typeof GlowStudentIdRoute
@@ -609,6 +635,13 @@ declare module '@tanstack/react-router' {
       path: '/student-analytics'
       fullPath: '/student-analytics'
       preLoaderRoute: typeof StudentAnalyticsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/skeleton-preview': {
+      id: '/skeleton-preview'
+      path: '/skeleton-preview'
+      fullPath: '/skeleton-preview'
+      preLoaderRoute: typeof SkeletonPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings': {
@@ -665,6 +698,13 @@ declare module '@tanstack/react-router' {
       path: '/flags'
       fullPath: '/flags'
       preLoaderRoute: typeof FlagsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/error-preview': {
+      id: '/error-preview'
+      path: '/error-preview'
+      fullPath: '/error-preview'
+      preLoaderRoute: typeof ErrorPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ds': {
@@ -1076,6 +1116,7 @@ const rootRouteChildren: RootRouteChildren = {
   AttendanceRoute: AttendanceRoute,
   CalendarRoute: CalendarRouteWithChildren,
   DsRoute: DsRoute,
+  ErrorPreviewRoute: ErrorPreviewRoute,
   FlagsRoute: FlagsRoute,
   FormsRoute: FormsRouteWithChildren,
   GroupsRoute: GroupsRouteWithChildren,
@@ -1084,6 +1125,7 @@ const rootRouteChildren: RootRouteChildren = {
   MeetingsRoute: MeetingsRouteWithChildren,
   ReportsRoute: ReportsRouteWithChildren,
   SettingsRoute: SettingsRoute,
+  SkeletonPreviewRoute: SkeletonPreviewRoute,
   StudentAnalyticsRoute: StudentAnalyticsRoute,
   StudentsRoute: StudentsRouteWithChildren,
   GlowStudentIdRoute: GlowStudentIdRoute,

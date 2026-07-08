@@ -1,6 +1,12 @@
 import { useState } from 'react'
 import { Link, createFileRoute } from '@tanstack/react-router'
-import { FlagIcon, PaletteIcon } from 'lucide-react'
+import {
+  FlagIcon,
+  LoaderCircle,
+  PaletteIcon,
+  TriangleAlertIcon,
+  Unplug,
+} from 'lucide-react'
 import { toast } from 'sonner'
 
 import { useAuth } from '@/lib/auth'
@@ -124,6 +130,47 @@ function SettingsPage() {
               <PaletteIcon className="mr-2 size-4" />
               Open Design System
             </Button>
+
+            <Separator />
+
+            <div>
+              <p className="font-medium">Error states</p>
+              <p className="text-muted-foreground text-sm">
+                Preview the designed error screens for failed navigation and
+                module loads
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                render={<Link to="/$" params={{ _splat: 'not-found' }} />}
+              >
+                <TriangleAlertIcon className="mr-2 size-4" />
+                Not found (404)
+              </Button>
+              <Button variant="outline" render={<Link to="/error-preview" />}>
+                <Unplug className="mr-2 size-4" />
+                Module load error
+              </Button>
+            </div>
+
+            <Separator />
+
+            <div>
+              <p className="font-medium">Loading states</p>
+              <p className="text-muted-foreground text-sm">
+                Preview the skeleton placeholders shown while data is fetching
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                render={<Link to="/skeleton-preview" />}
+              >
+                <LoaderCircle className="mr-2 size-4" />
+                Student table skeleton
+              </Button>
+            </div>
           </div>
         </div>
       </section>
