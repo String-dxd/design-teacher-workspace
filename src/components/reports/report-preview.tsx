@@ -92,7 +92,7 @@ function SubjectCard({
   return (
     <div className="rounded-xl border px-3.5 py-3">
       <div className="flex w-full items-center gap-2">
-        <SubjectIcon aria-hidden className="text-primary size-4 shrink-0" />
+        <SubjectIcon aria-hidden className="text-muted-foreground size-4 shrink-0" />
         <span className="min-w-0 flex-1 truncate text-sm font-medium">
           {subj.name}
         </span>
@@ -224,13 +224,13 @@ function TermAtAGlance({ report }: { report: HolisticReport }) {
       {/* Where the child shines and where she's growing. */}
       {strongest.length > 0 && (
         <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
-          <div className="bg-twblue-2 flex-1 rounded-lg p-3">
-            <p className="text-twblue-12 flex items-center gap-2 text-xs font-medium">
+          <div className="bg-lime-2 flex-1 rounded-lg p-3">
+            <p className="text-lime-12 flex items-center gap-2 text-xs font-medium">
               <span
                 aria-hidden
                 className="bg-card flex size-7 shrink-0 items-center justify-center rounded-full"
               >
-                <Award className="text-twblue-11 size-3.5" />
+                <Award className="text-lime-11 size-3.5" />
               </span>
               Strongest in
             </p>
@@ -246,13 +246,13 @@ function TermAtAGlance({ report }: { report: HolisticReport }) {
             </div>
           </div>
           {growing.length > 0 && (
-            <div className="bg-lime-2 flex-1 rounded-lg p-3">
-              <p className="text-lime-12 flex items-center gap-2 text-xs font-medium">
+            <div className="bg-amber-2 flex-1 rounded-lg p-3">
+              <p className="text-amber-12 flex items-center gap-2 text-xs font-medium">
                 <span
                   aria-hidden
                   className="bg-card flex size-7 shrink-0 items-center justify-center rounded-full"
                 >
-                  <Sprout className="text-lime-11 size-3.5" />
+                  <Sprout className="text-amber-11 size-3.5" />
                 </span>
                 Growing in
               </p>
@@ -380,7 +380,7 @@ export function ReportPreview({
           const first = firstName(report.studentName)
           const [beforeName, ...afterName] = quote.split(first)
           return (
-            <blockquote className="border-amber-8 border-l-4 py-0.5 pl-4">
+            <blockquote className="border-amber-6 border-l-4 py-0.5 pl-4">
                 <p className="text-sm leading-relaxed">
                   “
                   {afterName.length > 0 ? (
