@@ -307,24 +307,24 @@ const P1_OUTCOMES: Record<
       description: 'Read aloud Primary 1 texts with accuracy.',
     },
   ],
-  // The artifact lists Mathematics outcomes as bare statements — no outcome
-  // names — so the statement is the row.
+  // The artifact lists bare statements; headers follow the MOE P1 syllabus
+  // strands so the rows match the other subjects' anatomy.
   Mathematics: [
     {
-      name: 'Understand addition and subtraction.',
-      description: '',
+      name: 'Number sense',
+      description: 'Understand addition and subtraction.',
     },
     {
-      name: 'Add and subtract numbers.',
-      description: '',
+      name: 'Computation',
+      description: 'Add and subtract numbers.',
     },
     {
-      name: 'Identify, name, describe and sort shapes.',
-      description: '',
+      name: 'Geometry',
+      description: 'Identify, name, describe and sort shapes.',
     },
     {
-      name: 'Read and interpret picture graphs.',
-      description: '',
+      name: 'Data handling',
+      description: 'Read and interpret picture graphs.',
     },
   ],
   'Social Studies': [
