@@ -4,6 +4,7 @@ import {
   BookOpen,
   Calculator,
   CalendarCheck,
+  ChevronDown,
   FlaskConical,
   Globe,
   Languages,
@@ -22,10 +23,24 @@ import type {
   SubjectPerformance,
 } from '@/types/report'
 import type { CockpitSubjectSubmission } from '@/data/mock-cockpit-submissions'
+import type { DraftSource } from '@/lib/hdp-comment-draft'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { draftTeacherComment } from '@/lib/hdp-comment-draft'
+import {
+  ALL_DRAFT_SOURCES,
+  DRAFT_SOURCE_DEFS,
+  draftSourcesSummary,
+  draftTeacherComment,
+} from '@/lib/hdp-comment-draft'
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { AttendanceRing } from '@/components/reports/attendance-ring'
 import {
   getCockpitSubmissions,
@@ -172,7 +187,8 @@ function ScaleRow({
  * The comments field wears the exact chrome of the final parent-facing quote
  * (amber rule + attribution) so what the teacher types is what parents see.
  * Plain text only — no rich text for report prose. "Generate draft" composes
- * a comment from results, attendance, conduct and Student-Insights data.
+ * a comment from the sources the teacher has checked in the split-button menu
+ * (results, attendance, conduct, personal qualities, CCA).
  */
 function CommentField({
   report,
@@ -184,11 +200,20 @@ function CommentField({
   onCommentsChange: (value: string) => void
 }) {
   const [drafting, setDrafting] = useState(false)
+  const [sources, setSources] = useState<Array<DraftSource>>(ALL_DRAFT_SOURCES)
+
+  function toggleSource(id: DraftSource, checked: boolean) {
+    setSources((prev) =>
+      checked
+        ? ALL_DRAFT_SOURCES.filter((s) => s === id || prev.includes(s))
+        : prev.filter((s) => s !== id),
+    )
+  }
 
   function handleGenerate() {
     setDrafting(true)
     window.setTimeout(() => {
-      onCommentsChange(draftTeacherComment(report))
+      onCommentsChange(draftTeacherComment(report, sources))
       setDrafting(false)
     }, 800)
   }
@@ -212,21 +237,61 @@ function CommentField({
         </footer>
       </blockquote>
       <div className="flex flex-wrap items-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleGenerate}
-          disabled={drafting}
-        >
-          {drafting ? (
-            <Loader2 className="mr-2 size-4 animate-spin" />
-          ) : (
-            <Sparkles className="mr-2 size-4" />
-          )}
-          {drafting ? 'Drafting…' : 'Generate draft'}
-        </Button>
+        <div className="flex items-center">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleGenerate}
+            disabled={drafting || sources.length === 0}
+            className="rounded-r-none border-r-0"
+          >
+            {drafting ? (
+              <Loader2 className="mr-2 size-4 animate-spin" />
+            ) : (
+              <Sparkles className="mr-2 size-4" />
+            )}
+            {drafting ? 'Drafting…' : 'Generate draft'}
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={drafting}
+                  aria-label="Choose draft sources"
+                  className="rounded-l-none px-2"
+                />
+              }
+            >
+              <ChevronDown className="size-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="min-w-64">
+              <DropdownMenuGroup>
+                <DropdownMenuLabel>Draft from</DropdownMenuLabel>
+                {DRAFT_SOURCE_DEFS.map((def) => (
+                  <DropdownMenuCheckboxItem
+                    key={def.id}
+                    checked={sources.includes(def.id)}
+                    onCheckedChange={(checked) =>
+                      toggleSource(def.id, checked === true)
+                    }
+                    closeOnClick={false}
+                  >
+                    <span className="whitespace-nowrap">{def.label}</span>
+                    {def.origin ? (
+                      <span className="text-muted-foreground ml-auto pl-4 text-xs whitespace-nowrap">
+                        {def.origin}
+                      </span>
+                    ) : null}
+                  </DropdownMenuCheckboxItem>
+                ))}
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
         <span className="text-muted-foreground text-xs">
-          Drafts from results, attendance, conduct and Student Insights
+          {draftSourcesSummary(sources)}
         </span>
       </div>
     </div>

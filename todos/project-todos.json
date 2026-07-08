@@ -285,7 +285,7 @@
     {
       "id": "tw-031",
       "title": "Report document redesign: growth-bar descriptor scales",
-      "description": "ReportPreview redesign \u2014 LO and personal-quality descriptors render as growth bars (filled segments to the achieved stage, stage named per row, staggered fill animation), subject icons + per-teacher School Cockpit provenance captions, How to read this report accordion legend, Packaged from School Cockpit freshness line, signed form-teacher comment, attendance as three inline stats. Replaces descriptor chips.",
+      "description": "ReportPreview redesign — LO and personal-quality descriptors render as growth bars (filled segments to the achieved stage, stage named per row, staggered fill animation), subject icons + per-teacher School Cockpit provenance captions, How to read this report accordion legend, Packaged from School Cockpit freshness line, signed form-teacher comment, attendance as three inline stats. Replaces descriptor chips.",
       "status": "completed",
       "createdAt": "2026-07-06T14:00:00.000Z",
       "completedAt": "2026-07-06T14:15:00.000Z"
@@ -293,7 +293,7 @@
     {
       "id": "tw-032",
       "title": "Layout control page: display options, templates, drag reorder",
-      "description": "Set up layout page rework \u2014 per-section Show progress as toggle (Growth bar / Labels) on scale-bearing sections, template picker with School templates + My templates groups, Edited-differs-from-template indicator, Save as template dialog capturing sections+order+display, drag-to-reorder via grip handle with arrow buttons kept as the keyboard path. ReportBlock gains display field, persisted through cycle store and templates.",
+      "description": "Set up layout page rework — per-section Show progress as toggle (Growth bar / Labels) on scale-bearing sections, template picker with School templates + My templates groups, Edited-differs-from-template indicator, Save as template dialog capturing sections+order+display, drag-to-reorder via grip handle with arrow buttons kept as the keyboard path. ReportBlock gains display field, persisted through cycle store and templates.",
       "status": "completed",
       "createdAt": "2026-07-06T14:30:00.000Z",
       "completedAt": "2026-07-06T14:55:00.000Z"
@@ -309,7 +309,7 @@
     {
       "id": "tw-034",
       "title": "Subject story cards in the report document",
-      "description": "Subjects render as collapsible cards: icon + subject + teacher, a deterministic summary sentence built from LO stages (strongest/building phrasing, uniform-stage variants), and LO growth-bar rows behind a tap. Teachers default expanded, parents collapsed. Single-semester view \u2014 progression deferred per user direction. Awaiting-data card unchanged.",
+      "description": "Subjects render as collapsible cards: icon + subject + teacher, a deterministic summary sentence built from LO stages (strongest/building phrasing, uniform-stage variants), and LO growth-bar rows behind a tap. Teachers default expanded, parents collapsed. Single-semester view — progression deferred per user direction. Awaiting-data card unchanged.",
       "status": "completed",
       "createdAt": "2026-07-06T15:40:00.000Z",
       "completedAt": "2026-07-06T15:55:00.000Z"
@@ -317,7 +317,7 @@
     {
       "id": "tw-035",
       "title": "Replace growth bars with soft stage pills",
-      "description": "Expanded subject cards and personal qualities now show one tinted pill per row (single blue family, deeper tint = further along) instead of segmented growth bars \u2014 decluttering the expanded view. Layout page display toggle relabelled Pills / Text. Growth-bar component and its keyframes removed.",
+      "description": "Expanded subject cards and personal qualities now show one tinted pill per row (single blue family, deeper tint = further along) instead of segmented growth bars — decluttering the expanded view. Layout page display toggle relabelled Pills / Text. Growth-bar component and its keyframes removed.",
       "status": "completed",
       "createdAt": "2026-07-06T16:05:00.000Z",
       "completedAt": "2026-07-06T16:15:00.000Z"
@@ -325,7 +325,7 @@
     {
       "id": "tw-036",
       "title": "Declutter pass: flatten disclosure, 4 subjects, hero layout",
-      "description": "Report document declutter from design critique \u2014 all disclosure removed (LO statements always visible as sublabels, subject cards always open, no chevrons); Social Studies added as 4th P1 subject with authentic LOs; awaiting-data gaps cleared so every subject shows mock data; hero highlights moved to a full-width line; Write page uses compactPupilInfo to stop repeating student identity under the page header.",
+      "description": "Report document declutter from design critique — all disclosure removed (LO statements always visible as sublabels, subject cards always open, no chevrons); Social Studies added as 4th P1 subject with authentic LOs; awaiting-data gaps cleared so every subject shows mock data; hero highlights moved to a full-width line; Write page uses compactPupilInfo to stop repeating student identity under the page header.",
       "status": "completed",
       "createdAt": "2026-07-06T16:30:00.000Z",
       "completedAt": "2026-07-06T16:45:00.000Z"
@@ -333,7 +333,7 @@
     {
       "id": "tw-037",
       "title": "Certificate-style hero: identity band, highlights first",
-      "description": "Report hero reworked after Duolingo English Test reference \u2014 identity band with initials avatar (name, class, term left; form teacher + provenance right), Strongest in / Growing in tinted panels with area chips lead the at-a-glance card, attendance and conduct demoted to quiet icon-chip bullet rows, big attendance ring removed from the document.",
+      "description": "Report hero reworked after Duolingo English Test reference — identity band with initials avatar (name, class, term left; form teacher + provenance right), Strongest in / Growing in tinted panels with area chips lead the at-a-glance card, attendance and conduct demoted to quiet icon-chip bullet rows, big attendance ring removed from the document.",
       "status": "completed",
       "createdAt": "2026-07-06T17:00:00.000Z",
       "completedAt": "2026-07-06T17:10:00.000Z"
@@ -341,7 +341,7 @@
     {
       "id": "tw-038",
       "title": "Header cleanup + vibrant stage pills",
-      "description": "Removed the Packaged-from-School-Cockpit provenance line from the document; subject teacher now sits right-aligned in each subject card header (no date), matching the identity band placement; stage pills brightened \u2014 top stage (Accomplished / Demonstrates Very Strongly) is solid brand blue with white text, remaining stages step down through the tints. Dead audience prop plumbing removed.",
+      "description": "Removed the Packaged-from-School-Cockpit provenance line from the document; subject teacher now sits right-aligned in each subject card header (no date), matching the identity band placement; stage pills brightened — top stage (Accomplished / Demonstrates Very Strongly) is solid brand blue with white text, remaining stages step down through the tints. Dead audience prop plumbing removed.",
       "status": "completed",
       "createdAt": "2026-07-06T17:20:00.000Z",
       "completedAt": "2026-07-06T17:30:00.000Z"
@@ -369,6 +369,14 @@
       "status": "completed",
       "createdAt": "2026-07-08T11:00:00.000Z",
       "completedAt": "2026-07-08T11:25:00.000Z"
+    },
+    {
+      "id": "tw-040b",
+      "title": "Selectable sources for Generate draft",
+      "description": "Split-button on the Write page comment field: Generate draft + chevron opening a checkbox menu of draft sources (Subject results/School Cockpit, Attendance, Conduct, Personal qualities, CCA/Student Insights). The hint line mirrors the selection; draftTeacherComment(report, sources) composes only selected sentence blocks; button disabled when no source is checked.",
+      "status": "completed",
+      "createdAt": "2026-07-08T09:39:03.000Z",
+      "completedAt": "2026-07-08T09:39:03.000Z"
     }
   ]
 }
