@@ -241,21 +241,18 @@ const CLASS_COLUMN: ColumnConfig = {
   visible: true,
   sortable: true,
 }
-const RESULTS_COLUMN: ColumnConfig = {
-  id: 'results',
-  label: 'SC Results',
-  visible: true,
-  sortable: true,
-}
+// SC Results is deliberately not a displayed column — the School Cockpit
+// gate still drives the Action button (see RowAction's resultsAwaiting),
+// it's just no longer surfaced as its own status cell.
 const COMMENTS_COLUMN: ColumnConfig = {
   id: 'comments',
-  label: 'Teacher Comments',
+  label: 'Comment Status',
   visible: true,
   sortable: true,
 }
 const APPROVAL_COLUMN: ColumnConfig = {
   id: 'approval',
-  label: 'Approval',
+  label: 'Review Status',
   visible: true,
   sortable: true,
 }
@@ -506,24 +503,19 @@ export function CycleStudentTable({
                 />
               )}
               <ColumnHeaderMenu
-                column={RESULTS_COLUMN}
-                {...headerMenuProps}
-                className="w-[130px]"
-              />
-              <ColumnHeaderMenu
                 column={COMMENTS_COLUMN}
                 {...headerMenuProps}
-                className="w-[170px]"
+                className="w-[160px]"
               />
               <ColumnHeaderMenu
                 column={APPROVAL_COLUMN}
                 {...headerMenuProps}
-                className="w-[120px]"
+                className="w-[150px]"
               />
               <ColumnHeaderMenu
                 column={PARENTS_COLUMN}
                 {...headerMenuProps}
-                className="w-[150px]"
+                className="w-[160px]"
               />
               <TableHead className="w-[160px] text-right">Action</TableHead>
             </TableRow>
@@ -545,11 +537,6 @@ export function CycleStudentTable({
                     {student.class}
                   </TableCell>
                 )}
-                {cp.results === 'in' ? (
-                  <CheckpointCell label="Submitted" tone="lime" />
-                ) : (
-                  <CheckpointCell label="Pending" tone="outline" />
-                )}
                 {cp.comments === 'done' ? (
                   <CheckpointCell label="Submitted" tone="lime" />
                 ) : cp.comments === 'draft' ? (
@@ -559,16 +546,17 @@ export function CycleStudentTable({
                 )}
                 {cp.approval === 'approved' ? (
                   <CheckpointCell label="Approved" tone="lime" />
+                ) : cp.approval === 'pending' ? (
+                  <CheckpointCell label="In review" tone="amber" />
                 ) : (
-                  <CheckpointCell
-                    label="Pending"
-                    tone={cp.approval === 'pending' ? 'amber' : 'outline'}
-                  />
+                  <CheckpointCell label="Not sent" tone="outline" />
                 )}
                 {cp.parents === 'acknowledged' ? (
-                  <CheckpointCell label="Yes" tone="lime" />
+                  <CheckpointCell label="Acknowledged" tone="lime" />
+                ) : cp.parents === 'sent' ? (
+                  <CheckpointCell label="Sent" tone="blue" />
                 ) : (
-                  <CheckpointCell label="Pending" tone="outline" />
+                  <CheckpointCell label="Not sent" tone="outline" />
                 )}
                 <TableCell className="text-right">
                   <RowAction
