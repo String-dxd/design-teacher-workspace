@@ -43,7 +43,9 @@ import { Button } from '@/components/ui/button'
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
 } from '@/components/ui/select'
 import { CURRENT_ACADEMIC_YEAR, mockReports } from '@/data/mock-reports'
@@ -66,6 +68,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { hasAllResults } from '@/data/mock-cockpit-submissions'
+import {
+  NEVER_ACK_STUDENT_IDS,
+  P1_LEVEL_SCOPE,
+  REPORT_LEVELS,
+  getReportRoster,
+  getSiblingState,
+} from '@/data/mock-report-classes'
 import { loadCycle, patchStudent } from '@/lib/hdp-cycle-store'
 import { commitCycleReport } from '@/lib/hdp-report-commit'
 import { saveShareMessage } from '@/lib/hdp-template-store'
@@ -126,11 +135,12 @@ function ReportsPage() {
 
   const builderEnabled = useFeatureFlag('hdp-reports')
 
-  // Cycle hub scope: any specific primary class (P1–P6) with the flag on.
-  // Secondary keeps the legacy table (its grade-based reports use a different
-  // document); level/'all' selections also fall through to the table.
+  // Cycle hub scope: any specific primary class (P1–P6) or the P1 level view,
+  // with the flag on. Secondary keeps the legacy table (its grade-based
+  // reports use a different document); 'all' also falls through to the table.
   const isPrimaryClass = /^P\d/.test(selectedClass)
-  const showCycleHub = isPrimaryClass && builderEnabled
+  const showCycleHub =
+    builderEnabled && (isPrimaryClass || selectedClass === P1_LEVEL_SCOPE)
 
   // Filter by school level first
   const levelFilteredReports = useMemo(() => {
@@ -299,7 +309,9 @@ function ReportsPage() {
     setSelectedIds(new Set())
     if (nextClass === 'all') return
     const nextLevel: SchoolLevel =
-      nextClass.startsWith('P') || nextClass.startsWith('Primary')
+      nextClass.startsWith('P') ||
+      nextClass.startsWith('Primary') ||
+      nextClass === P1_LEVEL_SCOPE
         ? 'primary'
         : 'secondary'
     if (nextLevel !== schoolLevel) {
@@ -333,7 +345,6 @@ function ReportsPage() {
             </p>
           </div>
         </div>
-
       </div>
 
       {showCycleHub ? (
@@ -347,34 +358,34 @@ function ReportsPage() {
               onValueChange={handleClassChange}
             />
           </div>
-        <LegacyReportsView
-          metrics={metrics}
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          activeFilterCount={activeFilterCount}
-          selectedTerm={selectedTerm}
-          setSelectedTerm={setSelectedTerm}
-          selectedReviewStatus={selectedReviewStatus}
-          setSelectedReviewStatus={setSelectedReviewStatus}
-          selectedParentStatus={selectedParentStatus}
-          setSelectedParentStatus={setSelectedParentStatus}
-          schoolLevel={schoolLevel}
-          selectedStudentStatus={selectedStudentStatus}
-          setSelectedStudentStatus={setSelectedStudentStatus}
-          groupBy={groupBy}
-          setGroupBy={setGroupBy}
-          filteredReports={filteredReports}
-          selectedIds={selectedIds}
-          setSelectedIds={setSelectedIds}
-          onQuickSendStudent={handleQuickSendStudent}
-          onQuickSendParent={handleQuickSendParent}
-          sendLabel={sendLabel}
-          handleSend={handleSend}
-          pgSendableCount={pgSendableCount}
-          handleBulkSendParentsPg={handleBulkSendParentsPg}
-          reviewableCount={reviewableCount}
-          handleRequestReview={handleRequestReview}
-        />
+          <LegacyReportsView
+            metrics={metrics}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            activeFilterCount={activeFilterCount}
+            selectedTerm={selectedTerm}
+            setSelectedTerm={setSelectedTerm}
+            selectedReviewStatus={selectedReviewStatus}
+            setSelectedReviewStatus={setSelectedReviewStatus}
+            selectedParentStatus={selectedParentStatus}
+            setSelectedParentStatus={setSelectedParentStatus}
+            schoolLevel={schoolLevel}
+            selectedStudentStatus={selectedStudentStatus}
+            setSelectedStudentStatus={setSelectedStudentStatus}
+            groupBy={groupBy}
+            setGroupBy={setGroupBy}
+            filteredReports={filteredReports}
+            selectedIds={selectedIds}
+            setSelectedIds={setSelectedIds}
+            onQuickSendStudent={handleQuickSendStudent}
+            onQuickSendParent={handleQuickSendParent}
+            sendLabel={sendLabel}
+            handleSend={handleSend}
+            pgSendableCount={pgSendableCount}
+            handleBulkSendParentsPg={handleBulkSendParentsPg}
+            reviewableCount={reviewableCount}
+            handleRequestReview={handleRequestReview}
+          />
         </>
       )}
     </div>
@@ -752,39 +763,73 @@ function CycleHub({
   const [term, setTerm] = useState<Term>('Term 2')
   const [shareOpen, setShareOpen] = useState(false)
   const [shareState, setShareState] = useState<'idle' | 'loading'>('idle')
+  // Per-row "Send to parents" pending confirmation (student id).
+  const [rowSendId, setRowSendId] = useState<string | null>(null)
   const [announcement, setAnnouncement] = useState('')
   // Bump this to force re-reads from localStorage after a mutation.
   const [refreshKey, setRefreshKey] = useState(0)
 
-  // P1-A pilots the six-state pipeline (results gate + leader review);
-  // other classes keep the original hub until the design is proven.
-  const pipeline = classId === 'P1-A'
+  // Scope: a class id or the whole-of-P1 level view. The teacher is P1-A's
+  // form teacher, so interactive pieces (layout, share, review, ack) always
+  // act on P1-A; sibling P1 classes are display-only seeded states.
+  const levelScope = classId === P1_LEVEL_SCOPE
+  const cycleClassId = levelScope ? 'P1-A' : classId
+  // P1 classes show the six-state pipeline (results gate + leader review);
+  // other primary classes keep the original hub until the design is proven.
+  const pipeline = levelScope || classId.startsWith('P1')
+  // Only the teacher's own class has a real cycle behind its pipeline.
+  const ownCycleClass = cycleClassId === 'P1-A'
+
+  const roster = useMemo(() => getReportRoster(classId), [classId])
 
   const classStudents = useMemo(
-    () => mockStudents.filter((s) => s.class === classId),
-    [classId],
+    () => mockStudents.filter((s) => s.class === cycleClassId),
+    [cycleClassId],
   )
 
   // refreshKey is a deliberate extra dependency: it forces a re-read from
   // localStorage after a mutation (loadCycle itself doesn't change identity).
   const cycle = useMemo(
-    () => loadCycle(classId, term),
-    [classId, term, refreshKey],
+    () => loadCycle(cycleClassId, term),
+    [cycleClassId, term, refreshKey],
   )
+
+  const seededStates = useMemo(() => {
+    const map = new Map<
+      string,
+      NonNullable<ReturnType<typeof getSiblingState>>
+    >()
+    for (const pupil of roster) {
+      const state = getSiblingState(pupil.id)
+      if (state) map.set(pupil.id, state)
+    }
+    return map
+  }, [roster])
 
   const summary = useMemo(() => {
     let ready = 0
     let drafts = 0
     let sent = 0
+    let acked = 0
     let resultsIn = 0
     let pendingComments = 0
     let pendingReview = 0
-    for (const student of classStudents) {
-      const status = statusFor(cycle, student.id, pipeline)
+    for (const pupil of roster) {
+      const seeded = seededStates.get(pupil.id)
+      const status = seeded?.status ?? statusFor(cycle, pupil.id, pipeline)
       if (status === 'ready') ready += 1
       else if (status === 'draft') drafts += 1
-      if (status === 'sent') sent += 1
-      if (hasAllResults(student.id)) resultsIn += 1
+      if (status === 'sent') {
+        sent += 1
+        const acknowledged = seeded
+          ? seeded.acknowledged
+          : cycle?.perStudent[pupil.id]?.ackAt !== undefined
+        if (acknowledged) acked += 1
+      }
+      const hasResults = seeded
+        ? status !== 'awaiting_results'
+        : hasAllResults(pupil.id)
+      if (hasResults) resultsIn += 1
       if (status === 'pending_comments' || status === 'draft')
         pendingComments += 1
       if (status === 'in_review') pendingReview += 1
@@ -793,12 +838,13 @@ function CycleHub({
       ready,
       drafts,
       sent,
+      acked,
       resultsIn,
       pendingComments,
       pendingReview,
-      total: classStudents.length,
+      total: roster.length,
     }
-  }, [classStudents, cycle, pipeline])
+  }, [roster, seededStates, cycle, pipeline])
 
   // Reports the teacher can send to parents: leader-approved in the pipeline,
   // self-marked ready elsewhere.
@@ -815,9 +861,9 @@ function CycleHub({
   // Demo stand-in for the school leaders' side: reports submitted for review
   // get approved shortly after, so the teacher-facing flow can complete.
   useEffect(() => {
-    if (!pipeline) return
+    if (!pipeline || !ownCycleClass) return
     const tick = () => {
-      const current = loadCycle(classId, term)
+      const current = loadCycle(cycleClassId, term)
       if (!current) return
       let approvedAny = false
       for (const [studentId, draft] of Object.entries(current.perStudent)) {
@@ -826,7 +872,9 @@ function CycleHub({
           draft.submittedAt &&
           Date.now() - new Date(draft.submittedAt).getTime() > 15_000
         ) {
-          patchStudent(classId, term, studentId, { reviewStatus: 'approved' })
+          patchStudent(cycleClassId, term, studentId, {
+            reviewStatus: 'approved',
+          })
           approvedAny = true
         }
       }
@@ -838,9 +886,48 @@ function CycleHub({
     tick()
     const id = window.setInterval(tick, 5000)
     return () => window.clearInterval(id)
-  }, [pipeline, classId, term])
+  }, [pipeline, ownCycleClass, cycleClassId, term])
 
-  if (classStudents.length === 0) {
+  // Demo stand-in for Parents Gateway: after a report is sent, parents
+  // acknowledge at staggered delays (deterministic per roster position) —
+  // except the designated never-ack pupils, so the follow-up story stays
+  // visible on the hub.
+  useEffect(() => {
+    if (!pipeline || !ownCycleClass) return
+    const tick = () => {
+      const current = loadCycle(cycleClassId, term)
+      if (!current) return
+      let ackedCount = 0
+      for (const [studentId, draft] of Object.entries(current.perStudent)) {
+        if (!draft.sentAt || draft.ackAt) continue
+        if (NEVER_ACK_STUDENT_IDS.has(studentId)) continue
+        // Stagger deterministically by roster position so the table updates
+        // in visible steps rather than all at once.
+        const i = classStudents.findIndex((s) => s.id === studentId)
+        if (i === -1) continue
+        if (
+          Date.now() - new Date(draft.sentAt).getTime() >
+          ((i % 3) + 1) * 8_000
+        ) {
+          patchStudent(cycleClassId, term, studentId, {
+            ackAt: new Date().toISOString(),
+          })
+          ackedCount += 1
+        }
+      }
+      if (ackedCount > 0) {
+        toast.success(
+          `${ackedCount} parent${ackedCount !== 1 ? 's' : ''} acknowledged the report in Parents Gateway`,
+        )
+        setRefreshKey((k) => k + 1)
+      }
+    }
+    tick()
+    const id = window.setInterval(tick, 5000)
+    return () => window.clearInterval(id)
+  }, [pipeline, ownCycleClass, cycleClassId, term, classStudents])
+
+  if (roster.length === 0) {
     return (
       <EmptyState
         title="No students in this class"
@@ -850,23 +937,28 @@ function CycleHub({
     )
   }
 
+  function sendReportToParents(student: (typeof classStudents)[number]) {
+    if (!cycle) return
+    const built = commitCycleReport(student, term, cycle)
+    const hasDraft = Object.prototype.hasOwnProperty.call(
+      cycle.perStudent,
+      student.id,
+    )
+    const parentMessage = hasDraft
+      ? cycle.perStudent[student.id].parentMessage
+      : ''
+    saveShareMessage(built.id, parentMessage)
+    patchStudent(cycleClassId, term, student.id, {
+      sentAt: new Date().toISOString(),
+    })
+  }
+
   function handleShareConfirm() {
     setShareState('loading')
     window.setTimeout(() => {
       if (!cycle) return
       for (const student of sendableStudents) {
-        const built = commitCycleReport(student, term, cycle)
-        const hasDraft = Object.prototype.hasOwnProperty.call(
-          cycle.perStudent,
-          student.id,
-        )
-        const parentMessage = hasDraft
-          ? cycle.perStudent[student.id].parentMessage
-          : ''
-        saveShareMessage(built.id, parentMessage)
-        patchStudent(classId, term, student.id, {
-          sentAt: new Date().toISOString(),
-        })
+        sendReportToParents(student)
       }
       setShareState('idle')
       setShareOpen(false)
@@ -877,11 +969,50 @@ function CycleHub({
     }, 600)
   }
 
+  function handleRowSendConfirm() {
+    const student = classStudents.find((s) => s.id === rowSendId)
+    setRowSendId(null)
+    if (!student || !cycle) return
+    sendReportToParents(student)
+    setRefreshKey((k) => k + 1)
+    const message = `${student.name}’s report sent to parents via Parents Gateway`
+    toast.success(message)
+    setAnnouncement(message)
+  }
+
   return (
     <div className="flex flex-col gap-6 px-6 pt-6 pb-10">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
-          <ClassSelector value={classId} onValueChange={onClassChange} />
+          {/* Scope: pinned form class, then level groups (reports hub only —
+              the Students page keeps its own ClassSelector untouched). */}
+          <Select value={classId} onValueChange={(v) => v && onClassChange(v)}>
+            <SelectTrigger aria-label="Select class or level" className="w-56">
+              {classId === 'P1-A'
+                ? 'My form class · P1-A'
+                : classId === P1_LEVEL_SCOPE
+                  ? 'All Primary 1'
+                  : classId}
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="P1-A">My form class · P1-A</SelectItem>
+              {REPORT_LEVELS.map((group) => (
+                <SelectGroup key={group.level}>
+                  <SelectLabel>{group.level}</SelectLabel>
+                  {group.allValue && (
+                    <SelectItem value={group.allValue}>
+                      All {group.level}
+                    </SelectItem>
+                  )}
+                  {group.classes.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              ))}
+            </SelectContent>
+          </Select>
           <Label htmlFor="cycle-term" className="sr-only">
             Term
           </Label>
@@ -897,7 +1028,7 @@ function CycleHub({
             onClick={() =>
               navigate({
                 to: '/reports/cycle/layout',
-                search: { classId, term },
+                search: { classId: cycleClassId, term },
               })
             }
           >
@@ -920,9 +1051,8 @@ function CycleHub({
                   Send {sendableStudents.length}{' '}
                   {pipeline ? 'approved' : 'ready'} report
                   {sendableStudents.length !== 1 ? 's' : ''} to parents via
-                  Parents
-                  Gateway? Each parent will see the note you wrote for their
-                  child, if any.
+                  Parents Gateway? Each parent will see the note you wrote for
+                  their child, if any.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -971,10 +1101,16 @@ function CycleHub({
             </div>
           </div>
           <div className="rounded-lg border bg-card p-4">
-            <div className="text-muted-foreground text-sm">
-              Sent to parents
+            <div className="text-muted-foreground text-sm">Sent to parents</div>
+            <div className="text-2xl font-semibold">
+              {summary.sent}
+              {summary.sent > 0 && (
+                <span className="text-muted-foreground text-base font-normal">
+                  {' '}
+                  · {summary.acked} acknowledged
+                </span>
+              )}
             </div>
-            <div className="text-2xl font-semibold">{summary.sent}</div>
           </div>
         </div>
       ) : (
@@ -1008,12 +1144,43 @@ function CycleHub({
       )}
 
       <CycleStudentTable
-        students={classStudents}
+        students={pipeline ? roster : classStudents}
         pipeline={pipeline}
         cycle={cycle}
-        classId={classId}
+        classId={cycleClassId}
         term={term}
+        showClass={levelScope}
+        ownClassId="P1-A"
+        seededStates={seededStates}
+        onSendToParents={ownCycleClass ? setRowSendId : undefined}
       />
+
+      {/* Per-row send confirmation — same story as the bulk share. */}
+      <AlertDialog
+        open={rowSendId !== null}
+        onOpenChange={(open) => {
+          if (!open) setRowSendId(null)
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Send to parents</AlertDialogTitle>
+            <AlertDialogDescription>
+              Send{' '}
+              {classStudents.find((s) => s.id === rowSendId)?.name ??
+                'this pupil'}
+              ’s approved report to their parents via Parents Gateway? They will
+              see the note you wrote, if any.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleRowSendConfirm}>
+              Send
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Polite live region for the async share action. */}
       <div role="status" aria-live="polite" className="sr-only">
