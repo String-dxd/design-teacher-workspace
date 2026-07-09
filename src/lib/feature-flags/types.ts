@@ -19,6 +19,7 @@ export type FeatureFlagKey =
   | 'social-links'
   | 'export'
   | 'primary-contact'
+  | 'posts-admin-view'
 
 export type FeatureFlags = {
   [K in FeatureFlagKey]: boolean

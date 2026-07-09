@@ -4,6 +4,7 @@ import { format, parse } from 'date-fns'
 import type { PGOwnership, PGStatus } from '@/types/pg-announcement'
 import type { ResponseType } from '@/types/form'
 import { Button } from '@/components/ui/button'
+import { Toggle } from '@/components/ui/toggle'
 import { Calendar } from '@/components/ui/calendar'
 import {
   Popover,
@@ -39,9 +40,9 @@ function countActiveFilters(filters: AnnouncementFilters): number {
 }
 
 const RESPONSE_TYPE_OPTIONS: Array<{ value: ResponseType; label: string }> = [
-  { value: 'view-only', label: 'View Only' },
+  { value: 'view-only', label: 'Read Only' },
   { value: 'acknowledge', label: 'Acknowledge' },
-  { value: 'yes-no', label: 'Yes / No' },
+  { value: 'yes-no', label: 'Yes / no' },
 ]
 
 interface AnnouncementFilterBarProps {
@@ -114,7 +115,7 @@ export function AnnouncementFilterBar({
       <PopoverContent className="w-[460px] gap-0 p-0" align="start">
         {/* Header */}
         <div className="px-5 pb-3 pt-4">
-          <h3 className="text-sm font-semibold">Show records</h3>
+          <h3 className="text-sm font-semibold">Show posts</h3>
         </div>
 
         {/* Filter rows */}
@@ -124,19 +125,16 @@ export function AnnouncementFilterBar({
             <span className="w-24 shrink-0 text-sm font-medium">Status</span>
             <div className="flex flex-1 flex-wrap gap-1.5">
               {STATUS_OPTIONS.map((opt) => (
-                <button
+                <Toggle
                   key={opt.value}
-                  type="button"
-                  onClick={() => toggleStatus(opt.value)}
-                  className={cn(
-                    'rounded-md border px-2.5 py-1 text-xs font-medium transition-colors',
-                    filters.statuses.includes(opt.value)
-                      ? 'border-primary bg-twblue-2 text-twblue-9'
-                      : 'border-border bg-card text-foreground hover:border-primary hover:text-primary',
-                  )}
+                  variant="outline"
+                  size="sm"
+                  pressed={filters.statuses.includes(opt.value)}
+                  onPressedChange={() => toggleStatus(opt.value)}
+                  className="aria-pressed:border-primary aria-pressed:bg-twblue-2 aria-pressed:text-twblue-9"
                 >
                   {opt.label}
-                </button>
+                </Toggle>
               ))}
             </div>
           </div>
@@ -146,19 +144,16 @@ export function AnnouncementFilterBar({
             <span className="w-24 shrink-0 text-sm font-medium">Ownership</span>
             <div className="flex flex-1 flex-wrap gap-1.5">
               {OWNERSHIP_OPTIONS.map((opt) => (
-                <button
+                <Toggle
                   key={opt.value}
-                  type="button"
-                  onClick={() => toggleOwnership(opt.value)}
-                  className={cn(
-                    'rounded-md border px-2.5 py-1 text-xs font-medium transition-colors',
-                    filters.ownerships.includes(opt.value)
-                      ? 'border-primary bg-twblue-2 text-twblue-9'
-                      : 'border-border bg-card text-foreground hover:border-primary hover:text-primary',
-                  )}
+                  variant="outline"
+                  size="sm"
+                  pressed={filters.ownerships.includes(opt.value)}
+                  onPressedChange={() => toggleOwnership(opt.value)}
+                  className="aria-pressed:border-primary aria-pressed:bg-twblue-2 aria-pressed:text-twblue-9"
                 >
                   {opt.label}
-                </button>
+                </Toggle>
               ))}
             </div>
           </div>
@@ -168,19 +163,16 @@ export function AnnouncementFilterBar({
             <span className="w-24 shrink-0 text-sm font-medium">Response</span>
             <div className="flex flex-1 flex-wrap gap-1.5">
               {RESPONSE_TYPE_OPTIONS.map((opt) => (
-                <button
+                <Toggle
                   key={opt.value}
-                  type="button"
-                  onClick={() => toggleResponseType(opt.value)}
-                  className={cn(
-                    'rounded-md border px-2.5 py-1 text-xs font-medium transition-colors',
-                    filters.responseTypes.includes(opt.value)
-                      ? 'border-primary bg-twblue-2 text-twblue-9'
-                      : 'border-border bg-card text-foreground hover:border-primary hover:text-primary',
-                  )}
+                  variant="outline"
+                  size="sm"
+                  pressed={filters.responseTypes.includes(opt.value)}
+                  onPressedChange={() => toggleResponseType(opt.value)}
+                  className="aria-pressed:border-primary aria-pressed:bg-twblue-2 aria-pressed:text-twblue-9"
                 >
                   {opt.label}
-                </button>
+                </Toggle>
               ))}
             </div>
           </div>

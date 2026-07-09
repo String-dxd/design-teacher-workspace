@@ -11,10 +11,7 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
   if (status === 'posted') {
     return (
       <Badge
-        className={cn(
-          'bg-lime-3 text-lime-11 hover:bg-lime-3',
-          className,
-        )}
+        className={cn('bg-lime-3 text-lime-11 hover:bg-lime-3', className)}
       >
         Posted
       </Badge>
@@ -24,7 +21,7 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
     return (
       <Badge
         className={cn(
-          'bg-twblue-3 text-twblue-11 hover:bg-twblue-3',
+          'bg-amber-100 text-amber-800 hover:bg-amber-100',
           className,
         )}
       >
@@ -34,10 +31,7 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
   }
   return (
     <Badge
-      className={cn(
-        'bg-muted text-muted-foreground hover:bg-muted',
-        className,
-      )}
+      className={cn('bg-muted text-muted-foreground hover:bg-muted', className)}
     >
       Draft
     </Badge>

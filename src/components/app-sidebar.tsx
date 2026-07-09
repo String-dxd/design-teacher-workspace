@@ -64,6 +64,9 @@ interface MenuItem {
   stage?: string
   transparent?: boolean
   alsoActiveFor?: Array<string>
+  search?: Record<string, string> // extra search params for the Link
+  excludeSearchView?: string // not active when currentView === this
+  requiredSearchView?: string // only active when currentView === this
 }
 
 const mainNavItems: Array<MenuItem> = [
@@ -140,6 +143,16 @@ const parentsCommItems: Array<MenuItem> = [
     icon: Mail,
     stage: 'Release 2',
     featureFlag: 'posts',
+    excludeSearchView: 'admin',
+  },
+  {
+    title: 'Posts (Admin)',
+    url: '/announcements',
+    icon: Mail,
+    stage: 'Release 2',
+    featureFlag: 'posts-admin-view',
+    search: { view: 'admin' },
+    requiredSearchView: 'admin',
   },
   {
     title: 'Reports',
@@ -152,58 +165,77 @@ const parentsCommItems: Array<MenuItem> = [
 interface SidebarMenuItemsProps {
   items: Array<MenuItem>
   currentPath: string
+  currentView?: string
   highlightTitle?: string
 }
 
 function SidebarMenuItems({
   items,
   currentPath,
+  currentView,
   highlightTitle,
 }: SidebarMenuItemsProps) {
   return (
     <SidebarMenu>
-      {items.map((item) => (
-        <SidebarMenuItem
-          key={item.title}
-          className={item.transparent ? 'opacity-0 pointer-events-none' : ''}
-        >
-          <SidebarMenuButton
-            render={<Link to={item.url} />}
-            isActive={
-              currentPath === item.url ||
-              (item.url !== '/' && currentPath.startsWith(item.url)) ||
-              (item.alsoActiveFor?.some((p) => currentPath.startsWith(p)) ??
-                false)
-            }
-            tooltip={item.title}
-            className={
-              highlightTitle === item.title
-                ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                : undefined
-            }
+      {items.map((item) => {
+        const pathActive =
+          currentPath === item.url ||
+          (item.url !== '/' && currentPath.startsWith(item.url)) ||
+          (item.alsoActiveFor?.some((p) => currentPath.startsWith(p)) ?? false)
+
+        let isActive: boolean
+        if (item.requiredSearchView != null) {
+          isActive = pathActive && currentView === item.requiredSearchView
+        } else if (item.excludeSearchView != null) {
+          isActive = pathActive && currentView !== item.excludeSearchView
+        } else {
+          isActive = pathActive
+        }
+
+        return (
+          <SidebarMenuItem
+            key={item.title}
+            className={item.transparent ? 'opacity-0 pointer-events-none' : ''}
           >
-            <item.icon className="size-4" />
-            <span>{item.title}</span>
-            {item.stage && (
-              <Badge
-                variant="outline"
-                className={
-                  item.stage === 'Experiment'
-                    ? 'border-violet-6 bg-violet-3 text-violet-11 group-data-[collapsible=icon]:hidden'
-                    : 'group-data-[collapsible=icon]:hidden'
-                }
-              >
-                {item.stage}
-              </Badge>
+            <SidebarMenuButton
+              render={
+                item.search ? (
+                  <Link to={item.url} search={item.search} />
+                ) : (
+                  <Link to={item.url} />
+                )
+              }
+              isActive={isActive}
+              tooltip={item.title}
+              className={
+                highlightTitle === item.title
+                  ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                  : undefined
+              }
+            >
+              <item.icon className="size-4" />
+              <span>{item.title}</span>
+              {item.stage && (
+                <Badge
+                  variant="outline"
+                  className={
+                    item.stage === 'Experiment'
+                      ? 'border-violet-6 bg-violet-3 text-violet-11 group-data-[collapsible=icon]:hidden'
+                      : 'group-data-[collapsible=icon]:hidden'
+                  }
+                >
+                  {item.stage}
+                </Badge>
+              )}
+            </SidebarMenuButton>
+            {item.badge && (
+              <SidebarMenuBadge className="bg-muted text-muted-foreground">
+                {item.badge}
+              </SidebarMenuBadge>
             )}
-          </SidebarMenuButton>
-          {item.badge && (
-            <SidebarMenuBadge className="bg-muted text-muted-foreground">
-              {item.badge}
-            </SidebarMenuBadge>
-          )}
-        </SidebarMenuItem>
-      ))}
+          </SidebarMenuItem>
+        )
+      })}
     </SidebarMenu>
   )
 }
@@ -224,6 +256,10 @@ export function AppSidebar() {
   const studentGroupsEnabled = useFeatureFlag('student-groups')
   const agencyReportsEnabled = useFeatureFlag('agency-reports')
   const msfUpliftEnabled = useFeatureFlag('msf-uplift-data')
+  const postsAdminViewEnabled = useFeatureFlag('posts-admin-view')
+  const currentView = (location.search as Record<string, unknown>).view as
+    | string
+    | undefined
 
   const hideAttendanceAndReports =
     msfUpliftEnabled ||
@@ -266,6 +302,7 @@ export function AppSidebar() {
       if (item.featureFlag === 'hdp-reports') return hdpReportsEnabled
       if (item.featureFlag === 'parents-gateway') return parentsGatewayEnabled
       if (item.featureFlag === 'student-groups') return studentGroupsEnabled
+      if (item.featureFlag === 'posts-admin-view') return postsAdminViewEnabled
       return true
     })
 
@@ -340,6 +377,7 @@ export function AppSidebar() {
                   <SidebarMenuItems
                     items={filteredParentsItems}
                     currentPath={location.pathname}
+                    currentView={currentView}
                     highlightTitle={showCoachMark ? 'Posts' : undefined}
                   />
                 </PopoverTrigger>

@@ -7,7 +7,6 @@ import {
   getStudentScopes,
 } from '@/data/mock-student-groups'
 
-
 interface StudentRecipientSelectorProps {
   value: Array<SelectedEntity>
   onChange: (recipients: Array<SelectedEntity>) => void

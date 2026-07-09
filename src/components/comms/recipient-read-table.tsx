@@ -550,8 +550,8 @@ export function RecipientReadTable({
       {/* ── Table ── */}
       <div className="overflow-x-auto">
         <Table>
-          <TableHeader>
-            <TableRow className="hover:bg-transparent">
+          <TableHeader className="border-b bg-background">
+            <TableRow className="border-0 hover:bg-transparent">
               <TableHead>Student</TableHead>
               {show('indexNo') && (
                 <TableHead className="w-20">Index No.</TableHead>
@@ -606,46 +606,44 @@ export function RecipientReadTable({
                         {r.indexNo ?? '—'}
                       </TableCell>
                     )}
-                    <TableCell>
-                      <Badge variant="outline" className="text-xs">
-                        {r.classLabel}
-                      </Badge>
+                    <TableCell className="text-muted-foreground">
+                      {r.classLabel}
                     </TableCell>
 
                     {/* Status cell — adapts to responseType */}
                     <TableCell>
                       {responseType === 'acknowledge' ? (
                         status === 'acknowledged' ? (
-                          <span className="text-sm font-medium text-lime-11">
+                          <Badge className="bg-lime-3 text-lime-11 hover:bg-lime-3">
                             Acknowledged
-                          </span>
+                          </Badge>
                         ) : (
-                          <span className="text-sm font-medium text-foreground">
+                          <Badge className="bg-muted text-muted-foreground hover:bg-muted">
                             Pending
-                          </span>
+                          </Badge>
                         )
                       ) : responseType === 'yes-no' ? (
                         status === 'yes' ? (
-                          <span className="text-sm font-medium text-lime-11">
+                          <Badge className="bg-lime-3 text-lime-11 hover:bg-lime-3">
                             Yes
-                          </span>
+                          </Badge>
                         ) : status === 'no' ? (
-                          <span className="text-sm font-medium text-crimson-11">
+                          <Badge className="bg-crimson-3 text-crimson-11 hover:bg-crimson-3">
                             No
-                          </span>
+                          </Badge>
                         ) : (
-                          <span className="text-sm font-medium text-foreground">
+                          <Badge className="bg-muted text-muted-foreground hover:bg-muted">
                             No Response
-                          </span>
+                          </Badge>
                         )
                       ) : r.readStatus === 'read' ? (
-                        <span className="text-sm font-medium text-lime-11">
+                        <Badge className="bg-lime-3 text-lime-11 hover:bg-lime-3">
                           Read
-                        </span>
+                        </Badge>
                       ) : (
-                        <span className="text-sm font-medium text-foreground">
+                        <Badge className="bg-muted text-muted-foreground hover:bg-muted">
                           Unread
-                        </span>
+                        </Badge>
                       )}
                     </TableCell>
 

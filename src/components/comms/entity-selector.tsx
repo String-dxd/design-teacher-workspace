@@ -124,7 +124,6 @@ function getCountUnit(groupType: GroupType | undefined, count: number): string {
   return count === 1 ? 'member' : 'members'
 }
 
-
 export function detectOverlaps(
   entities: Array<SelectedEntity>,
   overlapMap: Record<string, Array<string>>,
@@ -450,9 +449,7 @@ function EntityChip({
       )}
       <span className="truncate">{entity.label}</span>
       {entity.type === 'group' && (
-        <span
-          className={cn('shrink-0', large ? 'text-slate-9' : 'opacity-60')}
-        >
+        <span className={cn('shrink-0', large ? 'text-slate-9' : 'opacity-60')}>
           · {entity.count}
         </span>
       )}

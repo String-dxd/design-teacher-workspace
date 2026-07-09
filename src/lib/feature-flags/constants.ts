@@ -23,4 +23,5 @@ export const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
   'social-links': false,
   export: false,
   'primary-contact': false,
+  'posts-admin-view': true,
 }
