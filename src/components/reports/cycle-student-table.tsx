@@ -485,7 +485,7 @@ export function CycleStudentTable({
         <Table tableClassName="table-fixed w-full">
           <TableHeader className="border-b bg-background">
             <TableRow className="border-0 hover:bg-transparent">
-              <TableHead className="sticky left-0 z-20 w-10 bg-background">
+              <TableHead className="sticky left-0 z-20 w-10 bg-background shadow-[inset_0_1px_0_var(--color-border),inset_0_-1px_0_var(--color-border)]">
                 #
               </TableHead>
               <ColumnHeaderMenu
@@ -494,6 +494,7 @@ export function CycleStudentTable({
                 isSticky
                 stickyLeft="2.5rem"
                 showStickyShadow
+                className="w-[180px]"
               />
               {showClass && (
                 <ColumnHeaderMenu
@@ -523,11 +524,11 @@ export function CycleStudentTable({
           <TableBody>
             {rows.map(({ student, status, cp }, index) => (
               <TableRow key={student.id} className="group">
-                <TableCell className="sticky left-0 z-10 w-10 bg-background text-muted-foreground transition-colors group-hover:bg-muted/50">
+                <TableCell className="sticky left-0 z-10 w-10 bg-background text-muted-foreground shadow-[inset_0_-1px_0_var(--color-border)] transition-colors group-hover:bg-muted/50">
                   {index + 1}
                 </TableCell>
                 <TableCell
-                  className="sticky z-10 bg-background font-medium shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] transition-colors group-hover:bg-muted/50"
+                  className="sticky z-10 w-[180px] bg-background font-medium shadow-[inset_0_-1px_0_var(--color-border),2px_0_5px_-2px_rgba(0,0,0,0.1)] transition-colors group-hover:bg-muted/50"
                   style={{ left: '2.5rem' }}
                 >
                   {student.name}
