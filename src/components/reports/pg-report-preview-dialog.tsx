@@ -121,7 +121,7 @@ export function PgReportPreviewDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>Preview in Parents Gateway</DialogTitle>
           <DialogDescription>
@@ -130,9 +130,9 @@ export function PgReportPreviewDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {/* Phone mockup — same chrome as the Posts PG preview */}
-        <div className="mx-auto w-full max-w-[300px]">
-          <div className="relative flex h-[540px] flex-col overflow-hidden rounded-[28px] border-[7px] border-slate-900 bg-white shadow-md">
+        {/* Phone mockup — real device width, same chrome as the Posts PG preview */}
+        <div className="mx-auto w-full max-w-[390px]">
+          <div className="relative flex h-[560px] flex-col overflow-hidden rounded-[28px] border-[7px] border-slate-900 bg-white shadow-md">
             {/* PG nav bar */}
             <div className="flex shrink-0 items-center justify-between border-b border-slate-100 bg-white px-3 py-2.5">
               <ChevronLeft className="h-5 w-5 text-slate-400" />

@@ -164,7 +164,7 @@ function ScaleRow({
   pillClass: string
 }) {
   return (
-    <div className="flex items-start justify-between gap-3 py-1.5">
+    <div className="flex items-start justify-between gap-2 py-1.5 @sm/report:gap-3">
       <div className="min-w-0 flex-1">
         <p className="text-sm">{label}</p>
         {sublabel && (
@@ -480,7 +480,7 @@ function TermAtAGlance({ report }: { report: HolisticReport }) {
 
   return (
     <div className="bg-card rounded-xl border p-3.5">
-      <div className="grid grid-cols-2 gap-2.5">
+      <div className="grid grid-cols-1 gap-2.5 @sm/report:grid-cols-2">
         {strongest.length > 0 && (
           <GlanceTile
             icon={Award}
@@ -584,7 +584,7 @@ export function ReportPreview({
   const restBlocks = ordered.filter((b) => b.key !== 'pupilInfo')
 
   return (
-    <div className="mx-auto flex max-w-[66ch] flex-col gap-6">
+    <div className="@container/report mx-auto flex max-w-[66ch] flex-col gap-4 @sm/report:gap-6">
       {pupilInfoBlock && (
         <div data-section-key={pupilInfoBlock.key}>
           <PreviewBlock
