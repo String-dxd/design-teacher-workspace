@@ -485,7 +485,7 @@ export function CycleStudentTable({
     }
     return (
       <div className="overflow-x-auto">
-        <Table>
+        <Table tableClassName="table-fixed w-full">
           <TableHeader className="border-b bg-background">
             <TableRow className="border-0 hover:bg-transparent">
               <TableHead className="sticky left-0 z-20 w-10 bg-background">
@@ -499,13 +499,33 @@ export function CycleStudentTable({
                 showStickyShadow
               />
               {showClass && (
-                <ColumnHeaderMenu column={CLASS_COLUMN} {...headerMenuProps} />
+                <ColumnHeaderMenu
+                  column={CLASS_COLUMN}
+                  {...headerMenuProps}
+                  className="w-20"
+                />
               )}
-              <ColumnHeaderMenu column={RESULTS_COLUMN} {...headerMenuProps} />
-              <ColumnHeaderMenu column={COMMENTS_COLUMN} {...headerMenuProps} />
-              <ColumnHeaderMenu column={APPROVAL_COLUMN} {...headerMenuProps} />
-              <ColumnHeaderMenu column={PARENTS_COLUMN} {...headerMenuProps} />
-              <TableHead className="text-right">Action</TableHead>
+              <ColumnHeaderMenu
+                column={RESULTS_COLUMN}
+                {...headerMenuProps}
+                className="w-[130px]"
+              />
+              <ColumnHeaderMenu
+                column={COMMENTS_COLUMN}
+                {...headerMenuProps}
+                className="w-[170px]"
+              />
+              <ColumnHeaderMenu
+                column={APPROVAL_COLUMN}
+                {...headerMenuProps}
+                className="w-[120px]"
+              />
+              <ColumnHeaderMenu
+                column={PARENTS_COLUMN}
+                {...headerMenuProps}
+                className="w-[150px]"
+              />
+              <TableHead className="w-[160px] text-right">Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -569,59 +589,61 @@ export function CycleStudentTable({
   }
 
   return (
-    <Table>
-      <TableHeader className="border-b bg-background">
-        <TableRow className="border-0 hover:bg-transparent">
-          <TableHead>Student</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Comments</TableHead>
-          <TableHead className="text-right">Action</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {students.map((student) => {
-          const status = statusFor(cycle, student.id, false)
-          const draft = cycle?.perStudent[student.id]
-          return (
-            <TableRow key={student.id}>
-              <TableCell className="font-medium">{student.name}</TableCell>
-              <TableCell>
-                <Badge
-                  variant={
-                    OUTLINED_STATUSES.has(status) ? 'outline' : 'default'
-                  }
-                  className={STATUS_CLASS[status]}
-                >
-                  {STATUS_LABEL[status]}
-                </Badge>
-              </TableCell>
-              <TableCell className="text-muted-foreground max-w-xs truncate">
-                {draft?.comments ? (
-                  excerpt(draft.comments)
-                ) : (
-                  <span className="italic">No comments yet</span>
-                )}
-              </TableCell>
-              <TableCell className="text-right">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  render={
-                    <Link
-                      to="/reports/cycle/write/$studentId"
-                      params={{ studentId: student.id }}
-                      search={{ classId, term }}
-                    />
-                  }
-                >
-                  Write
-                </Button>
-              </TableCell>
-            </TableRow>
-          )
-        })}
-      </TableBody>
-    </Table>
+    <div className="overflow-x-auto">
+      <Table tableClassName="table-fixed w-full">
+        <TableHeader className="border-b bg-background">
+          <TableRow className="border-0 hover:bg-transparent">
+            <TableHead>Student</TableHead>
+            <TableHead className="w-[140px]">Status</TableHead>
+            <TableHead>Comments</TableHead>
+            <TableHead className="w-[120px] text-right">Action</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {students.map((student) => {
+            const status = statusFor(cycle, student.id, false)
+            const draft = cycle?.perStudent[student.id]
+            return (
+              <TableRow key={student.id}>
+                <TableCell className="font-medium">{student.name}</TableCell>
+                <TableCell>
+                  <Badge
+                    variant={
+                      OUTLINED_STATUSES.has(status) ? 'outline' : 'default'
+                    }
+                    className={STATUS_CLASS[status]}
+                  >
+                    {STATUS_LABEL[status]}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-muted-foreground max-w-xs truncate">
+                  {draft?.comments ? (
+                    excerpt(draft.comments)
+                  ) : (
+                    <span className="italic">No comments yet</span>
+                  )}
+                </TableCell>
+                <TableCell className="text-right">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    render={
+                      <Link
+                        to="/reports/cycle/write/$studentId"
+                        params={{ studentId: student.id }}
+                        search={{ classId, term }}
+                      />
+                    }
+                  >
+                    Write
+                  </Button>
+                </TableCell>
+              </TableRow>
+            )
+          })}
+        </TableBody>
+      </Table>
+    </div>
   )
 }
 

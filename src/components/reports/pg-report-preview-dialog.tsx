@@ -30,16 +30,22 @@ interface PgReportPreviewDialogProps {
   onOpenChange: (open: boolean) => void
 }
 
-/** Static field that looks like the PG app's select boxes — display only. */
+/**
+ * Static field that reads as the PG app's own select boxes — display only
+ * (the report being previewed has one fixed year/term, so this never opens).
+ * Built from the design system's own SelectTrigger tokens (`ui/select.tsx`:
+ * border-input, bg-input/30, rounded-[var(--radius-input)]) rather than
+ * hand-picked colors, so it matches every other select in the app.
+ */
 function StaticField({ label, value }: { label: string; value: string }) {
   return (
     <div className="min-w-0 flex-1">
-      <p className="text-[10px] font-semibold text-slate-400">{label}</p>
-      <div className="mt-1 flex items-center justify-between gap-2 rounded-lg border border-slate-200 px-3 py-2">
-        <span className="truncate text-xs font-bold text-slate-700">
-          {value}
-        </span>
-        <ChevronDown className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+      <p className="text-muted-foreground mb-1 text-[10px] font-semibold">
+        {label}
+      </p>
+      <div className="border-input bg-input/30 flex h-9 w-full items-center justify-between gap-1.5 rounded-[var(--radius-input)] border px-3 text-sm">
+        <span className="truncate font-bold text-slate-700">{value}</span>
+        <ChevronDown className="text-muted-foreground size-4 shrink-0" />
       </div>
     </div>
   )
@@ -131,10 +137,7 @@ export function PgReportPreviewDialog({
                     Student Profile
                   </h3>
                   <span className="grid h-9 w-9 shrink-0 place-content-center rounded-full border border-slate-200 bg-slate-50">
-                    <Image
-                      aria-hidden
-                      className="h-4 w-4 text-slate-400"
-                    />
+                    <Image aria-hidden className="h-4 w-4 text-slate-400" />
                   </span>
                 </div>
                 <div className="mt-4 flex gap-3">
