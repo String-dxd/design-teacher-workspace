@@ -1069,51 +1069,7 @@ function CycleHub({
         </div>
       </div>
 
-      {pipeline ? (
-        /* Pipeline metrics — one card per stage of the reporting flow. */
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-          <div className="rounded-lg border bg-card p-4">
-            <div className="text-muted-foreground text-sm">Students</div>
-            <div className="text-2xl font-semibold">{summary.total}</div>
-          </div>
-          <div className="rounded-lg border bg-card p-4">
-            <div className="text-muted-foreground text-sm">Results in</div>
-            <div className="text-2xl font-semibold">
-              {summary.resultsIn}
-              <span className="text-muted-foreground text-base font-normal">
-                {' '}
-                of {summary.total}
-              </span>
-            </div>
-          </div>
-          <div className="rounded-lg border bg-card p-4">
-            <div className="text-muted-foreground text-sm">
-              Pending comments
-            </div>
-            <div className="text-2xl font-semibold">
-              {summary.pendingComments}
-            </div>
-          </div>
-          <div className="rounded-lg border bg-card p-4">
-            <div className="text-muted-foreground text-sm">Pending review</div>
-            <div className="text-2xl font-semibold">
-              {summary.pendingReview}
-            </div>
-          </div>
-          <div className="rounded-lg border bg-card p-4">
-            <div className="text-muted-foreground text-sm">Sent to parents</div>
-            <div className="text-2xl font-semibold">
-              {summary.sent}
-              {summary.sent > 0 && (
-                <span className="text-muted-foreground text-base font-normal">
-                  {' '}
-                  · {summary.acked} acknowledged
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-      ) : (
+      {!pipeline && (
         /* Cycle summary — compact, so the student list stays the focal point */
         <div className="text-muted-foreground flex flex-wrap items-center gap-x-6 gap-y-1 text-sm">
           <span>
