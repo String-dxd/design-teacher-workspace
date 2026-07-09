@@ -121,7 +121,10 @@ function SubjectCard({
   return (
     <div className="rounded-xl border px-3.5 py-3">
       <div className="flex w-full items-center gap-2">
-        <SubjectIcon aria-hidden className="text-muted-foreground size-4 shrink-0" />
+        <SubjectIcon
+          aria-hidden
+          className="text-muted-foreground size-4 shrink-0"
+        />
         <span className="min-w-0 flex-1 truncate text-sm font-medium">
           {subj.name}
         </span>
@@ -298,6 +301,44 @@ function stripHtml(html: string): string {
     .replace(/<[^>]*>/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
+}
+
+/**
+ * The teacher's written note as parents read it — quoted, child's first name
+ * bolded, attributed. Read-view counterpart of CommentField; renders in the
+ * "Form teacher comments" section's ordered slot.
+ */
+function TeacherQuote({
+  report,
+  comments,
+}: {
+  report: HolisticReport
+  comments: string
+}) {
+  const quote = stripHtml(comments)
+  if (!quote) return null
+  const first = firstName(report.studentName)
+  const [beforeName, ...afterName] = quote.split(first)
+  return (
+    <blockquote className="border-amber-6 border-l-4 py-0.5 pl-4">
+      <p className="text-sm leading-relaxed">
+        “
+        {afterName.length > 0 ? (
+          <>
+            {beforeName}
+            <strong>{first}</strong>
+            {afterName.join(first)}
+          </>
+        ) : (
+          quote
+        )}
+        ”
+      </p>
+      <footer className="text-muted-foreground mt-2 text-xs">
+        — {stripSalutation(report.formTeacher)}, Form Teacher
+      </footer>
+    </blockquote>
+  )
 }
 
 /** 'P1-A' → 'Primary 1A' — the report spells the class out in full. */
@@ -557,60 +598,30 @@ export function ReportPreview({
           />
         </div>
       )}
-      {/* The teacher's words lead the document — a standalone block quote in
-          read views. Write mode keeps the editor section instead, and the
-          quote respects the "Form teacher comments" layout toggle. */}
-      {!editable &&
-        ordered.some((b) => b.key === 'conduct') &&
-        (() => {
-          const quote = stripHtml(comments)
-          if (!quote) return null
-          const first = firstName(report.studentName)
-          const [beforeName, ...afterName] = quote.split(first)
-          return (
-            <blockquote className="border-amber-6 border-l-4 py-0.5 pl-4">
-                <p className="text-sm leading-relaxed">
-                  “
-                  {afterName.length > 0 ? (
-                    <>
-                      {beforeName}
-                      <strong>{first}</strong>
-                      {afterName.join(first)}
-                    </>
-                  ) : (
-                    quote
-                  )}
-                  ”
-                </p>
-              <footer className="text-muted-foreground mt-2 text-xs">
-                — {stripSalutation(report.formTeacher)}, Form Teacher
-              </footer>
-            </blockquote>
-          )
-        })()}
       {restBlocks
         .filter(
           (block) =>
             // Skip blocks that would render nothing — an empty wrapper still
-            // occupies a flex slot and doubles the section gap. The comments
-            // section only renders where the teacher edits it (read views
-            // quote the comment in the hero), and stored layouts may carry
-            // keys with no renderer (e.g. the retired attendance section).
+            // occupies a flex slot and doubles the section gap. In read views
+            // the comments section renders as the teacher's quote (skipped
+            // when nothing is written), and stored layouts may carry keys
+            // with no renderer (e.g. the retired attendance section).
             RENDERED_SECTIONS.has(block.key) &&
-            (block.key !== 'conduct' || (editable && !!onCommentsChange)),
+            (block.key !== 'conduct' ||
+              (editable ? !!onCommentsChange : stripHtml(comments).length > 0)),
         )
         .map((block) => (
-        <div key={block.key} data-section-key={block.key}>
-          <PreviewBlock
-            block={block}
-            report={report}
-            editable={editable}
-            comments={comments}
-            onCommentsChange={onCommentsChange}
-            showMissingData={showMissingData}
-          />
-        </div>
-      ))}
+          <div key={block.key} data-section-key={block.key}>
+            <PreviewBlock
+              block={block}
+              report={report}
+              editable={editable}
+              comments={comments}
+              onCommentsChange={onCommentsChange}
+              showMissingData={showMissingData}
+            />
+          </div>
+        ))}
     </div>
   )
 }
@@ -730,7 +741,9 @@ function PreviewBlock({
                     <p className="text-sm font-medium">{subj.name}</p>
                     <p className="text-muted-foreground text-sm">
                       Awaiting data from School Cockpit
-                      {submission ? ` — ${stripSalutation(submission.teacherName)}` : ''}
+                      {submission
+                        ? ` — ${stripSalutation(submission.teacherName)}`
+                        : ''}
                     </p>
                   </div>
                 )
@@ -749,16 +762,19 @@ function PreviewBlock({
     }
 
     case 'conduct':
-      // Conduct lives in the at-a-glance bullet, and read views surface the
-      // written note as the quote at the top of that card — this section only
-      // renders where the teacher edits the comment.
-      if (!editable || !onCommentsChange) return null
+      // Conduct lives in the at-a-glance bullet; this section carries the
+      // teacher's written note. Read views render it as the quote, in
+      // whatever position the layout orders it (the section is filtered out
+      // upstream when nothing is written).
+      if (!editable || !onCommentsChange) {
+        return <TeacherQuote report={report} comments={comments} />
+      }
       return (
         <div className="flex flex-col gap-2">
           {heading('Form teacher comments')}
           <p className="text-muted-foreground text-xs">
-            A note from the form teacher on{' '}
-            {firstName(report.studentName)}'s term.
+            A note from the form teacher on {firstName(report.studentName)}'s
+            term.
           </p>
           <CommentField
             report={report}

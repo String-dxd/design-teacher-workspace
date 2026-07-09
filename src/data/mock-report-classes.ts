@@ -1,4 +1,5 @@
 import type { CycleStudentStatus } from '@/lib/hdp-cycle-store'
+import type { Student } from '@/types/student'
 import { mockStudents } from '@/data/mock-students'
 
 // Reports-hub-only class data. The Students page owns `classGroups` in
@@ -98,6 +99,59 @@ export function getReportRoster(scope: string): Array<ReportPupil> {
     return [...realRoster('P1-A'), ...P1B_ROSTER, ...P1C_ROSTER]
   }
   return SIBLING_ROSTERS.get(scope) ?? realRoster(scope)
+}
+
+/**
+ * Fictional pupil for the Set up layout page's preview — the layout stage is
+ * about the document's shape, never a real child (whose results may not even
+ * be in yet). Runs through the normal report generator so every section
+ * previews with believable content. Not part of any roster.
+ */
+export const SAMPLE_PREVIEW_PUPIL: Student = {
+  id: 'sample-preview',
+  name: 'Jamie Tan (Sample)',
+  class: 'P1-A',
+  cca: 'Art and Crafts Club',
+  schoolName: 'River Valley Primary School',
+  attentionTags: [],
+  overallPercentage: 75,
+  conduct: 'Good',
+  approvedMtl: null,
+  learningSupport: null,
+  postSecEligibility: '',
+  offences: 0,
+  absences: 3,
+  privateVrAbsences: 0,
+  mcAbsences: 3,
+  lateComing: 0,
+  ccaMissed: 0,
+  riskIndicators: 0,
+  lowMoodFlagged: null,
+  socialLinks: 4,
+  counsellingSessions: 0,
+  sen: null,
+  fas: null,
+  housing: null,
+  housingType: null,
+  custody: null,
+  custodyDetails: null,
+  commuterStatus: null,
+  afterSchoolArrangement: null,
+  siblings: 0,
+  externalAgencies: null,
+  citizenship: 'Singapore citizen',
+  languagesSpoken: 'English',
+  nric: 'T0000000A',
+  indexNumber: 0,
+  formTeacher: 'Mrs. Lim Siew Bee',
+  coFormTeacher: 'Ms Nurul Huda',
+  promotionStatus: null,
+  daysPresent: 44,
+  totalSchoolDays: 47,
+  teacherObservations:
+    'Jamie is a curious and cheerful learner who has settled well into the routines of school. Jamie takes part in class activities with a positive attitude and is growing in confidence each week.',
+  nextSteps:
+    'Continue reading together at home — regular reading will further strengthen Jamie’s language skills and support their learning overall.',
 }
 
 /** Level groups for the hub's scope selector (reports hub only). */

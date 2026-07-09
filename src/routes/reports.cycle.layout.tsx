@@ -15,7 +15,7 @@ import {
   CURRENT_ACADEMIC_YEAR,
   generateReportFromStudent,
 } from '@/data/mock-reports'
-import { mockStudents } from '@/data/mock-students'
+import { SAMPLE_PREVIEW_PUPIL } from '@/data/mock-report-classes'
 import { useFeatureFlag } from '@/hooks/use-feature-flag'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
 import { Button, buttonVariants } from '@/components/ui/button'
@@ -138,18 +138,18 @@ function CycleLayoutPage() {
   const [newTemplateName, setNewTemplateName] = useState('')
   const [pgPreviewOpen, setPgPreviewOpen] = useState(false)
 
-  // Sample student from the class, used only to preview the layout.
-  const sampleStudent = useMemo(
+  // The preview always uses the fictional sample pupil — never a real child,
+  // whose results may not be entered yet. Class follows the page so the
+  // document header reads correctly.
+  const previewReport = useMemo(
     () =>
-      mockStudents.find((s) => s.class === classId) ??
-      mockStudents.find((s) => s.class.startsWith('P')),
-    [classId],
+      generateReportFromStudent(
+        { ...SAMPLE_PREVIEW_PUPIL, class: classId },
+        term,
+        CURRENT_ACADEMIC_YEAR,
+      ),
+    [classId, term],
   )
-
-  const previewReport = useMemo(() => {
-    if (!sampleStudent) return null
-    return generateReportFromStudent(sampleStudent, term, CURRENT_ACADEMIC_YEAR)
-  }, [sampleStudent, term])
 
   if (!builderEnabled) {
     return (
@@ -405,42 +405,35 @@ function CycleLayoutPage() {
           <div className="p-6">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
               <p className="text-muted-foreground text-xs">
-                {sampleStudent
-                  ? `Previewing with ${sampleStudent.name}’s data`
-                  : 'Live preview'}
+                Previewing with sample data — not a real pupil. Real results
+                appear when you write each report.
               </p>
-              {previewReport && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPgPreviewOpen(true)}
-                >
-                  <Smartphone className="mr-1.5 size-3.5" />
-                  Preview in Parents Gateway
-                </Button>
-              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPgPreviewOpen(true)}
+              >
+                <Smartphone className="mr-1.5 size-3.5" />
+                Preview in Parents Gateway
+              </Button>
             </div>
-            {previewReport && (
-              <ReportPreview
-                report={previewReport}
-                blocks={blocks}
-                comments={previewReport.teacherComments ?? ''}
-                showMissingData
-              />
-            )}
+            <ReportPreview
+              report={previewReport}
+              blocks={blocks}
+              comments={previewReport.teacherComments ?? ''}
+              showMissingData
+            />
           </div>
         </section>
       </div>
 
-      {previewReport && (
-        <PgReportPreviewDialog
-          report={previewReport}
-          blocks={blocks}
-          comments={previewReport.teacherComments ?? ''}
-          open={pgPreviewOpen}
-          onOpenChange={setPgPreviewOpen}
-        />
-      )}
+      <PgReportPreviewDialog
+        report={previewReport}
+        blocks={blocks}
+        comments={previewReport.teacherComments ?? ''}
+        open={pgPreviewOpen}
+        onOpenChange={setPgPreviewOpen}
+      />
 
       <Dialog open={saveTemplateOpen} onOpenChange={setSaveTemplateOpen}>
         <DialogContent className="sm:max-w-sm">
