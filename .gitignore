@@ -20,3 +20,6 @@ todos.json
 
 # Local design references — do not commit
 reference/
+
+# Superpowers plugin runtime state — do not commit
+.superpowers/
