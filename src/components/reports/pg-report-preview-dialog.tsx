@@ -1,14 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import {
-  ArrowDown,
-  ArrowUp,
-  CheckCircle2,
-  ChevronDown,
-  ChevronLeft,
-  Download,
-  Image,
-  MoreHorizontal,
-} from 'lucide-react'
+import { CheckCircle2, ChevronDown, Download, Image } from 'lucide-react'
 
 import type { HolisticReport, ReportBlock } from '@/types/report'
 import {
@@ -23,13 +14,12 @@ import { cn } from '@/lib/utils'
 
 // Shared "how parents see it" preview: the report document inside a Parents
 // Gateway phone mockup, mirroring the real PG HDP viewer — Student Profile
-// header with the child chip, static Year/Term fields, one scrollable report
-// page, and the scroll-gated Acknowledge footer. The bezel/nav-bar chrome and
-// salmon accent match the Posts feature's PG preview (announcements.new.tsx),
-// so every PG preview in the app reads as the same parent-facing product.
-// The acknowledge tap is a local mock (it never writes to the cycle store) —
-// the hub's Parents column tracks the real (simulated) acknowledgements
-// after sending.
+// header, static Year/Term fields, one scrollable report page, and the
+// scroll-gated Acknowledge footer. The bezel and salmon accent match the
+// Posts feature's PG preview (announcements.new.tsx), so every PG preview
+// in the app reads as the same parent-facing product. The acknowledge tap
+// is a local mock (it never writes to the cycle store) — the hub's Parents
+// column tracks the real (simulated) acknowledgements after sending.
 
 interface PgReportPreviewDialogProps {
   report: HolisticReport
@@ -115,10 +105,6 @@ export function PgReportPreviewDialog({
     setAckByDate(ackBy.toLocaleDateString('en-SG', dateOpts))
   }, [])
 
-  // Chip shows "Jamie Tan (P1-A)" — the sample suffix would double up the
-  // parentheses, so it's stripped here only.
-  const chipName = report.studentName.replace(/\s*\(Sample\)\s*$/, '')
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
@@ -130,19 +116,9 @@ export function PgReportPreviewDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {/* Phone mockup — real device width, same chrome as the Posts PG preview */}
+        {/* Phone mockup — real device width and proportion */}
         <div className="mx-auto w-full max-w-[390px]">
-          <div className="relative flex h-[560px] flex-col overflow-hidden rounded-[28px] border-[7px] border-slate-900 bg-white shadow-md">
-            {/* PG nav bar */}
-            <div className="flex shrink-0 items-center justify-between border-b border-slate-100 bg-white px-3 py-2.5">
-              <ChevronLeft className="h-5 w-5 text-slate-400" />
-              <div className="flex items-center gap-3 text-slate-400">
-                <ArrowUp className="h-3.5 w-3.5" />
-                <ArrowDown className="h-3.5 w-3.5" />
-                <MoreHorizontal className="h-4 w-4" />
-              </div>
-            </div>
-
+          <div className="relative flex h-[720px] max-h-[75vh] flex-col overflow-hidden rounded-[28px] border-[7px] border-slate-900 bg-white shadow-md">
             <div
               ref={scrollRef}
               onScroll={handleScroll}
@@ -159,11 +135,6 @@ export function PgReportPreviewDialog({
                       aria-hidden
                       className="h-4 w-4 text-slate-400"
                     />
-                  </span>
-                </div>
-                <div className="mt-3">
-                  <span className="inline-block rounded-lg bg-[#c47565] px-3 py-1.5 text-[11px] font-semibold text-white">
-                    {chipName} ({report.studentClass})
                   </span>
                 </div>
                 <div className="mt-4 flex gap-3">
