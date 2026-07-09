@@ -22,13 +22,7 @@ import { Button, buttonVariants } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { ReportPreview } from '@/components/reports/report-preview'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { PgReportPreviewDialog } from '@/components/reports/pg-report-preview-dialog'
 import { hasAllResults } from '@/data/mock-cockpit-submissions'
 import { loadCycle, patchStudent } from '@/lib/hdp-cycle-store'
 import { commitCycleReport } from '@/lib/hdp-report-commit'
@@ -302,9 +296,7 @@ function CycleWriteBody({ studentId }: { studentId: string }) {
               onClick={handleMarkReady}
               disabled={markState === 'loading' || !resultsIn}
               title={
-                resultsIn
-                  ? undefined
-                  : 'Waiting on results from School Cockpit'
+                resultsIn ? undefined : 'Waiting on results from School Cockpit'
               }
             >
               {markState === 'loading' && (
@@ -342,64 +334,45 @@ function CycleWriteBody({ studentId }: { studentId: string }) {
             <p className="text-sm font-medium">Results not in yet</p>
             <p className="text-muted-foreground max-w-sm text-sm">
               School Cockpit hasn’t received all subject results for{' '}
-              {student.name}. You can write this report once the results are
-              in.
+              {student.name}. You can write this report once the results are in.
             </p>
           </div>
         ) : (
-        <>
-        <div className="bg-card rounded-xl border p-6 shadow-sm">
-          <ReportPreview
-            report={report}
-            blocks={cycle.layout.blocks}
-            editable
-            comments={comments}
-            onCommentsChange={setComments}
-            showMissingData
-          />
-        </div>
+          <>
+            <div className="bg-card rounded-xl border p-6 shadow-sm">
+              <ReportPreview
+                report={report}
+                blocks={cycle.layout.blocks}
+                editable
+                comments={comments}
+                onCommentsChange={setComments}
+                showMissingData
+              />
+            </div>
 
-        <div className="mt-6 space-y-1.5">
-          <Label htmlFor="parent-message">Note to parents (optional)</Label>
-          <Textarea
-            id="parent-message"
-            placeholder="Add a short note for the parent…"
-            value={parentMessage}
-            onChange={(e) => setParentMessage(e.target.value)}
-            rows={3}
-          />
-        </div>
-        </>
+            <div className="mt-6 space-y-1.5">
+              <Label htmlFor="parent-message">Note to parents (optional)</Label>
+              <Textarea
+                id="parent-message"
+                placeholder="Add a short note for the parent…"
+                value={parentMessage}
+                onChange={(e) => setParentMessage(e.target.value)}
+                rows={3}
+              />
+            </div>
+          </>
         )}
       </div>
 
       {/* How the report reads on a parent's phone in Parents Gateway. */}
-      <Dialog open={parentPreviewOpen} onOpenChange={setParentPreviewOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Parent preview</DialogTitle>
-            <DialogDescription>
-              How {student.name}’s report reads on a phone in Parents Gateway.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="mx-auto max-h-[70vh] w-[375px] max-w-full overflow-y-auto rounded-2xl border p-4">
-            {parentMessage.trim() && (
-              <div className="bg-muted/50 mb-4 rounded-xl border p-3">
-                <p className="text-muted-foreground mb-1 text-xs font-medium">
-                  A note from your form teacher
-                </p>
-                <p className="text-sm leading-relaxed">{parentMessage}</p>
-              </div>
-            )}
-            <ReportPreview
-              report={report}
-              blocks={cycle.layout.blocks}
-              comments={comments}
-              compactPupilInfo
-            />
-          </div>
-        </DialogContent>
-      </Dialog>
+      <PgReportPreviewDialog
+        report={report}
+        blocks={cycle.layout.blocks}
+        comments={comments}
+        parentMessage={parentMessage}
+        open={parentPreviewOpen}
+        onOpenChange={setParentPreviewOpen}
+      />
     </div>
   )
 }

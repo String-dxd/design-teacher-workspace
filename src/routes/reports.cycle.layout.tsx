@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
-import { ArrowLeft, Bookmark } from 'lucide-react'
+import { ArrowLeft, Bookmark, Smartphone } from 'lucide-react'
 import { toast } from 'sonner'
 
 import type { ReportBlock, ReportLayout, Term } from '@/types/report'
@@ -40,6 +40,7 @@ import {
   SelectTrigger,
 } from '@/components/ui/select'
 import { ReportPreview } from '@/components/reports/report-preview'
+import { PgReportPreviewDialog } from '@/components/reports/pg-report-preview-dialog'
 import { SectionLayoutEditor } from '@/components/reports/section-layout-editor'
 import { loadCycle, saveCycle } from '@/lib/hdp-cycle-store'
 import {
@@ -93,9 +94,9 @@ function CycleLayoutPage() {
     const existingCycle = loadCycle(classId, term)
     return existingCycle?.templateId ?? BUILT_IN_TEMPLATES[0].id
   })
-  const [customTemplates, setCustomTemplates] = useState<
-    Array<CustomTemplate>
-  >([])
+  const [customTemplates, setCustomTemplates] = useState<Array<CustomTemplate>>(
+    [],
+  )
   useEffect(() => {
     setCustomTemplates(listCustomTemplates())
   }, [])
@@ -135,6 +136,7 @@ function CycleLayoutPage() {
 
   const [saveTemplateOpen, setSaveTemplateOpen] = useState(false)
   const [newTemplateName, setNewTemplateName] = useState('')
+  const [pgPreviewOpen, setPgPreviewOpen] = useState(false)
 
   // Sample student from the class, used only to preview the layout.
   const sampleStudent = useMemo(
@@ -401,11 +403,23 @@ function CycleLayoutPage() {
           className="w-full flex-1 lg:sticky lg:top-4 lg:max-h-[calc(100vh-5rem)] lg:overflow-y-auto"
         >
           <div className="p-6">
-            <p className="text-muted-foreground mb-4 text-xs">
-              {sampleStudent
-                ? `Previewing with ${sampleStudent.name}’s data`
-                : 'Live preview'}
-            </p>
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+              <p className="text-muted-foreground text-xs">
+                {sampleStudent
+                  ? `Previewing with ${sampleStudent.name}’s data`
+                  : 'Live preview'}
+              </p>
+              {previewReport && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPgPreviewOpen(true)}
+                >
+                  <Smartphone className="mr-1.5 size-3.5" />
+                  Preview in Parents Gateway
+                </Button>
+              )}
+            </div>
             {previewReport && (
               <ReportPreview
                 report={previewReport}
@@ -417,6 +431,16 @@ function CycleLayoutPage() {
           </div>
         </section>
       </div>
+
+      {previewReport && (
+        <PgReportPreviewDialog
+          report={previewReport}
+          blocks={blocks}
+          comments={previewReport.teacherComments ?? ''}
+          open={pgPreviewOpen}
+          onOpenChange={setPgPreviewOpen}
+        />
+      )}
 
       <Dialog open={saveTemplateOpen} onOpenChange={setSaveTemplateOpen}>
         <DialogContent className="sm:max-w-sm">
