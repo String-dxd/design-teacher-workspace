@@ -203,7 +203,11 @@ const PARENTS_RANK: Record<StudentCheckpoints['parents'], number> = {
   acknowledged: 2,
 }
 
-export type CheckpointSortField = 'results' | 'comments' | 'approval' | 'parents'
+export type CheckpointSortField =
+  | 'results'
+  | 'comments'
+  | 'approval'
+  | 'parents'
 
 export function checkpointRank(
   field: CheckpointSortField,
@@ -225,8 +229,18 @@ export function checkpointRank(
 // ColumnHeaderMenu (`components/students/column-header-menu.tsx`) so this
 // table's headers look and behave identically. No column here is filterable,
 // so the popover shows only the sort options.
-const NAME_COLUMN: ColumnConfig = { id: 'name', label: 'Name', visible: true, sortable: true }
-const CLASS_COLUMN: ColumnConfig = { id: 'class', label: 'Class', visible: true, sortable: true }
+const NAME_COLUMN: ColumnConfig = {
+  id: 'name',
+  label: 'Name',
+  visible: true,
+  sortable: true,
+}
+const CLASS_COLUMN: ColumnConfig = {
+  id: 'class',
+  label: 'Class',
+  visible: true,
+  sortable: true,
+}
 const RESULTS_COLUMN: ColumnConfig = {
   id: 'results',
   label: 'SC Results',
@@ -259,7 +273,11 @@ interface CheckpointRow {
   cp: StudentCheckpoints
 }
 
-function compareRows(a: CheckpointRow, b: CheckpointRow, sort: SortConfig): number {
+function compareRows(
+  a: CheckpointRow,
+  b: CheckpointRow,
+  sort: SortConfig,
+): number {
   let cmp: number
   if (sort.field === 'name') {
     cmp = a.student.name.localeCompare(b.student.name)
@@ -466,72 +484,87 @@ export function CycleStudentTable({
       onClearFilter: () => {},
     }
     return (
-      <Table>
-        <TableHeader className="border-b bg-background">
-          <TableRow className="border-0 hover:bg-transparent">
-            <TableHead>#</TableHead>
-            <ColumnHeaderMenu column={NAME_COLUMN} {...headerMenuProps} />
-            {showClass && (
-              <ColumnHeaderMenu column={CLASS_COLUMN} {...headerMenuProps} />
-            )}
-            <ColumnHeaderMenu column={RESULTS_COLUMN} {...headerMenuProps} />
-            <ColumnHeaderMenu column={COMMENTS_COLUMN} {...headerMenuProps} />
-            <ColumnHeaderMenu column={APPROVAL_COLUMN} {...headerMenuProps} />
-            <ColumnHeaderMenu column={PARENTS_COLUMN} {...headerMenuProps} />
-            <TableHead className="text-right">Action</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {rows.map(({ student, status, cp }, index) => (
-            <TableRow key={student.id}>
-              <TableCell className="text-muted-foreground">
-                {index + 1}
-              </TableCell>
-              <TableCell className="font-medium">{student.name}</TableCell>
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader className="border-b bg-background">
+            <TableRow className="border-0 hover:bg-transparent">
+              <TableHead className="sticky left-0 z-20 w-10 bg-background">
+                #
+              </TableHead>
+              <ColumnHeaderMenu
+                column={NAME_COLUMN}
+                {...headerMenuProps}
+                isSticky
+                stickyLeft="2.5rem"
+                showStickyShadow
+              />
               {showClass && (
-                <TableCell className="text-muted-foreground">
-                  {student.class}
-                </TableCell>
+                <ColumnHeaderMenu column={CLASS_COLUMN} {...headerMenuProps} />
               )}
-              {cp.results === 'in' ? (
-                <CheckpointCell label="Submitted" tone="lime" />
-              ) : (
-                <CheckpointCell label="Pending" tone="outline" />
-              )}
-              {cp.comments === 'done' ? (
-                <CheckpointCell label="Submitted" tone="lime" />
-              ) : cp.comments === 'draft' ? (
-                <CheckpointCell label="Draft" tone="muted" />
-              ) : (
-                <CheckpointCell label="Pending" tone="outline" />
-              )}
-              {cp.approval === 'approved' ? (
-                <CheckpointCell label="Approved" tone="lime" />
-              ) : (
-                <CheckpointCell
-                  label="Pending"
-                  tone={cp.approval === 'pending' ? 'amber' : 'outline'}
-                />
-              )}
-              {cp.parents === 'acknowledged' ? (
-                <CheckpointCell label="Yes" tone="lime" />
-              ) : (
-                <CheckpointCell label="Pending" tone="outline" />
-              )}
-              <TableCell className="text-right">
-                <RowAction
-                  student={student}
-                  status={status}
-                  resultsAwaiting={cp.results === 'awaiting'}
-                  ownClass={student.class === ownClass}
-                  term={term}
-                  onSendToParents={onSendToParents}
-                />
-              </TableCell>
+              <ColumnHeaderMenu column={RESULTS_COLUMN} {...headerMenuProps} />
+              <ColumnHeaderMenu column={COMMENTS_COLUMN} {...headerMenuProps} />
+              <ColumnHeaderMenu column={APPROVAL_COLUMN} {...headerMenuProps} />
+              <ColumnHeaderMenu column={PARENTS_COLUMN} {...headerMenuProps} />
+              <TableHead className="text-right">Action</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {rows.map(({ student, status, cp }, index) => (
+              <TableRow key={student.id} className="group">
+                <TableCell className="sticky left-0 z-10 w-10 bg-background text-muted-foreground transition-colors group-hover:bg-muted/50">
+                  {index + 1}
+                </TableCell>
+                <TableCell
+                  className="sticky z-10 bg-background font-medium shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] transition-colors group-hover:bg-muted/50"
+                  style={{ left: '2.5rem' }}
+                >
+                  {student.name}
+                </TableCell>
+                {showClass && (
+                  <TableCell className="text-muted-foreground">
+                    {student.class}
+                  </TableCell>
+                )}
+                {cp.results === 'in' ? (
+                  <CheckpointCell label="Submitted" tone="lime" />
+                ) : (
+                  <CheckpointCell label="Pending" tone="outline" />
+                )}
+                {cp.comments === 'done' ? (
+                  <CheckpointCell label="Submitted" tone="lime" />
+                ) : cp.comments === 'draft' ? (
+                  <CheckpointCell label="Draft" tone="muted" />
+                ) : (
+                  <CheckpointCell label="Pending" tone="outline" />
+                )}
+                {cp.approval === 'approved' ? (
+                  <CheckpointCell label="Approved" tone="lime" />
+                ) : (
+                  <CheckpointCell
+                    label="Pending"
+                    tone={cp.approval === 'pending' ? 'amber' : 'outline'}
+                  />
+                )}
+                {cp.parents === 'acknowledged' ? (
+                  <CheckpointCell label="Yes" tone="lime" />
+                ) : (
+                  <CheckpointCell label="Pending" tone="outline" />
+                )}
+                <TableCell className="text-right">
+                  <RowAction
+                    student={student}
+                    status={status}
+                    resultsAwaiting={cp.results === 'awaiting'}
+                    ownClass={student.class === ownClass}
+                    term={term}
+                    onSendToParents={onSendToParents}
+                  />
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     )
   }
 

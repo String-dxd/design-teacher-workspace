@@ -182,6 +182,10 @@ export function ColumnHeaderMenu({
                     if (isSortedBy && sortDirection === 'asc') onClearSort()
                     else onSort(column.id, 'asc')
                     setOpen(false)
+                    // The popover restores focus to the column trigger on
+                    // close, leaving its native focus ring lit indefinitely —
+                    // blur it so the ring clears once the choice is made.
+                    ;(document.activeElement as HTMLElement | null)?.blur()
                   }}
                   className={cn(
                     'flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-[var(--slate-5)]',
@@ -202,6 +206,7 @@ export function ColumnHeaderMenu({
                     if (isSortedBy && sortDirection === 'desc') onClearSort()
                     else onSort(column.id, 'desc')
                     setOpen(false)
+                    ;(document.activeElement as HTMLElement | null)?.blur()
                   }}
                   className={cn(
                     'flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-[var(--slate-5)]',
