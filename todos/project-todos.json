@@ -377,6 +377,14 @@
       "status": "completed",
       "createdAt": "2026-07-08T09:39:03.000Z",
       "completedAt": "2026-07-08T09:39:03.000Z"
+    },
+    {
+      "id": "tw-041b",
+      "title": "Hub scope filter, checkpoint columns, parent ack, PG preview (plan 026)",
+      "description": "Reports hub: combined scope selector (pinned form class + All Primary 1 with Class column and read-only seeded P1-B/P1-C rows), four checkpoint columns (Results/Comments/Approval/Parents) with contextual per-row actions incl. Send to parents, staggered parent acknowledgement after sending (ackAt in cycle store), and a shared Parents Gateway preview dialog with an Acknowledge tap used from both the layout and write stages.",
+      "status": "completed",
+      "createdAt": "2026-07-09T02:55:37.000Z",
+      "completedAt": "2026-07-09T02:55:37.000Z"
     }
   ]
 }
