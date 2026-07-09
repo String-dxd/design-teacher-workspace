@@ -1,8 +1,11 @@
+import { useMemo, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 
 import type { Term } from '@/types/report'
+import type { SortConfig, SortDirection } from '@/types/student'
 import type { CycleState, CycleStudentStatus } from '@/lib/hdp-cycle-store'
 import type { SiblingReportState } from '@/data/mock-report-classes'
+import type { ColumnConfig } from '@/components/students/column-visibility-popover'
 import {
   Table,
   TableBody,
@@ -13,6 +16,7 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { ColumnHeaderMenu } from '@/components/students/column-header-menu'
 import { hasAllResults } from '@/data/mock-cockpit-submissions'
 
 // Light student-status table for the reporting-cycle hub. Deliberately not the
@@ -175,6 +179,98 @@ const LIME = 'bg-lime-3 text-lime-11 hover:bg-lime-3'
 const AMBER = 'bg-amber-100 text-amber-800 hover:bg-amber-100'
 const MUTED = 'bg-muted text-muted-foreground hover:bg-muted'
 const BLUE = 'bg-twblue-3 text-twblue-11 hover:bg-twblue-3'
+
+// Rank of each checkpoint field's states, least → most progressed — powers
+// the sortable headers (Student Insights table style) without changing the
+// underlying StudentCheckpoints semantics.
+const RESULTS_RANK: Record<StudentCheckpoints['results'], number> = {
+  awaiting: 0,
+  in: 1,
+}
+const COMMENTS_RANK: Record<StudentCheckpoints['comments'], number> = {
+  none: 0,
+  draft: 1,
+  done: 2,
+}
+const APPROVAL_RANK: Record<StudentCheckpoints['approval'], number> = {
+  none: 0,
+  pending: 1,
+  approved: 2,
+}
+const PARENTS_RANK: Record<StudentCheckpoints['parents'], number> = {
+  none: 0,
+  sent: 1,
+  acknowledged: 2,
+}
+
+export type CheckpointSortField = 'results' | 'comments' | 'approval' | 'parents'
+
+export function checkpointRank(
+  field: CheckpointSortField,
+  cp: StudentCheckpoints,
+): number {
+  switch (field) {
+    case 'results':
+      return RESULTS_RANK[cp.results]
+    case 'comments':
+      return COMMENTS_RANK[cp.comments]
+    case 'approval':
+      return APPROVAL_RANK[cp.approval]
+    case 'parents':
+      return PARENTS_RANK[cp.parents]
+  }
+}
+
+// Sortable-header column defs — reuses the Student Insights table's own
+// ColumnHeaderMenu (`components/students/column-header-menu.tsx`) so this
+// table's headers look and behave identically. No column here is filterable,
+// so the popover shows only the sort options.
+const NAME_COLUMN: ColumnConfig = { id: 'name', label: 'Name', visible: true, sortable: true }
+const CLASS_COLUMN: ColumnConfig = { id: 'class', label: 'Class', visible: true, sortable: true }
+const RESULTS_COLUMN: ColumnConfig = {
+  id: 'results',
+  label: 'SC Results',
+  visible: true,
+  sortable: true,
+}
+const COMMENTS_COLUMN: ColumnConfig = {
+  id: 'comments',
+  label: 'Teacher Comments',
+  visible: true,
+  sortable: true,
+}
+const APPROVAL_COLUMN: ColumnConfig = {
+  id: 'approval',
+  label: 'Approval',
+  visible: true,
+  sortable: true,
+}
+const PARENTS_COLUMN: ColumnConfig = {
+  id: 'parents',
+  label: 'Parent Response',
+  visible: true,
+  sortable: true,
+}
+const EMPTY_FILTER_FIELDS = new Set<string>()
+
+interface CheckpointRow {
+  student: CycleTableStudent
+  status: CycleStudentStatus
+  cp: StudentCheckpoints
+}
+
+function compareRows(a: CheckpointRow, b: CheckpointRow, sort: SortConfig): number {
+  let cmp: number
+  if (sort.field === 'name') {
+    cmp = a.student.name.localeCompare(b.student.name)
+  } else if (sort.field === 'class') {
+    cmp = a.student.class.localeCompare(b.student.class)
+  } else {
+    const field = sort.field as CheckpointSortField
+    cmp = checkpointRank(field, a.cp) - checkpointRank(field, b.cp)
+  }
+  return sort.direction === 'asc' ? cmp : -cmp
+}
 
 function CheckpointCell({
   label,
@@ -342,75 +438,98 @@ export function CycleStudentTable({
   onSendToParents,
 }: CycleStudentTableProps) {
   const ownClass = ownClassId ?? classId
+  const [sort, setSort] = useState<SortConfig | null>(null)
+
+  const rows = useMemo(() => {
+    const base: Array<CheckpointRow> = students.map((student) => {
+      const seeded = seededStates?.get(student.id)
+      const status = seeded?.status ?? statusFor(cycle, student.id, true)
+      const cp = seeded
+        ? checkpointsFromStatus(seeded.status, seeded.acknowledged)
+        : checkpointsFor(cycle, student.id)
+      return { student, status, cp }
+    })
+    if (!sort) return base
+    return [...base].sort((a, b) => compareRows(a, b, sort))
+  }, [students, cycle, seededStates, sort])
 
   if (pipeline) {
+    const handleSort = (field: string, direction: SortDirection) =>
+      setSort({ field, direction })
+    const handleClearSort = () => setSort(null)
+    const headerMenuProps = {
+      currentSort: sort,
+      activeFilterFields: EMPTY_FILTER_FIELDS,
+      onSort: handleSort,
+      onClearSort: handleClearSort,
+      onAddQuickFilter: () => {},
+      onClearFilter: () => {},
+    }
     return (
       <Table>
         <TableHeader className="border-b bg-background">
           <TableRow className="border-0 hover:bg-transparent">
-            <TableHead>Student</TableHead>
-            {showClass && <TableHead>Class</TableHead>}
-            <TableHead>Results</TableHead>
-            <TableHead>Comments</TableHead>
-            <TableHead>Approval</TableHead>
-            <TableHead>Parents</TableHead>
+            <TableHead>#</TableHead>
+            <ColumnHeaderMenu column={NAME_COLUMN} {...headerMenuProps} />
+            {showClass && (
+              <ColumnHeaderMenu column={CLASS_COLUMN} {...headerMenuProps} />
+            )}
+            <ColumnHeaderMenu column={RESULTS_COLUMN} {...headerMenuProps} />
+            <ColumnHeaderMenu column={COMMENTS_COLUMN} {...headerMenuProps} />
+            <ColumnHeaderMenu column={APPROVAL_COLUMN} {...headerMenuProps} />
+            <ColumnHeaderMenu column={PARENTS_COLUMN} {...headerMenuProps} />
             <TableHead className="text-right">Action</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {students.map((student) => {
-            const seeded = seededStates?.get(student.id)
-            const status = seeded?.status ?? statusFor(cycle, student.id, true)
-            const cp = seeded
-              ? checkpointsFromStatus(seeded.status, seeded.acknowledged)
-              : checkpointsFor(cycle, student.id)
-            return (
-              <TableRow key={student.id}>
-                <TableCell className="font-medium">{student.name}</TableCell>
-                {showClass && (
-                  <TableCell className="text-muted-foreground">
-                    {student.class}
-                  </TableCell>
-                )}
-                {cp.results === 'in' ? (
-                  <CheckpointCell label="In" tone="lime" />
-                ) : (
-                  <CheckpointCell label="Awaiting" tone="outline" />
-                )}
-                {cp.comments === 'done' ? (
-                  <CheckpointCell label="Entered" tone="lime" />
-                ) : cp.comments === 'draft' ? (
-                  <CheckpointCell label="Draft" tone="muted" />
-                ) : (
-                  <CheckpointCell />
-                )}
-                {cp.approval === 'approved' ? (
-                  <CheckpointCell label="Approved" tone="lime" />
-                ) : cp.approval === 'pending' ? (
-                  <CheckpointCell label="Pending" tone="amber" />
-                ) : (
-                  <CheckpointCell />
-                )}
-                {cp.parents === 'acknowledged' ? (
-                  <CheckpointCell label="Acknowledged" tone="lime" />
-                ) : cp.parents === 'sent' ? (
-                  <CheckpointCell label="Sent" tone="blue" />
-                ) : (
-                  <CheckpointCell />
-                )}
-                <TableCell className="text-right">
-                  <RowAction
-                    student={student}
-                    status={status}
-                    resultsAwaiting={cp.results === 'awaiting'}
-                    ownClass={student.class === ownClass}
-                    term={term}
-                    onSendToParents={onSendToParents}
-                  />
+          {rows.map(({ student, status, cp }, index) => (
+            <TableRow key={student.id}>
+              <TableCell className="text-muted-foreground">
+                {index + 1}
+              </TableCell>
+              <TableCell className="font-medium">{student.name}</TableCell>
+              {showClass && (
+                <TableCell className="text-muted-foreground">
+                  {student.class}
                 </TableCell>
-              </TableRow>
-            )
-          })}
+              )}
+              {cp.results === 'in' ? (
+                <CheckpointCell label="Submitted" tone="lime" />
+              ) : (
+                <CheckpointCell label="Pending" tone="outline" />
+              )}
+              {cp.comments === 'done' ? (
+                <CheckpointCell label="Submitted" tone="lime" />
+              ) : cp.comments === 'draft' ? (
+                <CheckpointCell label="Draft" tone="muted" />
+              ) : (
+                <CheckpointCell label="Pending" tone="outline" />
+              )}
+              {cp.approval === 'approved' ? (
+                <CheckpointCell label="Approved" tone="lime" />
+              ) : (
+                <CheckpointCell
+                  label="Pending"
+                  tone={cp.approval === 'pending' ? 'amber' : 'outline'}
+                />
+              )}
+              {cp.parents === 'acknowledged' ? (
+                <CheckpointCell label="Yes" tone="lime" />
+              ) : (
+                <CheckpointCell label="Pending" tone="outline" />
+              )}
+              <TableCell className="text-right">
+                <RowAction
+                  student={student}
+                  status={status}
+                  resultsAwaiting={cp.results === 'awaiting'}
+                  ownClass={student.class === ownClass}
+                  term={term}
+                  onSendToParents={onSendToParents}
+                />
+              </TableCell>
+            </TableRow>
+          ))}
         </TableBody>
       </Table>
     )

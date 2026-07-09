@@ -1,11 +1,19 @@
 import { describe, expect, it } from 'vitest'
 import {
+  checkpointRank,
   checkpointsFor,
   checkpointsFromStatus,
   statusFor,
 } from './cycle-student-table'
-import type { CycleStudentStatus } from './cycle-student-table'
+import type { CycleStudentStatus, StudentCheckpoints } from './cycle-student-table'
 import type { CycleState } from '@/lib/hdp-cycle-store'
+
+const BLANK_CHECKPOINTS: StudentCheckpoints = {
+  results: 'awaiting',
+  comments: 'none',
+  approval: 'none',
+  parents: 'none',
+}
 
 function makeCycle(overrides: Partial<CycleState> = {}): CycleState {
   return {
@@ -210,6 +218,41 @@ describe('checkpointsFor', () => {
       },
     })
     expect(checkpointsFor(acked, '36').parents).toBe('acknowledged')
+  })
+})
+
+describe('checkpointRank', () => {
+  it('orders each field from least to most progressed, for sortable headers', () => {
+    expect(checkpointRank('results', BLANK_CHECKPOINTS)).toBeLessThan(
+      checkpointRank('results', { ...BLANK_CHECKPOINTS, results: 'in' }),
+    )
+    expect(
+      checkpointRank('comments', { ...BLANK_CHECKPOINTS, comments: 'draft' }),
+    ).toBeLessThan(
+      checkpointRank('comments', { ...BLANK_CHECKPOINTS, comments: 'done' }),
+    )
+    expect(checkpointRank('comments', BLANK_CHECKPOINTS)).toBeLessThan(
+      checkpointRank('comments', { ...BLANK_CHECKPOINTS, comments: 'draft' }),
+    )
+    expect(
+      checkpointRank('approval', {
+        ...BLANK_CHECKPOINTS,
+        approval: 'pending',
+      }),
+    ).toBeLessThan(
+      checkpointRank('approval', {
+        ...BLANK_CHECKPOINTS,
+        approval: 'approved',
+      }),
+    )
+    expect(
+      checkpointRank('parents', { ...BLANK_CHECKPOINTS, parents: 'sent' }),
+    ).toBeLessThan(
+      checkpointRank('parents', {
+        ...BLANK_CHECKPOINTS,
+        parents: 'acknowledged',
+      }),
+    )
   })
 })
 
