@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { statusFor } from './cycle-student-table'
+import {
+  checkpointsFor,
+  checkpointsFromStatus,
+  statusFor,
+} from './cycle-student-table'
 import type { CycleStudentStatus } from './cycle-student-table'
 import type { CycleState } from '@/lib/hdp-cycle-store'
 
@@ -139,5 +143,89 @@ describe('statusFor — P1-A pipeline', () => {
       },
     })
     expect(statusFor(cycle, '36', true)).toBe('sent')
+  })
+})
+
+describe('checkpointsFor', () => {
+  const draftBase = { comments: '', parentMessage: '', ready: false }
+
+  it('marks results awaiting for the cockpit-gap student, nothing else started', () => {
+    expect(checkpointsFor(makeCycle(), '48')).toEqual({
+      results: 'awaiting',
+      comments: 'none',
+      approval: 'none',
+      parents: 'none',
+    })
+  })
+
+  it('keeps comments at draft until submission', () => {
+    const cycle = makeCycle({
+      perStudent: { '36': { ...draftBase, comments: 'Hi' } },
+    })
+    expect(checkpointsFor(cycle, '36')).toEqual({
+      results: 'in',
+      comments: 'draft',
+      approval: 'none',
+      parents: 'none',
+    })
+  })
+
+  it('a submitted comment reads done, approval pending', () => {
+    const cycle = makeCycle({
+      perStudent: {
+        '36': { ...draftBase, comments: 'Hi', reviewStatus: 'in_review' },
+      },
+    })
+    expect(checkpointsFor(cycle, '36')).toEqual({
+      results: 'in',
+      comments: 'done',
+      approval: 'pending',
+      parents: 'none',
+    })
+  })
+
+  it('sent then acknowledged flows through the parents checkpoint', () => {
+    const sent = makeCycle({
+      perStudent: {
+        '36': {
+          ...draftBase,
+          comments: 'Hi',
+          reviewStatus: 'approved',
+          sentAt: '2026-07-09T00:00:00.000Z',
+        },
+      },
+    })
+    expect(checkpointsFor(sent, '36').parents).toBe('sent')
+    expect(checkpointsFor(sent, '36').approval).toBe('approved')
+
+    const acked = makeCycle({
+      perStudent: {
+        '36': {
+          ...draftBase,
+          comments: 'Hi',
+          reviewStatus: 'approved',
+          sentAt: '2026-07-09T00:00:00.000Z',
+          ackAt: '2026-07-09T00:01:00.000Z',
+        },
+      },
+    })
+    expect(checkpointsFor(acked, '36').parents).toBe('acknowledged')
+  })
+})
+
+describe('checkpointsFromStatus', () => {
+  it('maps every pipeline status to a consistent checkpoint tuple', () => {
+    expect(checkpointsFromStatus('awaiting_results').results).toBe('awaiting')
+    expect(checkpointsFromStatus('pending_comments')).toEqual({
+      results: 'in',
+      comments: 'none',
+      approval: 'none',
+      parents: 'none',
+    })
+    expect(checkpointsFromStatus('draft').comments).toBe('draft')
+    expect(checkpointsFromStatus('in_review').approval).toBe('pending')
+    expect(checkpointsFromStatus('approved').approval).toBe('approved')
+    expect(checkpointsFromStatus('sent').parents).toBe('sent')
+    expect(checkpointsFromStatus('sent', true).parents).toBe('acknowledged')
   })
 })

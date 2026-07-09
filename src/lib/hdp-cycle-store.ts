@@ -17,7 +17,26 @@ export interface PerStudentDraft {
   reviewStatus?: 'in_review' | 'approved'
   submittedAt?: string
   sentAt?: string
+  /** When the parent acknowledged the report in Parents Gateway (mock). */
+  ackAt?: string
 }
+
+/**
+ * A student's place in the reporting cycle. Lives here (not in the table
+ * component) so data modules can seed display states without importing from
+ * a component.
+ */
+export type CycleStudentStatus =
+  // Legacy 4-state story (all classes except P1-A)
+  | 'not_started'
+  | 'draft'
+  | 'ready'
+  | 'sent'
+  // P1-A pipeline states
+  | 'awaiting_results'
+  | 'pending_comments'
+  | 'in_review'
+  | 'approved'
 
 export interface CycleState {
   classId: string
@@ -77,6 +96,7 @@ export function loadCycle(classId: string, term: Term): CycleState | null {
         submittedAt:
           typeof d.submittedAt === 'string' ? d.submittedAt : undefined,
         sentAt: typeof d.sentAt === 'string' ? d.sentAt : undefined,
+        ackAt: typeof d.ackAt === 'string' ? d.ackAt : undefined,
       }
     }
     return {
