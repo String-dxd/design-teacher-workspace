@@ -188,7 +188,7 @@ const parentsCommItems: Array<MenuItem> = [
     featureFlag: 'meetings',
   },
   {
-    title: 'Reports',
+    title: 'Holistic Development Reports',
     url: '/reports',
     icon: FileText,
     stage: 'Experiment',
@@ -248,7 +248,7 @@ function SidebarMenuItems({
               }
             >
               <item.icon className="size-4" />
-              <span>{item.title}</span>
+              <span className="truncate">{item.title}</span>
               {item.stage && (
                 <Badge
                   variant="outline"
