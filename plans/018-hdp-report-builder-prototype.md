@@ -33,11 +33,12 @@ has ONE pre-committed failure signal (decided in a grilling session):
 - **The bet**: teachers **would use this over SC + Smart Compose**.
 - **Kill-criterion**: the bet is LOST if, after building + sharing a report, teachers **cannot name a
   concrete reason they'd pick this over SC**.
-- **Forced consequences**: (1) the flow must feel *faster* than SC; (2) **inline Smart Compose is
+- **Forced consequences**: (1) the flow must feel _faster_ than SC; (2) **inline Smart Compose is
   non-negotiable** ("no platform switching" is a primary reason to defect from SC); (3) the test script
   must put SC in the room — otherwise the kill-criterion is unmeasurable.
 
 **Two audiences — keep them separate in code and demo:**
+
 - **TEST TRACK (A0–A4, P1)** — what P1 teachers touch: one entry door → build → generate → P1
   parents-first share, with inline Smart Compose. Its only job is the bet.
 - **DEMO TRACK (B1–B3, P2)** — what STCI/CDC see: bulk (scale), an interactive extended holistic view
@@ -82,6 +83,7 @@ The HDP surface already exists behind the `holistic-reports` flag (default off).
   Admin UI: `src/routes/flags.tsx` (`featureFlagConfigs` array).
 
 **Exemplars to copy patterns from (do NOT rebuild — `AGENTS.md`: compose/extend, don't create):**
+
 - Up/down reorder: `src/components/comms/question-builder.tsx:46-58` (array-swap `moveUp`/`moveDown`,
   `GripVertical`/`ArrowUp`/`ArrowDown`, boundary-disabled).
 - Editor + live-preview split layout: `src/routes/announcements.new.tsx:882-890`
@@ -96,14 +98,14 @@ The HDP surface already exists behind the `holistic-reports` flag (default off).
 
 ## Commands you will need
 
-| Purpose | Command | Expected |
-|---|---|---|
-| Install (fresh worktree) | `bun install` | exit 0 — **required; hydration silently fails without it** |
-| Dev server | `bun run dev` | serves http://localhost:3000 |
-| Build | `bun run build` | exit 0 |
-| Typecheck | `bunx tsc --noEmit` | error count **≤ baseline** (see below), no NEW errors in touched files |
-| Tests | `bun run test` | no regression vs baseline |
-| Lint/format | `bun run check` | exit 0 after auto-fix |
+| Purpose                  | Command             | Expected                                                               |
+| ------------------------ | ------------------- | ---------------------------------------------------------------------- |
+| Install (fresh worktree) | `bun install`       | exit 0 — **required; hydration silently fails without it**             |
+| Dev server               | `bun run dev`       | serves http://localhost:3000                                           |
+| Build                    | `bun run build`     | exit 0                                                                 |
+| Typecheck                | `bunx tsc --noEmit` | error count **≤ baseline** (see below), no NEW errors in touched files |
+| Tests                    | `bun run test`      | no regression vs baseline                                              |
+| Lint/format              | `bun run check`     | exit 0 after auto-fix                                                  |
 
 **Capture the baseline BEFORE any change** (this repo has pre-existing failures; do not try to fix them):
 `bun install && bun run build && bunx tsc --noEmit 2>&1 | tail -1 && bun run test 2>&1 | tail -5`.
@@ -114,6 +116,7 @@ and gate on "no regression."
 ## Scope
 
 **In scope (test track A0–A4 — build first):**
+
 - `src/lib/feature-flags/types.ts`, `src/lib/feature-flags/constants.ts`, `src/routes/flags.tsx`
 - `src/types/report.ts`
 - `src/data/report-layouts.ts` (create — data/config)
@@ -123,10 +126,12 @@ and gate on "no regression."
 - `src/routes/reports.index.tsx`, `src/routes/reports.$id.tsx`, `src/routes/_guest.report-view.$token.tsx`
 
 **In scope (demo track B1–B3 — additive, lower priority):**
+
 - `src/components/reports/progression-chart.tsx` (create — new domain chart type, justified per policy)
 - plus the same wizard/index files above for bulk + extended template
 
 **Out of scope (do NOT touch):**
+
 - Real PG integration, real link auth/expiry, real School Cockpit / SEI data pull.
 - A data-gathering stage, error flows, field-level toggles, true drag-and-drop / any dnd dependency.
 - The radar/spider chart (`radar-chart.tsx`) in the extended view — use progression charts instead.
@@ -172,11 +177,20 @@ shell with clearly-labeled placeholder content and report.
 #### Step A1 — Persist the layout ("what you build is the template")
 
 In `src/types/report.ts` (additive, backward-compatible), add:
+
 ```ts
 export type ReportBlockViz = 'bar' | 'table' | 'progress' | 'line'
-export interface ReportBlock { key: string; enabled: boolean; order: number; viz?: ReportBlockViz }
-export interface ReportLayout { blocks: Array<ReportBlock> }
+export interface ReportBlock {
+  key: string
+  enabled: boolean
+  order: number
+  viz?: ReportBlockViz
+}
+export interface ReportLayout {
+  blocks: Array<ReportBlock>
+}
 ```
+
 and add `layout?: ReportLayout` to `HolisticReport` (optional → existing reports still render).
 Create `src/data/report-layouts.ts` exporting `P1_DEFAULT_LAYOUT` (studentInfo, attendance, academic,
 teacherComments; bar/table viz — the low-hanging-fruit set) and `SECONDARY_EXTENDED_LAYOUT` (adds
@@ -260,6 +274,7 @@ and report.
 
 This is a prototype; do not chase the pre-existing 16 failing unit tests. Add focused tests only where
 logic is non-trivial and side-effect-free:
+
 - `src/data/report-layouts.test.ts` (create) — assert `P1_DEFAULT_LAYOUT` excludes `cca`/`via` and its
   block `key`s are a subset of `SECTION_DEFS` keys; model after an existing `src/data/*` or `src/lib/*`
   test structure.
@@ -270,6 +285,7 @@ logic is non-trivial and side-effect-free:
 ## Done criteria
 
 ALL must hold:
+
 - [ ] `bun run build` → exit 0.
 - [ ] `bunx tsc --noEmit` → no NEW errors vs the captured baseline (touched files introduce 0).
 - [ ] `bun run test` → no regression vs baseline; new layout tests pass.
@@ -285,6 +301,7 @@ ALL must hold:
 ## STOP conditions
 
 Stop and report (do not improvise) if:
+
 - The header **P1 prerequisite** is unmet (no real P1 section/field set) and you'd otherwise hardcode
   specific P1 descriptors.
 - A "Current state" excerpt doesn't match the live code at HEAD (drift).
@@ -303,7 +320,7 @@ Stop and report (do not improvise) if:
   stall while code sits ready.
 - **Session hygiene**: flags are in localStorage and `mockReports` mutates in memory — reset between the
   3–5 test sessions (hard refresh + seed reset, or a fresh browser profile) or session #3 shows dirty state.
-- `layout` is intentionally a *template of intent*: P1 renders it fully (curated data); secondary
+- `layout` is intentionally a _template of intent_: P1 renders it fully (curated data); secondary
   auto-hides empty sections. A reviewer should confirm the two render behaviors and that `layout` stays
   optional (old reports still render).
 - PG + data access are FLAGs in the source brief — the prototype mocks both; engineering must confirm the

@@ -17,25 +17,33 @@
 
 ## Why this matters
 
-On the layout stage (`/reports/cycle/layout`), the live preview wraps the whole report document in a bordered card, and inside that card the "Term at a glance" hero is *another* bordered card — a card inside a card. SLP-4 forbids nested cards (flatten with spacing/dividers instead). The nesting exists only on this preview surface: the parent guest view and the layout-aware detail page render the same `ReportPreview` **without** an outer card, so the hero's border is the single frame there and is correct. So the fix belongs on the preview wrapper, not the hero.
+On the layout stage (`/reports/cycle/layout`), the live preview wraps the whole report document in a bordered card, and inside that card the "Term at a glance" hero is _another_ bordered card — a card inside a card. SLP-4 forbids nested cards (flatten with spacing/dividers instead). The nesting exists only on this preview surface: the parent guest view and the layout-aware detail page render the same `ReportPreview` **without** an outer card, so the hero's border is the single frame there and is correct. So the fix belongs on the preview wrapper, not the hero.
 
 ## Current state
 
 `src/routes/reports.cycle.layout.tsx` — the preview section (around line 257):
+
 ```tsx
 <section aria-label="Live preview" className="w-full flex-1">
   <div className="bg-card rounded-xl border p-6 shadow-sm">
     <p className="text-muted-foreground mb-4 text-xs">
-      {sampleStudent ? `Previewing with ${sampleStudent.name}’s data` : 'Live preview'}
+      {sampleStudent
+        ? `Previewing with ${sampleStudent.name}’s data`
+        : 'Live preview'}
     </p>
     {previewReport && (
-      <ReportPreview report={previewReport} blocks={blocks} comments={previewReport.teacherComments ?? ''} />
+      <ReportPreview
+        report={previewReport}
+        blocks={blocks}
+        comments={previewReport.teacherComments ?? ''}
+      />
     )}
   </div>
 </section>
 ```
 
 `src/components/reports/report-preview.tsx` — `TermAtAGlance` (around line 65) is itself a bordered card and must **not** change (it's the single frame in the un-wrapped parent/detail contexts):
+
 ```tsx
 <div className="bg-card flex flex-col gap-4 rounded-xl border p-4 sm:flex-row sm:items-center sm:gap-6">
   {/* attendance ring + attendance + conduct */}
@@ -46,13 +54,13 @@ On the layout stage (`/reports/cycle/layout`), the live preview wraps the whole 
 
 ## Commands you will need
 
-| Purpose | Command | Expected |
-|---|---|---|
-| Typecheck | `bunx tsc --noEmit` | no error in `reports.cycle.layout`; total ≤ 107 |
-| Tests | `bun run test` | `Tests  75 passed (75)` |
-| Format (targeted) | `bunx prettier --check "src/routes/reports.cycle.layout.tsx"` | clean |
-| Lint (targeted) | `bunx eslint "src/routes/reports.cycle.layout.tsx"` | exit 0 |
-| Browser verify | Step 2 | preview shows one level of framing (hero only), not a card-in-a-card |
+| Purpose           | Command                                                       | Expected                                                             |
+| ----------------- | ------------------------------------------------------------- | -------------------------------------------------------------------- |
+| Typecheck         | `bunx tsc --noEmit`                                           | no error in `reports.cycle.layout`; total ≤ 107                      |
+| Tests             | `bun run test`                                                | `Tests  75 passed (75)`                                              |
+| Format (targeted) | `bunx prettier --check "src/routes/reports.cycle.layout.tsx"` | clean                                                                |
+| Lint (targeted)   | `bunx eslint "src/routes/reports.cycle.layout.tsx"`           | exit 0                                                               |
+| Browser verify    | Step 2                                                        | preview shows one level of framing (hero only), not a card-in-a-card |
 
 > ⚠️ Do NOT run `bun run check`, `bun install`, `git checkout`, `git restore`, `rm`.
 
@@ -66,18 +74,26 @@ On the layout stage (`/reports/cycle/layout`), the live preview wraps the whole 
 ### Step 1: Flatten the outer preview wrapper
 
 Remove the outer card's framing so the hero is the only bordered element inside the preview. Drop `rounded-xl border shadow-sm` (and `bg-card`) from the wrapper `<div>`, keeping the padding and the "Previewing with …" caption. Target:
+
 ```tsx
 <section aria-label="Live preview" className="w-full flex-1">
   <div className="p-6">
     <p className="text-muted-foreground mb-4 text-xs">
-      {sampleStudent ? `Previewing with ${sampleStudent.name}’s data` : 'Live preview'}
+      {sampleStudent
+        ? `Previewing with ${sampleStudent.name}’s data`
+        : 'Live preview'}
     </p>
     {previewReport && (
-      <ReportPreview report={previewReport} blocks={blocks} comments={previewReport.teacherComments ?? ''} />
+      <ReportPreview
+        report={previewReport}
+        blocks={blocks}
+        comments={previewReport.teacherComments ?? ''}
+      />
     )}
   </div>
 </section>
 ```
+
 (If a subtle boundary between the controls column and the preview is still wanted, a single left divider — `lg:border-l lg:pl-6` on the section — is acceptable and cheaper than a full card; use it only if the preview otherwise floats. Prefer the plain version first.)
 
 **Verify**: `bunx tsc --noEmit 2>&1 | grep -c "reports.cycle.layout"` → 0.

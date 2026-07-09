@@ -28,7 +28,7 @@ In the HDP report Write stage (`/reports/cycle/write/$studentId`), the teacher e
 1. The `useState` initializers seeding `comments`/`parentMessage` don't re-run, so the fields keep the previous student's text. The 500ms debounced autosave then persists that stale text under the **new** studentId, and "Mark ready" commits it — so student A's comments get written onto student B's report. **Data corruption.**
 2. The `cycle` object is `useMemo`'d on `[classId, term]`, which don't change during pager navigation, so it is **never re-read from localStorage** after edits. Returning to a student you edited earlier in the session shows stale (mount-time) content even though the edit was saved.
 
-**Why the obvious small fix is wrong** (this was tried and rejected): adding a `useEffect(() => { setComments(...); setParentMessage(...) }, [studentId, cycle, report])` re-sync *looks* right and fixes the plain `<textarea>` note — but it does **not** fix the rich-text comments. The `RichTextEditor` (`src/components/comms/rich-text-editor.tsx`) only pushes an external `value` into its Tiptap instance when the editor is **not focused** (`if (value !== editor.getHTML() && !editor.view.hasFocus())`, lines ~133–139). During pager navigation the editor commonly still holds focus, so the content reset is skipped and the previous student's text stays visible and re-saveable. It also doesn't fix problem 2 (the stale `cycle` memo). Verified in-browser: after typing for student A and clicking "Next student", student B's editor still showed A's text.
+**Why the obvious small fix is wrong** (this was tried and rejected): adding a `useEffect(() => { setComments(...); setParentMessage(...) }, [studentId, cycle, report])` re-sync _looks_ right and fixes the plain `<textarea>` note — but it does **not** fix the rich-text comments. The `RichTextEditor` (`src/components/comms/rich-text-editor.tsx`) only pushes an external `value` into its Tiptap instance when the editor is **not focused** (`if (value !== editor.getHTML() && !editor.view.hasFocus())`, lines ~133–139). During pager navigation the editor commonly still holds focus, so the content reset is skipped and the previous student's text stays visible and re-saveable. It also doesn't fix problem 2 (the stale `cycle` memo). Verified in-browser: after typing for student A and clicking "Next student", student B's editor still showed A's text.
 
 The robust, focus-independent fix is to **remount the whole Write body when `studentId` changes**, by giving it a React `key={studentId}`. A remount re-runs the `useState` initializers (fresh per-student text), creates a fresh `RichTextEditor` initialized to the correct content, and re-runs the `loadCycle` memo (fixing the stale-read). No focus timing, no effect ordering.
 
@@ -63,7 +63,9 @@ function CycleWritePage() {
   const [parentMessage, setParentMessage] = useState(
     () => draft?.parentMessage ?? '',
   )
-  const [markState, setMarkState] = useState<'idle' | 'loading' | 'error'>('idle')
+  const [markState, setMarkState] = useState<'idle' | 'loading' | 'error'>(
+    'idle',
+  )
   const errorRef = useRef<HTMLDivElement>(null)
   // ... effects, goToStudent, handleMarkReady, and the full JSX return ...
 }
@@ -75,21 +77,23 @@ The whole component body reads `studentId` from `Route.useParams()` at the top a
 
 ## Commands you will need
 
-| Purpose   | Command                | Expected |
-|-----------|------------------------|----------|
-| Typecheck | `bunx tsc --noEmit`    | repo has ~107 pre-existing errors elsewhere; bar = **no error whose path contains `reports.cycle.write`** (grep in Done criteria). node_modules is already installed — do NOT run `bun install`. |
-| Tests     | `bun run test`         | `Tests  65 passed (65)` |
-| Format (targeted) | `bunx prettier --check "src/routes/reports.cycle.write.$studentId.tsx"` | `All matched files use Prettier code style!` |
-| Lint (targeted)   | `bunx eslint "src/routes/reports.cycle.write.$studentId.tsx"` | exit 0 |
+| Purpose           | Command                                                                 | Expected                                                                                                                                                                                         |
+| ----------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Typecheck         | `bunx tsc --noEmit`                                                     | repo has ~107 pre-existing errors elsewhere; bar = **no error whose path contains `reports.cycle.write`** (grep in Done criteria). node_modules is already installed — do NOT run `bun install`. |
+| Tests             | `bun run test`                                                          | `Tests  65 passed (65)`                                                                                                                                                                          |
+| Format (targeted) | `bunx prettier --check "src/routes/reports.cycle.write.$studentId.tsx"` | `All matched files use Prettier code style!`                                                                                                                                                     |
+| Lint (targeted)   | `bunx eslint "src/routes/reports.cycle.write.$studentId.tsx"`           | exit 0                                                                                                                                                                                           |
 
 > ⚠️ Do NOT run `bun run check`. It is `prettier --write . && eslint --fix` across the **entire repo** and will reformat ~45 unrelated files. Use the targeted `prettier --check` / `eslint` on the single file above instead.
 
 ## Scope
 
 **In scope** (only file to modify):
+
 - `src/routes/reports.cycle.write.$studentId.tsx`
 
 **Out of scope** (do NOT touch):
+
 - `src/components/comms/rich-text-editor.tsx` — the editor's focus-guarded sync is used by many surfaces; the remount makes it irrelevant here without changing it.
 - `src/lib/hdp-cycle-store.ts`, `src/lib/hdp-report-commit.ts` — correct as-is.
 - `plans/README.md` if a reviewer dispatched you and said they maintain the index.
@@ -122,6 +126,7 @@ function CycleWritePage() {
 Keep `CycleWritePage` as the value of `component:` in the `createFileRoute(...)` call (do not change the route registration). `CycleWriteBody` must be defined in the same file.
 
 Notes:
+
 - Everything inside the old function stays identical except: (a) the function name, (b) it takes `{ studentId }` as a prop instead of calling `Route.useParams()`, (c) `Route.useSearch()` / `Route.useParams()` for other values — keep `Route.useSearch()` as-is; only the `studentId` destructure moves up to the wrapper.
 - Do NOT otherwise change the effects, the debounce, `goToStudent`, `handleMarkReady`, or the JSX.
 
@@ -130,6 +135,7 @@ Notes:
 ### Step 2: Confirm scope + formatting
 
 **Verify**:
+
 - `git diff --name-only` → only `src/routes/reports.cycle.write.$studentId.tsx`.
 - `bunx prettier --check "src/routes/reports.cycle.write.$studentId.tsx"` → clean.
 - `bunx eslint "src/routes/reports.cycle.write.$studentId.tsx"` → exit 0.

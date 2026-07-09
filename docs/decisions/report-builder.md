@@ -14,7 +14,7 @@
 ## The bet & kill-criterion (why this design exists)
 
 - **Bet:** teachers would use this **over SC + Smart Compose**.
-- **Kill-criterion:** the bet is lost if teachers can't name a concrete reason to pick it over SC. → the flow must feel *faster* than SC, inline Smart Compose is non-negotiable, and the test script must put SC in the room.
+- **Kill-criterion:** the bet is lost if teachers can't name a concrete reason to pick it over SC. → the flow must feel _faster_ than SC, inline Smart Compose is non-negotiable, and the test script must put SC in the room.
 - Full context: `plans/018-hdp-report-builder-prototype.md`.
 
 ## Sprint contract (done-criteria)
@@ -28,7 +28,7 @@
 
 ## Chosen approach
 
-**Option A — Split-view builder with live preview** (chosen at diverge). One full-screen route `/reports/build`: left = built-in template `Select` + section list (per-row `Checkbox` toggle + `GripVertical` + up/down `Button`s + viz `Select`); right = live report preview reusing existing section components, with the academic section rendered as **Learning Outcomes + qualitative descriptors** for P1. Teacher Comments uses `RichTextEditor` + an inline AI **Suggest** button (canned, no live API). Parents-first Share via a `Sheet` (link + Copy + personal message) → parent-facing guest view. **Governance:** built-in templates ship with the product; a **role-gated** admin/HOD view (behind `hdp-template-admin`) reuses the *same* builder to create/modify/save the **template definition**, while a teacher's build saves only their **report instance**.
+**Option A — Split-view builder with live preview** (chosen at diverge). One full-screen route `/reports/build`: left = built-in template `Select` + section list (per-row `Checkbox` toggle + `GripVertical` + up/down `Button`s + viz `Select`); right = live report preview reusing existing section components, with the academic section rendered as **Learning Outcomes + qualitative descriptors** for P1. Teacher Comments uses `RichTextEditor` + an inline AI **Suggest** button (canned, no live API). Parents-first Share via a `Sheet` (link + Copy + personal message) → parent-facing guest view. **Governance:** built-in templates ship with the product; a **role-gated** admin/HOD view (behind `hdp-template-admin`) reuses the _same_ builder to create/modify/save the **template definition**, while a teacher's build saves only their **report instance**.
 
 ## Rejected options
 
@@ -52,9 +52,9 @@ L0: A11Y-1, A11Y-2, A11Y-3, CMP-2. L1: A11Y-4, A11Y-6, A11Y-7, A11Y-8, A11Y-9, A
 
 ## Waivers granted
 
-| Control | Tier | Reason | Approver | Where recorded |
-|---------|------|--------|----------|----------------|
-| (none) | | No one-offs; all surfaces compose existing stack components. | | |
+| Control | Tier | Reason                                                       | Approver | Where recorded |
+| ------- | ---- | ------------------------------------------------------------ | -------- | -------------- |
+| (none)  |      | No one-offs; all surfaces compose existing stack components. |          |                |
 
 ## Plan approval
 
@@ -76,11 +76,13 @@ L0: A11Y-1, A11Y-2, A11Y-3, CMP-2. L1: A11Y-4, A11Y-6, A11Y-7, A11Y-8, A11Y-9, A
 > The build meets all six done-criteria substantively and the L0 floor is clean. Three in-scope L1 controls fail (TYP-2, TYP-3, A11Y-9-guest), all narrow and easily fixed, so no L0 blocker exists — but per the mechanical rule, unwaived L1 fails are blocking.
 >
 > **BLOCKING (must fix before ship):**
+>
 > - **TYP-3** fail — Two visible micro-labels render at `text-[10px]` (10px), off the TFX type scale `{…,12,11}`. Evidence: `reports.build.tsx:413` ("Required") and `:418` ("Not applicable at P1"). Fix: `text-[11px]` or a scale token. No waiver.
 > - **TYP-2** fail — Same two labels below the 11px label floor. Same evidence. Fixing to 11px clears both. No waiver.
 > - **A11Y-9** fail (guest) — Parent guest view is a distinct view with no descriptive document title; inherits root static `'MOE Workspace Homepage'`. `_guest.report-view.$token.tsx` sets no title. Builder route sets its title correctly. Fix: set "{student} · Holistic Development Profile". No waiver.
 >
 > **ADVISORY (should fix):**
+>
 > - **A11Y-4** close call — Reorder buttons `size="icon-sm"` = 32×32px (above 24px floor, below the 44px mobile clause; don't enlarge at 360). Builder is a stated laptop tool; portfolio-wide `icon-sm` pattern. Not a hard fail at 32px.
 > - **RichTextEditor** toolbar icon buttons name via `title` only, no `aria-label` (`comms/rich-text-editor.tsx:64`) — `title` computes an accessible name (fallback), weaker mechanism. Pre-existing shared component, out of new-file scope. The new "Suggest" button has a visible text label — clean.
 > - **LAY-2** note — 360 capture shows correct single-column reflow (controls above preview, order preserved, no horizontal scroll); the 320px/400%-zoom target was not run. Recommend a 320px pass. [Done post-verdict — `builder-320.png`.]
@@ -104,8 +106,7 @@ Requested review of the shipped flow end to end. Fresh evidence captured live (a
 > **BLOCKING (must fix before ship):**
 >
 > - **A11Y-11 fail (generate error) — verified from code + runtime observation, evidence source: code-read + orchestrator live-run.** `reports.build.tsx:232-236`: on failure the handler calls `setGenState('error')` then `errorRef.current?.focus()` synchronously in the same tick. The error `<div ref={errorRef} tabIndex={-1}>` is conditionally rendered on `genState === 'error'` (`:330`) and is not yet in the DOM when `.focus()` runs, so `errorRef.current` is `null` and focus never moves. The banner carries NO `role="alert"` / `aria-live` (grep confirms zero live regions in the file). The declared channel (focus-move, no live region) therefore never fires and there is no fallback — the error is silent to assistive technology. This is the "state change visually obvious but silent to AT" fail case in a11y-11.md. L1, no waiver on file → blocking. Fix: either wrap the focus call so it runs after paint (e.g. `requestAnimationFrame` / effect keyed on `genState`), or give the banner `role="alert"` and drop the focus move (pick one channel, not both). Recommend human re-test with a screen reader after the fix.
->
-> - **Done-criterion 5 (content authenticity) partially not met — verified from code + screenshots, evidence source: code-read + 08-parent-view-full / 13-builder-320.** Criterion 5 requires P1 content "grounded in the real HDP artifact." The P1 student's Subjects section renders seven graded LO subjects — English Language, Chinese Language, Mathematics, **Science**, **Music**, **Art**, **Physical Education** — because `generateSubjects` (`mock-reports.ts:294`) maps over every key of `SUBJECT_OUTCOMES` uniformly for any student. Science is not a P1 subject in Singapore (starts P3), and graded LOs for Music/Art/PE at P1 are not authentic. The report itself does keep to LOs + descriptors with no % or A1–F9 (the numeric/grade half of criterion 5 is met), so this is *partial*: the format is right, the subject set undermines the "authentic P1" claim the concept test depends on. The record labels per-subject LO *wording* illustrative, but the subject *list* is a recognizable fake and reads as such in the parent view. Not covered by a specific in-scope control (CNT controls cover naming/voice, not domain accuracy), so this is graded against the contract criterion directly. Recommend HOD confirmation of the P1 subject set before test sessions.
+> - **Done-criterion 5 (content authenticity) partially not met — verified from code + screenshots, evidence source: code-read + 08-parent-view-full / 13-builder-320.** Criterion 5 requires P1 content "grounded in the real HDP artifact." The P1 student's Subjects section renders seven graded LO subjects — English Language, Chinese Language, Mathematics, **Science**, **Music**, **Art**, **Physical Education** — because `generateSubjects` (`mock-reports.ts:294`) maps over every key of `SUBJECT_OUTCOMES` uniformly for any student. Science is not a P1 subject in Singapore (starts P3), and graded LOs for Music/Art/PE at P1 are not authentic. The report itself does keep to LOs + descriptors with no % or A1–F9 (the numeric/grade half of criterion 5 is met), so this is _partial_: the format is right, the subject set undermines the "authentic P1" claim the concept test depends on. The record labels per-subject LO _wording_ illustrative, but the subject _list_ is a recognizable fake and reads as such in the parent view. Not covered by a specific in-scope control (CNT controls cover naming/voice, not domain accuracy), so this is graded against the contract criterion directly. Recommend HOD confirmation of the P1 subject set before test sessions.
 >
 > **ADVISORY (should fix):**
 >
@@ -128,7 +129,7 @@ Requested review of the shipped flow end to end. Fresh evidence captured live (a
 > - **A11Y-8 pass** — reorder buttons carry `aria-label` ("Move {label} up/down"), checkbox `aria-label` ("Include {label}") with disabled+checked state tracking the visual for required rows; `GripVertical` is `aria-hidden`. State matches visual.
 > - **CMP-1 pass** — asserted, no manifest — manifest absent for Teacher Workspace. Evidence source: product codebase read. Section row and share sheet are composition of existing Checkbox/Button/Select/Sheet/Input/Textarea, not a new component.
 > - **CMP-2 pass/N-A** — no destructive action in the flow; "Reset to template" is non-destructive and re-derivable (toast confirms).
-> - **CMP-3 pass** — loading (button spinner + "Generating report…"/"Sharing…"), success (toast + navigate / inline confirm), error (banner) exist per async action; loading is contextual, not a page takeover. (The error state's *announcement* fails A11Y-11, but the visible-state trio CMP-3 requires is present.)
+> - **CMP-3 pass** — loading (button spinner + "Generating report…"/"Sharing…"), success (toast + navigate / inline confirm), error (banner) exist per async action; loading is contextual, not a page takeover. (The error state's _announcement_ fails A11Y-11, but the visible-state trio CMP-3 requires is present.)
 > - **CNT-1 pass** — error copy states what happened + next step, names the object, no code: "Couldn't generate Chloe Tan Xin Yi's report. Check the student's data and try again." (`reports.build.tsx:337-340`).
 > - **CNT-2 pass** — "Report Builder", "Share with parents", "Generate report", "Acknowledge report" — plain, no codenames/portmanteaus.
 > - **CNT-3 pass** — second person, active, ≤25 words ("You're adjusting this report only…", "Parents open a private link to view Chloe's report on Parents Gateway").
@@ -140,11 +141,13 @@ Requested review of the shipped flow end to end. Fresh evidence captured live (a
 > - **LAY-4 pass** — preview prose capped at `max-w-[66ch]` (`report-preview.tsx:69`), within the ≤80ch measure.
 >
 > **Controls I could NOT independently verify (recommend human/screen-reader confirmation):**
-> - A11Y-11 error announcement post-fix — I verified the *defect* from code + the orchestrator's runtime note; the fix (whichever channel) needs a real SR pass.
+>
+> - A11Y-11 error announcement post-fix — I verified the _defect_ from code + the orchestrator's runtime note; the fix (whichever channel) needs a real SR pass.
 > - Deterministic scripts (validate, token-audit, type-scan, contrast) were NOT re-run this pass; TYP-2/TYP-3/TOK/COL token and type checks are code-review-verified only, not machine-verified this pass. [Orchestrator note: token-audit + a11y-static WERE re-run this pass by the orchestrator — a11y-static clean; token-audit only the known amber/lime findings.]
 > - A11Y-1 contrast on `amber-11`-on-`amber-3` pill and `lime-11`-on-`lime-3` confirmation not machine-scanned this pass; Radix same-step pairings are conventionally AA but not verified here.
 >
 > **UNCOVERED (feeds the ratchet):**
+>
 > - Unchanged from prior: the parent guest view renders teacher comments via `dangerouslySetInnerHTML` (`report-preview.tsx:197`), labelled "schema-constrained Tiptap output (prototype)." No in-scope control covers HTML-injection safety of content rendered to another user. Acceptable for a mock-data prototype; a real parent-facing surface must sanitise (e.g. DOMPurify) before any non-prototype ship. Already recorded as a proposed anti-pattern in the record's Ratchet section.
 > - Content-domain authenticity (the Science-at-P1 issue) has no covering control — the CNT family covers naming/voice, not curricular accuracy. This is a candidate ratchet item: "domain content must match the real-world artifact it claims to model" is not currently a checkable standard.
 

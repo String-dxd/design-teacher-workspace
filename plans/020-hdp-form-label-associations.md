@@ -28,6 +28,7 @@ Two form controls in the cycle hub / Write stage render a visible `<Label htmlFo
 `src/components/reports/term-selector.tsx` — props `{ value, onValueChange }`; renders `<SelectTrigger className="w-[140px]">`. No `id`.
 
 `reports.index.tsx:820-821`:
+
 ```tsx
 <Label htmlFor="cycle-term">Term</Label>
 <TermSelector value={term} onValueChange={(v) => v && setTerm(v)} />
@@ -36,6 +37,7 @@ Two form controls in the cycle hub / Write stage render a visible `<Label htmlFo
 `src/components/comms/rich-text-editor.tsx` — `RichTextEditorProps` = `{ value, onChange, placeholder?, className?, onBlur?, minHeight?, toolbar? }`. The contenteditable is configured via `useEditor({ ..., editorProps: { attributes: { class: '…' } } })` (around lines 116-131). No accessible name is set.
 
 `report-preview.tsx:255-256`:
+
 ```tsx
 <Label htmlFor="ft-comments">Form-teacher comments</Label>
 <RichTextEditor value={comments} onChange={...} toolbar="simple" placeholder="…" />
@@ -45,18 +47,19 @@ Two form controls in the cycle hub / Write stage render a visible `<Label htmlFo
 
 ## Commands you will need
 
-| Purpose | Command | Expected |
-|---|---|---|
-| Typecheck | `bunx tsc --noEmit` | no error in the 4 edited files; total ≤ baseline 107 |
-| Tests | `bun run test` | `Tests  65 passed (65)` |
-| Format (targeted) | `bunx prettier --check <edited files>` | clean |
-| Lint (targeted) | `bunx eslint <edited files>` | exit 0 |
+| Purpose           | Command                                | Expected                                             |
+| ----------------- | -------------------------------------- | ---------------------------------------------------- |
+| Typecheck         | `bunx tsc --noEmit`                    | no error in the 4 edited files; total ≤ baseline 107 |
+| Tests             | `bun run test`                         | `Tests  65 passed (65)`                              |
+| Format (targeted) | `bunx prettier --check <edited files>` | clean                                                |
+| Lint (targeted)   | `bunx eslint <edited files>`           | exit 0                                               |
 
 > ⚠️ Do NOT run `bun run check` (repo-wide `prettier --write .`). Do NOT `bun install`, `git checkout`, `git restore`, or `rm`.
 
 ## Scope
 
 **In scope**:
+
 - `src/components/reports/term-selector.tsx` (add optional `id` prop → SelectTrigger)
 - `src/routes/reports.index.tsx` (pass `id="cycle-term"`)
 - `src/components/comms/rich-text-editor.tsx` (add optional `ariaLabel` prop → editor's contenteditable `aria-label`)
@@ -71,20 +74,25 @@ Branch `advisor/020-hdp-form-label-associations`. One commit (`fix(a11y): associ
 ## Steps
 
 ### Step 1: TermSelector accepts and forwards `id`
+
 Add `id?: string` to `TermSelectorProps`; destructure it; pass to `<SelectTrigger id={id} className="w-[140px]">`. (SelectTrigger is a button — a labelable element, so `htmlFor` will now bind.)
 **Verify**: `bunx tsc --noEmit 2>&1 | grep -c "term-selector"` → 0.
 
 ### Step 2: Pass the id at the hub
+
 In `reports.index.tsx` (~line 821), change to `<TermSelector id="cycle-term" value={term} onValueChange={(v) => v && setTerm(v)} />`.
 
 ### Step 3: RichTextEditor accepts an accessible name
+
 Add `ariaLabel?: string` to `RichTextEditorProps`; destructure it in the component; inject it into the contenteditable via the editor's `editorProps.attributes` — add `'aria-label': ariaLabel` (only when set) alongside the existing `class`. Concretely, `attributes: { class: '…', ...(ariaLabel ? { 'aria-label': ariaLabel } : {}) }`.
 **Verify**: `bunx tsc --noEmit 2>&1 | grep -c "rich-text-editor"` → 0.
 
 ### Step 4: Pass the accessible name at the comments editor
+
 In `report-preview.tsx` (~line 256), add `ariaLabel="Form-teacher comments"` to the `<RichTextEditor .../>` used for form-teacher comments. (Leave the visible `<Label>` as-is — it's still a useful visible heading; the `htmlFor` is now redundant but harmless. Optionally drop the `htmlFor` since it can't bind a contenteditable — but do NOT remove the visible label text.)
 
 ### Step 5: Confirm scope + gates
+
 **Verify**: `git diff --name-only` → only the 4 in-scope files; targeted prettier `--check` clean; targeted eslint exit 0; `bun run test` → 65 pass.
 
 ## Test plan

@@ -20,6 +20,7 @@
 ## Why this matters
 
 Three small debts left by the HDP build/cleanup:
+
 1. `classOptions` (`src/data/mock-students.ts:5427`) — a flat class list with **zero references** anywhere (the ClassSelector uses `groupedClassOptions`). Dead export that invites "which list do I use?" confusion.
 2. `SECTION_FIELD_DEFS` (`src/data/report-layouts.ts:87`) — an exported map with **zero references** (it was speculative field-level metadata; no consumer exists).
 3. The built-in template is named `'P1 Holistic Development'` (`report-layouts.ts:168`), but the reporting-cycle hub now covers **all primary (P1–P6)**. A P3 teacher sees "P1 Holistic Development" — misleading. Two fallback strings in the layout route repeat the stale name.
@@ -29,6 +30,7 @@ None change behavior; all reduce confusion.
 ## Current state
 
 `src/data/mock-students.ts` (~5427):
+
 ```ts
 export const classOptions: Array<ClassOption> = [
   { value: 'all', label: 'All Classes' },
@@ -36,37 +38,42 @@ export const classOptions: Array<ClassOption> = [
   // ... ~10 entries ...
 ]
 ```
+
 (There is also a `ClassOption` type/interface it references — check whether anything else uses it before removing it; see Step 1.)
 
 `src/data/report-layouts.ts:87`:
+
 ```ts
 export const SECTION_FIELD_DEFS: Record< ... > = { ... }
 ```
 
 `src/data/report-layouts.ts:168` (inside `BUILT_IN_TEMPLATES[0]`):
+
 ```ts
     name: 'P1 Holistic Development',
 ```
 
 `src/routes/reports.cycle.layout.tsx` — two fallback literals repeating the name:
+
 - line ~171: `? 'P1 Holistic Development'`
 - line ~221: `{getTemplateById(templateId)?.name ?? 'P1 Holistic Development'}`
 
 ## Commands you will need
 
-| Purpose | Command | Expected |
-|---|---|---|
-| Typecheck | `bunx tsc --noEmit` | count of `error TS` lines must not increase vs baseline **107**; no error in a file you edited |
-| Tests | `bun run test` | `Tests  65 passed (65)` |
-| Format (targeted) | `bunx prettier --check <edited files>` | clean |
-| Lint (targeted) | `bunx eslint <edited files>` | exit 0 |
-| Usage check | `grep -rn "<symbol>" src` | as specified per step |
+| Purpose           | Command                                | Expected                                                                                       |
+| ----------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Typecheck         | `bunx tsc --noEmit`                    | count of `error TS` lines must not increase vs baseline **107**; no error in a file you edited |
+| Tests             | `bun run test`                         | `Tests  65 passed (65)`                                                                        |
+| Format (targeted) | `bunx prettier --check <edited files>` | clean                                                                                          |
+| Lint (targeted)   | `bunx eslint <edited files>`           | exit 0                                                                                         |
+| Usage check       | `grep -rn "<symbol>" src`              | as specified per step                                                                          |
 
 > ⚠️ Do NOT run `bun run check` (repo-wide `prettier --write .`). Do NOT `bun install`. Do NOT `git checkout`/`git restore`/`rm -rf`; delete code only by editing the specific files below.
 
 ## Scope
 
 **In scope**:
+
 - `src/data/mock-students.ts` (remove `classOptions`, and `ClassOption` only if unused)
 - `src/data/report-layouts.ts` (remove `SECTION_FIELD_DEFS`; rename template)
 - `src/routes/reports.cycle.layout.tsx` (update the two fallback strings)
@@ -97,7 +104,7 @@ Confirm dead: `grep -rn "SECTION_FIELD_DEFS" src` → only its definition in `re
 In `src/data/report-layouts.ts:168`, change `name: 'P1 Holistic Development',` → `name: 'Primary Holistic Development',`.
 In `src/routes/reports.cycle.layout.tsx`, change both fallback literals `'P1 Holistic Development'` (≈ lines 171 and 221) → `'Primary Holistic Development'`.
 
-**Verify**: `grep -rn "P1 Holistic Development" src` → no matches (comments/docstrings that *describe* P1 content may remain in report-layouts.ts headers — only the user-facing template NAME strings must change; if a match is a code comment, leave it and note it).
+**Verify**: `grep -rn "P1 Holistic Development" src` → no matches (comments/docstrings that _describe_ P1 content may remain in report-layouts.ts headers — only the user-facing template NAME strings must change; if a match is a code comment, leave it and note it).
 
 ### Step 4: Confirm scope + gates
 
@@ -124,5 +131,5 @@ No new tests (pure removals + a string rename). Existing suite must stay green (
 
 ## Maintenance notes
 
-- If a future feature needs a flat class list or per-section field metadata, reintroduce a *used* version rather than resurrecting these.
+- If a future feature needs a flat class list or per-section field metadata, reintroduce a _used_ version rather than resurrecting these.
 - The template is now "Primary Holistic Development"; if genuinely level-specific templates are later added (e.g. real P3+ grade layouts), revisit `BUILT_IN_TEMPLATES` and the fallback strings together.
