@@ -5,7 +5,10 @@ import {
   checkpointsFromStatus,
   statusFor,
 } from './cycle-student-table'
-import type { CycleStudentStatus, StudentCheckpoints } from './cycle-student-table'
+import type {
+  CycleStudentStatus,
+  StudentCheckpoints,
+} from './cycle-student-table'
 import type { CycleState } from '@/lib/hdp-cycle-store'
 
 const BLANK_CHECKPOINTS: StudentCheckpoints = {
@@ -219,6 +222,34 @@ describe('checkpointsFor', () => {
     })
     expect(checkpointsFor(acked, '36').parents).toBe('acknowledged')
   })
+
+  it('reads scheduled when a send is scheduled but not yet delivered', () => {
+    const scheduled = makeCycle({
+      perStudent: {
+        '36': {
+          ...draftBase,
+          comments: 'Hi',
+          reviewStatus: 'approved',
+          scheduledSendAt: '2026-08-01T00:00:00.000Z',
+        },
+      },
+    })
+    expect(checkpointsFor(scheduled, '36').parents).toBe('scheduled')
+
+    // Once sentAt lands, sent takes precedence over a stale scheduledSendAt.
+    const sent = makeCycle({
+      perStudent: {
+        '36': {
+          ...draftBase,
+          comments: 'Hi',
+          reviewStatus: 'approved',
+          scheduledSendAt: '2026-08-01T00:00:00.000Z',
+          sentAt: '2026-08-01T00:00:00.000Z',
+        },
+      },
+    })
+    expect(checkpointsFor(sent, '36').parents).toBe('sent')
+  })
 })
 
 describe('checkpointRank', () => {
@@ -244,6 +275,20 @@ describe('checkpointRank', () => {
         ...BLANK_CHECKPOINTS,
         approval: 'approved',
       }),
+    )
+    expect(checkpointRank('parents', BLANK_CHECKPOINTS)).toBeLessThan(
+      checkpointRank('parents', {
+        ...BLANK_CHECKPOINTS,
+        parents: 'scheduled',
+      }),
+    )
+    expect(
+      checkpointRank('parents', {
+        ...BLANK_CHECKPOINTS,
+        parents: 'scheduled',
+      }),
+    ).toBeLessThan(
+      checkpointRank('parents', { ...BLANK_CHECKPOINTS, parents: 'sent' }),
     )
     expect(
       checkpointRank('parents', { ...BLANK_CHECKPOINTS, parents: 'sent' }),

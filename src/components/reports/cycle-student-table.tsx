@@ -89,7 +89,7 @@ export interface StudentCheckpoints {
   results: 'in' | 'awaiting'
   comments: 'none' | 'draft' | 'done'
   approval: 'none' | 'pending' | 'approved'
-  parents: 'none' | 'sent' | 'acknowledged'
+  parents: 'none' | 'scheduled' | 'sent' | 'acknowledged'
 }
 
 /** Checkpoints for a pupil whose progress lives in the cycle store (P1-A). */
@@ -115,7 +115,13 @@ export function checkpointsFor(
         : draft?.reviewStatus === 'in_review'
           ? 'pending'
           : 'none',
-    parents: draft?.ackAt ? 'acknowledged' : draft?.sentAt ? 'sent' : 'none',
+    parents: draft?.ackAt
+      ? 'acknowledged'
+      : draft?.sentAt
+        ? 'sent'
+        : draft?.scheduledSendAt
+          ? 'scheduled'
+          : 'none',
   }
 }
 
@@ -199,8 +205,9 @@ const APPROVAL_RANK: Record<StudentCheckpoints['approval'], number> = {
 }
 const PARENTS_RANK: Record<StudentCheckpoints['parents'], number> = {
   none: 0,
-  sent: 1,
-  acknowledged: 2,
+  scheduled: 1,
+  sent: 2,
+  acknowledged: 3,
 }
 
 export type CheckpointSortField =
@@ -556,6 +563,8 @@ export function CycleStudentTable({
                   <CheckpointCell label="Acknowledged" tone="lime" />
                 ) : cp.parents === 'sent' ? (
                   <CheckpointCell label="Sent" tone="blue" />
+                ) : cp.parents === 'scheduled' ? (
+                  <CheckpointCell label="Scheduled" tone="amber" />
                 ) : (
                   <CheckpointCell label="Not sent" tone="outline" />
                 )}

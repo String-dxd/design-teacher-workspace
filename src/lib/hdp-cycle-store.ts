@@ -1,4 +1,5 @@
 import type { ReportLayout, Term } from '@/types/report'
+import type { ReminderType } from '@/types/form'
 import { withDefaultBlocks } from '@/data/report-layouts'
 
 // Prototype persistence for the reporting-cycle hub: one record per class+term,
@@ -19,6 +20,13 @@ export interface PerStudentDraft {
   sentAt?: string
   /** When the parent acknowledged the report in Parents Gateway (mock). */
   ackAt?: string
+  /** Set when a send is scheduled for later; cleared once sentAt is set. */
+  scheduledSendAt?: string
+  /** The configured "acknowledge by" date, set at send time. */
+  ackDeadline?: string
+  /** Captured at send time, same depth as Posts — never dispatched. */
+  reminderType?: ReminderType
+  reminderDate?: string
 }
 
 /**
@@ -97,6 +105,18 @@ export function loadCycle(classId: string, term: Term): CycleState | null {
           typeof d.submittedAt === 'string' ? d.submittedAt : undefined,
         sentAt: typeof d.sentAt === 'string' ? d.sentAt : undefined,
         ackAt: typeof d.ackAt === 'string' ? d.ackAt : undefined,
+        scheduledSendAt:
+          typeof d.scheduledSendAt === 'string' ? d.scheduledSendAt : undefined,
+        ackDeadline:
+          typeof d.ackDeadline === 'string' ? d.ackDeadline : undefined,
+        reminderType:
+          d.reminderType === 'none' ||
+          d.reminderType === 'one-time' ||
+          d.reminderType === 'daily'
+            ? d.reminderType
+            : undefined,
+        reminderDate:
+          typeof d.reminderDate === 'string' ? d.reminderDate : undefined,
       }
     }
     return {
