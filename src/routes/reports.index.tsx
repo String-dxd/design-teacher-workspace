@@ -28,6 +28,7 @@ import {
 } from '@/components/reports/cycle-student-table'
 import { SubmitForReviewDialog } from '@/components/reports/submit-for-review-dialog'
 import { SendToParentsDialog } from '@/components/reports/send-to-parents-dialog'
+import { PgReportPreviewDialog } from '@/components/reports/pg-report-preview-dialog'
 import { ClassSelector } from '@/components/students/class-selector'
 import { EmptyState } from '@/components/empty-state'
 import {
@@ -51,7 +52,12 @@ import {
   SelectLabel,
   SelectTrigger,
 } from '@/components/ui/select'
-import { CURRENT_ACADEMIC_YEAR, mockReports } from '@/data/mock-reports'
+import {
+  CURRENT_ACADEMIC_YEAR,
+  CURRENT_TERM,
+  generateReportFromStudent,
+  mockReports,
+} from '@/data/mock-reports'
 import { getSchoolLevel, mockStudents } from '@/data/mock-students'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
 import { useFeatureFlag } from '@/hooks/use-feature-flag'
@@ -70,7 +76,7 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { hasAllResults } from '@/data/mock-cockpit-submissions'
+import { hasAnyResults } from '@/data/mock-cockpit-submissions'
 import {
   NEVER_ACK_STUDENT_IDS,
   P1_LEVEL_SCOPE,
@@ -78,10 +84,9 @@ import {
   getReportRoster,
   getSiblingState,
 } from '@/data/mock-report-classes'
-import { loadCycle, patchStudent } from '@/lib/hdp-cycle-store'
+import { ensureCycle, loadCycle, patchStudent } from '@/lib/hdp-cycle-store'
 import { pushHdpNotification } from '@/lib/hdp-notifications'
 import { commitCycleReport } from '@/lib/hdp-report-commit'
-import { saveShareMessage } from '@/lib/hdp-template-store'
 
 type GroupBy = 'none' | 'student' | 'term'
 
@@ -764,7 +769,7 @@ function CycleHub({
   onClassChange: (classId: string) => void
 }) {
   const navigate = useNavigate()
-  const [term, setTerm] = useState<Term>('Term 2')
+  const [term, setTerm] = useState<Term>(CURRENT_TERM)
   const [submitReviewOpen, setSubmitReviewOpen] = useState(false)
   // The send-to-parents dialog's target: the bulk button, a single row's
   // send action, or closed. One dialog instance serves both triggers.
@@ -772,6 +777,11 @@ function CycleHub({
   const [announcement, setAnnouncement] = useState('')
   // Bump this to force re-reads from localStorage after a mutation.
   const [refreshKey, setRefreshKey] = useState(0)
+  // Clicking a row previews that student's report — own-class rows only,
+  // since sibling-class pupils have no underlying report to render.
+  const [previewStudentId, setPreviewStudentId] = useState<string | null>(
+    null,
+  )
 
   // Scope: a class id or the whole-of-P1 level view. The teacher is P1-A's
   // form teacher, so interactive pieces (layout, share, review, ack) always
@@ -797,6 +807,33 @@ function CycleHub({
     () => loadCycle(cycleClassId, term),
     [cycleClassId, term, refreshKey],
   )
+
+  // Form-class scope never requires a conscious "set up layout" step —
+  // layout editing is Level-scoped only (a form teacher can only view it),
+  // so if nothing's been configured yet, transparently provision the
+  // standard default the moment the hub loads. Level scope deliberately
+  // does NOT do this — see the empty-state gate in the render below.
+  useEffect(() => {
+    if (levelScope || !ownCycleClass || cycle) return
+    ensureCycle(cycleClassId, term, CURRENT_ACADEMIC_YEAR)
+    setRefreshKey((k) => k + 1)
+  }, [levelScope, ownCycleClass, cycleClassId, term, cycle])
+
+  // Row-click preview: the same "how parents see it" dialog the write page
+  // uses, reused here rather than building a second preview surface.
+  const previewStudent = previewStudentId
+    ? classStudents.find((s) => s.id === previewStudentId)
+    : undefined
+  const previewReport = useMemo(
+    () =>
+      previewStudent
+        ? generateReportFromStudent(previewStudent, term, CURRENT_ACADEMIC_YEAR)
+        : null,
+    [previewStudent, term],
+  )
+  const previewDraft = previewStudentId
+    ? cycle?.perStudent[previewStudentId]
+    : undefined
 
   const seededStates = useMemo(() => {
     const map = new Map<
@@ -832,7 +869,7 @@ function CycleHub({
       }
       const hasResults = seeded
         ? status !== 'awaiting_results'
-        : hasAllResults(pupil.id)
+        : hasAnyResults(pupil.id)
       if (hasResults) resultsIn += 1
       if (status === 'pending_comments' || status === 'draft')
         pendingComments += 1
@@ -871,7 +908,7 @@ function CycleHub({
         ? classStudents
             .filter(
               (s) =>
-                statusFor(cycle, s.id, true) === 'draft' && hasAllResults(s.id),
+                statusFor(cycle, s.id, true) === 'draft' && hasAnyResults(s.id),
             )
             .map((s) => ({
               id: s.id,
@@ -994,6 +1031,33 @@ function CycleHub({
     )
   }
 
+  // Level scope is where the layout is genuinely configured (only a Level
+  // Head can edit it — see reports.cycle.layout.tsx's `editable` gate), so
+  // unlike the form-class view it requires that step explicitly rather than
+  // silently falling back to a default.
+  if (levelScope && !cycle) {
+    return (
+      <EmptyState
+        title="Set up the report layout"
+        description="Choose a template and configure the sections before P1's reports can be prepared this term."
+        icon={<Settings2 className="text-muted-foreground size-8" />}
+        action={
+          <Button
+            onClick={() =>
+              navigate({
+                to: '/reports/cycle/layout',
+                search: { classId: cycleClassId, term, scope: 'level' },
+              })
+            }
+          >
+            <Settings2 className="mr-2 size-4" />
+            Set up layout
+          </Button>
+        }
+      />
+    )
+  }
+
   function sendReportToParents(
     student: (typeof classStudents)[number],
     settings: SendToParentsSettings,
@@ -1011,15 +1075,7 @@ function CycleHub({
       })
       return
     }
-    const built = commitCycleReport(student, term, cycle)
-    const hasDraft = Object.prototype.hasOwnProperty.call(
-      cycle.perStudent,
-      student.id,
-    )
-    const parentMessage = hasDraft
-      ? cycle.perStudent[student.id].parentMessage
-      : ''
-    saveShareMessage(built.id, parentMessage)
+    commitCycleReport(student, term, cycle)
     patchStudent(cycleClassId, term, student.id, {
       sentAt: new Date().toISOString(),
       ackDeadline: settings.ackDeadline,
@@ -1111,12 +1167,22 @@ function CycleHub({
             onClick={() =>
               navigate({
                 to: '/reports/cycle/layout',
-                search: { classId: cycleClassId, term },
+                search: {
+                  classId: cycleClassId,
+                  term,
+                  scope: levelScope ? 'level' : 'class',
+                },
               })
             }
           >
             <Settings2 className="mr-2 size-4" />
-            {cycle ? 'Edit layout' : 'Set up layout'}
+            {/* Layout editing is Level-scoped only — a form class can look
+                but not touch (see reports.cycle.layout.tsx's `editable`). */}
+            {levelScope
+              ? cycle
+                ? 'Edit layout'
+                : 'Set up layout'
+              : 'View layout'}
           </Button>
           {pipeline && ownCycleClass && (
             <Button
@@ -1187,7 +1253,23 @@ function CycleHub({
         ownClassId="P1-A"
         seededStates={seededStates}
         onSendToParents={ownCycleClass ? setSendTarget : undefined}
+        onRowClick={
+          ownCycleClass && cycle ? setPreviewStudentId : undefined
+        }
       />
+
+      {previewReport && cycle && (
+        <PgReportPreviewDialog
+          report={previewReport}
+          blocks={cycle.layout.blocks}
+          comments={previewDraft?.comments ?? ''}
+          ackDeadline={previewDraft?.ackDeadline}
+          open={previewStudentId !== null}
+          onOpenChange={(open) => {
+            if (!open) setPreviewStudentId(null)
+          }}
+        />
+      )}
 
       {/* Send-to-parents settings + confirm — shared by the bulk button and
           each row's own "Send to parents" action. */}

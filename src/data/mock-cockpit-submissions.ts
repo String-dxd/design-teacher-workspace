@@ -59,6 +59,15 @@ export function hasAllResults(studentId: string): boolean {
   )
 }
 
+/** True when at least one subject has results in — enough for a teacher to
+ * start writing, with the still-missing subjects showing an honest "awaiting
+ * data" placeholder rather than blocking the whole report. */
+export function hasAnyResults(studentId: string): boolean {
+  return getCockpitSubmissions(studentId).some(
+    (s) => s.submittedAt !== undefined,
+  )
+}
+
 export function getSubjectTeacher(subject: string): string | undefined {
   return P1_SUBJECT_TEACHERS.get(subject)
 }

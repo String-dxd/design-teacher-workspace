@@ -1,20 +1,15 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
-  Award,
-  BookOpen,
-  Calculator,
   CalendarCheck,
   ChevronDown,
-  FlaskConical,
-  Globe,
-  Languages,
+  Flag,
   Loader2,
-  Smile,
+  Pencil,
   Sparkles,
-  Sprout,
 } from 'lucide-react'
 
 import type { LucideIcon } from 'lucide-react'
+import type { ReactNode } from 'react'
 import type {
   CoreValueLevel,
   HolisticReport,
@@ -24,6 +19,7 @@ import type {
 } from '@/types/report'
 import type { CockpitSubjectSubmission } from '@/data/mock-cockpit-submissions'
 import type { DraftSource } from '@/lib/hdp-comment-draft'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -100,16 +96,40 @@ const RENDERED_SECTIONS = new Set([
   'physicalFitness',
 ])
 
-const SUBJECT_ICONS = new Map<string, LucideIcon>([
-  ['English Language', BookOpen],
-  ['Chinese Language', Languages],
-  ['Mathematics', Calculator],
-  ['Science', FlaskConical],
-  ['Social Studies', Globe],
+/**
+ * Illustration slot for a subject/qualities card — a hand-drawn graphic in
+ * this app's own house style (see public/teacher-illustration.png), sourced
+ * from the design team rather than generated here. Renders nothing until a
+ * matching file exists: drop a PNG at
+ * `public/subject-illustrations/{slug}.png` for each of 'mathematics',
+ * 'chinese-language', 'english-language', 'social-studies', 'science',
+ * 'personal-qualities', 'cca', 'values-in-action' and it appears
+ * automatically — no code change needed.
+ */
+function SectionIllustration({ slug, alt }: { slug: string; alt: string }) {
+  const [failed, setFailed] = useState(false)
+  if (failed) return null
+  return (
+    <img
+      src={`/subject-illustrations/${slug}.png`}
+      alt={alt}
+      className="h-24 w-24 object-contain"
+      onError={() => setFailed(true)}
+    />
+  )
+}
+
+const SUBJECT_ILLUSTRATION_SLUG = new Map<string, string>([
+  ['English Language', 'english-language'],
+  ['Chinese Language', 'chinese-language'],
+  ['Mathematics', 'mathematics'],
+  ['Science', 'science'],
+  ['Social Studies', 'social-studies'],
 ])
 
-/** Per-subject card: sentence first, then every outcome with its statement in
- * full view — no disclosure levels, the reader scrolls instead of tapping. */
+/** Per-subject card: illustration + centered name/teacher, then every
+ * outcome with its statement in full view — no disclosure levels, the
+ * reader scrolls instead of tapping. */
 function SubjectCard({
   subj,
   submission,
@@ -117,24 +137,19 @@ function SubjectCard({
   subj: SubjectPerformance
   submission?: CockpitSubjectSubmission
 }) {
-  const SubjectIcon = SUBJECT_ICONS.get(subj.name) ?? BookOpen
+  const slug = SUBJECT_ILLUSTRATION_SLUG.get(subj.name)
   return (
-    <div className="rounded-xl border px-3.5 py-3">
-      <div className="flex w-full items-center gap-2">
-        <SubjectIcon
-          aria-hidden
-          className="text-muted-foreground size-4 shrink-0"
-        />
-        <span className="min-w-0 flex-1 truncate text-sm font-medium">
-          {subj.name}
-        </span>
+    <div className="bg-card rounded-xl border px-3.5 py-4">
+      <div className="flex flex-col items-center gap-1 pb-3 text-center">
+        {slug && <SectionIllustration slug={slug} alt="" />}
+        <p className="text-sm font-semibold">{subj.name}</p>
         {submission?.submittedAt && (
-          <span className="text-muted-foreground shrink-0 text-xs whitespace-nowrap">
-            {stripSalutation(submission.teacherName)}
-          </span>
+          <p className="text-muted-foreground text-xs italic">
+            Taught by: {stripSalutation(submission.teacherName)}
+          </p>
         )}
       </div>
-      <div className="mt-2 border-t pt-1.5">
+      <div className="border-t pt-1.5">
         {/* Index keys: the artifact repeats outcome names (Chinese lists
             "Reading" twice), so names aren't unique. */}
         {subj.learningOutcomes.map((lo, i) => (
@@ -185,12 +200,82 @@ function ScaleRow({
   )
 }
 
+/** Generate-draft split button, shared between CommentField's read and edit
+ * modes so the two don't drift out of sync. */
+function GenerateDraftControl({
+  drafting,
+  sources,
+  onGenerate,
+  onToggleSource,
+}: {
+  drafting: boolean
+  sources: Array<DraftSource>
+  onGenerate: () => void
+  onToggleSource: (id: DraftSource, checked: boolean) => void
+}) {
+  return (
+    <div className="flex items-center">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={onGenerate}
+        disabled={drafting || sources.length === 0}
+        className="rounded-r-none border-r-0"
+      >
+        {drafting ? (
+          <Loader2 className="mr-2 size-4 animate-spin" />
+        ) : (
+          <Sparkles className="mr-2 size-4" />
+        )}
+        {drafting ? 'Drafting…' : 'Generate draft'}
+      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={drafting}
+              aria-label="Choose draft sources"
+              className="rounded-l-none px-2"
+            />
+          }
+        >
+          <ChevronDown className="size-4" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>Draft from</DropdownMenuLabel>
+            {DRAFT_SOURCE_DEFS.map((def) => (
+              <DropdownMenuCheckboxItem
+                key={def.id}
+                checked={sources.includes(def.id)}
+                onCheckedChange={(checked) =>
+                  onToggleSource(def.id, checked === true)
+                }
+                closeOnClick={false}
+              >
+                {def.label}
+              </DropdownMenuCheckboxItem>
+            ))}
+          </DropdownMenuGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  )
+}
+
 /**
  * The comments field wears the exact chrome of the final parent-facing quote
- * (amber rule + attribution) so what the teacher types is what parents see.
- * Plain text only — no rich text for report prose. "Generate draft" composes
- * a comment from the sources the teacher has checked in the split-button menu
- * (results, attendance, conduct, personal qualities, CCA).
+ * so what the teacher types is what parents see. Editing sits behind an
+ * explicit Edit → Save changes / Cancel flow so a stray click can't quietly
+ * rewrite an approved comment — read mode reuses TeacherQuote itself, so the
+ * read view is provably identical to what parents see. "Generate draft"
+ * composes a comment from the sources checked in the split-button menu
+ * (results, attendance, conduct, personal qualities, CCA); from read mode
+ * it's only offered when the comment is blank — otherwise the teacher must
+ * enter edit mode first, so generation can never silently overwrite existing
+ * text.
  */
 function CommentField({
   report,
@@ -201,8 +286,15 @@ function CommentField({
   comments: string
   onCommentsChange: (value: string) => void
 }) {
+  const [isEditing, setIsEditing] = useState(false)
+  const [draftText, setDraftText] = useState(comments)
   const [drafting, setDrafting] = useState(false)
   const [sources, setSources] = useState<Array<DraftSource>>(ALL_DRAFT_SOURCES)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  useEffect(() => {
+    if (isEditing) textareaRef.current?.focus()
+  }, [isEditing])
 
   function toggleSource(id: DraftSource, checked: boolean) {
     setSources((prev) =>
@@ -212,12 +304,56 @@ function CommentField({
     )
   }
 
+  function startEditing() {
+    setDraftText(comments)
+    setIsEditing(true)
+  }
+
   function handleGenerate() {
     setDrafting(true)
     window.setTimeout(() => {
-      onCommentsChange(draftTeacherComment(report, sources))
+      setDraftText(draftTeacherComment(report, sources))
+      setIsEditing(true)
       setDrafting(false)
     }, 800)
+  }
+
+  function handleSave() {
+    onCommentsChange(draftText)
+    setIsEditing(false)
+  }
+
+  function handleCancel() {
+    setDraftText(comments)
+    setIsEditing(false)
+  }
+
+  if (!isEditing) {
+    return (
+      <div className="space-y-2">
+        {comments.trim() ? (
+          <TeacherQuote report={report} comments={comments} />
+        ) : (
+          <p className="text-muted-foreground text-sm italic">
+            No comment written yet.
+          </p>
+        )}
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" size="sm" onClick={startEditing}>
+            <Pencil className="mr-2 size-3.5" />
+            Edit
+          </Button>
+          {!comments.trim() && (
+            <GenerateDraftControl
+              drafting={drafting}
+              sources={sources}
+              onGenerate={handleGenerate}
+              onToggleSource={toggleSource}
+            />
+          )}
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -225,11 +361,12 @@ function CommentField({
       <Label htmlFor="ft-comments" className="sr-only">
         Form teacher comments
       </Label>
-      <blockquote className="border-amber-6 border-l-4 py-0.5 pl-4">
+      <blockquote className="border-twblue-6 border-l-4 py-0.5 pl-4">
         <Textarea
+          ref={textareaRef}
           id="ft-comments"
-          value={comments}
-          onChange={(e) => onCommentsChange(e.target.value)}
+          value={draftText}
+          onChange={(e) => setDraftText(e.target.value)}
           placeholder="Write a short comment about this pupil…"
           rows={2}
           className="field-sizing-content min-h-0 resize-none rounded-none border-0 bg-transparent p-0 text-sm leading-relaxed shadow-none focus-visible:ring-0"
@@ -239,53 +376,19 @@ function CommentField({
         </footer>
       </blockquote>
       <div className="flex flex-wrap items-center gap-2">
-        <div className="flex items-center">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleGenerate}
-            disabled={drafting || sources.length === 0}
-            className="rounded-r-none border-r-0"
-          >
-            {drafting ? (
-              <Loader2 className="mr-2 size-4 animate-spin" />
-            ) : (
-              <Sparkles className="mr-2 size-4" />
-            )}
-            {drafting ? 'Drafting…' : 'Generate draft'}
+        <GenerateDraftControl
+          drafting={drafting}
+          sources={sources}
+          onGenerate={handleGenerate}
+          onToggleSource={toggleSource}
+        />
+        <div className="ml-auto flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={handleCancel}>
+            Cancel
           </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              render={
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={drafting}
-                  aria-label="Choose draft sources"
-                  className="rounded-l-none px-2"
-                />
-              }
-            >
-              <ChevronDown className="size-4" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
-              <DropdownMenuGroup>
-                <DropdownMenuLabel>Draft from</DropdownMenuLabel>
-                {DRAFT_SOURCE_DEFS.map((def) => (
-                  <DropdownMenuCheckboxItem
-                    key={def.id}
-                    checked={sources.includes(def.id)}
-                    onCheckedChange={(checked) =>
-                      toggleSource(def.id, checked === true)
-                    }
-                    closeOnClick={false}
-                  >
-                    {def.label}
-                  </DropdownMenuCheckboxItem>
-                ))}
-              </DropdownMenuGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <Button size="sm" onClick={handleSave}>
+            Save changes
+          </Button>
         </div>
       </div>
     </div>
@@ -320,7 +423,7 @@ function TeacherQuote({
   const first = firstName(report.studentName)
   const [beforeName, ...afterName] = quote.split(first)
   return (
-    <blockquote className="border-amber-6 border-l-4 py-0.5 pl-4">
+    <blockquote className="border-twblue-6 border-l-4 py-0.5 pl-4">
       <p className="text-sm leading-relaxed">
         “
         {afterName.length > 0 ? (
@@ -353,15 +456,20 @@ function maskNric(nric: string): string {
   return `${nric.slice(0, 1)}XXXX${nric.slice(5)}`
 }
 
-/** Subject-level highlights: each submitted subject is profiled by its LO
- * stages, and the panels name whole subjects — the strongest overall, and
- * (framed positively) the ones still climbing. */
-function deriveHighlights(report: HolisticReport): {
-  strongest: Array<string>
-  growing: Array<string>
-} {
-  // Only draw on subjects whose School Cockpit data has actually arrived —
-  // highlights must never cite data the teacher can't see yet.
+function getInitials(name: string): string {
+  return name
+    .split(' ')
+    .filter((part) => part.length > 0)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join('')
+    .toUpperCase()
+}
+
+/** Single best subject for the "Best Subject" tile: the submitted subject
+ * with the highest average LO stage. Ties are named together. Returns null
+ * when fewer than two subjects have data (nothing meaningful to compare). */
+function deriveBestSubject(report: HolisticReport): string | null {
   const scored = report.academic.subjects
     .filter((subj) => isSubjectSubmitted(report.studentId, subj.name))
     .map((subj) => ({
@@ -372,177 +480,103 @@ function deriveHighlights(report: HolisticReport): {
           0,
         ) / Math.max(subj.learningOutcomes.length, 1),
     }))
-  if (scored.length < 2) return { strongest: [], growing: [] }
+  if (scored.length < 2) return null
   const max = Math.max(...scored.map((s) => s.score))
-  const min = Math.min(...scored.map((s) => s.score))
-  if (max === min) return { strongest: [], growing: [] }
-  return {
-    strongest: scored
-      .filter((s) => s.score === max)
-      .map((s) => s.name)
-      .slice(0, 2),
-    growing: scored
-      .filter((s) => s.score === min)
-      .map((s) => s.name)
-      .slice(0, 2),
-  }
+  const names = scored.filter((s) => s.score === max).map((s) => s.name)
+  return names.length > 0 ? names.join(', ') : null
 }
 
-/** Count the dominant descriptor stage within one subject, for an honest
- * tile caption like "2 of 3 outcomes at Exceeding". */
-function subjectStageCaption(
-  report: HolisticReport,
-  subjectName: string,
-): string | null {
-  const subj = report.academic.subjects.find((x) => x.name === subjectName)
-  if (!subj || subj.learningOutcomes.length === 0) return null
-  const counts = new Map<LearningOutcomeStatus, number>()
-  for (const lo of subj.learningOutcomes) {
-    counts.set(lo.status, (counts.get(lo.status) ?? 0) + 1)
-  }
-  let best: LearningOutcomeStatus | null = null
-  let bestCount = 0
-  for (const [status, count] of counts) {
-    const higherStage =
-      best === null ||
-      LO_STAGE_ORDER.indexOf(status) > LO_STAGE_ORDER.indexOf(best)
-    if (count > bestCount || (count === bestCount && higherStage)) {
-      best = status
-      bestCount = count
-    }
-  }
-  if (best === null) return null
-  return `${bestCount} of ${subj.learningOutcomes.length} outcomes at ${best}`
+/** White bordered card split into two halves by a vertical divider — the
+ * "Term at a glance" hero is two of these, side by side. */
+function GlanceCard({ children }: { children: ReactNode }) {
+  return (
+    <div className="bg-card divide-x rounded-xl border">{children}</div>
+  )
 }
 
-/** One metric tile — health-app anatomy: icon + label, big value, caption. */
-function GlanceTile({
+/** One half of a GlanceCard: optional icon + label header, then arbitrary
+ * content below. The reference only shows an icon on the first half of each
+ * card, so icon is optional rather than required. */
+function GlanceHalf({
   icon,
   label,
-  value,
-  caption,
-  tint,
-  ring,
+  children,
 }: {
-  icon: LucideIcon
+  icon?: LucideIcon
   label: string
-  value: string
-  caption?: string | null
-  tint: { bg: string; label: string; value: string }
-  ring?: number
+  children: ReactNode
 }) {
   const Icon = icon
   return (
-    <div className={cn('rounded-lg p-3', tint.bg)}>
-      <p
-        className={cn(
-          'flex items-center gap-1.5 text-xs font-medium',
-          tint.label,
-        )}
-      >
-        <Icon aria-hidden className="size-4.5 shrink-0" />
+    <div className="flex-1 p-3.5">
+      <p className="text-muted-foreground flex items-center gap-1.5 text-xs font-medium">
+        {Icon && <Icon aria-hidden className="size-4 shrink-0" />}
         {label}
       </p>
-      <div className="mt-1.5 flex items-center gap-3">
-        {ring !== undefined && (
-          <div aria-hidden className={cn('shrink-0', tint.label)}>
+      <div className="mt-1.5">{children}</div>
+    </div>
+  )
+}
+
+/** "Term at a glance" — two divided white cards: attendance + days late,
+ * conduct + best subject. */
+function TermAtAGlance({ report }: { report: HolisticReport }) {
+  const attendancePct = Math.round(
+    (report.attendance.daysPresent / report.attendance.totalSchoolDays) * 100,
+  )
+  const bestSubject = deriveBestSubject(report)
+  const { daysLate } = report.attendance
+
+  return (
+    <div className="grid grid-cols-1 gap-2.5 @sm/report:grid-cols-2">
+      <GlanceCard>
+        <GlanceHalf icon={CalendarCheck} label="Attendance">
+          <div className="flex items-center gap-3">
             <AttendanceRing
-              percentage={ring}
+              percentage={attendancePct}
               size={40}
               strokeWidth={5}
               color="currentColor"
               label=""
             />
+            <div className="min-w-0">
+              <p className="text-lg leading-tight font-semibold">
+                {report.attendance.daysPresent}/
+                {report.attendance.totalSchoolDays}
+              </p>
+              <p className="text-muted-foreground mt-0.5 text-[11px] leading-snug">
+                Days present
+              </p>
+            </div>
           </div>
-        )}
-        <div className="min-w-0">
-          <p className={cn('text-lg leading-tight font-semibold', tint.value)}>
-            {value}
-          </p>
-          {caption && (
-            <p className={cn('mt-0.5 text-[11px] leading-snug', tint.label)}>
-              {caption}
+        </GlanceHalf>
+        <GlanceHalf label="Days Late">
+          <p className="text-lg leading-tight font-semibold">{daysLate}</p>
+          {daysLate === 0 && (
+            <p className="text-lime-11 mt-0.5 text-[11px] leading-snug font-medium">
+              Good job!
             </p>
           )}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-/** "Term at a glance" — four soft metric tiles, health-app style: each fact
- * in its own gentle colour family. */
-function TermAtAGlance({ report }: { report: HolisticReport }) {
-  const attendancePct = Math.round(
-    (report.attendance.daysPresent / report.attendance.totalSchoolDays) * 100,
-  )
-  const { strongest, growing } = deriveHighlights(report)
-
-  return (
-    <div className="bg-card rounded-xl border p-3.5">
-      <div className="grid grid-cols-1 gap-2.5 @sm/report:grid-cols-2">
-        {strongest.length > 0 && (
-          <GlanceTile
-            icon={Award}
-            label="Strongest in"
-            value={strongest.join(', ')}
-            caption={
-              strongest.length === 1
-                ? subjectStageCaption(report, strongest[0])
-                : null
-            }
-            tint={{
-              bg: 'bg-lime-2',
-              label: 'text-lime-11',
-              value: 'text-lime-12',
-            }}
-          />
-        )}
-        {growing.length > 0 && (
-          <GlanceTile
-            icon={Sprout}
-            label="Growing in"
-            value={growing.join(', ')}
-            caption={
-              growing.length === 1
-                ? subjectStageCaption(report, growing[0])
-                : null
-            }
-            tint={{
-              bg: 'bg-amber-2',
-              label: 'text-amber-11',
-              value: 'text-amber-12',
-            }}
-          />
-        )}
-        <GlanceTile
-          icon={CalendarCheck}
-          label="Attendance"
-          value={`${attendancePct}%`}
-          caption={`${report.attendance.daysPresent} of ${report.attendance.totalSchoolDays} days${
-            report.attendance.daysLate > 0
-              ? ` · ${report.attendance.daysLate} day${report.attendance.daysLate === 1 ? '' : 's'} late`
-              : ''
-          }`}
-          tint={{
-            bg: 'bg-twblue-2',
-            label: 'text-twblue-11',
-            value: 'text-twblue-12',
-          }}
-          ring={attendancePct}
-        />
-        <GlanceTile
-          icon={Smile}
-          label="Conduct"
-          value={report.character.conduct}
-          caption={`A ${report.character.conduct.toLowerCase()} term overall`}
-          tint={{
-            bg: 'bg-violet-2',
-            label: 'text-violet-11',
-            value: 'text-violet-12',
-          }}
-        />
-      </div>
+        </GlanceHalf>
+      </GlanceCard>
+      <GlanceCard>
+        <GlanceHalf icon={Flag} label="Conduct">
+          <span className="bg-violet-3 text-violet-12 inline-block rounded-full px-2.5 py-0.5 text-sm font-medium">
+            {report.character.conduct}
+          </span>
+        </GlanceHalf>
+        <GlanceHalf label="Best Subject">
+          {bestSubject ? (
+            <p className="text-sm leading-tight font-semibold">
+              {bestSubject}
+            </p>
+          ) : (
+            <p className="text-muted-foreground text-sm italic">
+              Not yet available
+            </p>
+          )}
+        </GlanceHalf>
+      </GlanceCard>
     </div>
   )
 }
@@ -584,7 +618,7 @@ export function ReportPreview({
   const restBlocks = ordered.filter((b) => b.key !== 'pupilInfo')
 
   return (
-    <div className="@container/report mx-auto flex max-w-[66ch] flex-col gap-4 @sm/report:gap-6">
+    <div className="@container/report bg-muted/40 mx-auto flex max-w-[66ch] flex-col gap-4 rounded-2xl p-3 @sm/report:gap-6 @sm/report:p-4">
       {pupilInfoBlock && (
         <div data-section-key={pupilInfoBlock.key}>
           <PreviewBlock
@@ -664,37 +698,51 @@ function PreviewBlock({
           </div>
         )
       }
-      // Identity band — avatar + particulars left, provenance right
-      // (certificate-style header, after the Duolingo English Test reference).
+      // Profile card — avatar + name/school up top, then Class, then a
+      // two-column Form/Co-form teacher row (matches the PG dialog's own
+      // header design, see pg-report-preview-dialog.tsx).
       return (
-        <div className="flex flex-col gap-3 border-b pb-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="bg-card flex flex-col gap-3 rounded-xl border p-4">
           <div className="flex items-center gap-3">
-            <div>
-              <h2 className="text-lg font-semibold">{report.studentName}</h2>
-              <p className="text-muted-foreground text-sm">
-                {spellOutClass(report.studentClass)} · {report.term}{' '}
-                {report.academicYear}
-              </p>
+            <Avatar size="lg">
+              <AvatarFallback>{getInitials(report.studentName)}</AvatarFallback>
+            </Avatar>
+            <div className="min-w-0">
+              <h2 className="text-twblue-11 truncate text-base font-bold uppercase">
+                {report.studentName}
+              </h2>
+              {report.schoolName && (
+                <p className="text-muted-foreground truncate text-sm">
+                  {report.schoolName}
+                </p>
+              )}
               <p className="text-muted-foreground text-xs">
-                ID: {maskNric(report.nric)}
+                {report.term} {report.academicYear} · ID:{' '}
+                {maskNric(report.nric)}
               </p>
             </div>
           </div>
-          <div className="flex flex-col gap-0.5 text-sm sm:text-right">
-            <p>
-              <span className="text-foreground font-medium">
-                Form teacher:{' '}
+          <div className="border-t pt-3">
+            <p className="text-sm">
+              <span className="text-muted-foreground">Class: </span>
+              <span className="font-medium">
+                {spellOutClass(report.studentClass)}
               </span>
-              <span className="text-muted-foreground">
+            </p>
+          </div>
+          <div className="grid grid-cols-1 gap-2 border-t pt-3 @sm/report:grid-cols-2">
+            <p className="text-sm">
+              <span className="text-muted-foreground">Form teacher: </span>
+              <span className="font-medium">
                 {stripSalutation(report.formTeacher)}
               </span>
             </p>
             {report.coFormTeacher && (
-              <p>
-                <span className="text-foreground font-medium">
+              <p className="text-sm">
+                <span className="text-muted-foreground">
                   Co-form teacher:{' '}
                 </span>
-                <span className="text-muted-foreground">
+                <span className="font-medium">
                   {stripSalutation(report.coFormTeacher)}
                 </span>
               </p>
@@ -771,7 +819,7 @@ function PreviewBlock({
       }
       return (
         <div className="flex flex-col gap-2">
-          {heading('Form teacher comments')}
+          {heading("Teacher's comments")}
           <p className="text-muted-foreground text-xs">
             A note from the form teacher on {firstName(report.studentName)}'s
             term.
@@ -795,16 +843,22 @@ function PreviewBlock({
             How {firstName(report.studentName)} shows the school's personal
             qualities day to day.
           </p>
-          <div className="rounded-xl border px-3.5 py-2">
-            {report.holistic.coreValues.map((cv) => (
-              <ScaleRow
-                key={cv.name}
-                label={cv.name}
-                sublabel={cv.description}
-                stageLabel={cv.level}
-                pillClass={QUALITY_PILL_CLASS[cv.level]}
-              />
-            ))}
+          <div className="bg-card rounded-xl border px-3.5 py-4">
+            <div className="flex flex-col items-center gap-1 pb-3 text-center">
+              <SectionIllustration slug="personal-qualities" alt="" />
+              <p className="text-sm font-semibold">Personal Qualities</p>
+            </div>
+            <div className="border-t pt-1.5">
+              {report.holistic.coreValues.map((cv) => (
+                <ScaleRow
+                  key={cv.name}
+                  label={cv.name}
+                  sublabel={cv.description}
+                  stageLabel={cv.level}
+                  pillClass={QUALITY_PILL_CLASS[cv.level]}
+                />
+              ))}
+            </div>
           </div>
         </div>
       )
@@ -813,18 +867,37 @@ function PreviewBlock({
       return (
         <div className="flex flex-col gap-2">
           {heading('Co-curricular activities')}
-          {report.holistic.cca.length ? (
-            report.holistic.cca.map((c) => (
-              <p key={c.name} className="text-sm">
-                <span className="font-medium">{c.name}</span>
-                <span className="text-muted-foreground"> · {c.role}</span>
+          <p className="text-muted-foreground text-xs">
+            Where {firstName(report.studentName)} spends time outside the
+            classroom.
+          </p>
+          <div className="bg-card rounded-xl border px-3.5 py-4">
+            <div className="flex flex-col items-center gap-1 pb-3 text-center">
+              <SectionIllustration slug="cca" alt="" />
+              <p className="text-sm font-semibold">
+                Co-curricular Activities
               </p>
-            ))
-          ) : (
-            <p className="text-muted-foreground text-sm italic">
-              No CCA recorded.
-            </p>
-          )}
+            </div>
+            <div className="border-t pt-1.5">
+              {report.holistic.cca.length ? (
+                report.holistic.cca.map((c) => (
+                  <div
+                    key={c.name}
+                    className="flex items-start justify-between gap-2 py-1.5"
+                  >
+                    <p className="text-sm">{c.name}</p>
+                    <span className="text-muted-foreground mt-0.5 shrink-0 text-xs">
+                      {c.role}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <p className="text-muted-foreground py-1.5 text-sm italic">
+                  No CCA recorded.
+                </p>
+              )}
+            </div>
+          </div>
         </div>
       )
 
@@ -832,31 +905,60 @@ function PreviewBlock({
       return (
         <div className="flex flex-col gap-2">
           {heading('Values in Action')}
-          {report.holistic.via.length ? (
-            report.holistic.via.map((v) => (
-              <p key={v.activityName} className="text-sm">
-                <span className="font-medium">{v.activityName}</span>
-                <span className="text-muted-foreground"> · {v.hours} hrs</span>
-              </p>
-            ))
-          ) : (
-            <p className="text-muted-foreground text-sm italic">
-              No activities recorded.
-            </p>
-          )}
+          <p className="text-muted-foreground text-xs">
+            How {firstName(report.studentName)} has contributed to the
+            community.
+          </p>
+          <div className="bg-card rounded-xl border px-3.5 py-4">
+            <div className="flex flex-col items-center gap-1 pb-3 text-center">
+              <SectionIllustration slug="values-in-action" alt="" />
+              <p className="text-sm font-semibold">Values in Action</p>
+            </div>
+            <div className="border-t pt-1.5">
+              {report.holistic.via.length ? (
+                report.holistic.via.map((v) => (
+                  <div
+                    key={v.activityName}
+                    className="flex items-start justify-between gap-2 py-1.5"
+                  >
+                    <p className="text-sm">{v.activityName}</p>
+                    <span className="text-muted-foreground mt-0.5 shrink-0 text-xs">
+                      {v.hours} hrs
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <p className="text-muted-foreground py-1.5 text-sm italic">
+                  No activities recorded.
+                </p>
+              )}
+            </div>
+          </div>
         </div>
       )
 
     case 'physicalFitness':
       return (
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-2">
           {heading('Physical fitness')}
-          <p className="text-muted-foreground text-sm">
-            {report.holistic.physicalFitness.bmiCategory}
-            {report.holistic.physicalFitness.napfaAward
-              ? ` · NAPFA ${report.holistic.physicalFitness.napfaAward}`
-              : ''}
-          </p>
+          <GlanceCard>
+            <GlanceHalf label="BMI Category">
+              <p className="text-sm leading-tight font-semibold">
+                {report.holistic.physicalFitness.bmiCategory}
+              </p>
+            </GlanceHalf>
+            <GlanceHalf label="NAPFA Award">
+              {report.holistic.physicalFitness.napfaAward ? (
+                <p className="text-sm leading-tight font-semibold">
+                  {report.holistic.physicalFitness.napfaAward}
+                </p>
+              ) : (
+                <p className="text-muted-foreground text-sm italic">
+                  Not yet available
+                </p>
+              )}
+            </GlanceHalf>
+          </GlanceCard>
         </div>
       )
 

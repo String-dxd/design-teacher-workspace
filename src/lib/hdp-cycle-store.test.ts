@@ -64,7 +64,6 @@ describe('patchStudent', () => {
     })
     expect(updated?.perStudent['stu-1']).toEqual({
       comments: 'Doing well',
-      parentMessage: '',
       ready: false,
       sentAt: undefined,
     })
@@ -78,7 +77,6 @@ describe('patchStudent', () => {
     const updated = patchStudent('P1-A', 'Term 2', 'stu-1', { ready: true })
     expect(updated?.perStudent['stu-1']).toEqual({
       comments: 'Draft comment',
-      parentMessage: '',
       ready: true,
       sentAt: undefined,
     })
@@ -132,7 +130,6 @@ describe('loadCycle with corrupted storage', () => {
     const loaded = loadCycle('P1-A', 'Term 2')
     expect(loaded?.perStudent['stu-1']).toEqual({
       comments: 'Old comment',
-      parentMessage: '',
       ready: false,
       sentAt: undefined,
     })
@@ -157,7 +154,7 @@ describe('review pipeline fields', () => {
     saveCycle(
       makeCycle({
         perStudent: {
-          '36': { comments: '', parentMessage: '', ready: true },
+          '36': { comments: '', ready: true },
         },
       }),
     )

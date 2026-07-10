@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import { CheckCircle2, ChevronDown, Download, Image } from 'lucide-react'
+import { CheckCircle2, Download } from 'lucide-react'
 
 import type { HolisticReport, ReportBlock } from '@/types/report'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   Dialog,
   DialogContent,
@@ -10,7 +11,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { ReportPreview } from '@/components/reports/report-preview'
-import { cn } from '@/lib/utils'
+import { cn, stripSalutation } from '@/lib/utils'
 
 // Shared "how parents see it" preview: the report document inside a Parents
 // Gateway phone mockup, mirroring the real PG HDP viewer — Student Profile
@@ -25,7 +26,6 @@ interface PgReportPreviewDialogProps {
   report: HolisticReport
   blocks: Array<ReportBlock>
   comments?: string
-  parentMessage?: string
   open: boolean
   onOpenChange: (open: boolean) => void
   /**
@@ -36,32 +36,26 @@ interface PgReportPreviewDialogProps {
   ackDeadline?: string
 }
 
-/**
- * Static field that reads as the PG app's own select boxes — display only
- * (the report being previewed has one fixed year/term, so this never opens).
- * Built from the design system's own SelectTrigger tokens (`ui/select.tsx`:
- * border-input, bg-input/30, rounded-[var(--radius-input)]) rather than
- * hand-picked colors, so it matches every other select in the app.
- */
-function StaticField({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="min-w-0 flex-1">
-      <p className="text-muted-foreground mb-1 text-[10px] font-semibold">
-        {label}
-      </p>
-      <div className="border-input bg-input/30 flex h-9 w-full items-center justify-between gap-1.5 rounded-[var(--radius-input)] border px-3 text-sm">
-        <span className="truncate font-bold text-slate-700">{value}</span>
-        <ChevronDown className="text-muted-foreground size-4 shrink-0" />
-      </div>
-    </div>
-  )
+function getInitials(name: string): string {
+  return name
+    .split(' ')
+    .filter((part) => part.length > 0)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join('')
+    .toUpperCase()
+}
+
+/** 'P1-A' → 'Primary 1A' — matches report-preview.tsx's own spell-out. */
+function spellOutClass(classLabel: string): string {
+  const match = /^P(\d)-([A-Z])$/.exec(classLabel)
+  return match ? `Primary ${match[1]}${match[2]}` : classLabel
 }
 
 export function PgReportPreviewDialog({
   report,
   blocks,
   comments,
-  parentMessage,
   open,
   onOpenChange,
   ackDeadline,
@@ -141,39 +135,61 @@ export function PgReportPreviewDialog({
             >
               {/* Student Profile header — per the PG HDP viewer */}
               <div className="px-4 py-4">
-                <div className="flex items-center justify-between gap-3">
-                  <h3 className="text-base font-bold text-slate-900">
-                    Student Profile
-                  </h3>
-                  <span className="grid h-9 w-9 shrink-0 place-content-center rounded-full border border-slate-200 bg-slate-50">
-                    <Image aria-hidden className="h-4 w-4 text-slate-400" />
-                  </span>
+                <h3 className="mb-3 text-base font-bold text-slate-900">
+                  Student Profile
+                </h3>
+                <div className="flex items-center gap-3">
+                  <Avatar size="lg">
+                    <AvatarFallback>
+                      {getInitials(report.studentName)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-bold text-[#c47565] uppercase">
+                      {report.studentName}
+                    </p>
+                    {report.schoolName && (
+                      <p className="truncate text-xs text-slate-500">
+                        {report.schoolName}
+                      </p>
+                    )}
+                  </div>
                 </div>
-                <div className="mt-4 flex gap-3">
-                  <StaticField
-                    label="Academic Year"
-                    value={String(report.academicYear)}
-                  />
-                  <StaticField label="Term" value={report.term} />
+                <div className="mt-3 border-t border-slate-100 pt-3">
+                  <p className="text-sm text-slate-700">
+                    <span className="text-slate-400">Class: </span>
+                    <span className="font-semibold">
+                      {spellOutClass(report.studentClass)}
+                    </span>
+                  </p>
+                </div>
+                <div className="mt-3 grid grid-cols-2 gap-2 border-t border-slate-100 pt-3">
+                  <p className="text-sm text-slate-700">
+                    <span className="text-slate-400">Form teacher: </span>
+                    <span className="font-semibold">
+                      {stripSalutation(report.formTeacher)}
+                    </span>
+                  </p>
+                  {report.coFormTeacher && (
+                    <p className="text-sm text-slate-700">
+                      <span className="text-slate-400">Co-form teacher: </span>
+                      <span className="font-semibold">
+                        {stripSalutation(report.coFormTeacher)}
+                      </span>
+                    </p>
+                  )}
                 </div>
                 <p className="mt-3 text-[10px] font-semibold text-slate-400">
-                  Issued Date: {issuedDate}
+                  {report.term} {report.academicYear} · Issued Date:{' '}
+                  {issuedDate}
                 </p>
               </div>
 
               {/* The report — one scrollable page, no tabs */}
               <div className="px-4 py-4">
-                {parentMessage?.trim() && (
-                  <div className="bg-muted/50 mb-4 rounded-xl border p-3">
-                    <p className="text-muted-foreground mb-1 text-xs font-medium">
-                      A note from your form teacher
-                    </p>
-                    <p className="text-sm leading-relaxed">{parentMessage}</p>
-                  </div>
-                )}
                 <ReportPreview
                   report={report}
-                  blocks={blocks}
+                  blocks={blocks.filter((b) => b.key !== 'pupilInfo')}
                   comments={comments ?? ''}
                   compactPupilInfo
                 />

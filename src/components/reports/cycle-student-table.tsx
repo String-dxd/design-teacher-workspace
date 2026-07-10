@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from '@tanstack/react-router'
+import { MoreHorizontal, Pencil, Send } from 'lucide-react'
 
 import type { Term } from '@/types/report'
 import type { SortConfig, SortDirection } from '@/types/student'
@@ -16,8 +17,15 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { ColumnHeaderMenu } from '@/components/students/column-header-menu'
-import { hasAllResults } from '@/data/mock-cockpit-submissions'
+import { hasAnyResults } from '@/data/mock-cockpit-submissions'
+import { cn } from '@/lib/utils'
 
 // Light student-status table for the reporting-cycle hub. Deliberately not the
 // 571-line report-row-shaped ReportTable (secondary still needs that unchanged) —
@@ -41,14 +49,14 @@ function statusFor(
     if (!draft) return 'not_started'
     if (draft.sentAt) return 'sent'
     if (draft.ready) return 'ready'
-    if (draft.comments || draft.parentMessage) return 'draft'
+    if (draft.comments) return 'draft'
     return 'not_started'
   }
   if (draft?.sentAt) return 'sent'
   if (draft?.reviewStatus === 'approved') return 'approved'
   if (draft?.reviewStatus === 'in_review') return 'in_review'
-  if (draft && (draft.comments || draft.parentMessage)) return 'draft'
-  if (!hasAllResults(studentId)) return 'awaiting_results'
+  if (draft && draft.comments) return 'draft'
+  if (!hasAnyResults(studentId)) return 'awaiting_results'
   return 'pending_comments'
 }
 
@@ -103,10 +111,10 @@ export function checkpointsFor(
   const submitted =
     draft?.reviewStatus !== undefined || draft?.sentAt !== undefined
   return {
-    results: hasAllResults(studentId) ? 'in' : 'awaiting',
+    results: hasAnyResults(studentId) ? 'in' : 'awaiting',
     comments: submitted
       ? 'done'
-      : draft && (draft.comments || draft.parentMessage)
+      : draft && draft.comments
         ? 'draft'
         : 'none',
     approval:
@@ -185,6 +193,14 @@ const LIME = 'bg-lime-3 text-lime-11 hover:bg-lime-3'
 const AMBER = 'bg-amber-100 text-amber-800 hover:bg-amber-100'
 const MUTED = 'bg-muted text-muted-foreground hover:bg-muted'
 const BLUE = 'bg-twblue-3 text-twblue-11 hover:bg-twblue-3'
+
+// Every body cell paints its own bottom border via inset box-shadow instead
+// of relying on the row's native `border-b` — the sticky #/Name cells
+// already had to do this (their opaque background paints over a real tr
+// border), and mixing that with a native border on the other cells produced
+// a visibly inconsistent row line (thicker under the sticky columns,
+// sometimes missing elsewhere). One mechanism for the whole row fixes it.
+const ROW_BOTTOM_BORDER = 'shadow-[inset_0_-1px_0_var(--color-border)]'
 
 // Rank of each checkpoint field's states, least → most progressed — powers
 // the sortable headers (Student Insights table style) without changing the
@@ -297,13 +313,15 @@ function compareRows(
 function CheckpointCell({
   label,
   tone,
+  className,
 }: {
   label?: string
   tone?: 'lime' | 'amber' | 'muted' | 'blue' | 'outline'
+  className?: string
 }) {
   if (!label) {
     return (
-      <TableCell>
+      <TableCell className={className}>
         <span aria-hidden className="text-muted-foreground">
           —
         </span>
@@ -322,7 +340,7 @@ function CheckpointCell({
             ? MUTED
             : ''
   return (
-    <TableCell>
+    <TableCell className={className}>
       <Badge
         variant={tone === 'outline' ? 'outline' : 'default'}
         className={toneClass}
@@ -364,12 +382,21 @@ export interface CycleStudentTableProps {
   seededStates?: Map<string, SiblingReportState>
   /** Per-row send (pipeline, approved rows). Omitting hides the send action. */
   onSendToParents?: (studentId: string) => void
+  /** Clicking a row opens a preview of that student's report. Only wired for
+   * own-class rows — sibling-class pupils are seeded display data with no
+   * underlying report to render. */
+  onRowClick?: (studentId: string) => void
 }
 
+// Every row exposes the same two actions behind a dot menu — Posts-page
+// pattern — rather than swapping which buttons appear. Unavailable actions
+// stay visible but disabled, each with a title explaining why, so the menu
+// shape never jumps around as a report moves through the pipeline.
 function RowAction({
   student,
   status,
   resultsAwaiting,
+  acknowledged,
   ownClass,
   term,
   onSendToParents,
@@ -378,73 +405,74 @@ function RowAction({
   status: CycleStudentStatus
   /** School Cockpit gate — blocks writing even when a draft already exists. */
   resultsAwaiting: boolean
+  /** Parent has acknowledged — the loop is closed, nothing left to do. */
+  acknowledged: boolean
   ownClass: boolean
   term: Term
   onSendToParents?: (studentId: string) => void
 }) {
-  if (!ownClass) {
-    return (
-      <Button
-        variant="outline"
-        size="sm"
-        disabled
-        title="You're not this class's form teacher"
-      >
-        View only
-      </Button>
-    )
-  }
-  if (status === 'awaiting_results' || resultsAwaiting) {
-    return (
-      <Button
-        variant="outline"
-        size="sm"
-        disabled
-        title="Waiting on results from School Cockpit"
-      >
-        Enter comments
-      </Button>
-    )
-  }
-  if (status === 'in_review') {
-    return (
-      <Button
-        variant="outline"
-        size="sm"
-        disabled
-        title="With school leaders for approval"
-      >
-        Awaiting approval
-      </Button>
-    )
-  }
-  if (status === 'approved' && onSendToParents) {
-    return (
-      <Button size="sm" onClick={() => onSendToParents(student.id)}>
-        Send to parents
-      </Button>
-    )
-  }
-  const label =
-    status === 'sent' || status === 'approved'
-      ? 'View'
-      : status === 'draft'
-        ? 'Review & submit'
-        : 'Enter comments'
+  const editLink = (
+    <Link
+      to="/reports/cycle/write/$studentId"
+      params={{ studentId: student.id }}
+      search={{ classId: student.class, term }}
+    />
+  )
+
+  const editReason = !ownClass
+    ? "You're not this class's form teacher"
+    : resultsAwaiting || status === 'awaiting_results'
+      ? 'Waiting on results from School Cockpit'
+      : status === 'in_review'
+        ? 'With school leaders for approval'
+        : status === 'sent' && acknowledged
+          ? 'Parent has acknowledged — nothing left to edit'
+          : undefined
+  const canEdit = editReason === undefined
+
+  const sendReason = !ownClass
+    ? "You're not this class's form teacher"
+    : !onSendToParents
+      ? 'Not available for this class'
+      : status !== 'approved'
+        ? 'Only approved reports can be sent'
+        : undefined
+  const canSend = sendReason === undefined
+
   return (
-    <Button
-      variant="outline"
-      size="sm"
-      render={
-        <Link
-          to="/reports/cycle/write/$studentId"
-          params={{ studentId: student.id }}
-          search={{ classId: student.class, term }}
-        />
-      }
-    >
-      {label}
-    </Button>
+    <div className="flex justify-end">
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label={`Actions for ${student.name}`}
+            />
+          }
+        >
+          <MoreHorizontal className="size-4" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem
+            disabled={!canEdit}
+            title={editReason}
+            render={canEdit ? editLink : <div />}
+          >
+            <Pencil aria-hidden />
+            Edit comments
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            disabled={!canSend}
+            title={sendReason}
+            onClick={() => canSend && onSendToParents?.(student.id)}
+          >
+            <Send aria-hidden />
+            Send to parents
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   )
 }
 
@@ -458,6 +486,7 @@ export function CycleStudentTable({
   ownClassId,
   seededStates,
   onSendToParents,
+  onRowClick,
 }: CycleStudentTableProps) {
   const ownClass = ownClassId ?? classId
   const [sort, setSort] = useState<SortConfig | null>(null)
@@ -525,61 +554,127 @@ export function CycleStudentTable({
                 {...headerMenuProps}
                 className="w-[160px]"
               />
-              <TableHead className="w-[160px] text-right">Action</TableHead>
+              <TableHead className="w-[160px] text-right shadow-[inset_0_1px_0_var(--color-border),inset_0_-1px_0_var(--color-border)]">
+                Action
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {rows.map(({ student, status, cp }, index) => (
-              <TableRow key={student.id} className="group">
-                <TableCell className="sticky left-0 z-10 w-10 bg-background text-muted-foreground shadow-[inset_0_-1px_0_var(--color-border)] transition-colors group-hover:bg-muted/50">
-                  {index + 1}
-                </TableCell>
-                <TableCell
-                  className="sticky z-10 w-[180px] bg-background font-medium shadow-[inset_0_-1px_0_var(--color-border),2px_0_5px_-2px_rgba(0,0,0,0.1)] transition-colors group-hover:bg-muted/50"
-                  style={{ left: '2.5rem' }}
+            {rows.map(({ student, status, cp }, index) => {
+              const isOwnClass = student.class === ownClass
+              const clickable = isOwnClass && !!onRowClick
+              return (
+                <TableRow
+                  key={student.id}
+                  className={cn(
+                    'group border-0',
+                    clickable && 'cursor-pointer',
+                  )}
+                  onClick={
+                    clickable ? () => onRowClick(student.id) : undefined
+                  }
                 >
-                  {student.name}
-                </TableCell>
-                {showClass && (
-                  <TableCell className="text-muted-foreground">
-                    {student.class}
+                  <TableCell
+                    className={cn(
+                      'sticky left-0 z-10 w-10 bg-background text-muted-foreground transition-colors group-hover:bg-muted/50',
+                      ROW_BOTTOM_BORDER,
+                    )}
+                  >
+                    {index + 1}
                   </TableCell>
-                )}
-                {cp.comments === 'done' ? (
-                  <CheckpointCell label="Submitted" tone="lime" />
-                ) : cp.comments === 'draft' ? (
-                  <CheckpointCell label="Draft" tone="muted" />
-                ) : (
-                  <CheckpointCell label="Pending" tone="outline" />
-                )}
-                {cp.approval === 'approved' ? (
-                  <CheckpointCell label="Approved" tone="lime" />
-                ) : cp.approval === 'pending' ? (
-                  <CheckpointCell label="In review" tone="amber" />
-                ) : (
-                  <CheckpointCell label="Not sent" tone="outline" />
-                )}
-                {cp.parents === 'acknowledged' ? (
-                  <CheckpointCell label="Acknowledged" tone="lime" />
-                ) : cp.parents === 'sent' ? (
-                  <CheckpointCell label="Sent" tone="blue" />
-                ) : cp.parents === 'scheduled' ? (
-                  <CheckpointCell label="Scheduled" tone="amber" />
-                ) : (
-                  <CheckpointCell label="Not sent" tone="outline" />
-                )}
-                <TableCell className="text-right">
-                  <RowAction
-                    student={student}
-                    status={status}
-                    resultsAwaiting={cp.results === 'awaiting'}
-                    ownClass={student.class === ownClass}
-                    term={term}
-                    onSendToParents={onSendToParents}
-                  />
-                </TableCell>
-              </TableRow>
-            ))}
+                  <TableCell
+                    className="sticky z-10 w-[180px] bg-background font-medium shadow-[inset_0_-1px_0_var(--color-border),2px_0_5px_-2px_rgba(0,0,0,0.1)] transition-colors group-hover:bg-muted/50"
+                    style={{ left: '2.5rem' }}
+                  >
+                    {student.name}
+                  </TableCell>
+                  {showClass && (
+                    <TableCell
+                      className={cn('text-muted-foreground', ROW_BOTTOM_BORDER)}
+                    >
+                      {student.class}
+                    </TableCell>
+                  )}
+                  {cp.comments === 'done' ? (
+                    <CheckpointCell
+                      label="Submitted"
+                      tone="lime"
+                      className={ROW_BOTTOM_BORDER}
+                    />
+                  ) : cp.comments === 'draft' ? (
+                    <CheckpointCell
+                      label="Draft"
+                      tone="muted"
+                      className={ROW_BOTTOM_BORDER}
+                    />
+                  ) : (
+                    <CheckpointCell
+                      label="Pending"
+                      tone="outline"
+                      className={ROW_BOTTOM_BORDER}
+                    />
+                  )}
+                  {cp.approval === 'approved' ? (
+                    <CheckpointCell
+                      label="Approved"
+                      tone="lime"
+                      className={ROW_BOTTOM_BORDER}
+                    />
+                  ) : cp.approval === 'pending' ? (
+                    <CheckpointCell
+                      label="In review"
+                      tone="amber"
+                      className={ROW_BOTTOM_BORDER}
+                    />
+                  ) : (
+                    <CheckpointCell
+                      label="Not sent"
+                      tone="outline"
+                      className={ROW_BOTTOM_BORDER}
+                    />
+                  )}
+                  {cp.parents === 'acknowledged' ? (
+                    <CheckpointCell
+                      label="Acknowledged"
+                      tone="lime"
+                      className={ROW_BOTTOM_BORDER}
+                    />
+                  ) : cp.parents === 'sent' ? (
+                    <CheckpointCell
+                      label="Sent"
+                      tone="blue"
+                      className={ROW_BOTTOM_BORDER}
+                    />
+                  ) : cp.parents === 'scheduled' ? (
+                    <CheckpointCell
+                      label="Scheduled"
+                      tone="amber"
+                      className={ROW_BOTTOM_BORDER}
+                    />
+                  ) : (
+                    <CheckpointCell
+                      label="Not sent"
+                      tone="outline"
+                      className={ROW_BOTTOM_BORDER}
+                    />
+                  )}
+                  <TableCell
+                    className={cn('text-right', ROW_BOTTOM_BORDER)}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <RowAction
+                      student={student}
+                      status={status}
+                      resultsAwaiting={cp.results === 'awaiting'}
+                      acknowledged={cp.parents === 'acknowledged'}
+                      ownClass={isOwnClass}
+                      term={term}
+                      onSendToParents={onSendToParents}
+                    />
+                  </TableCell>
+                </TableRow>
+              )
+            })}
           </TableBody>
         </Table>
       </div>

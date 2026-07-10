@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
+import { format, parse } from 'date-fns'
 import { CalendarClock, Send } from 'lucide-react'
 
 import type { ReminderType } from '@/types/form'
 import { Button } from '@/components/ui/button'
+import { Calendar } from '@/components/ui/calendar'
 import { Label } from '@/components/ui/label'
 import {
   Dialog,
@@ -12,7 +14,40 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { SendConfirmationSheet } from '@/components/comms/send-confirmation-sheet'
+import { cn } from '@/lib/utils'
+
+// 15-minute time slots, 7am–10pm — same convention as meetings.new.tsx's
+// own buildTimeSlots(), reimplemented locally since that one isn't exported.
+function buildTimeSlots(): Array<{ value: string; label: string }> {
+  const slots: Array<{ value: string; label: string }> = []
+  for (let min = 7 * 60; min <= 22 * 60; min += 15) {
+    const h = Math.floor(min / 60)
+    const m = min % 60
+    const value = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+    const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h
+    const period = h < 12 ? 'AM' : 'PM'
+    slots.push({
+      value,
+      label: `${h12}:${String(m).padStart(2, '0')} ${period}`,
+    })
+  }
+  return slots
+}
+
+const TIME_SLOTS = buildTimeSlots()
 
 // Send-to-parents settings, captured fresh each time a teacher sends —
 // mirrors the Posts composer's own granularity (schedule strip at
@@ -144,22 +179,65 @@ export function SendToParentsDialog({
                 </Button>
               </div>
               {sendOption === 'scheduled' && (
-                <div className="border-input mt-2 flex items-center gap-2 rounded-md border p-2">
-                  <span className="text-muted-foreground text-sm">Send on</span>
-                  <input
-                    type="date"
-                    value={scheduledDate}
-                    min={today}
-                    onChange={(e) => setScheduledDate(e.target.value)}
-                    className="border-input bg-background rounded-md border px-2.5 py-1 text-sm outline-none focus:ring-1 focus:ring-ring"
-                  />
-                  <span className="text-muted-foreground text-sm">at</span>
-                  <input
-                    type="time"
+                <div className="bg-twblue-3 mt-2 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-md px-3 py-2">
+                  <span className="text-twblue-12 flex shrink-0 items-center gap-1.5 text-sm font-medium whitespace-nowrap">
+                    <CalendarClock className="text-twblue-11 size-4 shrink-0" />
+                    Send on
+                  </span>
+                  <Popover>
+                    <PopoverTrigger
+                      render={
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className={cn(
+                            'bg-background justify-start font-normal',
+                            !scheduledDate && 'text-muted-foreground',
+                          )}
+                        />
+                      }
+                    >
+                      {scheduledDate
+                        ? format(
+                            parse(scheduledDate, 'yyyy-MM-dd', new Date()),
+                            'dd MMM yyyy',
+                          )
+                        : 'Pick a date'}
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={
+                          scheduledDate
+                            ? parse(scheduledDate, 'yyyy-MM-dd', new Date())
+                            : undefined
+                        }
+                        disabled={{ before: new Date(today) }}
+                        onSelect={(date) =>
+                          setScheduledDate(date ? format(date, 'yyyy-MM-dd') : '')
+                        }
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <span className="text-twblue-11 text-sm whitespace-nowrap">
+                    at
+                  </span>
+                  <Select
                     value={scheduledTime}
-                    onChange={(e) => setScheduledTime(e.target.value)}
-                    className="border-input bg-background rounded-md border px-2.5 py-1 text-sm outline-none focus:ring-1 focus:ring-ring"
-                  />
+                    onValueChange={(v) => setScheduledTime(v ?? '')}
+                  >
+                    <SelectTrigger size="sm" className="bg-background w-28">
+                      <SelectValue placeholder="Time" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {TIME_SLOTS.map((s) => (
+                        <SelectItem key={s.value} value={s.value}>
+                          {s.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               )}
             </div>
@@ -220,7 +298,7 @@ export function SendToParentsDialog({
               Cancel
             </Button>
             <Button disabled={!canSchedule} onClick={handleContinue}>
-              Continue
+              Review
             </Button>
           </DialogFooter>
         </DialogContent>

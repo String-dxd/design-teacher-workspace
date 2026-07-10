@@ -45,16 +45,7 @@ describe('statusFor', () => {
   it('returns draft when only comments are filled in', () => {
     const cycle = makeCycle({
       perStudent: {
-        'stu-1': { comments: 'x', parentMessage: '', ready: false },
-      },
-    })
-    expect(statusFor(cycle, 'stu-1')).toBe('draft')
-  })
-
-  it('returns draft when only parentMessage is filled in', () => {
-    const cycle = makeCycle({
-      perStudent: {
-        'stu-1': { comments: '', parentMessage: 'x', ready: false },
+        'stu-1': { comments: 'x', ready: false },
       },
     })
     expect(statusFor(cycle, 'stu-1')).toBe('draft')
@@ -63,7 +54,7 @@ describe('statusFor', () => {
   it('returns ready when marked ready with no comments', () => {
     const cycle = makeCycle({
       perStudent: {
-        'stu-1': { comments: '', parentMessage: '', ready: true },
+        'stu-1': { comments: '', ready: true },
       },
     })
     expect(statusFor(cycle, 'stu-1')).toBe('ready')
@@ -74,7 +65,6 @@ describe('statusFor', () => {
       perStudent: {
         'stu-1': {
           comments: '',
-          parentMessage: '',
           ready: true,
           sentAt: '2026-01-01',
         },
@@ -88,7 +78,6 @@ describe('statusFor', () => {
       perStudent: {
         'stu-1': {
           comments: '',
-          parentMessage: '',
           ready: false,
           sentAt: '2026-01-01',
         },
@@ -99,12 +88,15 @@ describe('statusFor', () => {
 })
 
 describe('statusFor — P1-A pipeline', () => {
-  const draftBase = { comments: '', parentMessage: '', ready: false }
+  const draftBase = { comments: '', ready: false }
 
-  it('returns awaiting_results when School Cockpit results are missing', () => {
-    // Student 48 (Ho Jia Min) has a seeded Mathematics gap in the cockpit mock.
+  it('returns pending_comments once at least one subject has results, even with a gap', () => {
+    // Student 48 (Ho Jia Min) has a seeded Mathematics gap in the cockpit
+    // mock, but English/Chinese/Social Studies are in — a partial gap
+    // shouldn't block writing entirely, just show an honest placeholder
+    // for the missing subject on the write page itself.
     const cycle = makeCycle()
-    expect(statusFor(cycle, '48', true)).toBe('awaiting_results')
+    expect(statusFor(cycle, '48', true)).toBe('pending_comments')
   })
 
   it('returns pending_comments when results are in and nothing is written', () => {
@@ -158,11 +150,13 @@ describe('statusFor — P1-A pipeline', () => {
 })
 
 describe('checkpointsFor', () => {
-  const draftBase = { comments: '', parentMessage: '', ready: false }
+  const draftBase = { comments: '', ready: false }
 
-  it('marks results awaiting for the cockpit-gap student, nothing else started', () => {
+  it('marks results in for the cockpit-gap student once one subject has landed', () => {
+    // Only Mathematics is missing for student 48 — partial results still
+    // count as "in" for the gate, so results doesn't block comments.
     expect(checkpointsFor(makeCycle(), '48')).toEqual({
-      results: 'awaiting',
+      results: 'in',
       comments: 'none',
       approval: 'none',
       parents: 'none',

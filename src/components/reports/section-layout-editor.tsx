@@ -17,6 +17,8 @@ export interface SectionLayoutEditorProps {
   onMove: (index: number, dir: -1 | 1) => void
   /** Move the block with `key` to position `toIndex` (drag reorder). */
   onReorder: (key: string, toIndex: number) => void
+  /** View-only: no drag, no arrows, no checkbox toggling. */
+  disabled?: boolean
 }
 
 export function SectionLayoutEditor({
@@ -24,6 +26,7 @@ export function SectionLayoutEditor({
   onToggle,
   onMove,
   onReorder,
+  disabled = false,
 }: SectionLayoutEditorProps) {
   const orderedBlocks = [...blocks].sort((a, b) => a.order - b.order)
   const defById = new Map<string, SectionDef>(
@@ -50,7 +53,7 @@ export function SectionLayoutEditor({
         return (
           <li
             key={b.key}
-            draggable={!pinned && (armedKey === b.key || isDragging)}
+            draggable={!disabled && !pinned && (armedKey === b.key || isDragging)}
             onDragStart={(e) => {
               e.dataTransfer.effectAllowed = 'move'
               setDraggingKey(b.key)
@@ -74,11 +77,11 @@ export function SectionLayoutEditor({
             <div className="flex items-center gap-2">
               <GripVertical
                 aria-hidden
-                onPointerDown={() => !pinned && setArmedKey(b.key)}
+                onPointerDown={() => !disabled && !pinned && setArmedKey(b.key)}
                 onPointerUp={() => setArmedKey(null)}
                 className={cn(
                   'text-muted-foreground/60 size-4 shrink-0 touch-none',
-                  pinned
+                  disabled || pinned
                     ? 'opacity-30'
                     : isDragging
                       ? 'cursor-grabbing'
@@ -87,27 +90,27 @@ export function SectionLayoutEditor({
               />
               <Checkbox
                 checked={def.required ? true : b.enabled}
-                disabled={def.required}
+                disabled={disabled || def.required}
                 aria-label={`Include ${def.label}`}
-                onCheckedChange={() => !def.required && onToggle(b.key)}
+                onCheckedChange={() =>
+                  !disabled && !def.required && onToggle(b.key)
+                }
               />
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5">
-                  <span className="truncate text-sm font-medium">
-                    {def.label}
-                  </span>
+                <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+                  <span className="text-sm font-medium">{def.label}</span>
                   {def.required && (
-                    <span className="text-muted-foreground text-[11px]">
+                    <span className="text-muted-foreground shrink-0 text-[11px]">
                       Required
                     </span>
                   )}
                   {naAtP1 && (
-                    <span className="text-muted-foreground text-[11px]">
+                    <span className="text-muted-foreground shrink-0 text-[11px]">
                       Not applicable at P1
                     </span>
                   )}
                 </div>
-                <p className="text-muted-foreground truncate text-xs">
+                <p className="text-muted-foreground text-xs">
                   {def.description}
                 </p>
               </div>
@@ -116,7 +119,7 @@ export function SectionLayoutEditor({
                   variant="ghost"
                   size="icon-sm"
                   aria-label={`Move ${def.label} up`}
-                  disabled={pinned || i === 0 || rowAboveIsPinned}
+                  disabled={disabled || pinned || i === 0 || rowAboveIsPinned}
                   onClick={() => onMove(i, -1)}
                 >
                   <ArrowUp className="size-4" />
@@ -125,7 +128,9 @@ export function SectionLayoutEditor({
                   variant="ghost"
                   size="icon-sm"
                   aria-label={`Move ${def.label} down`}
-                  disabled={pinned || i === orderedBlocks.length - 1}
+                  disabled={
+                    disabled || pinned || i === orderedBlocks.length - 1
+                  }
                   onClick={() => onMove(i, 1)}
                 >
                   <ArrowDown className="size-4" />

@@ -6,7 +6,11 @@ import {
   SelectItem,
   SelectTrigger,
 } from '@/components/ui/select'
-import { TERMS } from '@/data/mock-reports'
+import { CURRENT_TERM, TERMS } from '@/data/mock-reports'
+
+// Latest term first — matches how a teacher thinks about the year (most
+// recent/relevant first), and puts the current term at the top of the list.
+const TERMS_DESCENDING = [...TERMS].reverse()
 
 interface TermSelectorProps {
   value: Term | ''
@@ -19,7 +23,10 @@ export function TermSelector({
   onValueChange,
   className,
 }: TermSelectorProps) {
-  const displayValue = value || 'All terms'
+  const displayValue =
+    value === CURRENT_TERM
+      ? `${value} (Current)`
+      : value || 'All terms'
 
   return (
     <Select
@@ -31,9 +38,9 @@ export function TermSelector({
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="all">All terms</SelectItem>
-        {TERMS.map((term) => (
+        {TERMS_DESCENDING.map((term) => (
           <SelectItem key={term} value={term}>
-            {term}
+            {term === CURRENT_TERM ? `${term} (Current)` : term}
           </SelectItem>
         ))}
       </SelectContent>

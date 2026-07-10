@@ -13,18 +13,17 @@ import { toast } from 'sonner'
 import type { Term } from '@/types/report'
 import {
   CURRENT_ACADEMIC_YEAR,
+  CURRENT_TERM,
   generateReportFromStudent,
 } from '@/data/mock-reports'
 import { getStudentById, mockStudents } from '@/data/mock-students'
 import { useFeatureFlag } from '@/hooks/use-feature-flag'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
 import { Button, buttonVariants } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import { ReportPreview } from '@/components/reports/report-preview'
 import { PgReportPreviewDialog } from '@/components/reports/pg-report-preview-dialog'
-import { hasAllResults } from '@/data/mock-cockpit-submissions'
-import { loadCycle, patchStudent } from '@/lib/hdp-cycle-store'
+import { hasAnyResults } from '@/data/mock-cockpit-submissions'
+import { ensureCycle, loadCycle, patchStudent } from '@/lib/hdp-cycle-store'
 import { commitCycleReport } from '@/lib/hdp-report-commit'
 import { cn } from '@/lib/utils'
 
@@ -60,9 +59,25 @@ function CycleWriteBody({ studentId }: { studentId: string }) {
 
   const student = getStudentById(studentId)
   const classId = search.classId ?? student?.class ?? ''
-  const term: Term = search.term ?? 'Term 2'
+  const term: Term = search.term ?? CURRENT_TERM
+  // P1-A pilots the pipeline: School Cockpit results gate writing, and the
+  // report goes to school leaders for review instead of self-marked ready.
+  const pipeline = classId === 'P1-A'
 
-  const cycle = useMemo(() => loadCycle(classId, term), [classId, term])
+  // The form-class flow never requires a conscious "set up layout" step —
+  // layout editing is Level-scoped only — so provision the standard default
+  // transparently if nothing exists yet. The hub already does this on
+  // mount; this is defense-in-depth for a direct link that skips it.
+  // ensureCycle is idempotent (reads back the existing cycle on any call
+  // after the first), so calling it here during render is safe and avoids
+  // a flash of the "No layout set up yet" block below.
+  const cycle = useMemo(
+    () =>
+      pipeline
+        ? ensureCycle(classId, term, CURRENT_ACADEMIC_YEAR)
+        : loadCycle(classId, term),
+    [classId, term, pipeline],
+  )
 
   const classmates = useMemo(
     () =>
@@ -84,7 +99,11 @@ function CycleWriteBody({ studentId }: { studentId: string }) {
   }, [student, term])
 
   const draft = cycle?.perStudent[studentId]
-  const [comments, setComments] = useState(() =>
+  // Captured once on mount (the per-student key={studentId} remount at
+  // CycleWritePage means this never goes stale) — the baseline "Send for
+  // review" compares against, so a no-op open-then-close of an
+  // already-approved/sent report doesn't re-arm the button.
+  const [initialComments] = useState(() =>
     // The comment is plain text now; strip tags so drafts saved by the old
     // rich-text editor load clean.
     (draft?.comments ?? report?.teacherComments ?? '')
@@ -92,17 +111,20 @@ function CycleWriteBody({ studentId }: { studentId: string }) {
       .replace(/\s+/g, ' ')
       .trim(),
   )
-  const [parentMessage, setParentMessage] = useState(
-    () => draft?.parentMessage ?? '',
-  )
+  const [comments, setComments] = useState(initialComments)
   const [markState, setMarkState] = useState<'idle' | 'loading' | 'error'>(
     'idle',
   )
   const [parentPreviewOpen, setParentPreviewOpen] = useState(false)
-  // P1-A pilots the pipeline: School Cockpit results gate writing, and the
-  // report goes to school leaders for review instead of self-marked ready.
-  const pipeline = classId === 'P1-A'
-  const resultsIn = !pipeline || !student || hasAllResults(student.id)
+  const resultsIn = !pipeline || !student || hasAnyResults(student.id)
+  // Already been through review (approved, or sent — which implies approved)
+  // — resubmitting is a no-op unless the teacher actually changed something,
+  // so "Send for review" stays disabled until they do.
+  const alreadyReviewed =
+    pipeline &&
+    (draft?.reviewStatus === 'approved' || draft?.sentAt !== undefined)
+  const hasChanges = comments !== initialComments
+  const canSendForReview = !alreadyReviewed || hasChanges
   const errorRef = useRef<HTMLDivElement>(null)
   const headingRef = useRef<HTMLHeadingElement>(null)
 
@@ -149,10 +171,10 @@ function CycleWriteBody({ studentId }: { studentId: string }) {
   useEffect(() => {
     if (!cycle) return
     const handle = window.setTimeout(() => {
-      patchStudent(classId, term, studentId, { comments, parentMessage })
+      patchStudent(classId, term, studentId, { comments })
     }, 500)
     return () => window.clearTimeout(handle)
-  }, [comments, parentMessage, cycle, classId, term, studentId])
+  }, [comments, cycle, classId, term, studentId])
 
   if (!builderEnabled) {
     return (
@@ -219,7 +241,6 @@ function CycleWriteBody({ studentId }: { studentId: string }) {
       }
       const updatedCycle = patchStudent(classId, term, studentId, {
         comments,
-        parentMessage,
         ready: true,
         ...(pipeline
           ? {
@@ -294,9 +315,17 @@ function CycleWriteBody({ studentId }: { studentId: string }) {
             )}
             <Button
               onClick={handleMarkReady}
-              disabled={markState === 'loading' || !resultsIn}
+              disabled={
+                markState === 'loading' || !resultsIn || !canSendForReview
+              }
               title={
-                resultsIn ? undefined : 'Waiting on results from School Cockpit'
+                !resultsIn
+                  ? 'Waiting on results from School Cockpit'
+                  : !canSendForReview
+                    ? draft.sentAt
+                      ? 'Already sent to parents — edit the comments to resubmit for review'
+                      : 'Already approved — edit the comments to resubmit for review'
+                    : undefined
               }
             >
               {markState === 'loading' && (
@@ -338,29 +367,16 @@ function CycleWriteBody({ studentId }: { studentId: string }) {
             </p>
           </div>
         ) : (
-          <>
-            <div className="bg-card rounded-xl border p-6 shadow-sm">
-              <ReportPreview
-                report={report}
-                blocks={cycle.layout.blocks}
-                editable
-                comments={comments}
-                onCommentsChange={setComments}
-                showMissingData
-              />
-            </div>
-
-            <div className="mt-6 space-y-1.5">
-              <Label htmlFor="parent-message">Note to parents (optional)</Label>
-              <Textarea
-                id="parent-message"
-                placeholder="Add a short note for the parent…"
-                value={parentMessage}
-                onChange={(e) => setParentMessage(e.target.value)}
-                rows={3}
-              />
-            </div>
-          </>
+          <div className="bg-card rounded-xl border p-6 shadow-sm">
+            <ReportPreview
+              report={report}
+              blocks={cycle.layout.blocks}
+              editable
+              comments={comments}
+              onCommentsChange={setComments}
+              showMissingData
+            />
+          </div>
         )}
       </div>
 
@@ -369,7 +385,6 @@ function CycleWriteBody({ studentId }: { studentId: string }) {
         report={report}
         blocks={cycle.layout.blocks}
         comments={comments}
-        parentMessage={parentMessage}
         ackDeadline={draft?.ackDeadline}
         open={parentPreviewOpen}
         onOpenChange={setParentPreviewOpen}

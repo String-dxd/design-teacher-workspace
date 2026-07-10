@@ -28,6 +28,11 @@ import type { Student } from '@/types/student'
 
 const TERMS: Array<Term> = ['Term 1', 'Term 2', 'Term 3', 'Term 4']
 const CURRENT_ACADEMIC_YEAR = 2025
+/** The term in progress right now — drives the Term selector's default and
+ * its "(Current)" label. A simple fixed constant, same fidelity as
+ * CURRENT_ACADEMIC_YEAR above (this prototype has no calendar-date-to-term
+ * mapping). */
+const CURRENT_TERM: Term = 'Term 4'
 
 /**
  * Generates logically consistent review/student/parent statuses.
@@ -1029,4 +1034,4 @@ export function filterReports(filters: ReportFilters): Array<HolisticReport> {
   })
 }
 
-export { TERMS, CURRENT_ACADEMIC_YEAR }
+export { TERMS, CURRENT_ACADEMIC_YEAR, CURRENT_TERM }

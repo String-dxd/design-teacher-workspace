@@ -30,7 +30,6 @@ describe('commitCycleReport', () => {
       perStudent: {
         [student.id]: {
           comments: 'DRAFT-COMMENT',
-          parentMessage: '',
           ready: false,
         },
       },

@@ -1,6 +1,10 @@
 import type { ReportLayout, Term } from '@/types/report'
 import type { ReminderType } from '@/types/form'
-import { withDefaultBlocks } from '@/data/report-layouts'
+import {
+  BUILT_IN_TEMPLATES,
+  defaultP1Layout,
+  withDefaultBlocks,
+} from '@/data/report-layouts'
 
 // Prototype persistence for the reporting-cycle hub: one record per class+term,
 // holding the layout chosen in Stage 1 and each student's in-progress draft from
@@ -12,7 +16,6 @@ import { withDefaultBlocks } from '@/data/report-layouts'
 
 export interface PerStudentDraft {
   comments: string
-  parentMessage: string
   ready: boolean
   /** P1-A pipeline: submitted to school leaders / approved by them. */
   reviewStatus?: 'in_review' | 'approved'
@@ -90,8 +93,6 @@ export function loadCycle(classId: string, term: Term): CycleState | null {
       const ready = typeof d.ready === 'boolean' ? d.ready : false
       perStudent[studentId] = {
         comments: typeof d.comments === 'string' ? d.comments : '',
-        parentMessage:
-          typeof d.parentMessage === 'string' ? d.parentMessage : '',
         ready,
         reviewStatus:
           d.reviewStatus === 'in_review' || d.reviewStatus === 'approved'
@@ -151,6 +152,33 @@ export function saveCycle(state: CycleState): void {
 }
 
 /**
+ * Returns the saved cycle for classId/term, or transparently creates one
+ * from the standard default template and persists it. Used by the form-class
+ * flow (P1-A), which should never need a conscious "set up layout" step —
+ * layout configuration is Level-scoped only, so a form teacher gets a
+ * sensible default the moment they need to write, rather than a dead end.
+ */
+export function ensureCycle(
+  classId: string,
+  term: Term,
+  academicYear: number,
+): CycleState {
+  const existing = loadCycle(classId, term)
+  if (existing) return existing
+  const created: CycleState = {
+    classId,
+    term,
+    academicYear,
+    templateId: BUILT_IN_TEMPLATES[0].id,
+    layout: defaultP1Layout(),
+    perStudent: {},
+    updatedAt: new Date().toISOString(),
+  }
+  saveCycle(created)
+  return created
+}
+
+/**
  * Merge a partial draft update for one student into the cycle and persist it.
  * Creates the per-student entry if it doesn't exist yet.
  */
@@ -164,7 +192,6 @@ export function patchStudent(
   if (!current) return null
   const existing: PerStudentDraft = current.perStudent[studentId] ?? {
     comments: '',
-    parentMessage: '',
     ready: false,
   }
   const next: CycleState = {
