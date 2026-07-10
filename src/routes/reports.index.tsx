@@ -79,6 +79,7 @@ import {
   getSiblingState,
 } from '@/data/mock-report-classes'
 import { loadCycle, patchStudent } from '@/lib/hdp-cycle-store'
+import { pushHdpNotification } from '@/lib/hdp-notifications'
 import { commitCycleReport } from '@/lib/hdp-report-commit'
 import { saveShareMessage } from '@/lib/hdp-template-store'
 
@@ -888,7 +889,7 @@ function CycleHub({
     const tick = () => {
       const current = loadCycle(cycleClassId, term)
       if (!current) return
-      let approvedAny = false
+      let approvedCount = 0
       for (const [studentId, draft] of Object.entries(current.perStudent)) {
         if (
           draft.reviewStatus === 'in_review' &&
@@ -898,11 +899,16 @@ function CycleHub({
           patchStudent(cycleClassId, term, studentId, {
             reviewStatus: 'approved',
           })
-          approvedAny = true
+          approvedCount += 1
         }
       }
-      if (approvedAny) {
+      if (approvedCount > 0) {
         toast.success('Report approved by school leaders')
+        pushHdpNotification({
+          title: 'Reports approved',
+          description: `${approvedCount} report${approvedCount !== 1 ? 's' : ''} approved for ${cycleClassId} · ${term} — ready to send to parents`,
+          createdAt: new Date().toISOString(),
+        })
         setRefreshKey((k) => k + 1)
       }
     }
@@ -910,6 +916,34 @@ function CycleHub({
     const id = window.setInterval(tick, 5000)
     return () => window.clearInterval(id)
   }, [pipeline, ownCycleClass, cycleClassId, term])
+
+  // Notify once per class+term when School Cockpit results start coming in
+  // — the teacher's real-world "an email tells me to come write reports"
+  // moment. Fires as soon as any student's results are in (not all — one
+  // pupil's results can lag indefinitely, and the rest shouldn't wait on
+  // that), gated by a localStorage marker so it's a single fire per cycle
+  // rather than re-notifying on every reload.
+  useEffect(() => {
+    if (!pipeline || !ownCycleClass) return
+    if (summary.resultsIn === 0) return
+    const seenKey = `hdp_results_notified_${cycleClassId}_${term}`
+    if (localStorage.getItem(seenKey)) return
+    localStorage.setItem(seenKey, '1')
+    const message = `Results are in for ${cycleClassId} · ${term} — reports are ready to write`
+    toast.info(message)
+    pushHdpNotification({
+      title: 'Results are in',
+      description: message,
+      createdAt: new Date().toISOString(),
+    })
+  }, [
+    pipeline,
+    ownCycleClass,
+    cycleClassId,
+    term,
+    summary.total,
+    summary.resultsIn,
+  ])
 
   // Demo stand-in for Parents Gateway: after a report is sent, parents
   // acknowledge at staggered delays (deterministic per roster position) —
