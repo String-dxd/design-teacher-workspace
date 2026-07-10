@@ -19,6 +19,7 @@ import type {
   StudentStatus,
   Term,
 } from '@/types/report'
+import type { SendToParentsSettings } from '@/components/reports/send-to-parents-dialog'
 import { TermSelector } from '@/components/reports/term-selector'
 import { ReportTable } from '@/components/reports/report-table'
 import {
@@ -26,6 +27,7 @@ import {
   statusFor,
 } from '@/components/reports/cycle-student-table'
 import { SubmitForReviewDialog } from '@/components/reports/submit-for-review-dialog'
+import { SendToParentsDialog } from '@/components/reports/send-to-parents-dialog'
 import { ClassSelector } from '@/components/students/class-selector'
 import { EmptyState } from '@/components/empty-state'
 import {
@@ -762,11 +764,10 @@ function CycleHub({
 }) {
   const navigate = useNavigate()
   const [term, setTerm] = useState<Term>('Term 2')
-  const [shareOpen, setShareOpen] = useState(false)
-  const [shareState, setShareState] = useState<'idle' | 'loading'>('idle')
   const [submitReviewOpen, setSubmitReviewOpen] = useState(false)
-  // Per-row "Send to parents" pending confirmation (student id).
-  const [rowSendId, setRowSendId] = useState<string | null>(null)
+  // The send-to-parents dialog's target: the bulk button, a single row's
+  // send action, or closed. One dialog instance serves both triggers.
+  const [sendTarget, setSendTarget] = useState<'bulk' | string | null>(null)
   const [announcement, setAnnouncement] = useState('')
   // Bump this to force re-reads from localStorage after a mutation.
   const [refreshKey, setRefreshKey] = useState(0)
@@ -869,8 +870,7 @@ function CycleHub({
         ? classStudents
             .filter(
               (s) =>
-                statusFor(cycle, s.id, true) === 'draft' &&
-                hasAllResults(s.id),
+                statusFor(cycle, s.id, true) === 'draft' && hasAllResults(s.id),
             )
             .map((s) => ({
               id: s.id,
@@ -960,8 +960,23 @@ function CycleHub({
     )
   }
 
-  function sendReportToParents(student: (typeof classStudents)[number]) {
+  function sendReportToParents(
+    student: (typeof classStudents)[number],
+    settings: SendToParentsSettings,
+  ) {
     if (!cycle) return
+    if (settings.scheduledAt) {
+      // Scheduled: capture the settings, but nothing is actually delivered
+      // yet — matches Posts' own fidelity (a scheduled post just sits in
+      // that state; there's no live auto-fire timer here either).
+      patchStudent(cycleClassId, term, student.id, {
+        scheduledSendAt: settings.scheduledAt,
+        ackDeadline: settings.ackDeadline,
+        reminderType: settings.reminderType,
+        reminderDate: settings.reminderDate,
+      })
+      return
+    }
     const built = commitCycleReport(student, term, cycle)
     const hasDraft = Object.prototype.hasOwnProperty.call(
       cycle.perStudent,
@@ -973,32 +988,29 @@ function CycleHub({
     saveShareMessage(built.id, parentMessage)
     patchStudent(cycleClassId, term, student.id, {
       sentAt: new Date().toISOString(),
+      ackDeadline: settings.ackDeadline,
+      reminderType: settings.reminderType,
+      reminderDate: settings.reminderDate,
     })
   }
 
-  function handleShareConfirm() {
-    setShareState('loading')
-    window.setTimeout(() => {
-      if (!cycle) return
-      for (const student of sendableStudents) {
-        sendReportToParents(student)
-      }
-      setShareState('idle')
-      setShareOpen(false)
-      setRefreshKey((k) => k + 1)
-      const message = `Shared ${sendableStudents.length} report${sendableStudents.length !== 1 ? 's' : ''} with parents`
-      toast.success(message)
-      setAnnouncement(message)
-    }, 600)
-  }
+  const sendStudents =
+    sendTarget === 'bulk'
+      ? sendableStudents
+      : classStudents.filter((s) => s.id === sendTarget)
 
-  function handleRowSendConfirm() {
-    const student = classStudents.find((s) => s.id === rowSendId)
-    setRowSendId(null)
-    if (!student || !cycle) return
-    sendReportToParents(student)
+  function handleSendConfirm(settings: SendToParentsSettings) {
+    for (const student of sendStudents) {
+      sendReportToParents(student, settings)
+    }
+    setSendTarget(null)
     setRefreshKey((k) => k + 1)
-    const message = `${student.name}’s report sent to parents via Parents Gateway`
+    const scheduled = Boolean(settings.scheduledAt)
+    const count = sendStudents.length
+    const message =
+      count === 1
+        ? `${sendStudents[0].name}’s report ${scheduled ? 'scheduled for' : 'sent to'} parents via Parents Gateway`
+        : `${count} report${count !== 1 ? 's' : ''} ${scheduled ? 'scheduled for' : 'sent to'} parents via Parents Gateway`
     toast.success(message)
     setAnnouncement(message)
   }
@@ -1082,37 +1094,13 @@ function CycleHub({
               Submit for review ({reviewCandidates.length})
             </Button>
           )}
-          <AlertDialog open={shareOpen} onOpenChange={setShareOpen}>
-            <AlertDialogTrigger
-              render={
-                <Button disabled={!cycle || sendableStudents.length === 0}>
-                  <Send className="mr-2 size-4" />
-                  Share with parents ({sendableStudents.length})
-                </Button>
-              }
-            />
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Share with parents</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Send {sendableStudents.length}{' '}
-                  {pipeline ? 'approved' : 'ready'} report
-                  {sendableStudents.length !== 1 ? 's' : ''} to parents via
-                  Parents Gateway? Each parent will see the note you wrote for
-                  their child, if any.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={handleShareConfirm}
-                  disabled={shareState === 'loading'}
-                >
-                  {shareState === 'loading' ? 'Sharing…' : 'Share'}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          <Button
+            disabled={!cycle || sendableStudents.length === 0}
+            onClick={() => setSendTarget('bulk')}
+          >
+            <Send className="mr-2 size-4" />
+            Share with parents ({sendableStudents.length})
+          </Button>
         </div>
       </div>
 
@@ -1164,35 +1152,25 @@ function CycleHub({
         showClass={levelScope}
         ownClassId="P1-A"
         seededStates={seededStates}
-        onSendToParents={ownCycleClass ? setRowSendId : undefined}
+        onSendToParents={ownCycleClass ? setSendTarget : undefined}
       />
 
-      {/* Per-row send confirmation — same story as the bulk share. */}
-      <AlertDialog
-        open={rowSendId !== null}
+      {/* Send-to-parents settings + confirm — shared by the bulk button and
+          each row's own "Send to parents" action. */}
+      <SendToParentsDialog
+        open={sendTarget !== null}
         onOpenChange={(open) => {
-          if (!open) setRowSendId(null)
+          if (!open) setSendTarget(null)
         }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Send to parents</AlertDialogTitle>
-            <AlertDialogDescription>
-              Send{' '}
-              {classStudents.find((s) => s.id === rowSendId)?.name ??
-                'this pupil'}
-              ’s approved report to their parents via Parents Gateway? They will
-              see the note you wrote, if any.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleRowSendConfirm}>
-              Send
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        title={
+          sendStudents.length === 1
+            ? `${sendStudents[0].name}’s Holistic Development Report`
+            : `${sendStudents.length} Holistic Development Report${sendStudents.length !== 1 ? 's' : ''}`
+        }
+        recipientClasses={sendStudents.length > 0 ? [cycleClassId] : []}
+        totalRecipients={sendStudents.length}
+        onConfirm={handleSendConfirm}
+      />
 
       {/* Polite live region for the async share action. */}
       <div role="status" aria-live="polite" className="sr-only">

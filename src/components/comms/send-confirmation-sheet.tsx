@@ -21,6 +21,8 @@ interface SendConfirmationSheetProps {
   onConfirm: () => void
   responseType?: ResponseType
   dueDate?: string
+  /** What's being sent — swaps "post" for "report" in the confirm copy. */
+  subject?: 'post' | 'report'
 }
 
 function formatScheduledAt(iso: string): string {
@@ -43,6 +45,7 @@ export function SendConfirmationSheet({
   onConfirm,
   responseType,
   dueDate,
+  subject = 'post',
 }: SendConfirmationSheetProps) {
   const isScheduled = Boolean(scheduledAt)
   const hasResponse =
@@ -53,7 +56,7 @@ export function SendConfirmationSheet({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>
-            {isScheduled ? 'Schedule post?' : 'Send post?'}
+            {isScheduled ? `Schedule ${subject}?` : `Send ${subject}?`}
           </DialogTitle>
           <DialogDescription>
             Review the details below before{' '}
