@@ -25,6 +25,7 @@ import {
   CycleStudentTable,
   statusFor,
 } from '@/components/reports/cycle-student-table'
+import { SubmitForReviewDialog } from '@/components/reports/submit-for-review-dialog'
 import { ClassSelector } from '@/components/students/class-selector'
 import { EmptyState } from '@/components/empty-state'
 import {
@@ -763,6 +764,7 @@ function CycleHub({
   const [term, setTerm] = useState<Term>('Term 2')
   const [shareOpen, setShareOpen] = useState(false)
   const [shareState, setShareState] = useState<'idle' | 'loading'>('idle')
+  const [submitReviewOpen, setSubmitReviewOpen] = useState(false)
   // Per-row "Send to parents" pending confirmation (student id).
   const [rowSendId, setRowSendId] = useState<string | null>(null)
   const [announcement, setAnnouncement] = useState('')
@@ -856,6 +858,27 @@ function CycleHub({
           (pipeline ? 'approved' : 'ready'),
       ),
     [classStudents, cycle, pipeline],
+  )
+
+  // Drafted-but-not-yet-submitted students: candidates for the bulk
+  // "Submit for review" checklist. Own class only (P1-A) — the pipeline's
+  // review step is only real for the teacher's own reports.
+  const reviewCandidates = useMemo(
+    () =>
+      pipeline && ownCycleClass
+        ? classStudents
+            .filter(
+              (s) =>
+                statusFor(cycle, s.id, true) === 'draft' &&
+                hasAllResults(s.id),
+            )
+            .map((s) => ({
+              id: s.id,
+              name: s.name,
+              comments: cycle?.perStudent[s.id]?.comments ?? '',
+            }))
+        : [],
+    [classStudents, cycle, pipeline, ownCycleClass],
   )
 
   // Demo stand-in for the school leaders' side: reports submitted for review
@@ -980,6 +1003,20 @@ function CycleHub({
     setAnnouncement(message)
   }
 
+  function handleSubmitForReviewConfirm(selectedIds: Array<string>) {
+    for (const studentId of selectedIds) {
+      patchStudent(cycleClassId, term, studentId, {
+        reviewStatus: 'in_review',
+        submittedAt: new Date().toISOString(),
+      })
+    }
+    setSubmitReviewOpen(false)
+    setRefreshKey((k) => k + 1)
+    const message = `Submitted ${selectedIds.length} report${selectedIds.length !== 1 ? 's' : ''} for review`
+    toast.success(message)
+    setAnnouncement(message)
+  }
+
   return (
     <div className="flex flex-col gap-6 px-6 pt-6 pb-10">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -1035,6 +1072,16 @@ function CycleHub({
             <Settings2 className="mr-2 size-4" />
             {cycle ? 'Edit layout' : 'Set up layout'}
           </Button>
+          {pipeline && ownCycleClass && (
+            <Button
+              variant="outline"
+              disabled={reviewCandidates.length === 0}
+              onClick={() => setSubmitReviewOpen(true)}
+            >
+              <ClipboardCheck className="mr-2 size-4" />
+              Submit for review ({reviewCandidates.length})
+            </Button>
+          )}
           <AlertDialog open={shareOpen} onOpenChange={setShareOpen}>
             <AlertDialogTrigger
               render={
@@ -1068,6 +1115,15 @@ function CycleHub({
           </AlertDialog>
         </div>
       </div>
+
+      {pipeline && ownCycleClass && (
+        <SubmitForReviewDialog
+          open={submitReviewOpen}
+          onOpenChange={setSubmitReviewOpen}
+          candidates={reviewCandidates}
+          onConfirm={handleSubmitForReviewConfirm}
+        />
+      )}
 
       {!pipeline && (
         /* Cycle summary — compact, so the student list stays the focal point */

@@ -326,7 +326,7 @@ function CheckpointCell({
   )
 }
 
-function excerpt(html: string, max = 60): string {
+export function excerpt(html: string, max = 60): string {
   const text = html
     .replace(/<[^>]*>/g, ' ')
     .replace(/\s+/g, ' ')
