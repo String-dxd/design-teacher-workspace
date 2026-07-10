@@ -429,6 +429,13 @@ function RowAction({
           ? 'Parent has acknowledged — nothing left to edit'
           : undefined
   const canEdit = editReason === undefined
+  // No comments written yet at these statuses — offer to start rather than "edit".
+  const hasComments = !(
+    status === 'not_started' ||
+    status === 'awaiting_results' ||
+    status === 'pending_comments'
+  )
+  const editLabel = hasComments ? 'Edit comments' : 'Add comments'
 
   const sendReason = !ownClass
     ? "You're not this class's form teacher"
@@ -460,7 +467,7 @@ function RowAction({
             render={canEdit ? editLink : <div />}
           >
             <Pencil aria-hidden />
-            Edit comments
+            {editLabel}
           </DropdownMenuItem>
           <DropdownMenuItem
             disabled={!canSend}
