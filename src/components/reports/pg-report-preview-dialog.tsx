@@ -28,6 +28,12 @@ interface PgReportPreviewDialogProps {
   parentMessage?: string
   open: boolean
   onOpenChange: (open: boolean) => void
+  /**
+   * The real "acknowledge by" date, once one has actually been configured at
+   * send time (ISO string). Before any real send, there's nothing to show
+   * yet — the illustrative +14-day default fills in instead.
+   */
+  ackDeadline?: string
 }
 
 /**
@@ -58,6 +64,7 @@ export function PgReportPreviewDialog({
   parentMessage,
   open,
   onOpenChange,
+  ackDeadline,
 }: PgReportPreviewDialogProps) {
   const [acknowledged, setAcknowledged] = useState(false)
   // The reference app gates acknowledgement on reading to the end.
@@ -106,10 +113,12 @@ export function PgReportPreviewDialog({
     }
     const now = new Date()
     setIssuedDate(now.toLocaleDateString('en-SG', dateOpts))
-    const ackBy = new Date(now)
-    ackBy.setDate(ackBy.getDate() + 14)
+    // A real configured deadline (set at send time) wins; before any real
+    // send has happened, this is just an illustrative +14-day placeholder.
+    const ackBy = ackDeadline ? new Date(ackDeadline) : new Date(now)
+    if (!ackDeadline) ackBy.setDate(ackBy.getDate() + 14)
     setAckByDate(ackBy.toLocaleDateString('en-SG', dateOpts))
-  }, [])
+  }, [ackDeadline])
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

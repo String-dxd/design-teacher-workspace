@@ -370,6 +370,7 @@ function CycleWriteBody({ studentId }: { studentId: string }) {
         blocks={cycle.layout.blocks}
         comments={comments}
         parentMessage={parentMessage}
+        ackDeadline={draft?.ackDeadline}
         open={parentPreviewOpen}
         onOpenChange={setParentPreviewOpen}
       />
