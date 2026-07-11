@@ -1,10 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
+import {
+  Link,
+  createFileRoute,
+  useBlocker,
+  useNavigate,
+} from '@tanstack/react-router'
+import { format } from 'date-fns'
 import {
   AlertCircle,
   ArrowLeft,
   ChevronLeft,
   ChevronRight,
+  Info,
   Loader2,
   Smartphone,
 } from 'lucide-react'
@@ -20,6 +27,14 @@ import { getStudentById, mockStudents } from '@/data/mock-students'
 import { useFeatureFlag } from '@/hooks/use-feature-flag'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
 import { Button, buttonVariants } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { ReportPreview } from '@/components/reports/report-preview'
 import { PgReportPreviewDialog } from '@/components/reports/pg-report-preview-dialog'
 import { hasAnyResults } from '@/data/mock-cockpit-submissions'
@@ -64,6 +79,10 @@ function CycleWriteBody({ studentId }: { studentId: string }) {
   // report goes to school leaders for review instead of self-marked ready.
   const pipeline = classId === 'P1-A'
 
+  // Bumped after writes that change pipeline state (autosave demotions, the
+  // correction unlock) so `cycle`/`draft` re-read what the store now holds.
+  const [cycleRefresh, setCycleRefresh] = useState(0)
+
   // The form-class flow never requires a conscious "set up layout" step —
   // layout editing is Level-scoped only — so provision the standard default
   // transparently if nothing exists yet. The hub already does this on
@@ -76,7 +95,7 @@ function CycleWriteBody({ studentId }: { studentId: string }) {
       pipeline
         ? ensureCycle(classId, term, CURRENT_ACADEMIC_YEAR)
         : loadCycle(classId, term),
-    [classId, term, pipeline],
+    [classId, term, pipeline, cycleRefresh],
   )
 
   const classmates = useMemo(
@@ -104,9 +123,11 @@ function CycleWriteBody({ studentId }: { studentId: string }) {
   // review" compares against, so a no-op open-then-close of an
   // already-approved/sent report doesn't re-arm the button.
   const [initialComments] = useState(() =>
-    // The comment is plain text now; strip tags so drafts saved by the old
-    // rich-text editor load clean.
-    (draft?.comments ?? report?.teacherComments ?? '')
+    // Only what the teacher actually saved — never the report's sample
+    // teacherComments, which would present filler as the teacher's own words
+    // on a pupil whose comment is still pending. Strip tags so drafts saved
+    // by the old rich-text editor load clean.
+    (draft?.comments ?? '')
       .replace(/<[^>]*>/g, ' ')
       .replace(/\s+/g, ' ')
       .trim(),
@@ -116,17 +137,59 @@ function CycleWriteBody({ studentId }: { studentId: string }) {
     'idle',
   )
   const [parentPreviewOpen, setParentPreviewOpen] = useState(false)
+  const [correctionOpen, setCorrectionOpen] = useState(false)
   const resultsIn = !pipeline || !student || hasAnyResults(student.id)
+  // Once a report is with parents it's view-only — the pipeline can only be
+  // reopened through the explicit "Make a correction" flow below.
+  const sentToParents = pipeline && draft?.sentAt !== undefined
   // Already been through review (approved, or sent — which implies approved)
   // — resubmitting is a no-op unless the teacher actually changed something,
-  // so "Send for review" stays disabled until they do.
+  // so "Submit for review" stays disabled until they do.
   const alreadyReviewed =
     pipeline &&
     (draft?.reviewStatus === 'approved' || draft?.sentAt !== undefined)
   const hasChanges = comments !== initialComments
-  const canSendForReview = !alreadyReviewed || hasChanges
+  // An empty report can't go for review — there's nothing to approve.
+  const hasComment = comments.trim() !== ''
+  const canSendForReview = hasComment && (!alreadyReviewed || hasChanges)
   const errorRef = useRef<HTMLDivElement>(null)
   const headingRef = useRef<HTMLHeadingElement>(null)
+
+  // Save-status feedback for the debounced autosave below.
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>(
+    'idle',
+  )
+  const lastSavedRef = useRef(initialComments)
+
+  // Comment text sitting unsaved in the field's edit mode (before "Save
+  // changes") is the one state that navigation genuinely destroys — block
+  // route changes and tab closes while it exists.
+  const commentDirtyRef = useRef(false)
+  useBlocker({
+    shouldBlockFn: () => {
+      if (!commentDirtyRef.current) return false
+      return !window.confirm(
+        'You have unsaved comment edits — leave and discard them?',
+      )
+    },
+    enableBeforeUnload: () => commentDirtyRef.current,
+  })
+
+  // How far through the class the teacher is — shown in the header so the
+  // pager doesn't require bouncing back to the hub to re-orient.
+  const draftedCount = useMemo(
+    () =>
+      classmates.filter((s) => {
+        const d = cycle?.perStudent[s.id]
+        return (
+          !!d &&
+          (d.comments.trim() !== '' ||
+            d.reviewStatus !== undefined ||
+            d.sentAt !== undefined)
+        )
+      }).length,
+    [classmates, cycle],
+  )
 
   useSetBreadcrumbs([
     { label: 'Reports', href: '/reports' },
@@ -167,14 +230,31 @@ function CycleWriteBody({ studentId }: { studentId: string }) {
     if (markState === 'error') errorRef.current?.focus()
   }, [markState])
 
-  // Debounced write-through to localStorage.
+  // Debounced write-through to localStorage, with visible save status. Sent
+  // reports never autosave — they're view-only until explicitly corrected.
   useEffect(() => {
-    if (!cycle) return
+    if (!cycle || sentToParents) return
+    if (comments === lastSavedRef.current) return
+    setSaveState('saving')
     const handle = window.setTimeout(() => {
+      const before = loadCycle(classId, term)?.perStudent[studentId]
       patchStudent(classId, term, studentId, { comments })
+      lastSavedRef.current = comments
+      setSaveState('saved')
+      // patchStudent demotes an approved draft on a comment change — tell the
+      // teacher the approval (and any pending scheduled send) was reset
+      // rather than letting it change silently.
+      if (before?.reviewStatus === 'approved' && !before.sentAt) {
+        toast.info(
+          before.scheduledSendAt
+            ? 'Scheduled send cancelled — the edited report needs approval again before it can go to parents'
+            : 'Approval reset — submit this report for review again before it can go to parents',
+        )
+        setCycleRefresh((k) => k + 1)
+      }
     }, 500)
     return () => window.clearTimeout(handle)
-  }, [comments, cycle, classId, term, studentId])
+  }, [comments, cycle, sentToParents, classId, term, studentId])
 
   if (!builderEnabled) {
     return (
@@ -230,6 +310,26 @@ function CycleWriteBody({ studentId }: { studentId: string }) {
     })
   }
 
+  // Reopens a sent report for correction: the pipeline restarts from Draft,
+  // so the corrected version must be approved and re-sent. Parents keep the
+  // version they already received until then.
+  function handleUnlockCorrection() {
+    if (!student) return
+    patchStudent(classId, term, studentId, {
+      sentAt: undefined,
+      ackAt: undefined,
+      scheduledSendAt: undefined,
+      reviewStatus: undefined,
+      ready: false,
+      submittedAt: undefined,
+    })
+    setCorrectionOpen(false)
+    setCycleRefresh((k) => k + 1)
+    toast.info(
+      `${student.name}’s report is unlocked for correction — it needs approval and re-sending`,
+    )
+  }
+
   function handleMarkReady() {
     if (!student || !cycle) return
     const currentStudent = student
@@ -283,9 +383,26 @@ function CycleWriteBody({ studentId }: { studentId: string }) {
             </h1>
             <p className="text-muted-foreground text-sm">
               {student.class} · {term}
+              {currentIndex >= 0 && (
+                <>
+                  {' '}
+                  · Pupil {currentIndex + 1} of {classmates.length} ·{' '}
+                  {draftedCount} of {classmates.length} drafted
+                </>
+              )}
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <span
+              aria-live="polite"
+              className="text-muted-foreground mr-1 text-xs"
+            >
+              {saveState === 'saving'
+                ? 'Saving…'
+                : saveState === 'saved'
+                  ? 'All changes saved'
+                  : ''}
+            </span>
             <Button
               variant="outline"
               size="icon"
@@ -321,11 +438,13 @@ function CycleWriteBody({ studentId }: { studentId: string }) {
               title={
                 !resultsIn
                   ? 'Waiting on results from School Cockpit'
-                  : !canSendForReview
-                    ? draft.sentAt
-                      ? 'Already sent to parents — edit the comments to resubmit for review'
-                      : 'Already approved — edit the comments to resubmit for review'
-                    : undefined
+                  : !hasComment
+                    ? `Write a comment on ${student.name}’s term first`
+                    : !canSendForReview
+                      ? sentToParents
+                        ? 'Sent to parents — make a correction to reopen this report'
+                        : 'Already approved — edit the comments to resubmit for review'
+                      : undefined
               }
             >
               {markState === 'loading' && (
@@ -333,10 +452,10 @@ function CycleWriteBody({ studentId }: { studentId: string }) {
               )}
               {markState === 'loading'
                 ? pipeline
-                  ? 'Sending…'
+                  ? 'Submitting…'
                   : 'Marking ready…'
                 : pipeline
-                  ? 'Send for review'
+                  ? 'Submit for review'
                   : 'Mark ready'}
             </Button>
           </div>
@@ -367,18 +486,65 @@ function CycleWriteBody({ studentId }: { studentId: string }) {
             </p>
           </div>
         ) : (
-          <div className="bg-card rounded-xl border p-6 shadow-sm">
-            <ReportPreview
-              report={report}
-              blocks={cycle.layout.blocks}
-              editable
-              comments={comments}
-              onCommentsChange={setComments}
-              showMissingData
-            />
-          </div>
+          <>
+            {sentToParents && draft.sentAt && (
+              <div className="bg-twblue-3 text-twblue-12 mb-4 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg px-4 py-3 text-sm">
+                <Info className="text-twblue-11 size-4 shrink-0" />
+                <span className="min-w-0 flex-1">
+                  Sent to parents on{' '}
+                  {format(new Date(draft.sentAt), 'd MMM yyyy')} — this report
+                  is now view-only.
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="bg-background"
+                  onClick={() => setCorrectionOpen(true)}
+                >
+                  Make a correction
+                </Button>
+              </div>
+            )}
+            <div className="bg-card rounded-xl border p-6 shadow-sm">
+              <ReportPreview
+                report={report}
+                blocks={cycle.layout.blocks}
+                editable={!sentToParents}
+                comments={comments}
+                onCommentsChange={sentToParents ? undefined : setComments}
+                onCommentDirtyChange={(dirty) => {
+                  commentDirtyRef.current = dirty
+                }}
+                showMissingData
+              />
+            </div>
+          </>
         )}
       </div>
+
+      {/* Correcting a sent report restarts the pipeline — make the cost
+          explicit before unlocking anything. */}
+      <Dialog open={correctionOpen} onOpenChange={setCorrectionOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Make a correction?</DialogTitle>
+            <DialogDescription>
+              Parents keep the report they already received until your
+              corrected version is approved and re-sent. {student.name}’s
+              report goes back to Draft and needs school-leader approval
+              again.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCorrectionOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleUnlockCorrection}>
+              Unlock for correction
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* How the report reads on a parent's phone in Parents Gateway. */}
       <PgReportPreviewDialog

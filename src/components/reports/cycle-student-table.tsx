@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { MoreHorizontal, Pencil, Send } from 'lucide-react'
+import { Eye, MoreHorizontal, Pencil, Send } from 'lucide-react'
 
 import type { Term } from '@/types/report'
 import type { SortConfig, SortDirection } from '@/types/student'
@@ -60,6 +60,9 @@ function statusFor(
   return 'pending_comments'
 }
 
+// One vocabulary across every surface: these labels match the checkpoint
+// columns above (In review, Approved, Sent…) so toggling between the class
+// badge view and the level checkpoint view never renames a state.
 const STATUS_LABEL: Record<CycleStudentStatus, string> = {
   not_started: 'Not started',
   draft: 'Draft',
@@ -67,7 +70,7 @@ const STATUS_LABEL: Record<CycleStudentStatus, string> = {
   sent: 'Sent to parents',
   awaiting_results: 'Awaiting results',
   pending_comments: 'Pending comments',
-  in_review: 'Pending approval',
+  in_review: 'In review',
   approved: 'Approved',
 }
 
@@ -78,11 +81,11 @@ const STATUS_LABEL: Record<CycleStudentStatus, string> = {
 const STATUS_CLASS: Record<CycleStudentStatus, string> = {
   not_started: '',
   draft: 'bg-muted text-muted-foreground hover:bg-muted',
-  ready: 'bg-amber-100 text-amber-800 hover:bg-amber-100',
+  ready: 'bg-amber-3 text-amber-11 hover:bg-amber-3',
   sent: 'bg-twblue-3 text-twblue-11 hover:bg-twblue-3',
   awaiting_results: '',
   pending_comments: 'bg-muted text-muted-foreground hover:bg-muted',
-  in_review: 'bg-amber-100 text-amber-800 hover:bg-amber-100',
+  in_review: 'bg-amber-3 text-amber-11 hover:bg-amber-3',
   approved: 'bg-lime-3 text-lime-11 hover:bg-lime-3',
 }
 
@@ -190,7 +193,7 @@ export function checkpointsFromStatus(
 // Checkpoint-cell palette: lime = done-positive, amber = queued with someone,
 // muted = in progress, blue = delivered; a quiet em-dash for not-yet.
 const LIME = 'bg-lime-3 text-lime-11 hover:bg-lime-3'
-const AMBER = 'bg-amber-100 text-amber-800 hover:bg-amber-100'
+const AMBER = 'bg-amber-3 text-amber-11 hover:bg-amber-3'
 const MUTED = 'bg-muted text-muted-foreground hover:bg-muted'
 const BLUE = 'bg-twblue-3 text-twblue-11 hover:bg-twblue-3'
 
@@ -396,7 +399,6 @@ function RowAction({
   student,
   status,
   resultsAwaiting,
-  acknowledged,
   ownClass,
   term,
   onSendToParents,
@@ -405,8 +407,6 @@ function RowAction({
   status: CycleStudentStatus
   /** School Cockpit gate — blocks writing even when a draft already exists. */
   resultsAwaiting: boolean
-  /** Parent has acknowledged — the loop is closed, nothing left to do. */
-  acknowledged: boolean
   ownClass: boolean
   term: Term
   onSendToParents?: (studentId: string) => void
@@ -425,17 +425,22 @@ function RowAction({
       ? 'Waiting on results from School Cockpit'
       : status === 'in_review'
         ? 'With school leaders for approval'
-        : status === 'sent' && acknowledged
-          ? 'Parent has acknowledged — nothing left to edit'
-          : undefined
+        : undefined
   const canEdit = editReason === undefined
-  // No comments written yet at these statuses — offer to start rather than "edit".
+  // No comments written yet at these statuses — offer to start rather than
+  // "edit". Sent reports open view-only (write page's correction flow), so
+  // the action is honest about being a view.
   const hasComments = !(
     status === 'not_started' ||
     status === 'awaiting_results' ||
     status === 'pending_comments'
   )
-  const editLabel = hasComments ? 'Edit comments' : 'Add comments'
+  const editLabel =
+    status === 'sent'
+      ? 'View report'
+      : hasComments
+        ? 'Edit comments'
+        : 'Add comments'
 
   const sendReason = !ownClass
     ? "You're not this class's form teacher"
@@ -466,7 +471,7 @@ function RowAction({
             title={editReason}
             render={canEdit ? editLink : <div />}
           >
-            <Pencil aria-hidden />
+            {status === 'sent' ? <Eye aria-hidden /> : <Pencil aria-hidden />}
             {editLabel}
           </DropdownMenuItem>
           <DropdownMenuItem
@@ -634,8 +639,10 @@ export function CycleStudentTable({
                       className={ROW_BOTTOM_BORDER}
                     />
                   ) : (
+                    // "Not submitted" (for review), never "Not sent" — that
+                    // label belongs to the Parent Response column alone.
                     <CheckpointCell
-                      label="Not sent"
+                      label="Not submitted"
                       tone="outline"
                       className={ROW_BOTTOM_BORDER}
                     />
@@ -673,7 +680,6 @@ export function CycleStudentTable({
                       student={student}
                       status={status}
                       resultsAwaiting={cp.results === 'awaiting'}
-                      acknowledged={cp.parents === 'acknowledged'}
                       ownClass={isOwnClass}
                       term={term}
                       onSendToParents={onSendToParents}

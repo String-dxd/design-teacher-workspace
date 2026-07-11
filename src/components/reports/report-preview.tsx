@@ -4,6 +4,7 @@ import {
   ChevronDown,
   Flag,
   Loader2,
+  MessageSquarePlus,
   Pencil,
   Sparkles,
 } from 'lucide-react'
@@ -281,10 +282,14 @@ function CommentField({
   report,
   comments,
   onCommentsChange,
+  onDirtyChange,
 }: {
   report: HolisticReport
   comments: string
   onCommentsChange: (value: string) => void
+  /** Fires as unsaved in-edit text appears/clears, so the host page can
+   * guard navigation against losing it. */
+  onDirtyChange?: (dirty: boolean) => void
 }) {
   const [isEditing, setIsEditing] = useState(false)
   const [draftText, setDraftText] = useState(comments)
@@ -295,6 +300,14 @@ function CommentField({
   useEffect(() => {
     if (isEditing) textareaRef.current?.focus()
   }, [isEditing])
+
+  const dirty = isEditing && draftText !== comments
+  useEffect(() => {
+    onDirtyChange?.(dirty)
+  }, [dirty, onDirtyChange])
+  // Whatever was pending is gone once the field unmounts — don't leave the
+  // host page guarding a navigation that can no longer lose anything.
+  useEffect(() => () => onDirtyChange?.(false), [onDirtyChange])
 
   function toggleSource(id: DraftSource, checked: boolean) {
     setSources((prev) =>
@@ -329,28 +342,48 @@ function CommentField({
   }
 
   if (!isEditing) {
-    return (
-      <div className="space-y-2">
-        {comments.trim() ? (
-          <TeacherQuote report={report} comments={comments} />
-        ) : (
-          <p className="text-muted-foreground text-sm italic">
-            No comment written yet.
-          </p>
-        )}
-        <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline" size="sm" onClick={startEditing}>
-            <Pencil className="mr-2 size-3.5" />
-            Edit
-          </Button>
-          {!comments.trim() && (
+    // Nothing written yet — a proper empty state rather than filler text
+    // presented as the teacher's own words. Two ways in: write from scratch,
+    // or start from a generated draft and edit it.
+    if (!comments.trim()) {
+      return (
+        <div className="border-muted-foreground/25 flex flex-col items-center gap-3 rounded-xl border border-dashed px-6 py-8 text-center">
+          <MessageSquarePlus
+            aria-hidden
+            className="text-muted-foreground size-6"
+          />
+          <div className="space-y-1">
+            <p className="text-sm font-medium">No comment yet</p>
+            <p className="text-muted-foreground mx-auto max-w-sm text-sm">
+              Write a short note on {firstName(report.studentName)}’s term, or
+              start from a draft based on {firstName(report.studentName)}’s
+              results and conduct — you can edit it before anything is
+              submitted.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <Button size="sm" onClick={startEditing}>
+              <Pencil className="mr-2 size-3.5" />
+              Write comment
+            </Button>
             <GenerateDraftControl
               drafting={drafting}
               sources={sources}
               onGenerate={handleGenerate}
               onToggleSource={toggleSource}
             />
-          )}
+          </div>
+        </div>
+      )
+    }
+    return (
+      <div className="space-y-2">
+        <TeacherQuote report={report} comments={comments} />
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" size="sm" onClick={startEditing}>
+            <Pencil className="mr-2 size-3.5" />
+            Edit
+          </Button>
         </div>
       </div>
     )
@@ -588,6 +621,8 @@ export interface ReportPreviewProps {
   editable?: boolean
   comments: string
   onCommentsChange?: (value: string) => void
+  /** Unsaved in-edit comment text appeared/cleared — see CommentField. */
+  onCommentDirtyChange?: (dirty: boolean) => void
   /**
    * When true, the pupil-particulars block drops name/class/term and keeps only
    * form teacher — for surfaces (guest view, detail page) whose own header already
@@ -608,6 +643,7 @@ export function ReportPreview({
   editable = false,
   comments,
   onCommentsChange,
+  onCommentDirtyChange,
   compactPupilInfo = false,
   showMissingData = false,
 }: ReportPreviewProps) {
@@ -652,6 +688,7 @@ export function ReportPreview({
               editable={editable}
               comments={comments}
               onCommentsChange={onCommentsChange}
+              onCommentDirtyChange={onCommentDirtyChange}
               showMissingData={showMissingData}
             />
           </div>
@@ -666,6 +703,7 @@ function PreviewBlock({
   editable,
   comments,
   onCommentsChange,
+  onCommentDirtyChange,
   compactPupilInfo = false,
   showMissingData = false,
 }: {
@@ -674,6 +712,7 @@ function PreviewBlock({
   editable: boolean
   comments: string
   onCommentsChange?: (value: string) => void
+  onCommentDirtyChange?: (dirty: boolean) => void
   compactPupilInfo?: boolean
   showMissingData?: boolean
 }) {
@@ -828,6 +867,7 @@ function PreviewBlock({
             report={report}
             comments={comments}
             onCommentsChange={onCommentsChange}
+            onDirtyChange={onCommentDirtyChange}
           />
         </div>
       )

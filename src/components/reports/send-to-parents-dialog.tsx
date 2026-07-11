@@ -245,14 +245,36 @@ export function SendToParentsDialog({
             {/* Acknowledge-by deadline */}
             <div className="space-y-1.5">
               <Label htmlFor="ack-deadline">Acknowledge by</Label>
-              <input
-                id="ack-deadline"
-                type="date"
-                value={ackDeadline}
-                min={today}
-                onChange={(e) => setAckDeadline(e.target.value)}
-                className="border-input bg-background rounded-md border px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
-              />
+              <div>
+                <Popover>
+                  <PopoverTrigger
+                    render={
+                      <Button
+                        id="ack-deadline"
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="bg-background justify-start font-normal"
+                      />
+                    }
+                  >
+                    {format(
+                      parse(ackDeadline, 'yyyy-MM-dd', new Date()),
+                      'dd MMM yyyy',
+                    )}
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={parse(ackDeadline, 'yyyy-MM-dd', new Date())}
+                      disabled={{ before: new Date(today) }}
+                      onSelect={(date) => {
+                        if (date) setAckDeadline(format(date, 'yyyy-MM-dd'))
+                      }}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
             </div>
 
             {/* Reminders — captured, not dispatched (matches Posts) */}
@@ -278,13 +300,44 @@ export function SendToParentsDialog({
                         <span className="text-muted-foreground text-xs">
                           {opt.value === 'one-time' ? 'on' : 'from'}
                         </span>
-                        <input
-                          type="date"
-                          value={reminderDate}
-                          min={today}
-                          onChange={(e) => setReminderDate(e.target.value)}
-                          className="border-input bg-background rounded-md border px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-ring"
-                        />
+                        <Popover>
+                          <PopoverTrigger
+                            render={
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className={cn(
+                                  'bg-background justify-start font-normal',
+                                  !reminderDate && 'text-muted-foreground',
+                                )}
+                              />
+                            }
+                          >
+                            {reminderDate
+                              ? format(
+                                  parse(reminderDate, 'yyyy-MM-dd', new Date()),
+                                  'dd MMM yyyy',
+                                )
+                              : 'Pick a date'}
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={
+                                reminderDate
+                                  ? parse(reminderDate, 'yyyy-MM-dd', new Date())
+                                  : undefined
+                              }
+                              disabled={{ before: new Date(today) }}
+                              onSelect={(date) =>
+                                setReminderDate(
+                                  date ? format(date, 'yyyy-MM-dd') : '',
+                                )
+                              }
+                            />
+                          </PopoverContent>
+                        </Popover>
                       </div>
                     )}
                   </label>

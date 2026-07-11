@@ -850,6 +850,7 @@ function CycleHub({
   const summary = useMemo(() => {
     let ready = 0
     let drafts = 0
+    let approved = 0
     let sent = 0
     let acked = 0
     let resultsIn = 0
@@ -860,6 +861,7 @@ function CycleHub({
       const status = seeded?.status ?? statusFor(cycle, pupil.id, pipeline)
       if (status === 'ready') ready += 1
       else if (status === 'draft') drafts += 1
+      if (status === 'approved') approved += 1
       if (status === 'sent') {
         sent += 1
         const acknowledged = seeded
@@ -878,6 +880,7 @@ function CycleHub({
     return {
       ready,
       drafts,
+      approved,
       sent,
       acked,
       resultsIn,
@@ -888,13 +891,16 @@ function CycleHub({
   }, [roster, seededStates, cycle, pipeline])
 
   // Reports the teacher can send to parents: leader-approved in the pipeline,
-  // self-marked ready elsewhere.
+  // self-marked ready elsewhere. Already-scheduled reports are excluded —
+  // the teacher chose a delivery time, so offering to send them again now
+  // would double-book the same report.
   const sendableStudents = useMemo(
     () =>
       classStudents.filter(
         (s) =>
           statusFor(cycle, s.id, pipeline) ===
-          (pipeline ? 'approved' : 'ready'),
+            (pipeline ? 'approved' : 'ready') &&
+          !cycle?.perStudent[s.id]?.scheduledSendAt,
       ),
     [classStudents, cycle, pipeline],
   )
@@ -1199,7 +1205,7 @@ function CycleHub({
             onClick={() => setSendTarget('bulk')}
           >
             <Send className="mr-2 size-4" />
-            Share with parents ({sendableStudents.length})
+            Send to parents ({sendableStudents.length})
           </Button>
         </div>
       </div>
@@ -1213,7 +1219,54 @@ function CycleHub({
         />
       )}
 
-      {!pipeline && (
+      {pipeline ? (
+        /* Pipeline summary — one glanceable line of where the cycle stands,
+           in the same vocabulary as the table's checkpoint columns. */
+        <div className="text-muted-foreground flex flex-wrap items-center gap-x-6 gap-y-1 text-sm">
+          <span>
+            <span className="text-foreground font-semibold">
+              {summary.drafts +
+                summary.ready +
+                summary.pendingReview +
+                summary.approved +
+                summary.sent}
+            </span>{' '}
+            of {summary.total} commented
+          </span>
+          <span>
+            <span className="text-foreground font-semibold">
+              {summary.pendingReview}
+            </span>{' '}
+            in review
+          </span>
+          <span>
+            <span className="text-foreground font-semibold">
+              {summary.approved}
+            </span>{' '}
+            approved
+          </span>
+          <span>
+            <span className="text-foreground font-semibold">
+              {summary.sent}
+            </span>{' '}
+            sent
+          </span>
+          <span>
+            <span className="text-foreground font-semibold">
+              {summary.acked}
+            </span>{' '}
+            acknowledged
+          </span>
+          {summary.total - summary.resultsIn > 0 && (
+            <span>
+              <span className="text-foreground font-semibold">
+                {summary.total - summary.resultsIn}
+              </span>{' '}
+              awaiting results
+            </span>
+          )}
+        </div>
+      ) : (
         /* Cycle summary — compact, so the student list stays the focal point */
         <div className="text-muted-foreground flex flex-wrap items-center gap-x-6 gap-y-1 text-sm">
           <span>

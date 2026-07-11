@@ -162,3 +162,128 @@ describe('review pipeline fields', () => {
     expect(loaded?.perStudent['36'].reviewStatus).toBe('in_review')
   })
 })
+
+describe('editing an approved comment invalidates the approval', () => {
+  it('demotes an approved (unsent) draft back to draft on a comment change', () => {
+    saveCycle(
+      makeCycle({
+        perStudent: {
+          '36': {
+            comments: 'Approved text',
+            ready: true,
+            reviewStatus: 'approved',
+            submittedAt: '2026-07-08T01:00:00.000Z',
+          },
+        },
+      }),
+    )
+    patchStudent('P1-A', 'Term 2', '36', { comments: 'Edited text' })
+    const loaded = loadCycle('P1-A', 'Term 2')
+    expect(loaded?.perStudent['36'].reviewStatus).toBeUndefined()
+    expect(loaded?.perStudent['36'].ready).toBe(false)
+    expect(loaded?.perStudent['36'].submittedAt).toBeUndefined()
+    expect(loaded?.perStudent['36'].comments).toBe('Edited text')
+  })
+
+  it('keeps the approval when the comment is written back unchanged', () => {
+    saveCycle(
+      makeCycle({
+        perStudent: {
+          '36': {
+            comments: 'Approved text',
+            ready: true,
+            reviewStatus: 'approved',
+          },
+        },
+      }),
+    )
+    patchStudent('P1-A', 'Term 2', '36', { comments: 'Approved text' })
+    expect(loadCycle('P1-A', 'Term 2')?.perStudent['36'].reviewStatus).toBe(
+      'approved',
+    )
+  })
+
+  it('does not demote when the patch itself sets a review status (resubmission)', () => {
+    saveCycle(
+      makeCycle({
+        perStudent: {
+          '36': {
+            comments: 'Approved text',
+            ready: true,
+            reviewStatus: 'approved',
+          },
+        },
+      }),
+    )
+    patchStudent('P1-A', 'Term 2', '36', {
+      comments: 'Edited text',
+      ready: true,
+      reviewStatus: 'in_review',
+      submittedAt: '2026-07-09T01:00:00.000Z',
+    })
+    expect(loadCycle('P1-A', 'Term 2')?.perStudent['36'].reviewStatus).toBe(
+      'in_review',
+    )
+  })
+
+  it('cancels a pending scheduled send along with the approval', () => {
+    saveCycle(
+      makeCycle({
+        perStudent: {
+          '36': {
+            comments: 'Approved text',
+            ready: true,
+            reviewStatus: 'approved',
+            scheduledSendAt: '2026-07-17T09:00:00.000Z',
+            ackDeadline: '2026-07-24T00:00:00.000Z',
+            reminderType: 'daily',
+            reminderDate: '2026-07-20T00:00:00.000Z',
+          },
+        },
+      }),
+    )
+    patchStudent('P1-A', 'Term 2', '36', { comments: 'Edited text' })
+    const loaded = loadCycle('P1-A', 'Term 2')?.perStudent['36']
+    expect(loaded?.scheduledSendAt).toBeUndefined()
+    expect(loaded?.ackDeadline).toBeUndefined()
+    expect(loaded?.reminderType).toBeUndefined()
+    expect(loaded?.reminderDate).toBeUndefined()
+  })
+
+  it('leaves sent reports alone — the correction flow owns that path', () => {
+    saveCycle(
+      makeCycle({
+        perStudent: {
+          '36': {
+            comments: 'Sent text',
+            ready: true,
+            reviewStatus: 'approved',
+            sentAt: '2026-07-08T02:00:00.000Z',
+          },
+        },
+      }),
+    )
+    patchStudent('P1-A', 'Term 2', '36', { comments: 'Edited text' })
+    expect(loadCycle('P1-A', 'Term 2')?.perStudent['36'].reviewStatus).toBe(
+      'approved',
+    )
+  })
+
+  it('in-review drafts are not silently demoted by a comment change', () => {
+    saveCycle(
+      makeCycle({
+        perStudent: {
+          '36': {
+            comments: 'Submitted text',
+            ready: true,
+            reviewStatus: 'in_review',
+          },
+        },
+      }),
+    )
+    patchStudent('P1-A', 'Term 2', '36', { comments: 'Edited text' })
+    expect(loadCycle('P1-A', 'Term 2')?.perStudent['36'].reviewStatus).toBe(
+      'in_review',
+    )
+  })
+})

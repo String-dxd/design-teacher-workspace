@@ -56,15 +56,15 @@ export function SubmitForReviewDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>Submit for review</DialogTitle>
           <DialogDescription>
-            Send these drafted reports to school leaders for approval. Uncheck
-            anyone whose comment isn’t ready yet.
+            Read each comment in full — this is the last look before school
+            leaders see them. Uncheck anyone whose comment isn’t ready yet.
           </DialogDescription>
         </DialogHeader>
-        <div className="max-h-80 space-y-1 overflow-y-auto">
+        <div className="max-h-[55vh] space-y-1 overflow-y-auto">
           {candidates.map((c) => (
             <label
               key={c.id}
@@ -77,8 +77,11 @@ export function SubmitForReviewDialog({
               />
               <span className="min-w-0 flex-1">
                 <span className="block text-sm font-medium">{c.name}</span>
-                <span className="text-muted-foreground block truncate text-xs">
-                  {excerpt(c.comments, 80) || 'No comment text'}
+                {/* Full text, deliberately untruncated — reviewing the whole
+                    comment is the point of this step. */}
+                <span className="text-muted-foreground block text-xs leading-relaxed whitespace-pre-wrap">
+                  {excerpt(c.comments, Number.POSITIVE_INFINITY) ||
+                    'No comment text'}
                 </span>
               </span>
             </label>

@@ -107,11 +107,13 @@ export function PgReportPreviewDialog({
     }
     const now = new Date()
     setIssuedDate(now.toLocaleDateString('en-SG', dateOpts))
-    // A real configured deadline (set at send time) wins; before any real
-    // send has happened, this is just an illustrative +14-day placeholder.
-    const ackBy = ackDeadline ? new Date(ackDeadline) : new Date(now)
-    if (!ackDeadline) ackBy.setDate(ackBy.getDate() + 14)
-    setAckByDate(ackBy.toLocaleDateString('en-SG', dateOpts))
+    // Only a real configured deadline (set at send time) shows a date — a
+    // pre-send preview must not present a fabricated promise to parents.
+    setAckByDate(
+      ackDeadline
+        ? new Date(ackDeadline).toLocaleDateString('en-SG', dateOpts)
+        : '',
+    )
   }, [ackDeadline])
 
   return (
@@ -230,9 +232,11 @@ export function PgReportPreviewDialog({
                     </button>
                   </div>
                   <p className="mt-2 text-center text-[10px] text-slate-400">
-                    {canAcknowledge
-                      ? `Please acknowledge by ${ackByDate}`
-                      : 'Please scroll through all sections to acknowledge'}
+                    {!canAcknowledge
+                      ? 'Please scroll through all sections to acknowledge'
+                      : ackByDate
+                        ? `Please acknowledge by ${ackByDate}`
+                        : 'Acknowledge-by date is set when the report is sent'}
                   </p>
                 </>
               )}

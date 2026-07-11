@@ -188,14 +188,17 @@ function CycleLayoutPage() {
   // Level scope is where a layout is genuinely configured for the first
   // time (form-class visits always land on an auto-provisioned cycle — see
   // ensureCycle in hdp-cycle-store.ts), so gate on a conscious template pick
-  // rather than silently defaulting to the first built-in template.
+  // rather than silently defaulting to the first built-in template. Only for
+  // visitors who can actually edit — a view-only teacher (e.g. a sibling
+  // class's "View layout") must never be asked to set anything up.
   const hasExistingCycle = useMemo(
     () => loadCycle(classId, term) !== null,
     [classId, term],
   )
   const [templateChosen, setTemplateChosen] = useState(false)
   const [gatePick, setGatePick] = useState('')
-  const showTemplateGate = !isTemplateMode && !hasExistingCycle && !templateChosen
+  const showTemplateGate =
+    editable && !isTemplateMode && !hasExistingCycle && !templateChosen
 
   // The preview always uses the fictional sample pupil — never a real child,
   // whose results may not be entered yet. Class follows the page so the

@@ -194,11 +194,34 @@ export function patchStudent(
     comments: '',
     ready: false,
   }
+  const merged: PerStudentDraft = { ...existing, ...patch }
+  // Editing an approved comment invalidates the approval: the report drops
+  // back to Draft and must go through school-leader review again, no matter
+  // which surface wrote the change. Sent reports are exempt here — the write
+  // page locks those behind an explicit correction flow that resets the
+  // pipeline itself (clearing sentAt) before any comment edit can land.
+  if (
+    patch.comments !== undefined &&
+    patch.comments !== existing.comments &&
+    existing.reviewStatus === 'approved' &&
+    patch.reviewStatus === undefined &&
+    !existing.sentAt
+  ) {
+    merged.reviewStatus = undefined
+    merged.ready = false
+    merged.submittedAt = undefined
+    // A pending scheduled send rode on that approval — cancel it too,
+    // otherwise the report would be queued for parents while unapproved.
+    merged.scheduledSendAt = undefined
+    merged.ackDeadline = undefined
+    merged.reminderType = undefined
+    merged.reminderDate = undefined
+  }
   const next: CycleState = {
     ...current,
     perStudent: {
       ...current.perStudent,
-      [studentId]: { ...existing, ...patch },
+      [studentId]: merged,
     },
   }
   saveCycle(next)
