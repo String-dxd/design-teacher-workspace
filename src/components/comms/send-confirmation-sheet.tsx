@@ -1,7 +1,6 @@
-import { CalendarClock, Send, Users, Zap } from 'lucide-react'
+import { CalendarClock, Send, Users } from 'lucide-react'
 import type { ResponseType } from '@/types/form'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import {
   Dialog,
   DialogContent,
@@ -11,11 +10,18 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 
+/** One recipient chip as chosen on the compose page — same label and count
+ * shown there (a class, level, CCA group, or individual student). */
+export interface RecipientGroup {
+  label: string
+  count: number
+}
+
 interface SendConfirmationSheetProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   title: string
-  recipientClasses: Array<string>
+  recipientGroups: Array<RecipientGroup>
   totalRecipients: number
   scheduledAt?: string // ISO string — if set, this is a scheduled send
   onConfirm: () => void
@@ -26,20 +32,34 @@ interface SendConfirmationSheetProps {
 }
 
 function formatScheduledAt(iso: string): string {
-  return new Date(iso).toLocaleString('en-SG', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+  // en-SG lowercases am/pm by default; the time picker (TIME_SLOTS) shows
+  // it uppercase, so match that here — same value, same casing everywhere.
+  return new Date(iso)
+    .toLocaleString('en-SG', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    })
+    .replace(/\bam\b/, 'AM')
+    .replace(/\bpm\b/, 'PM')
+}
+
+/** Quiet section label — the review reads as label/value pairs. */
+function SummaryLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+      {children}
+    </p>
+  )
 }
 
 export function SendConfirmationSheet({
   open,
   onOpenChange,
   title,
-  recipientClasses,
+  recipientGroups,
   totalRecipients,
   scheduledAt,
   onConfirm,
@@ -59,88 +79,68 @@ export function SendConfirmationSheet({
             {isScheduled ? `Schedule ${subject}?` : `Send ${subject}?`}
           </DialogTitle>
           <DialogDescription>
-            Review the details below before{' '}
+            Review the details before{' '}
             {isScheduled ? 'scheduling.' : 'sending to parents.'}
           </DialogDescription>
         </DialogHeader>
 
+        {/* Label/value pairs, whitespace-separated — reviewable at a glance. */}
         <div className="space-y-4">
-          {/* Post title */}
-          <div className="rounded-lg border bg-muted px-4 py-3">
-            <p className="text-sm font-medium text-foreground">
+          <div className="space-y-1">
+            <SummaryLabel>Title</SummaryLabel>
+            <p className="text-sm font-semibold text-foreground">
               {title || 'Untitled post'}
             </p>
           </div>
 
-          {/* Target audience */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-1.5">
-              <Users className="h-3.5 w-3.5 text-muted-foreground" />
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Target audience
-              </p>
-            </div>
-            {recipientClasses.length > 0 && (
+          <div className="space-y-1.5">
+            <SummaryLabel>Recipients</SummaryLabel>
+            {recipientGroups.length > 0 ? (
               <div className="flex flex-wrap gap-1.5">
-                {recipientClasses.map((cls) => (
+                {recipientGroups.map((g) => (
                   <span
-                    key={cls}
-                    className="rounded-md bg-twblue-2 px-2 py-0.5 text-xs font-medium text-twblue-9"
+                    key={g.label}
+                    className="inline-flex shrink-0 items-center gap-1 rounded-md bg-twblue-2 px-2 py-0.5 text-xs font-medium text-twblue-9"
                   >
-                    {cls}
+                    <Users className="h-3 w-3 shrink-0" />
+                    <span className="truncate">{g.label}</span>
+                    <span className="opacity-60">· {g.count}</span>
                   </span>
                 ))}
               </div>
+            ) : (
+              <p className="text-sm text-foreground">
+                {totalRecipients > 0
+                  ? `${totalRecipients} parent${totalRecipients !== 1 ? 's' : ''}`
+                  : 'No recipients selected'}
+              </p>
             )}
-            <p className="text-sm text-muted-foreground">
-              {totalRecipients > 0
-                ? `${totalRecipients} parent${totalRecipients !== 1 ? 's' : ''} will be notified`
-                : 'No recipients selected'}
-            </p>
           </div>
 
-          {/* Delivery */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-1.5">
-              {isScheduled ? (
-                <CalendarClock className="h-3.5 w-3.5 text-muted-foreground" />
-              ) : (
-                <Zap className="h-3.5 w-3.5 text-muted-foreground" />
-              )}
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Delivery
-              </p>
-            </div>
-            <p className="text-sm text-muted-foreground">
+          <div className="space-y-1">
+            <SummaryLabel>{isScheduled ? 'Scheduled' : 'Delivery'}</SummaryLabel>
+            <p className="text-sm text-foreground">
               {isScheduled && scheduledAt
-                ? `Scheduled for ${formatScheduledAt(scheduledAt)}`
+                ? formatScheduledAt(scheduledAt)
                 : 'Immediately via Parents Gateway'}
             </p>
           </div>
 
-          {/* Response required — acknowledge / yes-no only */}
+          {/* Response due — acknowledge / yes-no only */}
           {hasResponse && (
-            <div className="space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Response required
-              </p>
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary">
-                  {responseType === 'acknowledge'
-                    ? 'Acknowledgement'
-                    : 'Yes / No'}
-                </Badge>
-                {dueDate && (
-                  <span className="text-sm text-muted-foreground">
-                    · due{' '}
-                    {new Date(dueDate).toLocaleDateString('en-SG', {
+            <div className="space-y-1">
+              <SummaryLabel>Response due</SummaryLabel>
+              <p className="text-sm text-foreground">
+                {dueDate
+                  ? `${new Date(dueDate).toLocaleDateString('en-SG', {
                       day: 'numeric',
                       month: 'short',
                       year: 'numeric',
-                    })}
-                  </span>
-                )}
-              </div>
+                    })} (${responseType === 'acknowledge' ? 'Acknowledgement' : 'Yes / No'})`
+                  : responseType === 'acknowledge'
+                    ? 'Acknowledgement'
+                    : 'Yes / No'}
+              </p>
             </div>
           )}
         </div>
@@ -153,12 +153,12 @@ export function SendConfirmationSheet({
             {isScheduled ? (
               <>
                 <CalendarClock className="mr-2 h-4 w-4" />
-                Confirm & schedule
+                Schedule {subject}
               </>
             ) : (
               <>
                 <Send className="mr-2 h-4 w-4" />
-                Confirm & send
+                Send {subject}
               </>
             )}
           </Button>

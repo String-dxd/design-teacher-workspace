@@ -20,6 +20,8 @@ export interface FormQuestion {
   type: QuestionType
   options?: Array<string> // for mcq, checkbox, ranking
   required?: boolean
+  /** Short supporting text shown under the question, e.g. formatting hints. */
+  helperText?: string
 }
 
 export interface Form {

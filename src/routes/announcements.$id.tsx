@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Link,
   createFileRoute,
@@ -9,7 +9,6 @@ import {
 import {
   ArrowLeft,
   CalendarClock,
-  ChevronDown,
   Clock,
   Lock,
   MessageSquare,
@@ -20,7 +19,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { SelectedEntity } from '@/components/comms/entity-selector'
-import type { PGRole } from '@/types/pg-announcement'
+import type { DeletePostMode } from '@/components/comms/delete-post-dialog'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
 import { getPGAnnouncementById } from '@/data/mock-pg-announcements'
 import { PG_SHORTCUT_PRESETS } from '@/data/pg-shortcuts'
@@ -33,15 +32,11 @@ import { EnquiryEmailSelector } from '@/components/comms/enquiry-email-selector'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-
+import { DeletePostDialog } from '@/components/comms/delete-post-dialog'
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+  DateField,
+  TimeField,
+} from '@/components/comms/date-time-fields'
 import { cn, stripSalutation } from '@/lib/utils'
 
 export const Route = createFileRoute('/announcements/$id')({
@@ -95,9 +90,6 @@ function AnnouncementDetailPage() {
   const [editStaffInCharge, setEditStaffInCharge] = useState<
     Array<SelectedEntity>
   >([])
-  const [editStaffRoles, setEditStaffRoles] = useState<Record<string, PGRole>>(
-    {},
-  )
   const [editEnquiryEmail, setEditEnquiryEmail] = useState('')
   const [editClasses, _setEditClasses] = useState<Array<string>>([])
 
@@ -112,10 +104,6 @@ function AnnouncementDetailPage() {
   // Delete state
   // ---------------------------------------------------------------------------
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-  const [deleteMode, setDeleteMode] = useState<
-    'remove-from-list' | 'delete-for-everyone'
-  >('remove-from-list')
-  const [deleteConfirmText, setDeleteConfirmText] = useState('')
 
   // ---------------------------------------------------------------------------
   // Derived values
@@ -163,16 +151,20 @@ function AnnouncementDetailPage() {
     { label: announcement.title, href: `/announcements/${announcement.id}` },
   ])
 
+  // Informative page title (e-services writing guide, accessibility step).
+  useEffect(() => {
+    document.title = `${announcement.title} · Posts`
+  }, [announcement.title])
+
   // ---------------------------------------------------------------------------
   // Delete handler
   // ---------------------------------------------------------------------------
-  function handleDelete() {
+  function handleDelete(mode: DeletePostMode) {
     const toastMsg =
-      announcement.status !== 'posted' || deleteMode === 'delete-for-everyone'
+      announcement.status !== 'posted' || mode === 'delete-for-everyone'
         ? 'Post deleted'
         : 'Post removed from your list'
     setShowDeleteDialog(false)
-    setDeleteConfirmText('')
     toast.success(toastMsg)
     navigate({ to: '/announcements' })
   }
@@ -232,7 +224,7 @@ function AnnouncementDetailPage() {
       staffInCharge: editStaffInCharge.map((s) => ({
         id: s.id,
         name: s.label,
-        role: editStaffRoles[s.id] ?? 'viewer',
+        role: 'editor',
       })),
       enquiryEmail: editEnquiryEmail.trim(),
       recipients: updatedRecipients,
@@ -265,7 +257,7 @@ function AnnouncementDetailPage() {
                   Posted {postedDate}
                   {' · Daniel Tan'}
                   {isShared && isViewer && (
-                    <span className="ml-2 inline-flex items-center gap-1 text-slate-400">
+                    <span className="ml-2 inline-flex items-center gap-1 text-muted-foreground">
                       <Lock className="h-3 w-3" />
                       Viewer
                     </span>
@@ -275,19 +267,16 @@ function AnnouncementDetailPage() {
               {announcement.status === 'scheduled' &&
                 (isEditingSchedule ? (
                   <div className="mt-2 flex flex-wrap items-center gap-2">
-                    <CalendarClock className="h-3.5 w-3.5 shrink-0 text-amber-600" />
-                    <input
-                      type="date"
+                    <CalendarClock className="h-3.5 w-3.5 shrink-0 text-amber-11" />
+                    <DateField
                       value={editScheduleDate}
-                      min={new Date().toISOString().split('T')[0]}
-                      onChange={(e) => setEditScheduleDate(e.target.value)}
-                      className="rounded-md border border-slate-300 bg-white px-2.5 py-1 text-sm text-foreground outline-none focus:ring-2 focus:ring-blue-300"
+                      onChange={setEditScheduleDate}
+                      disablePast
                     />
-                    <input
-                      type="time"
+                    <TimeField
                       value={editScheduleTime}
-                      onChange={(e) => setEditScheduleTime(e.target.value)}
-                      className="rounded-md border border-slate-300 bg-white px-2.5 py-1 text-sm text-foreground outline-none focus:ring-2 focus:ring-blue-300"
+                      onChange={setEditScheduleTime}
+                      className="w-28"
                     />
                     <Button
                       size="sm"
@@ -305,7 +294,7 @@ function AnnouncementDetailPage() {
                     </button>
                   </div>
                 ) : (
-                  <p className="mt-1 flex items-center gap-1.5 text-sm text-amber-600">
+                  <p className="mt-1 flex items-center gap-1.5 text-sm text-amber-11">
                     <CalendarClock className="h-3.5 w-3.5" />
                     Scheduled for {scheduledDate}
                     <span className="text-muted-foreground">· Daniel Tan</span>
@@ -313,7 +302,7 @@ function AnnouncementDetailPage() {
                       <button
                         type="button"
                         onClick={startEditingSchedule}
-                        className="ml-1 text-xs font-medium text-blue-600 hover:underline"
+                        className="ml-1 text-xs font-medium text-primary hover:underline"
                       >
                         Edit
                       </button>
@@ -324,7 +313,7 @@ function AnnouncementDetailPage() {
                 <p className="mt-1 text-sm text-muted-foreground">
                   Not yet sent
                   {isShared && (
-                    <span className="ml-2 inline-flex items-center gap-1 text-slate-400">
+                    <span className="ml-2 inline-flex items-center gap-1 text-muted-foreground">
                       <Users className="h-3 w-3" />
                       Shared
                     </span>
@@ -374,7 +363,6 @@ function AnnouncementDetailPage() {
                 size="icon"
                 className="text-muted-foreground hover:text-destructive"
                 onClick={() => {
-                  setDeleteMode('remove-from-list')
                   setShowDeleteDialog(true)
                 }}
               >
@@ -387,8 +375,8 @@ function AnnouncementDetailPage() {
 
       {/* 30-day file expiry banner — shown whenever the announcement has attachments */}
       {(announcement.attachments?.length ?? 0) > 0 && (
-        <div className="mx-6 mb-2 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          <Clock className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+        <div className="mx-6 mb-2 flex items-start gap-3 rounded-lg border border-amber-6 bg-amber-2 px-4 py-3 text-sm text-amber-12">
+          <Clock className="mt-0.5 h-4 w-4 shrink-0 text-amber-11" />
           <p>
             <span className="font-medium">Files expire after 30 days.</span>{' '}
             Uploaded files and images are automatically removed 30 days after
@@ -415,11 +403,11 @@ function AnnouncementDetailPage() {
                     </span>
                   </p>
                   {unreadCount > 0 ? (
-                    <p className="mt-1 text-sm text-amber-600">
+                    <p className="mt-1 text-sm text-amber-11">
                       {unreadCount} unread
                     </p>
                   ) : (
-                    <p className="mt-1 text-sm text-green-700">All read</p>
+                    <p className="mt-1 text-sm text-lime-11">All read</p>
                   )}
                 </div>
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-twblue-2">
@@ -452,11 +440,11 @@ function AnnouncementDetailPage() {
                       </span>
                     </p>
                     {pendingAckCount > 0 ? (
-                      <p className="mt-1 text-sm text-amber-600">
+                      <p className="mt-1 text-sm text-amber-11">
                         {pendingAckCount} pending
                       </p>
                     ) : (
-                      <p className="mt-1 text-sm text-green-700">
+                      <p className="mt-1 text-sm text-lime-11">
                         All acknowledged
                       </p>
                     )}
@@ -492,7 +480,7 @@ function AnnouncementDetailPage() {
                 </div>
                 <div className="flex items-center gap-6 text-center">
                   <div className="text-center">
-                    <p className="text-3xl font-semibold text-green-700">
+                    <p className="text-3xl font-semibold text-lime-11">
                       {yesCount}
                     </p>
                     <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -500,7 +488,7 @@ function AnnouncementDetailPage() {
                     </p>
                   </div>
                   <div className="text-center">
-                    <p className="text-3xl font-semibold text-rose-600">
+                    <p className="text-3xl font-semibold text-destructive">
                       {noCount}
                     </p>
                     <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -522,7 +510,7 @@ function AnnouncementDetailPage() {
           {announcement.status === 'scheduled' && (
             <div className="flex h-40 items-center justify-center rounded-lg border bg-background">
               <div className="flex flex-col items-center gap-2 text-center">
-                <CalendarClock className="h-8 w-8 text-blue-400" />
+                <CalendarClock className="h-8 w-8 text-twblue-8" />
                 <p className="text-sm text-muted-foreground">
                   Read tracking will be available after the announcement is
                   sent.
@@ -619,7 +607,7 @@ function AnnouncementDetailPage() {
 
               {/* Locked content notice */}
               {isEditing && contentLocked && (
-                <p className="flex items-center gap-1.5 rounded-md bg-slate-50 px-3 py-2 text-xs text-muted-foreground">
+                <p className="flex items-center gap-1.5 rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">
                   <Lock className="h-3 w-3 shrink-0" />
                   Title, description, and shortcuts cannot be edited after
                   posting.
@@ -642,9 +630,9 @@ function AnnouncementDetailPage() {
                   ).map((preset) => (
                     <div
                       key={preset.id}
-                      className="flex items-center gap-2.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2"
+                      className="flex items-center gap-2.5 rounded-lg border border-twblue-6 bg-twblue-2 px-3 py-2"
                     >
-                      <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded border border-blue-600 bg-blue-600 text-white">
+                      <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded border border-primary bg-primary text-primary-foreground">
                         <svg
                           viewBox="0 0 10 8"
                           fill="none"
@@ -657,7 +645,7 @@ function AnnouncementDetailPage() {
                           <path d="M1 4l3 3 5-6" />
                         </svg>
                       </span>
-                      <p className="text-sm font-medium text-blue-900">
+                      <p className="text-sm font-medium text-twblue-12">
                         {preset.composerLabel}
                       </p>
                     </div>
@@ -734,8 +722,8 @@ function AnnouncementDetailPage() {
                                   className={cn(
                                     'font-medium',
                                     q.showAfter === 'yes'
-                                      ? 'text-green-700'
-                                      : 'text-rose-600',
+                                      ? 'text-lime-11'
+                                      : 'text-destructive',
                                   )}
                                 >
                                   {q.showAfter === 'yes' ? 'Yes' : 'No'}
@@ -793,35 +781,6 @@ function AnnouncementDetailPage() {
                           })),
                         )
                       }
-                      renderChipExtra={(entity) => {
-                        const isEditor =
-                          (editStaffRoles[entity.id] ?? 'viewer') === 'editor'
-                        return (
-                          <button
-                            type="button"
-                            title={
-                              isEditor ? 'Switch to Viewer' : 'Switch to Editor'
-                            }
-                            onMouseDown={(e) => e.preventDefault()}
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              setEditStaffRoles((prev) => ({
-                                ...prev,
-                                [entity.id]: isEditor ? 'viewer' : 'editor',
-                              }))
-                            }}
-                            className={cn(
-                              'flex items-center gap-0.5 rounded border px-1.5 py-0.5 text-[10px] font-semibold transition-colors',
-                              isEditor
-                                ? 'border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100'
-                                : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50',
-                            )}
-                          >
-                            {isEditor ? 'Editor' : 'Viewer'}
-                            <ChevronDown className="h-2.5 w-2.5 opacity-50" />
-                          </button>
-                        )
-                      }}
                     />
                   </div>
                 ) : (
@@ -834,9 +793,9 @@ function AnnouncementDetailPage() {
                         {announcement.staffInCharge.map((m) => (
                           <span
                             key={m.id}
-                            className="inline-flex items-center gap-2 rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium text-slate-700"
+                            className="inline-flex items-center gap-2 rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium text-foreground"
                           >
-                            <User className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                            <User className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                             <span className="flex-1 truncate">{m.name}</span>
                           </span>
                         ))}
@@ -851,155 +810,13 @@ function AnnouncementDetailPage() {
       </div>
 
       {/* ── Delete dialog ── */}
-      <Dialog
+      <DeletePostDialog
         open={showDeleteDialog}
-        onOpenChange={(open) => {
-          setShowDeleteDialog(open)
-          if (!open) setDeleteConfirmText('')
-        }}
-      >
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Delete post?</DialogTitle>
-            <DialogDescription>
-              {announcement.status === 'posted'
-                ? 'This post has already been sent to parents. What would you like to do?'
-                : 'This will permanently delete the post. This cannot be undone.'}
-            </DialogDescription>
-          </DialogHeader>
-
-          {announcement.status === 'posted' && (
-            <div className="space-y-2 py-1">
-              {/* Option: Remove from my list */}
-              <button
-                type="button"
-                onClick={() => {
-                  setDeleteMode('remove-from-list')
-                  setDeleteConfirmText('')
-                }}
-                className={cn(
-                  'w-full rounded-md border p-3.5 text-left transition-colors',
-                  deleteMode === 'remove-from-list'
-                    ? 'border-primary bg-primary/[0.04]'
-                    : 'border-border hover:bg-muted',
-                )}
-              >
-                <div className="flex items-start gap-3">
-                  <span
-                    className={cn(
-                      'mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border',
-                      deleteMode === 'remove-from-list'
-                        ? 'border-primary bg-primary'
-                        : 'border-slate-300',
-                    )}
-                  >
-                    {deleteMode === 'remove-from-list' && (
-                      <span className="h-1.5 w-1.5 rounded-full bg-white" />
-                    )}
-                  </span>
-                  <div>
-                    <p className="text-sm font-medium">Remove from my list</p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      Parents can still see this post. It will only be removed
-                      from your view.
-                    </p>
-                  </div>
-                </div>
-              </button>
-
-              {/* Option: Delete for everyone */}
-              <button
-                type="button"
-                onClick={() => setDeleteMode('delete-for-everyone')}
-                className={cn(
-                  'w-full rounded-md border p-3.5 text-left transition-colors',
-                  deleteMode === 'delete-for-everyone'
-                    ? 'border-destructive bg-destructive/[0.04]'
-                    : 'border-border hover:bg-muted',
-                )}
-              >
-                <div className="flex items-start gap-3">
-                  <span
-                    className={cn(
-                      'mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border',
-                      deleteMode === 'delete-for-everyone'
-                        ? 'border-destructive bg-destructive'
-                        : 'border-slate-300',
-                    )}
-                  >
-                    {deleteMode === 'delete-for-everyone' && (
-                      <span className="h-1.5 w-1.5 rounded-full bg-white" />
-                    )}
-                  </span>
-                  <div>
-                    <p className="text-sm font-medium text-destructive">
-                      Delete for everyone
-                    </p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      This post will be removed from the Parents Gateway app.
-                      Parents will no longer be able to see it. This cannot be
-                      undone.
-                    </p>
-                  </div>
-                </div>
-              </button>
-            </div>
-          )}
-
-          {/* Type DELETE confirmation — only for "Delete for everyone" on posted posts */}
-          {announcement.status === 'posted' &&
-            deleteMode === 'delete-for-everyone' && (
-              <div className="space-y-1.5 pt-1">
-                <p className="text-xs text-muted-foreground">
-                  Type{' '}
-                  <span className="font-mono font-semibold text-destructive">
-                    DELETE
-                  </span>{' '}
-                  to confirm.
-                </p>
-                <Input
-                  placeholder=""
-                  value={deleteConfirmText}
-                  onChange={(e) => setDeleteConfirmText(e.target.value)}
-                  className="font-mono uppercase"
-                  autoComplete="off"
-                />
-              </div>
-            )}
-
-          <DialogFooter>
-            <Button
-              variant="ghost"
-              onClick={() => {
-                setShowDeleteDialog(false)
-                setDeleteConfirmText('')
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant={
-                announcement.status !== 'posted' ||
-                deleteMode === 'delete-for-everyone'
-                  ? 'destructive'
-                  : 'default'
-              }
-              disabled={
-                announcement.status === 'posted' &&
-                deleteMode === 'delete-for-everyone' &&
-                deleteConfirmText.trim().toUpperCase() !== 'DELETE'
-              }
-              onClick={handleDelete}
-            >
-              {announcement.status !== 'posted'
-                ? 'Delete post'
-                : deleteMode === 'remove-from-list'
-                  ? 'Remove from my list'
-                  : 'Delete for everyone'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        onOpenChange={setShowDeleteDialog}
+        postedCount={announcement.status === 'posted' ? 1 : 0}
+        draftCount={announcement.status === 'posted' ? 0 : 1}
+        onConfirm={handleDelete}
+      />
     </div>
   )
 }
