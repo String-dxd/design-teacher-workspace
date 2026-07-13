@@ -1,4 +1,4 @@
-import type { PGRole, PGWebsiteLink, Shortcut } from '@/types/pg-announcement'
+import type { PGWebsiteLink, Shortcut } from '@/types/pg-announcement'
 import type { FormQuestion, ReminderType, ResponseType } from '@/types/form'
 import type { SelectedEntity } from '@/components/comms/entity-selector'
 
@@ -32,8 +32,6 @@ export interface DraftData {
   sendOption: 'now' | 'scheduled'
   scheduledDate: string
   scheduledTime: string
-  /** Role map for staff-in-charge members: key = staff id, value = role */
-  staffRoles: Record<string, PGRole>
   /** Combined metadata for all files (draft stubs + current session). */
   filesMeta: Array<FileMeta>
   /** Combined metadata for all photos (draft stubs + current session). */

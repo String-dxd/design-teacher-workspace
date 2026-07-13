@@ -81,27 +81,27 @@ function AdminBanner({ scope }: { scope: 'my' | 'school' }) {
         'mx-6 flex cursor-pointer items-center justify-between rounded-xl border px-4 py-3 transition-all duration-300',
         isSchool
           ? 'border-twblue-6 bg-twblue-3 hover:bg-twblue-4/60'
-          : 'border-amber-200 bg-amber-50 hover:bg-amber-100/60',
+          : 'border-amber-6 bg-amber-2 hover:bg-amber-3/60',
       )}
     >
       <div className="flex items-center gap-3">
         <div
           className={cn(
             'flex h-8 w-8 shrink-0 items-center justify-center rounded-full',
-            isSchool ? 'bg-twblue-4' : 'bg-amber-100',
+            isSchool ? 'bg-twblue-4' : 'bg-amber-3',
           )}
         >
           {isSchool ? (
             <School className="h-4 w-4 text-twblue-11" />
           ) : (
-            <Crown className="h-4 w-4 text-amber-700" />
+            <Crown className="h-4 w-4 text-amber-11" />
           )}
         </div>
         <div>
           <p
             className={cn(
               'text-sm font-medium',
-              isSchool ? 'text-twblue-12' : 'text-amber-800',
+              isSchool ? 'text-twblue-12' : 'text-amber-12',
             )}
           >
             You have admin access.
@@ -109,7 +109,7 @@ function AdminBanner({ scope }: { scope: 'my' | 'school' }) {
           <p
             className={cn(
               'text-xs',
-              isSchool ? 'text-twblue-11' : 'text-amber-700',
+              isSchool ? 'text-twblue-11' : 'text-amber-11',
             )}
           >
             {isSchool
@@ -123,7 +123,7 @@ function AdminBanner({ scope }: { scope: 'my' | 'school' }) {
           'flex shrink-0 items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-sm font-medium transition-colors',
           isSchool
             ? 'border-twblue-6 text-twblue-11 hover:bg-twblue-4'
-            : 'border-amber-300 text-amber-800 hover:bg-amber-100',
+            : 'border-amber-7 text-amber-12 hover:bg-amber-3',
         )}
       >
         <ArrowLeftRight className="h-3.5 w-3.5" />
@@ -238,7 +238,7 @@ function AdminPostsExperiment() {
                   : 'text-muted-foreground hover:text-foreground',
               )}
             >
-              {t === 'with-responses' ? 'Response Required' : 'Read Only'}
+              {t === 'with-responses' ? 'Response required' : 'Read only'}
             </button>
           ))}
         </div>

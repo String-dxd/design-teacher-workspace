@@ -185,11 +185,7 @@ function QuestionBuilderDemo() {
     },
   ])
   return (
-    <QuestionBuilder
-      questions={questions}
-      onChange={setQuestions}
-      responseType="acknowledge"
-    />
+    <QuestionBuilder questions={questions} onChange={setQuestions} />
   )
 }
 

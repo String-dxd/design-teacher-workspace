@@ -20,6 +20,7 @@ import { toast } from 'sonner'
 import type { PGAnnouncement, PGStatus } from '@/types/pg-announcement'
 import type { FormStatus } from '@/types/form'
 import type { AnnouncementFilters } from '@/components/comms/announcement-filter-bar'
+import type { DeletePostMode } from '@/components/comms/delete-post-dialog'
 import { usePagination } from '@/hooks/use-pagination'
 import { clearDraft, loadDraft } from '@/lib/draft-storage'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
@@ -30,6 +31,7 @@ import {
 import { mockForms } from '@/data/mock-forms'
 import { StatusBadge } from '@/components/comms/status-badge'
 import { ReadRate } from '@/components/comms/read-rate'
+import { DeletePostDialog } from '@/components/comms/delete-post-dialog'
 import {
   AnnouncementFilterBar,
   EMPTY_ANNOUNCEMENT_FILTERS,
@@ -37,14 +39,6 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import {
   Table,
   TableBody,
@@ -175,14 +169,14 @@ function SortableHeader({
             setOpen(false)
           }}
           className={cn(
-            'flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-[var(--slate-5)]',
-            isSortedBy && sortDir === 'asc' && 'bg-[var(--slate-5)]',
+            'flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-slate-5',
+            isSortedBy && sortDir === 'asc' && 'bg-slate-5',
           )}
         >
-          <ArrowUp className="h-4 w-4 text-[var(--slate-11)]" />
+          <ArrowUp className="h-4 w-4 text-slate-11" />
           Sort ascending
           {isSortedBy && sortDir === 'asc' && (
-            <Check className="ml-auto h-4 w-4 text-[var(--slate-11)]" />
+            <Check className="ml-auto h-4 w-4 text-slate-11" />
           )}
         </button>
         <button
@@ -192,14 +186,14 @@ function SortableHeader({
             setOpen(false)
           }}
           className={cn(
-            'flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-[var(--slate-5)]',
-            isSortedBy && sortDir === 'desc' && 'bg-[var(--slate-5)]',
+            'flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-slate-5',
+            isSortedBy && sortDir === 'desc' && 'bg-slate-5',
           )}
         >
-          <ArrowDown className="h-4 w-4 text-[var(--slate-11)]" />
+          <ArrowDown className="h-4 w-4 text-slate-11" />
           Sort descending
           {isSortedBy && sortDir === 'desc' && (
-            <Check className="ml-auto h-4 w-4 text-[var(--slate-11)]" />
+            <Check className="ml-auto h-4 w-4 text-slate-11" />
           )}
         </button>
       </PopoverContent>
@@ -268,10 +262,6 @@ function ParentsGatewayPage() {
   // Multi-select + delete state
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-  const [deleteMode, setDeleteMode] = useState<
-    'remove-from-list' | 'delete-for-everyone'
-  >('remove-from-list')
-  const [deleteConfirmText, setDeleteConfirmText] = useState('')
   // Incrementing this key forces allAnnouncements to re-read mockPGAnnouncements after a deletion
   const [refreshKey, setRefreshKey] = useState(0)
   const [draft, setDraft] = useState<ReturnType<typeof loadDraft>>(null)
@@ -282,6 +272,11 @@ function ParentsGatewayPage() {
 
   useSetBreadcrumbs([{ label: 'Posts', href: '/announcements' }])
   const navigate = useNavigate()
+
+  // Informative page title (e-services writing guide, accessibility step).
+  useEffect(() => {
+    document.title = 'Posts · Teacher Workspace'
+  }, [])
 
   // Include any in-progress localStorage draft as a synthetic row at the top
   const allAnnouncements = useMemo<Array<PGAnnouncement>>(() => {
@@ -521,8 +516,8 @@ function ParentsGatewayPage() {
   )
 
   const tabs: Array<{ value: PostTab; label: string; hidden?: boolean }> = [
-    { value: 'with-responses', label: 'Response Required' },
-    { value: 'view-only', label: 'Read Only' },
+    { value: 'with-responses', label: 'Response required' },
+    { value: 'view-only', label: 'Read only' },
     { value: 'custom-forms', label: 'Custom forms', hidden: !formsEnabled },
   ]
   const visibleTabs = tabs.filter((t) => !t.hidden)
@@ -584,11 +579,10 @@ function ParentsGatewayPage() {
 
   function openDeleteDialog(id?: string) {
     if (id) setSelectedIds(new Set([id]))
-    setDeleteMode('remove-from-list')
     setShowDeleteDialog(true)
   }
 
-  function handleDelete() {
+  function handleDelete(mode: DeletePostMode) {
     const count = selectedIds.size
     for (const id of selectedIds) {
       if (id === '__draft__') {
@@ -600,11 +594,10 @@ function ParentsGatewayPage() {
     }
     setSelectedIds(new Set())
     setShowDeleteDialog(false)
-    setDeleteConfirmText('')
     setRefreshKey((k) => k + 1)
 
     const msg =
-      hasPostedSelected && deleteMode === 'remove-from-list'
+      hasPostedSelected && mode === 'remove-from-list'
         ? `${count} post${count > 1 ? 's' : ''} removed from your list`
         : `${count} post${count > 1 ? 's' : ''} deleted`
     toast.success(msg)
@@ -1451,10 +1444,7 @@ function ParentsGatewayPage() {
               size="sm"
               variant="outline"
               className="rounded-full text-destructive hover:text-destructive"
-              onClick={() => {
-                setDeleteMode('remove-from-list')
-                setShowDeleteDialog(true)
-              }}
+              onClick={() => setShowDeleteDialog(true)}
             >
               <Trash2 className="mr-2 h-4 w-4" />
               Delete{' '}
@@ -1465,169 +1455,13 @@ function ParentsGatewayPage() {
       )}
 
       {/* Delete confirmation dialog */}
-      <Dialog
+      <DeletePostDialog
         open={showDeleteDialog}
-        onOpenChange={(open) => {
-          setShowDeleteDialog(open)
-          if (!open) setDeleteConfirmText('')
-        }}
-      >
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>
-              Delete{' '}
-              {selectedIds.size > 1 ? `${selectedIds.size} posts` : 'post'}?
-            </DialogTitle>
-            {!hasPostedSelected ? (
-              <DialogDescription>
-                This action cannot be undone.
-              </DialogDescription>
-            ) : (
-              <DialogDescription>
-                {nonPostedSelected.length > 0 && (
-                  <span>
-                    {nonPostedSelected.length}{' '}
-                    {nonPostedSelected.length > 1 ? 'posts' : 'post'} (draft /
-                    scheduled) will be permanently deleted.{' '}
-                  </span>
-                )}
-                {nonPostedSelected.length > 0
-                  ? `For the ${postedSelected.length} published ${postedSelected.length > 1 ? 'posts' : 'post'}, choose what to do:`
-                  : `This post has already been sent to parents. What would you like to do?`}
-              </DialogDescription>
-            )}
-          </DialogHeader>
-
-          {hasPostedSelected && (
-            <div className="space-y-2 py-1">
-              {/* Option: Remove from my list */}
-              <button
-                type="button"
-                onClick={() => {
-                  setDeleteMode('remove-from-list')
-                  setDeleteConfirmText('')
-                }}
-                className={cn(
-                  'w-full rounded-md border p-3.5 text-left transition-colors',
-                  deleteMode === 'remove-from-list'
-                    ? 'border-primary bg-primary/[0.04]'
-                    : 'border-border hover:bg-muted',
-                )}
-              >
-                <div className="flex items-start gap-3">
-                  <span
-                    className={cn(
-                      'mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border',
-                      deleteMode === 'remove-from-list'
-                        ? 'border-primary bg-primary'
-                        : 'border-input',
-                    )}
-                  >
-                    {deleteMode === 'remove-from-list' && (
-                      <span className="h-1.5 w-1.5 rounded-full bg-primary-foreground" />
-                    )}
-                  </span>
-                  <div>
-                    <p className="text-sm font-medium">Remove from my list</p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      Parents can still see this post. It will only be removed
-                      from your view.
-                    </p>
-                  </div>
-                </div>
-              </button>
-
-              {/* Option: Delete for everyone */}
-              <button
-                type="button"
-                onClick={() => setDeleteMode('delete-for-everyone')}
-                className={cn(
-                  'w-full rounded-md border p-3.5 text-left transition-colors',
-                  deleteMode === 'delete-for-everyone'
-                    ? 'border-destructive bg-destructive/[0.04]'
-                    : 'border-border hover:bg-muted',
-                )}
-              >
-                <div className="flex items-start gap-3">
-                  <span
-                    className={cn(
-                      'mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border',
-                      deleteMode === 'delete-for-everyone'
-                        ? 'border-destructive bg-destructive'
-                        : 'border-input',
-                    )}
-                  >
-                    {deleteMode === 'delete-for-everyone' && (
-                      <span className="h-1.5 w-1.5 rounded-full bg-primary-foreground" />
-                    )}
-                  </span>
-                  <div>
-                    <p className="text-sm font-medium text-destructive">
-                      Delete for everyone
-                    </p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      This post will be removed from the Parents Gateway app.
-                      Parents will no longer be able to see it. This cannot be
-                      undone.
-                    </p>
-                  </div>
-                </div>
-              </button>
-            </div>
-          )}
-
-          {/* Type DELETE confirmation — only for "Delete for everyone" */}
-          {hasPostedSelected && deleteMode === 'delete-for-everyone' && (
-            <div className="space-y-1.5 pt-1">
-              <p className="text-xs text-muted-foreground">
-                Type{' '}
-                <span className="font-mono font-semibold text-destructive">
-                  DELETE
-                </span>{' '}
-                to confirm.
-              </p>
-              <Input
-                placeholder=""
-                value={deleteConfirmText}
-                onChange={(e) => setDeleteConfirmText(e.target.value)}
-                className="font-mono uppercase"
-                autoComplete="off"
-              />
-            </div>
-          )}
-
-          <DialogFooter>
-            <Button
-              variant="ghost"
-              onClick={() => {
-                setShowDeleteDialog(false)
-                setDeleteConfirmText('')
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant={
-                !hasPostedSelected || deleteMode === 'delete-for-everyone'
-                  ? 'destructive'
-                  : 'default'
-              }
-              disabled={
-                hasPostedSelected &&
-                deleteMode === 'delete-for-everyone' &&
-                deleteConfirmText.trim().toUpperCase() !== 'DELETE'
-              }
-              onClick={handleDelete}
-            >
-              {!hasPostedSelected
-                ? `Delete ${selectedIds.size > 1 ? `${selectedIds.size} posts` : 'post'}`
-                : deleteMode === 'remove-from-list'
-                  ? 'Remove from my list'
-                  : 'Delete for everyone'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        onOpenChange={setShowDeleteDialog}
+        postedCount={postedSelected.length}
+        draftCount={nonPostedSelected.length}
+        onConfirm={handleDelete}
+      />
     </div>
   )
 }

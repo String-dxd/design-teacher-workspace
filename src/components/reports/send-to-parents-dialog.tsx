@@ -29,25 +29,7 @@ import {
 import { SendConfirmationSheet } from '@/components/comms/send-confirmation-sheet'
 import { cn } from '@/lib/utils'
 
-// 15-minute time slots, 7am–10pm — same convention as meetings.new.tsx's
-// own buildTimeSlots(), reimplemented locally since that one isn't exported.
-function buildTimeSlots(): Array<{ value: string; label: string }> {
-  const slots: Array<{ value: string; label: string }> = []
-  for (let min = 7 * 60; min <= 22 * 60; min += 15) {
-    const h = Math.floor(min / 60)
-    const m = min % 60
-    const value = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
-    const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h
-    const period = h < 12 ? 'AM' : 'PM'
-    slots.push({
-      value,
-      label: `${h12}:${String(m).padStart(2, '0')} ${period}`,
-    })
-  }
-  return slots
-}
-
-const TIME_SLOTS = buildTimeSlots()
+import { TIME_SLOTS } from '@/lib/time-slots'
 
 // Send-to-parents settings, captured fresh each time a teacher sends —
 // mirrors the Posts composer's own granularity (schedule strip at
@@ -80,7 +62,7 @@ function defaultAckDeadline(): string {
 
 const REMINDER_OPTIONS: Array<{ value: ReminderType; label: string }> = [
   { value: 'none', label: 'None' },
-  { value: 'one-time', label: 'One Time' },
+  { value: 'one-time', label: 'One time' },
   { value: 'daily', label: 'Daily' },
 ]
 
@@ -363,7 +345,10 @@ export function SendToParentsDialog({
           if (!next) setStep('settings')
         }}
         title={title}
-        recipientClasses={recipientClasses}
+        recipientGroups={recipientClasses.map((cls) => ({
+          label: cls,
+          count: totalRecipients,
+        }))}
         totalRecipients={totalRecipients}
         scheduledAt={scheduledAt}
         dueDate={ackDeadline}

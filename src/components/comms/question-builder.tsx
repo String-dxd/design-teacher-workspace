@@ -1,8 +1,8 @@
-import { ArrowDown, ArrowUp, GripVertical, Plus, Trash2, X } from 'lucide-react'
-import type { FormQuestion, QuestionType, ResponseType } from '@/types/form'
+import { ChevronDown, ChevronUp, Plus, Trash2, X } from 'lucide-react'
+import type { FormQuestion } from '@/types/form'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { cn } from '@/lib/utils'
+import { Textarea } from '@/components/ui/textarea'
 
 const MAX_QUESTIONS = 5
 const MAX_OPTIONS = 6
@@ -11,18 +11,14 @@ const MIN_OPTIONS = 2
 interface QuestionBuilderProps {
   questions: Array<FormQuestion>
   onChange: (questions: Array<FormQuestion>) => void
-  responseType?: ResponseType
   onEditQuestion?: (id: string | null) => void
 }
 
 export function QuestionBuilder({
   questions,
   onChange,
-  responseType,
   onEditQuestion,
 }: QuestionBuilderProps) {
-  const isYesNo = responseType === 'yes-no'
-
   function addQuestion() {
     if (questions.length >= MAX_QUESTIONS) return
     const newQ: FormQuestion = {
@@ -30,7 +26,6 @@ export function QuestionBuilder({
       text: '',
       type: 'free-text',
       options: ['', ''],
-      showAfter: 'both',
     }
     onChange([...questions, newQ])
   }
@@ -84,7 +79,7 @@ export function QuestionBuilder({
     <section className="rounded-xl border bg-card p-6">
       <div className="mb-4 flex items-start justify-between">
         <div>
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Questions
           </h2>
           <p className="mt-0.5 text-xs text-muted-foreground">
@@ -112,161 +107,137 @@ export function QuestionBuilder({
       )}
 
       <div className="space-y-3">
-        {questions.map((q, i) => (
-          <div
-            key={q.id}
-            className="rounded-lg border border-border bg-slate-2 p-3"
-          >
-            {/* Question header row */}
-            <div className="flex items-start gap-2">
-              <GripVertical className="mt-2 h-4 w-4 shrink-0 text-slate-8" />
-              <span className="mt-2 w-4 shrink-0 text-xs font-medium text-muted-foreground">
-                {i + 1}.
-              </span>
-              <Input
-                value={q.text}
-                onChange={(e) => updateQuestion(q.id, { text: e.target.value })}
-                onFocus={() => onEditQuestion?.(q.id)}
-                onBlur={() => onEditQuestion?.(null)}
-                placeholder="Enter your question"
-                className="h-8 flex-1 text-sm"
-              />
-              <div className="flex shrink-0 items-center gap-0.5 mt-0.5">
-                <button
-                  type="button"
-                  onClick={() => moveUp(i)}
-                  disabled={i === 0}
-                  className="rounded p-1 text-slate-9 hover:bg-slate-4 hover:text-slate-12 disabled:opacity-30"
-                  aria-label="Move up"
-                >
-                  <ArrowUp className="h-3 w-3" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => moveDown(i)}
-                  disabled={i === questions.length - 1}
-                  className="rounded p-1 text-slate-9 hover:bg-slate-4 hover:text-slate-12 disabled:opacity-30"
-                  aria-label="Move down"
-                >
-                  <ArrowDown className="h-3 w-3" />
-                </button>
+        {questions.map((q, i) => {
+          const isOpenEnded = q.type === 'free-text' || !q.type
+          const isMcq = q.type === 'mcq'
+          return (
+            <div
+              key={q.id}
+              className="rounded-xl border border-border bg-card p-4"
+            >
+              {/* Question row */}
+              <div className="flex items-center gap-2">
+                <Input
+                  value={q.text}
+                  onChange={(e) =>
+                    updateQuestion(q.id, { text: e.target.value })
+                  }
+                  onFocus={() => onEditQuestion?.(q.id)}
+                  onBlur={() => onEditQuestion?.(null)}
+                  placeholder={`Question ${i + 1}`}
+                  className="h-10 flex-1 rounded-full"
+                />
+                <div className="flex shrink-0 flex-col gap-0.5">
+                  <button
+                    type="button"
+                    onClick={() => moveUp(i)}
+                    disabled={i === 0}
+                    className="rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30"
+                    aria-label="Move up"
+                  >
+                    <ChevronUp className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => moveDown(i)}
+                    disabled={i === questions.length - 1}
+                    className="rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30"
+                    aria-label="Move down"
+                  >
+                    <ChevronDown className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Helper text row */}
+              <div className="mt-2.5 flex items-center gap-2">
+                <Textarea
+                  value={q.helperText ?? ''}
+                  onChange={(e) =>
+                    updateQuestion(q.id, { helperText: e.target.value })
+                  }
+                  placeholder="Helper text (optional)"
+                  className="min-h-24 flex-1 resize-none bg-muted py-2.5 text-sm"
+                />
                 <button
                   type="button"
                   onClick={() => deleteQuestion(q.id)}
-                  className="rounded p-1 text-slate-9 hover:bg-destructive/10 hover:text-destructive"
+                  className="shrink-0 rounded p-1.5 text-destructive hover:bg-destructive/10"
                   aria-label="Delete question"
                 >
-                  <Trash2 className="h-3 w-3" />
+                  <Trash2 className="h-4 w-4" />
                 </button>
               </div>
-            </div>
 
-            {/* Type toggle */}
-            <div className="mt-2.5 ml-10 flex items-center gap-3">
-              <span className="text-xs text-muted-foreground">Type:</span>
-              {(['free-text', 'mcq'] as Array<QuestionType>).map((t) => (
-                <button
-                  key={t}
+              {/* Type toggle */}
+              <div className="mt-3 flex items-center gap-2">
+                <Button
                   type="button"
+                  size="sm"
+                  variant={isOpenEnded ? 'default' : 'outline'}
+                  onClick={() => updateQuestion(q.id, { type: 'free-text' })}
+                >
+                  Open-ended
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={isMcq ? 'default' : 'outline'}
                   onClick={() =>
                     updateQuestion(q.id, {
-                      type: t,
+                      type: 'mcq',
                       options:
-                        t === 'mcq' && (!q.options || q.options.length < 2)
+                        !q.options || q.options.length < 2
                           ? ['', '']
                           : q.options,
                     })
                   }
-                  className={cn(
-                    'flex items-center gap-1.5 text-xs',
-                    q.type === t || (!q.type && t === 'free-text')
-                      ? 'font-semibold text-foreground'
-                      : 'text-slate-9 hover:text-slate-12',
-                  )}
                 >
-                  <div
-                    className={cn(
-                      'h-3.5 w-3.5 rounded-full border-2',
-                      q.type === t || (!q.type && t === 'free-text')
-                        ? 'border-slate-12 bg-slate-12'
-                        : 'border-slate-6',
-                    )}
-                  >
-                    {(q.type === t || (!q.type && t === 'free-text')) && (
-                      <div className="h-full w-full rounded-full bg-background scale-[0.4]" />
-                    )}
-                  </div>
-                  {t === 'free-text' ? 'Open-ended' : 'MCQ'}
-                </button>
-              ))}
+                  MCQ
+                </Button>
+              </div>
+
+              {/* MCQ options */}
+              {isMcq && (
+                <div className="mt-3 space-y-1.5">
+                  {(q.options ?? ['', '']).map((opt, oi) => (
+                    <div key={oi} className="flex items-center gap-1.5">
+                      <div className="h-3 w-3 shrink-0 rounded-full border-2 border-slate-6" />
+                      <Input
+                        value={opt}
+                        onChange={(e) =>
+                          updateOption(q.id, oi, e.target.value)
+                        }
+                        placeholder={`Option ${oi + 1}`}
+                        className="h-8 flex-1 text-sm"
+                      />
+                      {(q.options ?? []).length > MIN_OPTIONS && (
+                        <button
+                          type="button"
+                          onClick={() => removeOption(q.id, oi)}
+                          className="shrink-0 rounded p-0.5 text-slate-9 hover:text-destructive"
+                          aria-label="Remove option"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  {(q.options ?? []).length < MAX_OPTIONS && (
+                    <button
+                      type="button"
+                      onClick={() => addOption(q.id)}
+                      className="ml-4 flex items-center gap-1 text-xs text-primary hover:text-primary/80"
+                    >
+                      <Plus className="h-3 w-3" />
+                      Add option
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
-
-            {/* MCQ options */}
-            {q.type === 'mcq' && (
-              <div className="mt-2.5 ml-10 space-y-1.5">
-                {(q.options ?? ['', '']).map((opt, oi) => (
-                  <div key={oi} className="flex items-center gap-1.5">
-                    <div className="h-3 w-3 shrink-0 rounded-full border-2 border-slate-6" />
-                    <Input
-                      value={opt}
-                      onChange={(e) => updateOption(q.id, oi, e.target.value)}
-                      placeholder={`Option ${oi + 1}`}
-                      className="h-7 flex-1 text-xs"
-                    />
-                    {(q.options ?? []).length > MIN_OPTIONS && (
-                      <button
-                        type="button"
-                        onClick={() => removeOption(q.id, oi)}
-                        className="shrink-0 rounded p-0.5 text-slate-9 hover:text-destructive"
-                        aria-label="Remove option"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    )}
-                  </div>
-                ))}
-                {(q.options ?? []).length < MAX_OPTIONS && (
-                  <button
-                    type="button"
-                    onClick={() => addOption(q.id)}
-                    className="ml-4 flex items-center gap-1 text-xs text-primary hover:text-primary/80"
-                  >
-                    <Plus className="h-3 w-3" />
-                    Add option
-                  </button>
-                )}
-              </div>
-            )}
-
-            {/* Show after (yes-no forms only) */}
-            {isYesNo && (
-              <div className="mt-2.5 ml-10 flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">
-                  Show after response:
-                </span>
-                {(['yes', 'no', 'both'] as const).map((choice) => (
-                  <button
-                    key={choice}
-                    type="button"
-                    onClick={() => updateQuestion(q.id, { showAfter: choice })}
-                    className={cn(
-                      'rounded-md px-2 py-0.5 text-xs font-medium transition-colors',
-                      (q.showAfter ?? 'both') === choice
-                        ? choice === 'yes'
-                          ? 'bg-lime-3 text-lime-11'
-                          : choice === 'no'
-                            ? 'bg-crimson-3 text-crimson-11'
-                            : 'bg-slate-4 text-slate-12'
-                        : 'text-slate-9 hover:bg-slate-4 hover:text-slate-12',
-                    )}
-                  >
-                    {choice === 'yes' ? 'Yes' : choice === 'no' ? 'No' : 'Both'}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
+          )
+        })}
       </div>
     </section>
   )

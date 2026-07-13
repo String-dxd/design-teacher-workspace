@@ -63,7 +63,6 @@ function makeDraft(overrides: Partial<DraftData> = {}): DraftData {
     sendOption: 'now',
     scheduledDate: '',
     scheduledTime: '',
-    staffRoles: {},
     filesMeta: [],
     photosMeta: [],
     coverPhotoIndices: [],
@@ -135,8 +134,7 @@ describe('loadDraft shape validation', () => {
       sendOption: 'now',
       scheduledDate: '',
       scheduledTime: '',
-      staffRoles: {},
-      filesMeta: [],
+        filesMeta: [],
       // photosMeta intentionally missing
       coverPhotoIndices: [],
     }
@@ -189,7 +187,6 @@ describe('saveDraft / loadDraft — full round-trip characterization', () => {
     'sendOption',
     'scheduledDate',
     'scheduledTime',
-    'staffRoles',
     'filesMeta',
     'photosMeta',
     'coverPhotoIndices',
@@ -239,7 +236,6 @@ describe('saveDraft / loadDraft — full round-trip characterization', () => {
       sendOption: 'scheduled',
       scheduledDate: '2026-07-05',
       scheduledTime: '08:30',
-      staffRoles: { s1: 'editor' },
       filesMeta: [
         { name: 'a.pdf', size: 1024, uploadedAt: '2026-07-01T00:00:00.000Z' },
       ],
