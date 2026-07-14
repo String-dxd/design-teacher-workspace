@@ -19,6 +19,7 @@ import {
 import { SAMPLE_PREVIEW_PUPIL } from '@/data/mock-report-classes'
 import { useFeatureFlag } from '@/hooks/use-feature-flag'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
+import { Badge } from '@/components/ui/badge'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -417,17 +418,17 @@ function CycleLayoutPage() {
                     : 'View layout'}
               </h1>
               {isTemplateMode && (
-                <span className="bg-amber-3 text-amber-11 rounded-full px-2 py-0.5 text-xs font-medium">
+                <Badge className="bg-amber-3 text-amber-12">
                   Editing the shared template
-                </span>
+                </Badge>
               )}
               {!isTemplateMode && !editable && (
-                <span
-                  className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-xs font-medium"
+                <Badge
+                  variant="secondary"
                   title="Only editable from a Level scope (e.g. All Primary 1)"
                 >
                   Level Head only to edit
-                </span>
+                </Badge>
               )}
             </div>
             <p className="text-muted-foreground text-sm">{contextLine}</p>
@@ -468,9 +469,8 @@ function CycleLayoutPage() {
         >
           {!isTemplateMode && !editable && (
             <p className="bg-muted text-muted-foreground rounded-lg px-3 py-2 text-xs">
-              You can view this class’s layout, but only a Level Head can
-              change it — switch to a Level scope (e.g. All Primary 1) to
-              edit.
+              You can view this class’s layout, but only a Level Head can change
+              it — switch to a Level scope (e.g. All Primary 1) to edit.
             </p>
           )}
           <div className="space-y-1.5">

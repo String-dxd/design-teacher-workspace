@@ -21,6 +21,7 @@ import type {
 import type { CockpitSubjectSubmission } from '@/data/mock-cockpit-submissions'
 import type { DraftSource } from '@/lib/hdp-comment-draft'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -70,12 +71,16 @@ const LO_STAGE_ORDER: Array<LearningOutcomeStatus> = [
 // blooms into saturated lime. A nature progression with no red anywhere, so
 // it reads as growth, not grading — and it leaves blue to the app's
 // interactive elements.
+// Tone classes layered over <Badge variant="default"> — the same
+// tone-over-Badge pattern the cycle hub table uses, so the document and the
+// hub share one badge component. Beginning maps to '' → rendered as the Badge
+// `outline` variant (quiet, unfilled seed).
 const LO_PILL_CLASS: Record<LearningOutcomeStatus, string> = {
   Exceeding: 'bg-lime-4 text-lime-12',
   Accomplished: 'bg-lime-4 text-lime-12',
   Competent: 'bg-lime-3 text-lime-12',
   Developing: 'bg-amber-3 text-amber-12',
-  Beginning: 'text-muted-foreground border bg-transparent',
+  Beginning: '',
 }
 
 const QUALITY_PILL_CLASS: Record<CoreValueLevel, string> = {
@@ -83,7 +88,7 @@ const QUALITY_PILL_CLASS: Record<CoreValueLevel, string> = {
   'Demonstrates Strongly': 'bg-lime-4 text-lime-12',
   Demonstrates: 'bg-lime-3 text-lime-12',
   'Regularly Shows': 'bg-amber-3 text-amber-12',
-  Beginning: 'text-muted-foreground border bg-transparent',
+  Beginning: '',
 }
 
 /** Section keys PreviewBlock can actually render (pupilInfo handled apart). */
@@ -128,6 +133,25 @@ const SUBJECT_ILLUSTRATION_SLUG = new Map<string, string>([
   ['Social Studies', 'social-studies'],
 ])
 
+/** Shared chrome for the document's content cards — ONE definition instead of
+ * six hand-rolled copies. Deliberately lighter than ui/Card (rounded-3xl +
+ * ring + py-6): these are dense, print-like cards rendered INSIDE the report
+ * container, so ui/Card's heavy chrome would read as nested-card slop (SLP-4).
+ * tfx-waive CMP-1 reason="dense print-artifact sub-cards inside the report
+ * container; ui/Card's rounded-3xl+ring would create nested-card chrome (SLP-4).
+ * One local helper, not six copies. See docs/decisions/hdp-design-consistency.md" */
+function DocCard({
+  className,
+  children,
+}: {
+  className?: string
+  children: ReactNode
+}) {
+  return (
+    <div className={cn('bg-card rounded-xl border', className)}>{children}</div>
+  )
+}
+
 /** Per-subject card: illustration + centered name/teacher, then every
  * outcome with its statement in full view — no disclosure levels, the
  * reader scrolls instead of tapping. */
@@ -140,7 +164,7 @@ function SubjectCard({
 }) {
   const slug = SUBJECT_ILLUSTRATION_SLUG.get(subj.name)
   return (
-    <div className="bg-card rounded-xl border px-3.5 py-4">
+    <DocCard className="px-3.5 py-4">
       <div className="flex flex-col items-center gap-1 pb-3 text-center">
         {slug && <SectionIllustration slug={slug} alt="" />}
         <p className="text-sm font-semibold">{subj.name}</p>
@@ -163,7 +187,7 @@ function SubjectCard({
           />
         ))}
       </div>
-    </div>
+    </DocCard>
   )
 }
 
@@ -189,14 +213,12 @@ function ScaleRow({
           </p>
         )}
       </div>
-      <span
-        className={cn(
-          'mt-0.5 shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium',
-          pillClass,
-        )}
+      <Badge
+        variant={pillClass ? 'default' : 'outline'}
+        className={cn('mt-0.5 shrink-0', pillClass)}
       >
         {stageLabel}
-      </span>
+      </Badge>
     </div>
   )
 }
@@ -522,9 +544,7 @@ function deriveBestSubject(report: HolisticReport): string | null {
 /** White bordered card split into two halves by a vertical divider — the
  * "Term at a glance" hero is two of these, side by side. */
 function GlanceCard({ children }: { children: ReactNode }) {
-  return (
-    <div className="bg-card divide-x rounded-xl border">{children}</div>
-  )
+  return <DocCard className="divide-x">{children}</DocCard>
 }
 
 /** One half of a GlanceCard: optional icon + label header, then arbitrary
@@ -577,32 +597,25 @@ function TermAtAGlance({ report }: { report: HolisticReport }) {
                 {report.attendance.daysPresent}/
                 {report.attendance.totalSchoolDays}
               </p>
-              <p className="text-muted-foreground mt-0.5 text-[11px] leading-snug">
+              <p className="text-muted-foreground mt-0.5 text-xs leading-snug">
                 Days present
               </p>
             </div>
           </div>
         </GlanceHalf>
-        <GlanceHalf label="Days Late">
+        <GlanceHalf label="Days late">
           <p className="text-lg leading-tight font-semibold">{daysLate}</p>
-          {daysLate === 0 && (
-            <p className="text-lime-11 mt-0.5 text-[11px] leading-snug font-medium">
-              Good job!
-            </p>
-          )}
         </GlanceHalf>
       </GlanceCard>
       <GlanceCard>
         <GlanceHalf icon={Flag} label="Conduct">
-          <span className="bg-violet-3 text-violet-12 inline-block rounded-full px-2.5 py-0.5 text-sm font-medium">
+          <Badge className="bg-violet-3 text-violet-12 text-sm">
             {report.character.conduct}
-          </span>
+          </Badge>
         </GlanceHalf>
-        <GlanceHalf label="Best Subject">
+        <GlanceHalf label="Best subject">
           {bestSubject ? (
-            <p className="text-sm leading-tight font-semibold">
-              {bestSubject}
-            </p>
+            <p className="text-sm leading-tight font-semibold">{bestSubject}</p>
           ) : (
             <p className="text-muted-foreground text-sm italic">
               Not yet available
@@ -741,13 +754,13 @@ function PreviewBlock({
       // two-column Form/Co-form teacher row (matches the PG dialog's own
       // header design, see pg-report-preview-dialog.tsx).
       return (
-        <div className="bg-card flex flex-col gap-3 rounded-xl border p-4">
+        <DocCard className="flex flex-col gap-3 p-4">
           <div className="flex items-center gap-3">
             <Avatar size="lg">
               <AvatarFallback>{getInitials(report.studentName)}</AvatarFallback>
             </Avatar>
             <div className="min-w-0">
-              <h2 className="text-twblue-11 truncate text-base font-bold uppercase">
+              <h2 className="text-twblue-11 truncate text-base font-bold">
                 {report.studentName}
               </h2>
               {report.schoolName && (
@@ -778,16 +791,14 @@ function PreviewBlock({
             </p>
             {report.coFormTeacher && (
               <p className="text-sm">
-                <span className="text-muted-foreground">
-                  Co-form teacher:{' '}
-                </span>
+                <span className="text-muted-foreground">Co-form teacher: </span>
                 <span className="font-medium">
                   {stripSalutation(report.coFormTeacher)}
                 </span>
               </p>
             )}
           </div>
-        </div>
+        </DocCard>
       )
 
     case 'termAtAGlance':
@@ -795,7 +806,7 @@ function PreviewBlock({
         <div className="flex flex-col gap-2">
           {heading('Term at a glance')}
           <p className="text-muted-foreground text-xs">
-            A quick snapshot of {firstName(report.studentName)}'s term —
+            A quick snapshot of {firstName(report.studentName)}’s term —
             strengths, growth areas, attendance, and conduct.
           </p>
           <TermAtAGlance report={report} />
@@ -860,7 +871,7 @@ function PreviewBlock({
         <div className="flex flex-col gap-2">
           {heading("Teacher's comments")}
           <p className="text-muted-foreground text-xs">
-            A note from the form teacher on {firstName(report.studentName)}'s
+            A note from the form teacher on {firstName(report.studentName)}’s
             term.
           </p>
           <CommentField
@@ -883,10 +894,10 @@ function PreviewBlock({
             How {firstName(report.studentName)} shows the school's personal
             qualities day to day.
           </p>
-          <div className="bg-card rounded-xl border px-3.5 py-4">
+          <DocCard className="px-3.5 py-4">
             <div className="flex flex-col items-center gap-1 pb-3 text-center">
               <SectionIllustration slug="personal-qualities" alt="" />
-              <p className="text-sm font-semibold">Personal Qualities</p>
+              <p className="text-sm font-semibold">Personal qualities</p>
             </div>
             <div className="border-t pt-1.5">
               {report.holistic.coreValues.map((cv) => (
@@ -899,7 +910,7 @@ function PreviewBlock({
                 />
               ))}
             </div>
-          </div>
+          </DocCard>
         </div>
       )
 
@@ -911,12 +922,10 @@ function PreviewBlock({
             Where {firstName(report.studentName)} spends time outside the
             classroom.
           </p>
-          <div className="bg-card rounded-xl border px-3.5 py-4">
+          <DocCard className="px-3.5 py-4">
             <div className="flex flex-col items-center gap-1 pb-3 text-center">
               <SectionIllustration slug="cca" alt="" />
-              <p className="text-sm font-semibold">
-                Co-curricular Activities
-              </p>
+              <p className="text-sm font-semibold">Co-curricular activities</p>
             </div>
             <div className="border-t pt-1.5">
               {report.holistic.cca.length ? (
@@ -937,7 +946,7 @@ function PreviewBlock({
                 </p>
               )}
             </div>
-          </div>
+          </DocCard>
         </div>
       )
 
@@ -949,7 +958,7 @@ function PreviewBlock({
             How {firstName(report.studentName)} has contributed to the
             community.
           </p>
-          <div className="bg-card rounded-xl border px-3.5 py-4">
+          <DocCard className="px-3.5 py-4">
             <div className="flex flex-col items-center gap-1 pb-3 text-center">
               <SectionIllustration slug="values-in-action" alt="" />
               <p className="text-sm font-semibold">Values in Action</p>
@@ -973,7 +982,7 @@ function PreviewBlock({
                 </p>
               )}
             </div>
-          </div>
+          </DocCard>
         </div>
       )
 
@@ -982,7 +991,7 @@ function PreviewBlock({
         <div className="flex flex-col gap-2">
           {heading('Physical fitness')}
           <GlanceCard>
-            <GlanceHalf label="BMI Category">
+            <GlanceHalf label="BMI category">
               <p className="text-sm leading-tight font-semibold">
                 {report.holistic.physicalFitness.bmiCategory}
               </p>

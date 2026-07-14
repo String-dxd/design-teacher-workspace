@@ -81,12 +81,12 @@ const STATUS_LABEL: Record<CycleStudentStatus, string> = {
 const STATUS_CLASS: Record<CycleStudentStatus, string> = {
   not_started: '',
   draft: 'bg-muted text-muted-foreground hover:bg-muted',
-  ready: 'bg-amber-3 text-amber-11 hover:bg-amber-3',
+  ready: 'bg-amber-3 text-amber-12 hover:bg-amber-3',
   sent: 'bg-twblue-3 text-twblue-11 hover:bg-twblue-3',
   awaiting_results: '',
   pending_comments: 'bg-muted text-muted-foreground hover:bg-muted',
-  in_review: 'bg-amber-3 text-amber-11 hover:bg-amber-3',
-  approved: 'bg-lime-3 text-lime-11 hover:bg-lime-3',
+  in_review: 'bg-amber-3 text-amber-12 hover:bg-amber-3',
+  approved: 'bg-lime-3 text-lime-12 hover:bg-lime-3',
 }
 
 const OUTLINED_STATUSES = new Set<CycleStudentStatus>([
@@ -115,11 +115,7 @@ export function checkpointsFor(
     draft?.reviewStatus !== undefined || draft?.sentAt !== undefined
   return {
     results: hasAnyResults(studentId) ? 'in' : 'awaiting',
-    comments: submitted
-      ? 'done'
-      : draft && draft.comments
-        ? 'draft'
-        : 'none',
+    comments: submitted ? 'done' : draft && draft.comments ? 'draft' : 'none',
     approval:
       draft?.reviewStatus === 'approved' || draft?.sentAt
         ? 'approved'
@@ -192,8 +188,8 @@ export function checkpointsFromStatus(
 
 // Checkpoint-cell palette: lime = done-positive, amber = queued with someone,
 // muted = in progress, blue = delivered; a quiet em-dash for not-yet.
-const LIME = 'bg-lime-3 text-lime-11 hover:bg-lime-3'
-const AMBER = 'bg-amber-3 text-amber-11 hover:bg-amber-3'
+const LIME = 'bg-lime-3 text-lime-12 hover:bg-lime-3'
+const AMBER = 'bg-amber-3 text-amber-12 hover:bg-amber-3'
 const MUTED = 'bg-muted text-muted-foreground hover:bg-muted'
 const BLUE = 'bg-twblue-3 text-twblue-11 hover:bg-twblue-3'
 
@@ -582,9 +578,7 @@ export function CycleStudentTable({
                     'group border-0',
                     clickable && 'cursor-pointer',
                   )}
-                  onClick={
-                    clickable ? () => onRowClick(student.id) : undefined
-                  }
+                  onClick={clickable ? () => onRowClick(student.id) : undefined}
                 >
                   <TableCell
                     className={cn(
@@ -595,7 +589,7 @@ export function CycleStudentTable({
                     {index + 1}
                   </TableCell>
                   <TableCell
-                    className="sticky z-10 w-[180px] bg-background font-medium shadow-[inset_0_-1px_0_var(--color-border),2px_0_5px_-2px_rgba(0,0,0,0.1)] transition-colors group-hover:bg-muted/50"
+                    className="sticky z-10 w-[180px] bg-background font-medium shadow-[inset_0_-1px_0_var(--color-border),2px_0_5px_-2px_var(--color-border)] transition-colors group-hover:bg-muted/50"
                     style={{ left: '2.5rem' }}
                   >
                     {student.name}

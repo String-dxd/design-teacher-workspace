@@ -3,6 +3,7 @@ import { CheckCircle2, Download } from 'lucide-react'
 
 import type { HolisticReport, ReportBlock } from '@/types/report'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -11,7 +12,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { ReportPreview } from '@/components/reports/report-preview'
-import { cn, stripSalutation } from '@/lib/utils'
+import { stripSalutation } from '@/lib/utils'
 
 // Shared "how parents see it" preview: the report document inside a Parents
 // Gateway phone mockup, mirroring the real PG HDP viewer — Student Profile
@@ -129,15 +130,15 @@ export function PgReportPreviewDialog({
 
         {/* Phone mockup — real device width and proportion */}
         <div className="mx-auto w-full max-w-[390px]">
-          <div className="relative flex h-[720px] max-h-[75vh] flex-col overflow-hidden rounded-[28px] border-[7px] border-slate-900 bg-white shadow-md">
+          <div className="relative flex h-[720px] max-h-[75vh] flex-col overflow-hidden rounded-[28px] border-[7px] border-foreground bg-card shadow-md">
             <div
               ref={scrollRef}
               onScroll={handleScroll}
-              className="min-h-0 flex-1 divide-y divide-slate-100 overflow-y-auto bg-white"
+              className="divide-border min-h-0 flex-1 divide-y overflow-y-auto bg-card"
             >
               {/* Student Profile header — per the PG HDP viewer */}
               <div className="px-4 py-4">
-                <h3 className="mb-3 text-base font-bold text-slate-900">
+                <h3 className="text-foreground mb-3 text-base font-bold">
                   Student Profile
                 </h3>
                 <div className="flex items-center gap-3">
@@ -147,42 +148,46 @@ export function PgReportPreviewDialog({
                     </AvatarFallback>
                   </Avatar>
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-bold text-[#c47565] uppercase">
+                    <p className="text-orange-11 truncate text-sm font-bold">
                       {report.studentName}
                     </p>
                     {report.schoolName && (
-                      <p className="truncate text-xs text-slate-500">
+                      <p className="text-muted-foreground truncate text-xs">
                         {report.schoolName}
                       </p>
                     )}
                   </div>
                 </div>
-                <div className="mt-3 border-t border-slate-100 pt-3">
-                  <p className="text-sm text-slate-700">
-                    <span className="text-slate-400">Class: </span>
+                <div className="border-border mt-3 border-t pt-3">
+                  <p className="text-foreground text-sm">
+                    <span className="text-muted-foreground">Class: </span>
                     <span className="font-semibold">
                       {spellOutClass(report.studentClass)}
                     </span>
                   </p>
                 </div>
-                <div className="mt-3 grid grid-cols-2 gap-2 border-t border-slate-100 pt-3">
-                  <p className="text-sm text-slate-700">
-                    <span className="text-slate-400">Form teacher: </span>
+                <div className="border-border mt-3 grid grid-cols-2 gap-2 border-t pt-3">
+                  <p className="text-foreground text-sm">
+                    <span className="text-muted-foreground">
+                      Form teacher:{' '}
+                    </span>
                     <span className="font-semibold">
                       {stripSalutation(report.formTeacher)}
                     </span>
                   </p>
                   {report.coFormTeacher && (
-                    <p className="text-sm text-slate-700">
-                      <span className="text-slate-400">Co-form teacher: </span>
+                    <p className="text-foreground text-sm">
+                      <span className="text-muted-foreground">
+                        Co-form teacher:{' '}
+                      </span>
                       <span className="font-semibold">
                         {stripSalutation(report.coFormTeacher)}
                       </span>
                     </p>
                   )}
                 </div>
-                <p className="mt-3 text-[10px] font-semibold text-slate-400">
-                  {report.term} {report.academicYear} · Issued Date:{' '}
+                <p className="text-muted-foreground mt-3 text-xs font-semibold">
+                  {report.term} {report.academicYear} · Issued date:{' '}
                   {issuedDate}
                 </p>
               </div>
@@ -199,39 +204,35 @@ export function PgReportPreviewDialog({
             </div>
 
             {/* Acknowledge footer — gated on reading to the end */}
-            <div className="shrink-0 border-t border-slate-100 bg-white px-4 py-3">
+            <div className="border-border bg-card shrink-0 border-t px-4 py-3">
               {acknowledged ? (
                 <div className="flex items-center justify-center gap-1.5 py-1">
-                  <CheckCircle2 className="h-4 w-4 text-lime-600" />
-                  <span className="text-xs font-semibold text-slate-700">
+                  <CheckCircle2 className="text-lime-11 h-4 w-4" />
+                  <span className="text-foreground text-xs font-semibold">
                     Acknowledged
                   </span>
                 </div>
               ) : (
                 <>
                   <div className="flex items-center gap-2">
-                    <button
+                    <Button
                       type="button"
                       disabled={!canAcknowledge}
                       onClick={() => setAcknowledged(true)}
-                      className={cn(
-                        'flex-1 rounded-lg px-4 py-2 text-[11px] font-semibold text-white transition-colors',
-                        canAcknowledge
-                          ? 'bg-[#c47565] hover:opacity-90'
-                          : 'cursor-not-allowed bg-slate-300',
-                      )}
+                      className="flex-1"
                     >
-                      Acknowledge Report
-                    </button>
-                    <button
+                      Acknowledge report
+                    </Button>
+                    <Button
                       type="button"
+                      variant="outline"
+                      size="icon"
                       aria-label="Download report (mock)"
-                      className="grid h-8 w-9 shrink-0 place-content-center rounded-lg border border-slate-200 text-slate-500"
                     >
                       <Download className="h-3.5 w-3.5" />
-                    </button>
+                    </Button>
                   </div>
-                  <p className="mt-2 text-center text-[10px] text-slate-400">
+                  <p className="text-muted-foreground mt-2 text-center text-xs">
                     {!canAcknowledge
                       ? 'Please scroll through all sections to acknowledge'
                       : ackByDate

@@ -48,12 +48,13 @@ export function SectionLayoutEditor({
         // rows can't be dropped above them.
         const pinned = def.required === true
         const rowAboveIsPinned =
-          i > 0 &&
-          defById.get(orderedBlocks[i - 1].key)?.required === true
+          i > 0 && defById.get(orderedBlocks[i - 1].key)?.required === true
         return (
           <li
             key={b.key}
-            draggable={!disabled && !pinned && (armedKey === b.key || isDragging)}
+            draggable={
+              !disabled && !pinned && (armedKey === b.key || isDragging)
+            }
             onDragStart={(e) => {
               e.dataTransfer.effectAllowed = 'move'
               setDraggingKey(b.key)
@@ -100,12 +101,12 @@ export function SectionLayoutEditor({
                 <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
                   <span className="text-sm font-medium">{def.label}</span>
                   {def.required && (
-                    <span className="text-muted-foreground shrink-0 text-[11px]">
+                    <span className="text-muted-foreground shrink-0 text-xs">
                       Required
                     </span>
                   )}
                   {naAtP1 && (
-                    <span className="text-muted-foreground shrink-0 text-[11px]">
+                    <span className="text-muted-foreground shrink-0 text-xs">
                       Not applicable at P1
                     </span>
                   )}

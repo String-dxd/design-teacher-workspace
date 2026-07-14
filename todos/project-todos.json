@@ -3,6 +3,30 @@
   "lastUpdated": "2026-07-08T11:25:00.000Z",
   "todos": [
     {
+      "id": "hdp-polish-027",
+      "title": "HDP colour & token hygiene (plan 027)",
+      "description": "One parent-facing accent; killed hard-coded hex, Tailwind-default slate, bg-white, lime-600, rgba-shadow. Accent refined after AA re-check: orange-11 text decorative, twblue primary for actions/count badges (orange-9 fills fail AA). Branch design/hdp-report-polish.",
+      "status": "completed",
+      "createdAt": "2026-07-13T00:00:00.000Z",
+      "completedAt": "2026-07-14T00:00:00.000Z"
+    },
+    {
+      "id": "hdp-polish-028",
+      "title": "HDP component reuse & report-document polish (plan 028)",
+      "description": "6 hand-rolled cards → local DocCard (documented CMP-1 waiver); pills → ui/Badge; text-[10/11px] → text-xs; raw buttons → ui/Button; uppercase removed (TYP-4). Evaluator round-1 FAIL on contrast → fixed (badges to step-12, actions to twblue).",
+      "status": "completed",
+      "createdAt": "2026-07-13T00:00:00.000Z",
+      "completedAt": "2026-07-14T00:00:00.000Z"
+    },
+    {
+      "id": "hdp-polish-029",
+      "title": "HDP copy & voice pass (plan 029)",
+      "description": "Title Case → sentence case labels across both hub routes + glance tiles; removed casual 'Good job!'; curly apostrophes; 'Issued date'/'Acknowledge report'. Proper nouns preserved. Executed via tfx:copy.",
+      "status": "completed",
+      "createdAt": "2026-07-13T00:00:00.000Z",
+      "completedAt": "2026-07-14T00:00:00.000Z"
+    },
+    {
       "id": "tw-001",
       "title": "Initialize TanStack Start project with Bun",
       "description": "Set up the base TanStack Start project using Bun as the package manager and runtime",

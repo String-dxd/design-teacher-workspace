@@ -471,7 +471,7 @@ function LegacyReportsView({
         {/* Metrics Cards */}
         <div className="grid grid-cols-1 gap-4 px-6 md:grid-cols-4">
           <div className="rounded-lg border bg-card p-4">
-            <div className="text-sm text-muted-foreground">Total Reports</div>
+            <div className="text-sm text-muted-foreground">Total reports</div>
             <div className="text-2xl font-semibold">{metrics.totalReports}</div>
           </div>
           <div className="rounded-lg border bg-card p-4">
@@ -481,13 +481,13 @@ function LegacyReportsView({
             </div>
           </div>
           <div className="rounded-lg border bg-card p-4">
-            <div className="text-sm text-muted-foreground">Pending Review</div>
+            <div className="text-sm text-muted-foreground">Pending review</div>
             <div className="text-2xl font-semibold">
               {metrics.pendingReview}
             </div>
           </div>
           <div className="rounded-lg border bg-card p-4">
-            <div className="text-sm text-muted-foreground">Not Sent</div>
+            <div className="text-sm text-muted-foreground">Not sent</div>
             <div className="text-2xl font-semibold">{metrics.notSentCount}</div>
           </div>
         </div>
@@ -512,7 +512,7 @@ function LegacyReportsView({
                   <ListFilter className="mr-2 h-4 w-4" />
                   Filters
                   {activeFilterCount > 0 && (
-                    <span className="ml-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-orange-9 px-1.5 text-xs font-medium text-white">
+                    <span className="bg-primary text-primary-foreground ml-1.5 flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-xs font-medium">
                       {activeFilterCount}
                     </span>
                   )}
@@ -567,7 +567,7 @@ function LegacyReportsView({
                   <SelectTrigger className="w-full">
                     {selectedParentStatus
                       ? {
-                          not_sent: 'Not Sent',
+                          not_sent: 'Not sent',
                           sent: 'Sent',
                           viewed: 'Viewed',
                           acknowledged: 'Acknowledged',
@@ -576,7 +576,7 @@ function LegacyReportsView({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All status</SelectItem>
-                    <SelectItem value="not_sent">Not Sent</SelectItem>
+                    <SelectItem value="not_sent">Not sent</SelectItem>
                     <SelectItem value="sent">Sent</SelectItem>
                     <SelectItem value="viewed">Viewed</SelectItem>
                     <SelectItem value="acknowledged">Acknowledged</SelectItem>
@@ -597,7 +597,7 @@ function LegacyReportsView({
                     <SelectTrigger className="w-full">
                       {selectedStudentStatus
                         ? {
-                            not_sent: 'Not Sent',
+                            not_sent: 'Not sent',
                             sent: 'Sent',
                             viewed: 'Viewed',
                             acknowledged: 'Acknowledged',
@@ -607,7 +607,7 @@ function LegacyReportsView({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All student</SelectItem>
-                      <SelectItem value="not_sent">Not Sent</SelectItem>
+                      <SelectItem value="not_sent">Not sent</SelectItem>
                       <SelectItem value="sent">Sent</SelectItem>
                       <SelectItem value="viewed">Viewed</SelectItem>
                       <SelectItem value="acknowledged">Acknowledged</SelectItem>
@@ -779,9 +779,7 @@ function CycleHub({
   const [refreshKey, setRefreshKey] = useState(0)
   // Clicking a row previews that student's report — own-class rows only,
   // since sibling-class pupils have no underlying report to render.
-  const [previewStudentId, setPreviewStudentId] = useState<string | null>(
-    null,
-  )
+  const [previewStudentId, setPreviewStudentId] = useState<string | null>(null)
 
   // Scope: a class id or the whole-of-P1 level view. The teacher is P1-A's
   // form teacher, so interactive pieces (layout, share, review, ack) always
@@ -1306,9 +1304,7 @@ function CycleHub({
         ownClassId="P1-A"
         seededStates={seededStates}
         onSendToParents={ownCycleClass ? setSendTarget : undefined}
-        onRowClick={
-          ownCycleClass && cycle ? setPreviewStudentId : undefined
-        }
+        onRowClick={ownCycleClass && cycle ? setPreviewStudentId : undefined}
       />
 
       {previewReport && cycle && (
