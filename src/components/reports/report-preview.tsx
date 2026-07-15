@@ -585,11 +585,13 @@ function TermAtAGlance({ report }: { report: HolisticReport }) {
       <GlanceCard>
         <GlanceHalf icon={CalendarCheck} label="Attendance">
           <div className="flex items-center gap-3">
+            {/* No color override: the ring self-colours by attendance level
+                (lime ≥90 / amber ≥75 / crimson below) on a muted track — a
+                calm, meaningful arc instead of a stark black one. */}
             <AttendanceRing
               percentage={attendancePct}
               size={40}
               strokeWidth={5}
-              color="currentColor"
               label=""
             />
             <div className="min-w-0">

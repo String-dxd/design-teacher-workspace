@@ -505,19 +505,21 @@ function CycleWriteBody({ studentId }: { studentId: string }) {
                 </Button>
               </div>
             )}
-            <div className="bg-card rounded-xl border p-6 shadow-sm">
-              <ReportPreview
-                report={report}
-                blocks={cycle.layout.blocks}
-                editable={!sentToParents}
-                comments={comments}
-                onCommentsChange={sentToParents ? undefined : setComments}
-                onCommentDirtyChange={(dirty) => {
-                  commentDirtyRef.current = dirty
-                }}
-                showMissingData
-              />
-            </div>
+            {/* No outer card here: ReportPreview renders on its own tinted
+                document surface with bordered section cards, so wrapping it in
+                another card nests card-in-card (SLP-4). Matches the layout
+                preview, which renders it bare too. */}
+            <ReportPreview
+              report={report}
+              blocks={cycle.layout.blocks}
+              editable={!sentToParents}
+              comments={comments}
+              onCommentsChange={sentToParents ? undefined : setComments}
+              onCommentDirtyChange={(dirty) => {
+                commentDirtyRef.current = dirty
+              }}
+              showMissingData
+            />
           </>
         )}
       </div>

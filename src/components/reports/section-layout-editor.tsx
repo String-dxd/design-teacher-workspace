@@ -38,7 +38,10 @@ export function SectionLayoutEditor({
   const [draggingKey, setDraggingKey] = useState<string | null>(null)
 
   return (
-    <ul className="flex flex-col gap-2">
+    // One bordered container with hairline row dividers rather than seven
+    // separate bordered cards — the list reads as a single control group
+    // (SLP-4/6: reach for a divider before a box).
+    <ul className="bg-card divide-y overflow-hidden rounded-lg border">
       {orderedBlocks.map((b, i) => {
         const def = defById.get(b.key)
         if (!def) return null
@@ -70,9 +73,9 @@ export function SectionLayoutEditor({
               setArmedKey(null)
             }}
             className={cn(
-              'rounded-lg border px-3 py-2.5 transition-opacity',
-              b.enabled ? 'bg-card' : 'bg-muted/30',
-              isDragging && 'border-primary/40 opacity-50',
+              'px-3 py-2.5 transition-colors',
+              !b.enabled && 'bg-muted/30',
+              isDragging && 'bg-muted opacity-60',
             )}
           >
             <div className="flex items-center gap-2">
