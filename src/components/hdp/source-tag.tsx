@@ -54,7 +54,7 @@ export function SourceTag({
       <PopoverTrigger
         className={cn(
           baseClassName,
-          'text-primary bg-primary/10 focus-visible:ring-ring/50 outline-none focus-visible:ring-[3px]',
+          'text-primary bg-primary/10 hover:bg-primary/15 focus-visible:ring-ring/50 outline-none motion-safe:transition-colors motion-safe:duration-150 focus-visible:ring-[3px]',
         )}
       >
         {source.label}
