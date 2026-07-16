@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { ClaimEditor } from './claim-editor'
 import { SourceTag } from './source-tag'
@@ -397,11 +398,7 @@ function DraftBody({
           title="No observations to draft from"
           description="Write from scratch below, or ask colleagues first — a draft is only suggested when there's evidence behind it."
           action={
-            <Button
-              variant="ghost"
-              disabled
-              title="Coming with Coverage & Broadcast"
-            >
+            <Button variant="ghost" render={<Link to="/reports/broadcast" />}>
               Ask colleagues
             </Button>
           }
