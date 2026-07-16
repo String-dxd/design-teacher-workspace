@@ -38,13 +38,16 @@ export function ToolCard({
     'border-border flex items-start gap-3 rounded-lg border bg-card p-4',
     'motion-safe:transition-colors motion-safe:duration-200',
     locked
-      ? 'cursor-default'
+      ? 'cursor-default focus-visible:border-primary focus-visible:outline-none'
       : 'hover:border-primary focus-visible:border-primary focus-visible:outline-none',
   )
 
   if (locked || !href) {
+    // tabIndex=0 keeps it reachable by keyboard — aria-disabled (unlike the
+    // native `disabled` attribute) is meant to keep a control discoverable
+    // so its state can be announced, not remove it from the tab order.
     return (
-      <div role="link" aria-disabled="true" className={className}>
+      <div role="link" aria-disabled="true" tabIndex={0} className={className}>
         {content}
       </div>
     )
