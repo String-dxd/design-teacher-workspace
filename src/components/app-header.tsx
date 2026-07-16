@@ -1,9 +1,10 @@
 import { Link, useNavigate } from '@tanstack/react-router'
-import { MessageCircle } from 'lucide-react'
+import { MessageCircle, Tag } from 'lucide-react'
 import * as React from 'react'
 
 import { NotificationPopover } from '@/components/notifications/notification-popover'
 import { useHeyTalia } from '@/components/heytalia/heytalia-context'
+import { useTagQueue } from '@/components/hdp/tag-queue-context'
 import { useFeatureFlag } from '@/hooks/use-feature-flag'
 import { useAuth } from '@/lib/auth'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -34,11 +35,13 @@ export function AppHeader() {
   const showNotifications = useFeatureFlag('notifications')
   const studentAnalyticsEnabled = useFeatureFlag('student-analytics')
   const studentAnalyticsBasicEnabled = useFeatureFlag('student-analytics-basic')
+  const hdpModuleEnabled = useFeatureFlag('reports-hdp')
   const showAssistant =
     !studentAnalyticsBasicEnabled && !studentAnalyticsEnabled
   const { isLoggedIn, logout } = useAuth()
   const navigate = useNavigate()
   const { setView } = useHeyTalia()
+  const { openTagQueue } = useTagQueue()
   const headerRef = React.useRef<HTMLElement>(null)
   const [isScrolled, setIsScrolled] = React.useState(false)
 
@@ -85,6 +88,17 @@ export function AppHeader() {
         </Breadcrumb>
       </div>
       <div className="flex items-center justify-center gap-3">
+        {hdpModuleEnabled && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+            onClick={() => openTagQueue({ entryPoint: 'topbar' })}
+          >
+            <Tag className="h-3.5 w-3.5" />
+            Tag
+          </Button>
+        )}
         {showNotifications && <NotificationPopover />}
         {isLoggedIn ? (
           <DropdownMenu>
