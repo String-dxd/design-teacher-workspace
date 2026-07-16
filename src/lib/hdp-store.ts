@@ -1,5 +1,6 @@
 import type {
   BroadcastRequest,
+  BroadcastResponse,
   CoverageSnapshot,
   DispositionId,
   FormingPattern,
@@ -15,6 +16,7 @@ import {
   CURRENT_TEACHER,
   HDP_COLLEAGUES,
   SEED_BROADCAST,
+  SEED_BROADCAST_FOR_TEACHER,
   SEED_DRAFTS,
   SEED_PATTERNS,
   SEED_REPORT_BOOKS,
@@ -70,7 +72,7 @@ export function seedIfEmpty(): void {
     writeArray(PATTERNS_KEY, SEED_PATTERNS)
   }
   if (localStorage.getItem(BROADCASTS_KEY) === null) {
-    writeArray(BROADCASTS_KEY, [SEED_BROADCAST])
+    writeArray(BROADCASTS_KEY, [SEED_BROADCAST, SEED_BROADCAST_FOR_TEACHER])
   }
   if (localStorage.getItem(DRAFTS_KEY) === null) {
     writeArray(DRAFTS_KEY, SEED_DRAFTS)
@@ -564,4 +566,159 @@ export function logEvent(
     ...payload,
   }
   writeArray(ANALYTICS_KEY, [...events, event])
+}
+
+// ── Broadcast lifecycle (plan 031) ──────────────────────────────────────
+// Research-tunable constants — keep as named exports so a later tuning
+// pass never has to hunt through the function body for a magic number.
+
+export const BROADCAST_COOLDOWN_DAYS = 7
+export const MAX_OUTSTANDING_PER_CLASS = 1
+
+const SEVEN_DAYS_MS = BROADCAST_COOLDOWN_DAYS * 24 * 60 * 60 * 1000
+
+export type CanBroadcastResult =
+  | { ok: true }
+  | { ok: false; reason: 'outstanding' | 'cooldown'; until?: string }
+
+/**
+ * A broadcast is "outstanding" while any of its recipients has given zero
+ * responses at all — a recipient who has answered for at least one student
+ * has engaged with the request, even if other students on the list haven't
+ * been individually covered yet (a group ask, not a per-student checklist).
+ */
+function hasUnansweredRecipient(broadcast: BroadcastRequest): boolean {
+  return broadcast.recipientIds.some(
+    (recipientId) =>
+      !broadcast.responses.some((r) => r.recipientId === recipientId),
+  )
+}
+
+function latestBroadcastForClass(
+  formClassId: string,
+): BroadcastRequest | undefined {
+  const forClass = loadBroadcasts().filter((b) => b.formClassId === formClassId)
+  if (forClass.length === 0) return undefined
+  return forClass.reduce((latest, b) =>
+    new Date(b.createdAt) > new Date(latest.createdAt) ? b : latest,
+  )
+}
+
+/**
+ * Guardrail from docs/decisions/reports-hdp.md: 1 outstanding broadcast per
+ * form class with a 7-day cooldown. Checked against the class's most recent
+ * broadcast only — MAX_OUTSTANDING_PER_CLASS is always 1 in this prototype,
+ * so "the latest one is still open" is equivalent to "the limit is hit".
+ */
+export function canBroadcast(formClassId: string): CanBroadcastResult {
+  const latest = latestBroadcastForClass(formClassId)
+  if (!latest) return { ok: true }
+
+  if (hasUnansweredRecipient(latest)) {
+    return { ok: false, reason: 'outstanding' }
+  }
+
+  const cooldownUntilMs = new Date(latest.createdAt).getTime() + SEVEN_DAYS_MS
+  if (Date.now() < cooldownUntilMs) {
+    return {
+      ok: false,
+      reason: 'cooldown',
+      until: new Date(cooldownUntilMs).toISOString(),
+    }
+  }
+
+  return { ok: true }
+}
+
+function newBroadcastId(): string {
+  return `broadcast-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+}
+
+export interface CreateBroadcastInput {
+  formClassId: string
+  requesterId: string
+  studentIds: Array<string>
+  recipientIds: Array<string>
+  message: string
+}
+
+/** Throws if `canBroadcast(formClassId)` is currently false — callers show
+ *  the cooldown/outstanding explanation and never call this while blocked. */
+export function createBroadcast(input: CreateBroadcastInput): BroadcastRequest {
+  const check = canBroadcast(input.formClassId)
+  if (!check.ok) {
+    throw new Error(
+      `Cannot broadcast for ${input.formClassId}: ${check.reason}`,
+    )
+  }
+  const broadcast: BroadcastRequest = {
+    id: newBroadcastId(),
+    formClassId: input.formClassId,
+    requesterId: input.requesterId,
+    studentIds: input.studentIds,
+    recipientIds: input.recipientIds,
+    message: input.message,
+    createdAt: new Date().toISOString(),
+    responses: [],
+  }
+  saveBroadcast(broadcast)
+  return broadcast
+}
+
+export type BroadcastResponseResult =
+  | { kind: 'tag'; tagInput: Omit<AddTagInput, 'source'> }
+  | { kind: 'nothing-stood-out' }
+
+/**
+ * Records a colleague's answer to one (recipient, student) pair on a
+ * broadcast. A tag answer creates the tag first (via addTag, stamped
+ * `source: 'broadcast'`) and stores only its id on the response — the
+ * response is a reference, the tag itself is the single source of truth
+ * (same shape the river and coverageForClass already read).
+ */
+export function respondToBroadcast(
+  broadcastId: string,
+  recipientId: string,
+  studentId: string,
+  result: BroadcastResponseResult,
+): BroadcastResponse {
+  const broadcasts = loadBroadcasts()
+  const broadcast = broadcasts.find((b) => b.id === broadcastId)
+  if (!broadcast) throw new Error(`Unknown broadcast id: ${broadcastId}`)
+
+  const response: BroadcastResponse =
+    result.kind === 'tag'
+      ? {
+          recipientId,
+          studentId,
+          result: {
+            kind: 'tag',
+            tagId: addTag({ ...result.tagInput, source: 'broadcast' }).id,
+          },
+          respondedAt: new Date().toISOString(),
+        }
+      : {
+          recipientId,
+          studentId,
+          result: { kind: 'nothing-stood-out' },
+          respondedAt: new Date().toISOString(),
+        }
+
+  saveBroadcast({ ...broadcast, responses: [...broadcast.responses, response] })
+  return response
+}
+
+/**
+ * The nil ("Nothing stood out") responses on record for a student, across
+ * every broadcast — feeds the "reviewed — nothing noted (teacher, date)"
+ * roster marker (already consumed inline by 030's /reports/students roster;
+ * this is the same rule as a named export for 031's own diagnostic table
+ * and responder section).
+ */
+export function nilsForStudent(studentId: string): Array<BroadcastResponse> {
+  return loadBroadcasts()
+    .flatMap((b) => b.responses)
+    .filter(
+      (r) => r.studentId === studentId && r.result.kind === 'nothing-stood-out',
+    )
 }

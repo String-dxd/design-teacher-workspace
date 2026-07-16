@@ -1,23 +1,29 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import {
   addTag,
+  canBroadcast,
   confirmPattern,
   coverageForClass,
+  createBroadcast,
   deleteTag,
   detectFormingPatterns,
   dismissPattern,
   dispositionMix,
+  loadBroadcasts,
   loadPatterns,
   loadTags,
   logEvent,
+  nilsForStudent,
+  respondToBroadcast,
   seedIfEmpty,
   summaryForTeacher,
   tagsForStudentVisible,
   updateTag,
 } from './hdp-store'
 import type { AddTagInput } from './hdp-store'
-import type { FormingPattern, HdpTag } from '@/types/hdp'
+import type { BroadcastRequest, FormingPattern, HdpTag } from '@/types/hdp'
 import { CURRENT_TEACHER } from '@/data/hdp'
+import { teachersForStudents } from '@/data/timetable'
 
 // Same jsdom/localStorage race as src/lib/draft-storage.test.ts — install a
 // minimal in-memory Storage-compatible stub so these tests exercise the
@@ -345,6 +351,188 @@ describe('tagsForStudentVisible', () => {
     )
     const visible = tagsForStudentVisible('11', 'goh-wt', true)
     expect(visible.map((t) => t.id).sort()).toEqual(['t1', 't2'])
+  })
+})
+
+function makeBroadcast(overrides: Partial<BroadcastRequest>): BroadcastRequest {
+  return {
+    id: 'b-test',
+    formClassId: '3A',
+    requesterId: 'lee-sy',
+    studentIds: ['1'],
+    recipientIds: ['goh-wt'],
+    message: 'test',
+    createdAt: '2026-07-10T09:00:00+08:00',
+    responses: [],
+    ...overrides,
+  }
+}
+
+describe('canBroadcast / createBroadcast — cooldown and outstanding', () => {
+  it('is ok (true) for a class with no broadcast history', () => {
+    expect(canBroadcast('unseeded-class')).toEqual({ ok: true })
+  })
+
+  it('is false (outstanding) while a recipient has given zero responses', () => {
+    localStorage.setItem(
+      'hdp_broadcasts',
+      JSON.stringify([
+        makeBroadcast({
+          recipientIds: ['goh-wt', 'kumar-a'],
+          responses: [], // neither recipient has responded at all
+        }),
+      ]),
+    )
+    const result = canBroadcast('3A')
+    expect(result).toEqual({ ok: false, reason: 'outstanding' })
+  })
+
+  it('is false (cooldown) within 7 days of the last broadcast once every recipient has answered', () => {
+    const NOW = new Date('2026-07-13T09:00:00+08:00') // 3 days after the fixture's createdAt
+    vi.useFakeTimers()
+    vi.setSystemTime(NOW)
+    localStorage.setItem(
+      'hdp_broadcasts',
+      JSON.stringify([
+        makeBroadcast({
+          recipientIds: ['goh-wt'],
+          responses: [
+            {
+              recipientId: 'goh-wt',
+              studentId: '1',
+              result: { kind: 'nothing-stood-out' },
+              respondedAt: '2026-07-10T10:00:00+08:00',
+            },
+          ],
+        }),
+      ]),
+    )
+    const result = canBroadcast('3A')
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.reason).toBe('cooldown')
+  })
+
+  it('is true after 7 days once every recipient has answered', () => {
+    const NOW = new Date('2026-07-18T09:00:00+08:00') // 8 days after the fixture's createdAt
+    vi.useFakeTimers()
+    vi.setSystemTime(NOW)
+    localStorage.setItem(
+      'hdp_broadcasts',
+      JSON.stringify([
+        makeBroadcast({
+          recipientIds: ['goh-wt'],
+          responses: [
+            {
+              recipientId: 'goh-wt',
+              studentId: '1',
+              result: { kind: 'nothing-stood-out' },
+              respondedAt: '2026-07-10T10:00:00+08:00',
+            },
+          ],
+        }),
+      ]),
+    )
+    expect(canBroadcast('3A')).toEqual({ ok: true })
+  })
+
+  it('createBroadcast throws when canBroadcast is blocked', () => {
+    localStorage.setItem(
+      'hdp_broadcasts',
+      JSON.stringify([
+        makeBroadcast({ recipientIds: ['goh-wt'], responses: [] }),
+      ]),
+    )
+    expect(() =>
+      createBroadcast({
+        formClassId: '3A',
+        requesterId: 'lee-sy',
+        studentIds: ['1'],
+        recipientIds: ['goh-wt'],
+        message: 'Anything stand out?',
+      }),
+    ).toThrow()
+  })
+
+  it('createBroadcast persists a new broadcast when not blocked', () => {
+    localStorage.setItem('hdp_broadcasts', JSON.stringify([]))
+    const broadcast = createBroadcast({
+      formClassId: '3A',
+      requesterId: 'lee-sy',
+      studentIds: ['1', '2'],
+      recipientIds: ['goh-wt'],
+      message: 'Anything stand out?',
+    })
+    expect(loadBroadcasts().map((b) => b.id)).toContain(broadcast.id)
+    expect(broadcast.responses).toEqual([])
+  })
+})
+
+describe('respondToBroadcast', () => {
+  it('a nothing-stood-out response marks the student covered via coverageForClass', () => {
+    localStorage.setItem('hdp_tags', JSON.stringify([]))
+    localStorage.setItem(
+      'hdp_broadcasts',
+      JSON.stringify([
+        makeBroadcast({
+          id: 'b1',
+          studentIds: ['1'],
+          recipientIds: ['goh-wt'],
+          responses: [],
+        }),
+      ]),
+    )
+    respondToBroadcast('b1', 'goh-wt', '1', { kind: 'nothing-stood-out' })
+    const snapshot = coverageForClass('3A')
+    expect(snapshot.covered).toBe(1)
+    expect(snapshot.reviewedNil).toBe(1)
+    expect(nilsForStudent('1')).toHaveLength(1)
+  })
+
+  it('a tag response creates a tag with source "broadcast" and the response references its id', () => {
+    localStorage.setItem('hdp_tags', JSON.stringify([]))
+    localStorage.setItem(
+      'hdp_broadcasts',
+      JSON.stringify([
+        makeBroadcast({
+          id: 'b2',
+          studentIds: ['1'],
+          recipientIds: ['goh-wt'],
+          responses: [],
+        }),
+      ]),
+    )
+    const response = respondToBroadcast('b2', 'goh-wt', '1', {
+      kind: 'tag',
+      tagInput: {
+        studentId: '1',
+        authorId: 'goh-wt',
+        disposition: 'curiosity',
+        context: 'lesson',
+        entryPoint: 'topbar',
+      },
+    })
+    expect(response.result.kind).toBe('tag')
+    const tagId = response.result.kind === 'tag' ? response.result.tagId : ''
+    const tag = loadTags().find((t) => t.id === tagId)
+    expect(tag).toBeDefined()
+    expect(tag?.source).toBe('broadcast')
+    expect(tag?.authorId).toBe('goh-wt')
+  })
+})
+
+describe('teachersForStudents', () => {
+  it('returns the union of timetabled teachers across students, with no duplicates', () => {
+    // '1' and '2' are 3A students — goh-wt, kumar-a, raj-v all teach 3A.
+    const teachers = teachersForStudents(['1', '2'])
+    expect(new Set(teachers).size).toBe(teachers.length)
+    expect(teachers.sort()).toEqual(['goh-wt', 'kumar-a', 'raj-v'].sort())
+  })
+
+  it('never returns a teacher with no timetabled overlap with the given students', () => {
+    // '11' is a 3B student — only lee-sy and kumar-a are timetabled to 3B.
+    const teachers = teachersForStudents(['11'])
+    expect(teachers.sort()).toEqual(['kumar-a', 'lee-sy'].sort())
+    expect(teachers).not.toContain('raj-v')
   })
 })
 

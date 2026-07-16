@@ -1251,6 +1251,34 @@ export const SEED_BROADCAST: BroadcastRequest = {
   ],
 }
 
+// ── SEED_BROADCAST_FOR_TEACHER ───────────────────────────────────────────
+// A second, independent broadcast where CURRENT_TEACHER is a RECIPIENT
+// rather than the requester (plan 031, Step 3) — makes the responder
+// ("Requests for you") section of /reports/broadcast demoable honestly
+// without reshaping SEED_BROADCAST's 3A fixture. Mdm Goh Wei Ting asks
+// about two 4A students CURRENT_TEACHER (lee-sy) teaches academically
+// (English); Mr Vijay Raj (Humanities, also timetabled to 4A) has already
+// answered for one of them. CURRENT_TEACHER's two pairs are still
+// unanswered — that's the outstanding work the responder section surfaces.
+export const SEED_BROADCAST_FOR_TEACHER: BroadcastRequest = {
+  id: 'broadcast-2',
+  formClassId: '4A',
+  requesterId: 'goh-wt',
+  studentIds: ['53', '61'],
+  recipientIds: ['lee-sy', 'raj-v'],
+  message:
+    "Anything stand out for these before the window closes? A quick tag or 'nothing stood out' both help.",
+  createdAt: '2026-07-15T09:00:00+08:00',
+  responses: [
+    {
+      recipientId: 'raj-v',
+      studentId: '53',
+      result: { kind: 'nothing-stood-out' },
+      respondedAt: '2026-07-15T15:00:00+08:00',
+    },
+  ],
+}
+
 // ── Staged funnel (UX grill decision, 2026-07-16) ───────────────────────
 // Student A ('1', Chen Jun Kai): confirmed, unsynced overall draft — Review
 // & Sync renders populated from first load. Book comments stay empty.
