@@ -9,6 +9,10 @@ interface ToolCardProps {
   state: string
   href?: string
   locked?: boolean
+  /** Colored icon-wrapper classes (Radix step-3 bg + step-11 text), e.g.
+   *  "bg-twblue-3 text-twblue-11". Locked/stub cards keep the default
+   *  bg-muted text-muted-foreground wrapper. */
+  iconClassName?: string
 }
 
 // Locked ≠ dimmed, locked ≠ hidden: locked cards keep full opacity and
@@ -22,12 +26,20 @@ export function ToolCard({
   state,
   href,
   locked,
+  iconClassName,
 }: ToolCardProps) {
   const content = (
     <>
-      <Icon className="text-muted-foreground size-5 shrink-0" aria-hidden />
+      <span
+        className={cn(
+          'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg',
+          iconClassName ?? 'bg-muted text-muted-foreground',
+        )}
+      >
+        <Icon className="size-5" aria-hidden />
+      </span>
       <div className="flex flex-col gap-1">
-        <span className="text-sm font-medium">{name}</span>
+        <span className="text-sm font-semibold">{name}</span>
         <span className="text-muted-foreground text-sm">{description}</span>
         <span className="text-muted-foreground text-xs">{state}</span>
       </div>

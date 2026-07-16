@@ -9,7 +9,11 @@ const DISPOSITION_LABELS: Record<DispositionId, string> = {
 }
 
 interface TagPillProps {
-  disposition: DispositionId
+  disposition?: DispositionId
+  /** Overrides the disposition lookup — used to name a context/artefact
+   *  instead of a disposition (e.g. the story register's evidence chips,
+   *  plan 037). Exactly one of `disposition`/`label` should be given. */
+  label?: string
   /** 'key' is the screen's one accent use — reserve it, don't default to it. */
   variant?: 'default' | 'key'
   className?: string
@@ -19,6 +23,7 @@ interface TagPillProps {
 // stream, pattern cards, and the disposition mix bar's legend.
 export function TagPill({
   disposition,
+  label,
   variant = 'default',
   className,
 }: TagPillProps) {
@@ -32,7 +37,7 @@ export function TagPill({
         className,
       )}
     >
-      {DISPOSITION_LABELS[disposition]}
+      {label ?? (disposition ? DISPOSITION_LABELS[disposition] : '')}
     </span>
   )
 }

@@ -1,5 +1,7 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { DraftStudio } from '@/components/hdp/draft-studio'
+import { MarksGrid } from '@/components/hdp/marks-grid'
+import { StudentSwitcher } from '@/components/hdp/student-switcher'
 import { getStudentById } from '@/data/mock-students'
 import { useFeatureFlag } from '@/hooks/use-feature-flag'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
@@ -53,14 +55,29 @@ function DraftStudioPage() {
   }
 
   return (
-    <main className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-8 sm:px-6">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold">{student.name}</h1>
-        <p className="text-muted-foreground text-sm">
-          Draft Studio — turn tags into an evidence-grounded comment.
-        </p>
+    <main className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6 lg:flex-row lg:items-start">
+      <StudentSwitcher currentStudentId={studentId} />
+
+      <div className="flex min-w-0 flex-1 flex-col gap-6">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl font-semibold">{student.name}</h1>
+          <p className="text-muted-foreground text-sm">
+            Draft Studio — turn tags into an evidence-grounded comment.
+          </p>
+        </div>
+        {/* Keyed remount on studentId: the grid's per-cell <Input
+            defaultValue> is intentionally uncontrolled (autosave-on-blur,
+            no per-keystroke re-render) — without a key, switching students
+            would leave stale DOM input values from the previous student
+            (same class of bug plan 019 fixed for the legacy cycle-write
+            pager). */}
+        <MarksGrid
+          key={studentId}
+          studentId={studentId}
+          studentName={student.name}
+        />
+        <DraftStudio studentId={studentId} />
       </div>
-      <DraftStudio studentId={studentId} />
     </main>
   )
 }

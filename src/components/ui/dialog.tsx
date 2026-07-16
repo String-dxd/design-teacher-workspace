@@ -31,7 +31,19 @@ function DialogOverlay({
     <DialogPrimitive.Backdrop
       data-slot="dialog-overlay"
       className={cn(
-        'data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 bg-overlay/75 duration-100 supports-backdrop-filter:backdrop-blur-xs fixed inset-0 isolate z-50',
+        // data-closed:pointer-events-none is a defensive fallback, not a
+        // cosmetic hack: Base UI unmounts the backdrop only after its exit
+        // CSS animation resolves via the Web Animations `finished` promise
+        // (see useAnimationsFinished/useOpenChangeComplete upstream). If
+        // that promise never settles — a backgrounded tab throttling rAF, a
+        // thin-client/VDI session, or any other stalled compositor — the
+        // "closed" backdrop stays mounted and fully interactive, silently
+        // blocking every click behind it. Marking it non-interactive the
+        // instant `data-closed` appears (which happens synchronously on
+        // close, independent of the animation) means a stuck exit animation
+        // can never again make the app unusable, whether or not the
+        // upstream unmount ever completes.
+        'data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:pointer-events-none bg-overlay/75 duration-100 supports-backdrop-filter:backdrop-blur-xs fixed inset-0 isolate z-50 motion-reduce:animate-none! motion-reduce:transition-none!',
         className,
       )}
       {...props}
@@ -53,7 +65,9 @@ function DialogContent({
       <DialogPrimitive.Popup
         data-slot="dialog-content"
         className={cn(
-          'bg-background data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 ring-foreground/5 grid max-w-[calc(100%-2rem)] gap-6 rounded-3xl p-6 text-sm ring-1 duration-100 sm:max-w-md fixed top-1/2 left-1/2 z-50 w-full -translate-x-1/2 -translate-y-1/2 outline-none',
+          // See DialogOverlay above for why data-closed:pointer-events-none
+          // is load-bearing, not cosmetic.
+          'bg-background data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 data-closed:pointer-events-none ring-foreground/5 grid max-w-[calc(100%-2rem)] gap-6 rounded-3xl p-6 text-sm ring-1 duration-100 sm:max-w-md fixed top-1/2 left-1/2 z-50 w-full -translate-x-1/2 -translate-y-1/2 outline-none motion-reduce:animate-none! motion-reduce:transition-none!',
           className,
         )}
         {...props}

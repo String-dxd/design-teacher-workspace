@@ -2,12 +2,10 @@ export type FeatureFlagKey =
   | 'posts'
   | 'forms'
   | 'notifications'
-  | 'hdp-reports'
   | 'student-analytics'
   | 'student-analytics-basic'
   | 'lta-intervention'
   | 'student-groups'
-  | 'reports'
   | 'calendar'
   | 'meetings'
   | 'import-data'
@@ -22,9 +20,9 @@ export type FeatureFlagKey =
   | 'export'
   | 'primary-contact'
   | 'posts-admin-view'
-  | 'reports-admin-view'
   | 'reports-hdp'
   | 'reports-river-visibility'
+  | 'reports-hdp-future'
 
 export type FeatureFlags = {
   [K in FeatureFlagKey]: boolean

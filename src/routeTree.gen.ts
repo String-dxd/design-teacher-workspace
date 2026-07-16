@@ -62,12 +62,10 @@ import { Route as ReportsStudentsIndexRouteImport } from './routes/reports.stude
 import { Route as ReportsDraftsIndexRouteImport } from './routes/reports.drafts.index'
 import { Route as ReportsStudentsStudentIdRouteImport } from './routes/reports.students.$studentId'
 import { Route as ReportsDraftsStudentIdRouteImport } from './routes/reports.drafts.$studentId'
-import { Route as ReportsCycleLayoutRouteImport } from './routes/reports.cycle.layout'
 import { Route as GroupsStructuredGroupIdRouteImport } from './routes/groups.structured.$groupId'
-import { Route as GuestReportViewTokenRouteImport } from './routes/_guest.report-view.$token'
+import { Route as GuestHdpStudentTokenRouteImport } from './routes/_guest.hdp-student.$token'
 import { Route as GuestHdpReportTokenRouteImport } from './routes/_guest.hdp-report.$token'
 import { Route as StudentsIdAgencyReportNewRouteImport } from './routes/students_.$id.agency-report.new'
-import { Route as ReportsCycleWriteStudentIdRouteImport } from './routes/reports.cycle.write.$studentId'
 
 const StudentsRoute = StudentsRouteImport.update({
   id: '/students',
@@ -334,19 +332,14 @@ const ReportsDraftsStudentIdRoute = ReportsDraftsStudentIdRouteImport.update({
   path: '/drafts/$studentId',
   getParentRoute: () => ReportsRoute,
 } as any)
-const ReportsCycleLayoutRoute = ReportsCycleLayoutRouteImport.update({
-  id: '/cycle/layout',
-  path: '/cycle/layout',
-  getParentRoute: () => ReportsRoute,
-} as any)
 const GroupsStructuredGroupIdRoute = GroupsStructuredGroupIdRouteImport.update({
   id: '/structured/$groupId',
   path: '/structured/$groupId',
   getParentRoute: () => GroupsRoute,
 } as any)
-const GuestReportViewTokenRoute = GuestReportViewTokenRouteImport.update({
-  id: '/report-view/$token',
-  path: '/report-view/$token',
+const GuestHdpStudentTokenRoute = GuestHdpStudentTokenRouteImport.update({
+  id: '/hdp-student/$token',
+  path: '/hdp-student/$token',
   getParentRoute: () => GuestRoute,
 } as any)
 const GuestHdpReportTokenRoute = GuestHdpReportTokenRouteImport.update({
@@ -359,12 +352,6 @@ const StudentsIdAgencyReportNewRoute =
     id: '/students_/$id/agency-report/new',
     path: '/students/$id/agency-report/new',
     getParentRoute: () => rootRouteImport,
-  } as any)
-const ReportsCycleWriteStudentIdRoute =
-  ReportsCycleWriteStudentIdRouteImport.update({
-    id: '/cycle/write/$studentId',
-    path: '/cycle/write/$studentId',
-    getParentRoute: () => ReportsRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -417,14 +404,12 @@ export interface FileRoutesByFullPath {
   '/reports/': typeof ReportsIndexRoute
   '/students/': typeof StudentsIndexRoute
   '/hdp-report/$token': typeof GuestHdpReportTokenRoute
-  '/report-view/$token': typeof GuestReportViewTokenRoute
+  '/hdp-student/$token': typeof GuestHdpStudentTokenRoute
   '/groups/structured/$groupId': typeof GroupsStructuredGroupIdRoute
-  '/reports/cycle/layout': typeof ReportsCycleLayoutRoute
   '/reports/drafts/$studentId': typeof ReportsDraftsStudentIdRoute
   '/reports/students/$studentId': typeof ReportsStudentsStudentIdRoute
   '/reports/drafts/': typeof ReportsDraftsIndexRoute
   '/reports/students/': typeof ReportsStudentsIndexRoute
-  '/reports/cycle/write/$studentId': typeof ReportsCycleWriteStudentIdRoute
   '/students/$id/agency-report/new': typeof StudentsIdAgencyReportNewRoute
 }
 export interface FileRoutesByTo {
@@ -469,14 +454,12 @@ export interface FileRoutesByTo {
   '/reports': typeof ReportsIndexRoute
   '/students': typeof StudentsIndexRoute
   '/hdp-report/$token': typeof GuestHdpReportTokenRoute
-  '/report-view/$token': typeof GuestReportViewTokenRoute
+  '/hdp-student/$token': typeof GuestHdpStudentTokenRoute
   '/groups/structured/$groupId': typeof GroupsStructuredGroupIdRoute
-  '/reports/cycle/layout': typeof ReportsCycleLayoutRoute
   '/reports/drafts/$studentId': typeof ReportsDraftsStudentIdRoute
   '/reports/students/$studentId': typeof ReportsStudentsStudentIdRoute
   '/reports/drafts': typeof ReportsDraftsIndexRoute
   '/reports/students': typeof ReportsStudentsIndexRoute
-  '/reports/cycle/write/$studentId': typeof ReportsCycleWriteStudentIdRoute
   '/students/$id/agency-report/new': typeof StudentsIdAgencyReportNewRoute
 }
 export interface FileRoutesById {
@@ -531,14 +514,12 @@ export interface FileRoutesById {
   '/reports/': typeof ReportsIndexRoute
   '/students/': typeof StudentsIndexRoute
   '/_guest/hdp-report/$token': typeof GuestHdpReportTokenRoute
-  '/_guest/report-view/$token': typeof GuestReportViewTokenRoute
+  '/_guest/hdp-student/$token': typeof GuestHdpStudentTokenRoute
   '/groups/structured/$groupId': typeof GroupsStructuredGroupIdRoute
-  '/reports/cycle/layout': typeof ReportsCycleLayoutRoute
   '/reports/drafts/$studentId': typeof ReportsDraftsStudentIdRoute
   '/reports/students/$studentId': typeof ReportsStudentsStudentIdRoute
   '/reports/drafts/': typeof ReportsDraftsIndexRoute
   '/reports/students/': typeof ReportsStudentsIndexRoute
-  '/reports/cycle/write/$studentId': typeof ReportsCycleWriteStudentIdRoute
   '/students_/$id/agency-report/new': typeof StudentsIdAgencyReportNewRoute
 }
 export interface FileRouteTypes {
@@ -593,14 +574,12 @@ export interface FileRouteTypes {
     | '/reports/'
     | '/students/'
     | '/hdp-report/$token'
-    | '/report-view/$token'
+    | '/hdp-student/$token'
     | '/groups/structured/$groupId'
-    | '/reports/cycle/layout'
     | '/reports/drafts/$studentId'
     | '/reports/students/$studentId'
     | '/reports/drafts/'
     | '/reports/students/'
-    | '/reports/cycle/write/$studentId'
     | '/students/$id/agency-report/new'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -645,14 +624,12 @@ export interface FileRouteTypes {
     | '/reports'
     | '/students'
     | '/hdp-report/$token'
-    | '/report-view/$token'
+    | '/hdp-student/$token'
     | '/groups/structured/$groupId'
-    | '/reports/cycle/layout'
     | '/reports/drafts/$studentId'
     | '/reports/students/$studentId'
     | '/reports/drafts'
     | '/reports/students'
-    | '/reports/cycle/write/$studentId'
     | '/students/$id/agency-report/new'
   id:
     | '__root__'
@@ -706,14 +683,12 @@ export interface FileRouteTypes {
     | '/reports/'
     | '/students/'
     | '/_guest/hdp-report/$token'
-    | '/_guest/report-view/$token'
+    | '/_guest/hdp-student/$token'
     | '/groups/structured/$groupId'
-    | '/reports/cycle/layout'
     | '/reports/drafts/$studentId'
     | '/reports/students/$studentId'
     | '/reports/drafts/'
     | '/reports/students/'
-    | '/reports/cycle/write/$studentId'
     | '/students_/$id/agency-report/new'
   fileRoutesById: FileRoutesById
 }
@@ -1115,13 +1090,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReportsDraftsStudentIdRouteImport
       parentRoute: typeof ReportsRoute
     }
-    '/reports/cycle/layout': {
-      id: '/reports/cycle/layout'
-      path: '/cycle/layout'
-      fullPath: '/reports/cycle/layout'
-      preLoaderRoute: typeof ReportsCycleLayoutRouteImport
-      parentRoute: typeof ReportsRoute
-    }
     '/groups/structured/$groupId': {
       id: '/groups/structured/$groupId'
       path: '/structured/$groupId'
@@ -1129,11 +1097,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GroupsStructuredGroupIdRouteImport
       parentRoute: typeof GroupsRoute
     }
-    '/_guest/report-view/$token': {
-      id: '/_guest/report-view/$token'
-      path: '/report-view/$token'
-      fullPath: '/report-view/$token'
-      preLoaderRoute: typeof GuestReportViewTokenRouteImport
+    '/_guest/hdp-student/$token': {
+      id: '/_guest/hdp-student/$token'
+      path: '/hdp-student/$token'
+      fullPath: '/hdp-student/$token'
+      preLoaderRoute: typeof GuestHdpStudentTokenRouteImport
       parentRoute: typeof GuestRoute
     }
     '/_guest/hdp-report/$token': {
@@ -1150,13 +1118,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudentsIdAgencyReportNewRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/reports/cycle/write/$studentId': {
-      id: '/reports/cycle/write/$studentId'
-      path: '/cycle/write/$studentId'
-      fullPath: '/reports/cycle/write/$studentId'
-      preLoaderRoute: typeof ReportsCycleWriteStudentIdRouteImport
-      parentRoute: typeof ReportsRoute
-    }
   }
 }
 
@@ -1166,7 +1127,7 @@ interface GuestRouteChildren {
   GuestPreviewMenuRoute: typeof GuestPreviewMenuRoute
   GuestStudentLoginRoute: typeof GuestStudentLoginRoute
   GuestHdpReportTokenRoute: typeof GuestHdpReportTokenRoute
-  GuestReportViewTokenRoute: typeof GuestReportViewTokenRoute
+  GuestHdpStudentTokenRoute: typeof GuestHdpStudentTokenRoute
 }
 
 const GuestRouteChildren: GuestRouteChildren = {
@@ -1175,7 +1136,7 @@ const GuestRouteChildren: GuestRouteChildren = {
   GuestPreviewMenuRoute: GuestPreviewMenuRoute,
   GuestStudentLoginRoute: GuestStudentLoginRoute,
   GuestHdpReportTokenRoute: GuestHdpReportTokenRoute,
-  GuestReportViewTokenRoute: GuestReportViewTokenRoute,
+  GuestHdpStudentTokenRoute: GuestHdpStudentTokenRoute,
 }
 
 const GuestRouteWithChildren = GuestRoute._addFileChildren(GuestRouteChildren)
@@ -1278,12 +1239,10 @@ interface ReportsRouteChildren {
   ReportsSummaryRoute: typeof ReportsSummaryRoute
   ReportsTagRoute: typeof ReportsTagRoute
   ReportsIndexRoute: typeof ReportsIndexRoute
-  ReportsCycleLayoutRoute: typeof ReportsCycleLayoutRoute
   ReportsDraftsStudentIdRoute: typeof ReportsDraftsStudentIdRoute
   ReportsStudentsStudentIdRoute: typeof ReportsStudentsStudentIdRoute
   ReportsDraftsIndexRoute: typeof ReportsDraftsIndexRoute
   ReportsStudentsIndexRoute: typeof ReportsStudentsIndexRoute
-  ReportsCycleWriteStudentIdRoute: typeof ReportsCycleWriteStudentIdRoute
 }
 
 const ReportsRouteChildren: ReportsRouteChildren = {
@@ -1293,12 +1252,10 @@ const ReportsRouteChildren: ReportsRouteChildren = {
   ReportsSummaryRoute: ReportsSummaryRoute,
   ReportsTagRoute: ReportsTagRoute,
   ReportsIndexRoute: ReportsIndexRoute,
-  ReportsCycleLayoutRoute: ReportsCycleLayoutRoute,
   ReportsDraftsStudentIdRoute: ReportsDraftsStudentIdRoute,
   ReportsStudentsStudentIdRoute: ReportsStudentsStudentIdRoute,
   ReportsDraftsIndexRoute: ReportsDraftsIndexRoute,
   ReportsStudentsIndexRoute: ReportsStudentsIndexRoute,
-  ReportsCycleWriteStudentIdRoute: ReportsCycleWriteStudentIdRoute,
 }
 
 const ReportsRouteWithChildren =

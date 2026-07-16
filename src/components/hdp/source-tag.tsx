@@ -18,14 +18,27 @@ interface SourceTagProps {
    *  popover renders honestly rather than fabricating. */
   tag?: HdpTag
   authorName?: string
+  /** Prototype B only (plan 040): when this claim was composed from an
+   *  insight whose `sourceRef.system` isn't `'tw-river'` (attendance/CCA/
+   *  conduct/VIA/competition/trajectory — no HdpTag exists to resolve),
+   *  the caller passes the insight's own fact line here so the popover
+   *  shows it instead of the "tag not available" fallback below. */
+  insightFact?: string
 }
 
 // Inline chip after a claim's text. Two variants: `source` (a real tag
 // backs this sentence — click opens the "Based on:" lineage popover) and
 // `mine` (a teacher-written sentence with no source — "your addition",
 // no popover, nothing to trace). There is deliberately no third variant and
-// no prop that lets a caller attach a source without a real tag (P3).
-export function SourceTag({ source, edited, tag, authorName }: SourceTagProps) {
+// no prop that lets a caller attach a source without a real tag or insight
+// (P3).
+export function SourceTag({
+  source,
+  edited,
+  tag,
+  authorName,
+  insightFact,
+}: SourceTagProps) {
   const baseClassName = 'text-xs font-medium rounded px-1.5 whitespace-nowrap'
 
   if (!source) {
@@ -41,7 +54,7 @@ export function SourceTag({ source, edited, tag, authorName }: SourceTagProps) {
       <PopoverTrigger
         className={cn(
           baseClassName,
-          'text-primary bg-primary/10 focus-visible:ring-ring/50 outline-none focus-visible:ring-[3px]',
+          'text-primary bg-primary/10 hover:bg-primary/15 focus-visible:ring-ring/50 outline-none motion-safe:transition-colors motion-safe:duration-150 focus-visible:ring-[3px]',
         )}
       >
         {source.label}
@@ -58,6 +71,8 @@ export function SourceTag({ source, edited, tag, authorName }: SourceTagProps) {
               editable={false}
             />
           </ol>
+        ) : insightFact ? (
+          <p className="text-sm">{insightFact}</p>
         ) : (
           <p className="text-muted-foreground text-sm">
             This tag is no longer available.

@@ -1,12 +1,18 @@
 import { mockStudents } from './mock-students'
 import { MOCK_STAFF } from './mock-staff'
 import type {
+  AssessmentKind,
   BroadcastRequest,
   FormingPattern,
   HdpCycle,
   HdpDraft,
+  HdpMarkEntry,
+  HdpMarksRecord,
   HdpReportBook,
   HdpTag,
+  SchoolYear,
+  Semester,
+  StudentReflection,
 } from '@/types/hdp'
 
 // Fresh, self-contained fixtures for the HDP Reports module. Zero imports
@@ -1210,6 +1216,26 @@ export const SEED_PATTERNS: Array<FormingPattern> = [
     status: 'candidate',
     schoolYear: '2026',
   },
+  // pattern-3: student B (Vincent, '2') — the story register's confirmed
+  // pattern chapter (plan 037). Reuses the same collaboration tags already
+  // cited by his overall draft claim ("Has become the groupmate others go
+  // to first when they get stuck") so the chapter's evidence matches the
+  // book's own comment thread. tag-9/tag-10 (lee-sy, context 'other') +
+  // tag-12 (raj-v, context 'marking') — 2 distinct contexts, confirmed by
+  // both teachers who logged them.
+  {
+    id: 'pattern-3',
+    studentId: '2',
+    disposition: 'collaboration',
+    contexts: ['other', 'marking'],
+    tagIds: ['tag-9', 'tag-10', 'tag-12'],
+    status: 'confirmed',
+    confirmedBy: 'lee-sy',
+    schoolYear: '2026',
+    headline: 'Steps in when a groupmate gets stuck',
+    studentNote:
+      "I like being the one people ask when they're confused — it means I actually get it.",
+  },
 ]
 
 // ── SEED_BROADCAST ───────────────────────────────────────────────────────
@@ -1424,5 +1450,144 @@ export const SEED_REPORT_BOOKS: Array<HdpReportBook> = [
       'Ask me why I think the formula works, not just how to use it.',
       'Ask me about the group project where I let someone else present.',
     ],
+  },
+]
+
+// ── SEED_MARKS (plan 036) ────────────────────────────────────────────────
+// Four semesters of marks history per 3A student (2025 S1 → 2026 S2, the
+// current semester) across 5 subjects — realistic 45–90 scores, deterministic
+// (no Date.now/Math.random) so the fixture is stable across reloads. Each
+// (student, subject) pair is mapped to one of the four trend shapes below via
+// a plain string hash, so across 14 students × 5 subjects every trend
+// direction (climbing/steady/recovering/easing) shows up at least once.
+const MARK_SUBJECTS = [
+  'English',
+  'Mathematics',
+  'Science',
+  'Mother Tongue',
+  'Humanities',
+]
+
+const MARK_SEMESTERS: Array<{ schoolYear: SchoolYear; semester: Semester }> = [
+  { schoolYear: '2025', semester: 1 },
+  { schoolYear: '2025', semester: 2 },
+  { schoolYear: '2026', semester: 1 },
+  { schoolYear: '2026', semester: 2 }, // current — partially filled (WA1 only)
+]
+
+type MarkTrendShape = 'climbing' | 'steady' | 'recovering' | 'easing'
+const MARK_TREND_SHAPES: Array<MarkTrendShape> = [
+  'climbing',
+  'steady',
+  'recovering',
+  'easing',
+]
+
+// Per-semester deltas off a base score, one per shape. `recovering`'s last
+// delta is kept inside ±2 on purpose — it dips then recovers to roughly
+// where it started, distinct from a `climbing` shape whose last delta is
+// what pushes it past the +2 threshold.
+function marksDeltasForShape(
+  shape: MarkTrendShape,
+): [number, number, number, number] {
+  switch (shape) {
+    case 'climbing':
+      return [0, 3, 6, 9]
+    case 'easing':
+      return [9, 6, 3, 0]
+    case 'recovering':
+      return [0, -6, -1, 0]
+    case 'steady':
+    default:
+      return [0, 1, 0, 1]
+  }
+}
+
+/** Deterministic, dependency-free string hash — spreads (student, subject)
+ *  pairs across the four trend shapes and a small score jitter. Not for
+ *  anything cryptographic; purely a stable fixture-shaping tool. */
+function seedHash(input: string): number {
+  let hash = 0
+  for (let i = 0; i < input.length; i++) {
+    hash = (hash * 31 + input.charCodeAt(i)) | 0
+  }
+  return Math.abs(hash)
+}
+
+function clampScore(score: number): number {
+  return Math.max(45, Math.min(90, Math.round(score)))
+}
+
+function marksForStudent(studentId: string): HdpMarksRecord {
+  const entries: Array<HdpMarkEntry> = []
+  for (const subject of MARK_SUBJECTS) {
+    const hash = seedHash(`${studentId}-${subject}`)
+    const base = 55 + (hash % 15) // 55..69 starting band
+    const shape = MARK_TREND_SHAPES[Math.floor(hash / 15) % 4]
+    const jitter = Math.floor(hash / 60) % 3 // 0..2, keeps clamping rare
+    const deltas = marksDeltasForShape(shape)
+
+    MARK_SEMESTERS.forEach((sem, index) => {
+      const target = base + deltas[index]
+      const isCurrent = index === MARK_SEMESTERS.length - 1
+      if (isCurrent) {
+        // The current semester's marking window has only just opened — WA1
+        // is the only assessment recorded so far.
+        entries.push({
+          subject,
+          schoolYear: sem.schoolYear,
+          semester: sem.semester,
+          assessment: 'wa1',
+          score: clampScore(target),
+        })
+        return
+      }
+      const assessments: Array<{ assessment: AssessmentKind; score: number }> =
+        [
+          { assessment: 'wa1', score: clampScore(target - jitter) },
+          { assessment: 'wa2', score: clampScore(target) },
+          { assessment: 'exam', score: clampScore(target + jitter) },
+        ]
+      for (const { assessment, score } of assessments) {
+        entries.push({
+          subject,
+          schoolYear: sem.schoolYear,
+          semester: sem.semester,
+          assessment,
+          score,
+        })
+      }
+    })
+  }
+  return { studentId, entries }
+}
+
+export const SEED_MARKS: Array<HdpMarksRecord> =
+  CLASS_3A_STUDENT_IDS.map(marksForStudent)
+
+// ── SEED_REFLECTIONS (plan 037) ─────────────────────────────────────────
+// First-person, age-plausible reflections for the 3 report-book students
+// (see the "Staged funnel" note above). Student B ('2', Vincent) is marked
+// `chosenAsCover: true` — the story register's cover quote. Behaviour-in-
+// context language, no trait vocabulary, matches the "Ask … about" prompts
+// already seeded for these three.
+export const SEED_REFLECTIONS: Array<StudentReflection> = [
+  {
+    studentId: '1',
+    text: 'This term I finally got the geometry proof to work after redoing it a few times. I want to try explaining my working out loud more, not just writing it down.',
+    writtenAt: '2026-07-10T20:15:00+08:00',
+    chosenAsCover: false,
+  },
+  {
+    studentId: '2',
+    text: 'I kept going back to that geometry proof at CCA training until it made sense, even when it was frustrating. I also started noticing when people around me look lost, and I like being the one they ask.',
+    writtenAt: '2026-07-11T19:40:00+08:00',
+    chosenAsCover: true,
+  },
+  {
+    studentId: '3',
+    text: 'I let someone else present our group project this time, even though I wanted to. I think I understand the formula better when I ask why it works, not just how to use it.',
+    writtenAt: '2026-07-12T21:05:00+08:00',
+    chosenAsCover: false,
   },
 ]

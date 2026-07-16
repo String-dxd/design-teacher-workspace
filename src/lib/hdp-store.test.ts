@@ -2,10 +2,12 @@ import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import {
   acknowledgeReport,
   addTag,
+  bookByStudentToken,
   bookByToken,
   canBroadcast,
   confirmDraft,
   confirmPattern,
+  coverReflection,
   coverageForClass,
   createBroadcast,
   deleteTag,
@@ -16,19 +18,31 @@ import {
   findDraft,
   loadBroadcasts,
   loadDrafts,
+  loadMarks,
   loadPatterns,
+  loadReflections,
   loadReportBooks,
   loadTags,
   logEvent,
   markSynced,
   nilsForStudent,
+  reactToPattern,
+  reflectionGatesShare,
+  releaseToStudent,
   reopenDraft,
   respondToBroadcast,
+  restorePattern,
+  retirePatternFromFamily,
   saveDraft,
+  saveMarkEntry,
+  saveReflection,
   saveReportBook,
   seedIfEmpty,
+  semesterAverage,
   shareReportBook,
+  submitStudentReflection,
   summaryForTeacher,
+  syncAcademicResults,
   tagsForStudentVisible,
   unsyncedConfirmedDrafts,
   updateTag,
@@ -312,6 +326,159 @@ describe('confirmPattern / dismissPattern', () => {
     const [candidate] = detectFormingPatterns('x2')
     dismissPattern(candidate.id)
     expect(detectFormingPatterns('x2')).toEqual([])
+  })
+})
+
+// ── Student pattern reactions + light curation (plan 041) ────────────────
+
+function makeConfirmedPattern(
+  overrides: Partial<FormingPattern> = {},
+): FormingPattern {
+  return {
+    id: 'pattern-react-1',
+    studentId: 'react-1',
+    disposition: 'perseverance',
+    contexts: ['lesson', 'cca'],
+    tagIds: ['t1', 't2'],
+    status: 'confirmed',
+    confirmedBy: 'lee-sy',
+    schoolYear: '2026',
+    ...overrides,
+  }
+}
+
+describe('reactToPattern', () => {
+  it('persists a reaction and an optional note', () => {
+    localStorage.setItem(
+      'hdp_patterns',
+      JSON.stringify([makeConfirmedPattern()]),
+    )
+    const updated = reactToPattern(
+      'pattern-react-1',
+      'add-my-side',
+      'It was harder than it looked.',
+    )
+    expect(updated.studentReaction).toBe('add-my-side')
+    expect(updated.studentNote).toBe('It was harder than it looked.')
+    const reloaded = loadPatterns().find((p) => p.id === 'pattern-react-1')
+    expect(reloaded?.studentReaction).toBe('add-my-side')
+  })
+
+  it('is changeable until the book is parent-shared, then throws (freeze like reflections)', () => {
+    localStorage.setItem(
+      'hdp_patterns',
+      JSON.stringify([
+        makeConfirmedPattern({
+          id: 'pattern-react-2',
+          studentId: 'react-2',
+        }),
+      ]),
+    )
+    saveReportBook(makeReportBook({ studentId: 'react-2' }))
+    reactToPattern('pattern-react-2', 'agree')
+    expect(
+      loadPatterns().find((p) => p.id === 'pattern-react-2')?.studentReaction,
+    ).toBe('agree')
+
+    reactToPattern('pattern-react-2', 'more-complicated', 'Actually, no.')
+    expect(
+      loadPatterns().find((p) => p.id === 'pattern-react-2')?.studentReaction,
+    ).toBe('more-complicated')
+
+    shareReportBook('react-2')
+    expect(() => reactToPattern('pattern-react-2', 'agree')).toThrow()
+  })
+})
+
+describe('retirePatternFromFamily / restorePattern', () => {
+  it('flips status to retired-by-student and back to confirmed', () => {
+    localStorage.setItem(
+      'hdp_patterns',
+      JSON.stringify([
+        makeConfirmedPattern({ id: 'pattern-retire-1', studentId: 'retire-1' }),
+      ]),
+    )
+    const retired = retirePatternFromFamily('pattern-retire-1')
+    expect(retired.status).toBe('retired-by-student')
+
+    const restored = restorePattern('pattern-retire-1')
+    expect(restored.status).toBe('confirmed')
+    expect(restored.confirmedBy).toBe('lee-sy')
+  })
+
+  it('teacher visibility is unaffected — the pattern still appears in loadPatterns', () => {
+    localStorage.setItem(
+      'hdp_patterns',
+      JSON.stringify([
+        makeConfirmedPattern({ id: 'pattern-retire-2', studentId: 'retire-2' }),
+      ]),
+    )
+    retirePatternFromFamily('pattern-retire-2')
+    const stillThere = loadPatterns().find((p) => p.id === 'pattern-retire-2')
+    expect(stillThere).toBeDefined()
+    expect(stillThere?.status).toBe('retired-by-student')
+  })
+
+  it('throws when retiring a non-confirmed pattern, or restoring a non-retired one', () => {
+    localStorage.setItem(
+      'hdp_patterns',
+      JSON.stringify([
+        makeConfirmedPattern({
+          id: 'pattern-retire-3',
+          studentId: 'retire-3',
+          status: 'candidate',
+          confirmedBy: undefined,
+        }),
+      ]),
+    )
+    expect(() => retirePatternFromFamily('pattern-retire-3')).toThrow()
+    expect(() => restorePattern('pattern-retire-3')).toThrow()
+  })
+
+  it('is frozen once the book is parent-shared', () => {
+    localStorage.setItem(
+      'hdp_patterns',
+      JSON.stringify([
+        makeConfirmedPattern({ id: 'pattern-retire-4', studentId: 'retire-4' }),
+      ]),
+    )
+    saveReportBook(makeReportBook({ studentId: 'retire-4' }))
+    shareReportBook('retire-4')
+    expect(() => retirePatternFromFamily('pattern-retire-4')).toThrow()
+  })
+})
+
+describe('reflectionGatesShare', () => {
+  it('is false with fewer than three sentences and true with three or more', () => {
+    saveReflection({
+      studentId: 'gate-1',
+      text: 'One sentence. Two sentences.',
+      writtenAt: '2026-07-16T10:00:00+08:00',
+      chosenAsCover: true,
+    })
+    expect(reflectionGatesShare('gate-1')).toBe(false)
+
+    saveReflection({
+      studentId: 'gate-2',
+      text: 'One sentence. Two sentences. Three sentences.',
+      writtenAt: '2026-07-16T10:00:00+08:00',
+      chosenAsCover: true,
+    })
+    expect(reflectionGatesShare('gate-2')).toBe(true)
+  })
+
+  it('handles trailing whitespace and punctuation without inflating the count', () => {
+    saveReflection({
+      studentId: 'gate-3',
+      text: '  One!   Two? Three...   ',
+      writtenAt: '2026-07-16T10:00:00+08:00',
+      chosenAsCover: true,
+    })
+    expect(reflectionGatesShare('gate-3')).toBe(true)
+  })
+
+  it('is false when the student has no reflection at all', () => {
+    expect(reflectionGatesShare('no-such-student-gate')).toBe(false)
   })
 })
 
@@ -681,6 +848,36 @@ describe('draft confirm/reopen/sync', () => {
     ])
   })
 
+  it('persists insightIds and reconcile (Prototype B, plan 040)', () => {
+    saveDraft(
+      makeDraft({
+        insightIds: ['insight-99-attendance', 'insight-99-observation-tag-1'],
+        reconcile: { fired: true, resolution: 'kept-with-context' },
+      }),
+    )
+    const loaded = loadDrafts().find((d) => d.id === 'draft-test-1')
+    expect(loaded?.insightIds).toEqual([
+      'insight-99-attendance',
+      'insight-99-observation-tag-1',
+    ])
+    expect(loaded?.reconcile).toEqual({
+      fired: true,
+      resolution: 'kept-with-context',
+    })
+
+    // confirmDraft spreads the existing draft, so a reconcile decision set
+    // before confirming survives the freeze.
+    const confirmed = confirmDraft('draft-test-1')
+    expect(confirmed.insightIds).toEqual([
+      'insight-99-attendance',
+      'insight-99-observation-tag-1',
+    ])
+    expect(confirmed.reconcile).toEqual({
+      fired: true,
+      resolution: 'kept-with-context',
+    })
+  })
+
   it('reopenDraft sets status back to draft and clears confirmedAt/syncedAt', () => {
     saveDraft(
       makeDraft({
@@ -829,6 +1026,44 @@ describe('shareReportBook', () => {
     ])
   })
 
+  it('snapshots insightIds onto the comment only when the source draft carries them (Prototype B, plan 040)', () => {
+    saveReportBook(makeReportBook({ studentId: '7' }))
+    saveDraft(
+      makeDraft({
+        id: 'draft-share-insights',
+        studentId: '7',
+        kind: 'overall',
+        status: 'confirmed',
+        claims: [{ text: 'Insight-composed sentence.' }],
+        insightIds: ['insight-7-attendance', 'insight-7-observation-tag-x'],
+      }),
+    )
+    shareReportBook('7')
+    const shared = loadReportBooks().find((b) => b.studentId === '7')
+    expect(shared?.overallComment?.insightIds).toEqual([
+      'insight-7-attendance',
+      'insight-7-observation-tag-x',
+    ])
+  })
+
+  it('leaves insightIds absent on the comment for an A-path (composeDraft) draft', () => {
+    saveReportBook(makeReportBook({ studentId: '8' }))
+    saveDraft(
+      makeDraft({
+        id: 'draft-share-a-path',
+        studentId: '8',
+        kind: 'overall',
+        status: 'confirmed',
+        claims: [
+          { text: 'A-path sentence.', source: { tagId: 't1', label: 'x' } },
+        ],
+      }),
+    )
+    shareReportBook('8')
+    const shared = loadReportBooks().find((b) => b.studentId === '8')
+    expect(shared?.overallComment?.insightIds).toBeUndefined()
+  })
+
   it('with no confirmed overall draft still shares a results-only book (comments absent)', () => {
     saveReportBook(makeReportBook({ studentId: '2' }))
     const { token } = shareReportBook('2')
@@ -885,5 +1120,316 @@ describe('acknowledgeReport', () => {
 
   it('throws for an unknown or unshared token', () => {
     expect(() => acknowledgeReport('hdp-unknown')).toThrow()
+  })
+})
+
+describe('saveMarkEntry', () => {
+  it('upserts by subject + schoolYear + semester + assessment — no duplicate rows', () => {
+    saveMarkEntry('marks-1', {
+      subject: 'English',
+      schoolYear: '2026',
+      semester: 2,
+      assessment: 'wa1',
+      score: 70,
+    })
+    saveMarkEntry('marks-1', {
+      subject: 'English',
+      schoolYear: '2026',
+      semester: 2,
+      assessment: 'wa1',
+      score: 75,
+    })
+    const entries = loadMarks('marks-1').filter(
+      (e) =>
+        e.subject === 'English' && e.schoolYear === '2026' && e.semester === 2,
+    )
+    expect(entries).toHaveLength(1)
+    expect(entries[0].score).toBe(75)
+  })
+
+  it('does not collide entries that share subject + semester across different school years', () => {
+    saveMarkEntry('marks-2', {
+      subject: 'Mathematics',
+      schoolYear: '2025',
+      semester: 1,
+      assessment: 'wa1',
+      score: 60,
+    })
+    saveMarkEntry('marks-2', {
+      subject: 'Mathematics',
+      schoolYear: '2026',
+      semester: 1,
+      assessment: 'wa1',
+      score: 80,
+    })
+    const entries = loadMarks('marks-2')
+    expect(entries).toHaveLength(2)
+    expect(entries.find((e) => e.schoolYear === '2025')?.score).toBe(60)
+    expect(entries.find((e) => e.schoolYear === '2026')?.score).toBe(80)
+  })
+})
+
+describe('semesterAverage', () => {
+  it('averages every assessment recorded for a subject/semester', () => {
+    const entries = [
+      {
+        subject: 'Science',
+        schoolYear: '2026' as const,
+        semester: 2 as const,
+        assessment: 'wa1' as const,
+        score: 60,
+      },
+      {
+        subject: 'Science',
+        schoolYear: '2026' as const,
+        semester: 2 as const,
+        assessment: 'wa2' as const,
+        score: 70,
+      },
+    ]
+    expect(semesterAverage(entries, 'Science', '2026', 2)).toBe(65)
+  })
+
+  it('returns undefined when nothing is recorded for that semester', () => {
+    expect(semesterAverage([], 'Science', '2026', 2)).toBeUndefined()
+  })
+})
+
+describe('syncAcademicResults', () => {
+  it('writes results with a grade + change vs the previous semester, and stamps marksSyncedAt', () => {
+    saveReportBook(
+      makeReportBook({
+        studentId: 'marks-sync-1',
+        results: [{ subject: 'English', term: 3, grade: 'B3' }],
+      }),
+    )
+    saveMarkEntry('marks-sync-1', {
+      subject: 'English',
+      schoolYear: '2026',
+      semester: 1,
+      assessment: 'wa1',
+      score: 60,
+    })
+    saveMarkEntry('marks-sync-1', {
+      subject: 'English',
+      schoolYear: '2026',
+      semester: 2,
+      assessment: 'wa1',
+      score: 70,
+    })
+
+    const book = syncAcademicResults('marks-sync-1')
+    const english = book.results.find(
+      (r) => r.subject === 'English' && r.term === 4,
+    )
+    expect(english?.grade).toBe('70')
+    expect(english?.change).toBe(10)
+    expect(book.marksSyncedAt).toBeDefined()
+    // The pre-existing term-3 result is untouched.
+    expect(
+      book.results.find((r) => r.subject === 'English' && r.term === 3)?.grade,
+    ).toBe('B3')
+  })
+
+  it('is a snapshot — a later saveMarkEntry does not change the synced book until re-synced', () => {
+    saveReportBook(makeReportBook({ studentId: 'marks-sync-2', results: [] }))
+    saveMarkEntry('marks-sync-2', {
+      subject: 'Mathematics',
+      schoolYear: '2026',
+      semester: 2,
+      assessment: 'wa1',
+      score: 70,
+    })
+    syncAcademicResults('marks-sync-2')
+
+    saveMarkEntry('marks-sync-2', {
+      subject: 'Mathematics',
+      schoolYear: '2026',
+      semester: 2,
+      assessment: 'wa1',
+      score: 90,
+    })
+    const book = loadReportBooks().find((b) => b.studentId === 'marks-sync-2')
+    expect(
+      book?.results.find((r) => r.subject === 'Mathematics' && r.term === 4)
+        ?.grade,
+    ).toBe('70')
+
+    const resynced = syncAcademicResults('marks-sync-2')
+    expect(
+      resynced.results.find((r) => r.subject === 'Mathematics' && r.term === 4)
+        ?.grade,
+    ).toBe('90')
+  })
+
+  it('throws when no report book exists yet for the student', () => {
+    expect(() => syncAcademicResults('no-such-student')).toThrow()
+  })
+})
+
+describe('reflections (plan 037)', () => {
+  it('seeds from SEED_REFLECTIONS and round-trips a save', () => {
+    seedIfEmpty()
+    expect(loadReflections('2').length).toBeGreaterThan(0)
+
+    saveReflection({
+      studentId: 'refl-1',
+      text: 'Sample reflection text.',
+      writtenAt: '2026-07-16T10:00:00+08:00',
+      chosenAsCover: false,
+    })
+    expect(loadReflections('refl-1')).toEqual([
+      {
+        studentId: 'refl-1',
+        text: 'Sample reflection text.',
+        writtenAt: '2026-07-16T10:00:00+08:00',
+        chosenAsCover: false,
+      },
+    ])
+  })
+
+  it('coverReflection returns exactly the chosenAsCover one, even when others are newer', () => {
+    saveReflection({
+      studentId: 'refl-2',
+      text: 'Older, not the cover.',
+      writtenAt: '2026-01-01T09:00:00+08:00',
+      chosenAsCover: true,
+    })
+    saveReflection({
+      studentId: 'refl-2',
+      text: 'Newer, but not chosen.',
+      writtenAt: '2026-07-01T09:00:00+08:00',
+      chosenAsCover: false,
+    })
+    expect(coverReflection('refl-2')?.text).toBe('Older, not the cover.')
+  })
+
+  it('falls back to the most recent reflection when none is chosenAsCover', () => {
+    saveReflection({
+      studentId: 'refl-3',
+      text: 'First.',
+      writtenAt: '2026-01-01T09:00:00+08:00',
+      chosenAsCover: false,
+    })
+    saveReflection({
+      studentId: 'refl-3',
+      text: 'Second, most recent.',
+      writtenAt: '2026-07-01T09:00:00+08:00',
+      chosenAsCover: false,
+    })
+    expect(coverReflection('refl-3')?.text).toBe('Second, most recent.')
+  })
+
+  it('returns undefined when the student has no reflections', () => {
+    expect(coverReflection('no-such-student')).toBeUndefined()
+  })
+})
+
+// ── Student-first release (plan 038) ─────────────────────────────────────
+
+describe('releaseToStudent', () => {
+  it('throws when there is no confirmed overall draft', () => {
+    saveReportBook(makeReportBook({ studentId: 'release-1' }))
+    expect(() => releaseToStudent('release-1')).toThrow()
+  })
+
+  it('stamps studentReleasedAt and returns a deterministic token', () => {
+    saveReportBook(makeReportBook({ studentId: 'release-2' }))
+    saveDraft(
+      makeDraft({
+        id: 'draft-release-2',
+        studentId: 'release-2',
+        kind: 'overall',
+        status: 'confirmed',
+      }),
+    )
+    const { token } = releaseToStudent('release-2')
+    expect(token).toBe('hdp-student-release-2')
+    const book = loadReportBooks().find((b) => b.studentId === 'release-2')
+    expect(book?.studentReleasedAt).toBeDefined()
+  })
+
+  it('throws when no report book exists yet for the student', () => {
+    saveDraft(
+      makeDraft({
+        id: 'draft-release-3',
+        studentId: 'release-3',
+        kind: 'overall',
+        status: 'confirmed',
+      }),
+    )
+    expect(() => releaseToStudent('release-3')).toThrow()
+  })
+})
+
+describe('bookByStudentToken', () => {
+  it('resolves a released book by its student token', () => {
+    saveReportBook(makeReportBook({ studentId: 'release-4' }))
+    saveDraft(
+      makeDraft({
+        id: 'draft-release-4',
+        studentId: 'release-4',
+        kind: 'overall',
+        status: 'confirmed',
+      }),
+    )
+    const { token } = releaseToStudent('release-4')
+    expect(bookByStudentToken(token)?.studentId).toBe('release-4')
+  })
+
+  it('returns undefined for an unknown or not-yet-released token', () => {
+    expect(bookByStudentToken('hdp-student-nope')).toBeUndefined()
+    saveReportBook(makeReportBook({ studentId: 'release-5' }))
+    expect(bookByStudentToken('hdp-student-release-5')).toBeUndefined()
+  })
+
+  it('does not resolve a parent token as a student token', () => {
+    expect(bookByStudentToken('hdp-release-5')).toBeUndefined()
+  })
+})
+
+describe('submitStudentReflection', () => {
+  function releasedToken(studentId: string): string {
+    saveReportBook(makeReportBook({ studentId }))
+    saveDraft(
+      makeDraft({
+        id: `draft-${studentId}`,
+        studentId,
+        kind: 'overall',
+        status: 'confirmed',
+      }),
+    )
+    return releaseToStudent(studentId).token
+  }
+
+  it('round-trips a reflection and stamps studentReactedAt', () => {
+    const token = releasedToken('reflect-1')
+    submitStudentReflection(token, 'My honest reflection.')
+    expect(coverReflection('reflect-1')?.text).toBe('My honest reflection.')
+    expect(coverReflection('reflect-1')?.chosenAsCover).toBe(true)
+    const book = loadReportBooks().find((b) => b.studentId === 'reflect-1')
+    expect(book?.studentReactedAt).toBeDefined()
+  })
+
+  it('replaces the reflection in place on a second submission', () => {
+    const token = releasedToken('reflect-2')
+    submitStudentReflection(token, 'First draft of my reflection.')
+    submitStudentReflection(token, 'Rewritten reflection.')
+    expect(loadReflections('reflect-2')).toHaveLength(1)
+    expect(coverReflection('reflect-2')?.text).toBe('Rewritten reflection.')
+    expect(coverReflection('reflect-2')?.chosenAsCover).toBe(true)
+  })
+
+  it('throws once the book has been shared with parents (frozen)', () => {
+    const token = releasedToken('reflect-3')
+    submitStudentReflection(token, 'Before sharing.')
+    shareReportBook('reflect-3')
+    expect(() => submitStudentReflection(token, 'After sharing.')).toThrow()
+  })
+
+  it('throws for an unknown token', () => {
+    expect(() =>
+      submitStudentReflection('hdp-student-no-such-student', 'Text.'),
+    ).toThrow()
   })
 })

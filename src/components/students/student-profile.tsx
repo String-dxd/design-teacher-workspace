@@ -26,16 +26,11 @@ import { AcademicAnalytics } from './academic-analytics'
 import { AttendanceAnalytics } from './attendance-analytics'
 import { ProfileCriteriaDetailsCard } from './profile-criteria-details-card'
 import type { Student } from '@/types/student'
-import type { HolisticReport, ReviewStatus, Term } from '@/types/report'
 import type { AgencyReport } from '@/data/mock-agency-reports'
 import type { ImportedColumn } from '@/lib/imported-columns'
 import { useFeatureFlag } from '@/hooks/use-feature-flag'
 import { getImportedColumns } from '@/lib/imported-columns'
-import {
-  TERMS,
-  filterReports,
-  getStudentGradeCounts,
-} from '@/data/mock-reports'
+import { getStudentGradeCounts } from '@/data/mock-reports'
 import {
   AGENCY_TEMPLATES,
   getAgencyReportsByStudent,
@@ -430,57 +425,6 @@ const COMPUTED_OVERALL_PERCENTAGE = Math.round(
     SUBJECT_COMPUTATION.length,
 )
 
-const REVIEW_STATUS_CONFIG: Record<
-  ReviewStatus,
-  { label: string; className: string }
-> = {
-  pending: {
-    label: 'Pending',
-    className: 'bg-muted text-muted-foreground hover:bg-muted',
-  },
-  in_review: {
-    label: 'In Review',
-    className: 'bg-amber-3 text-amber-11 hover:bg-amber-3',
-  },
-  approved: {
-    label: 'Approved',
-    className: 'bg-lime-3 text-lime-11 hover:bg-lime-3',
-  },
-}
-
-function ReportRow({ report }: { report: HolisticReport }) {
-  const { label, className } = REVIEW_STATUS_CONFIG[report.reviewStatus]
-  const generatedDate = report.generatedAt.toLocaleDateString('en-SG', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })
-
-  return (
-    <Link
-      to="/reports/$id"
-      params={{ id: report.id }}
-      className="flex items-center justify-between rounded-lg border px-4 py-3 transition-colors hover:bg-muted/50"
-    >
-      <div className="flex items-center gap-3">
-        <FileText className="h-4 w-4 text-muted-foreground" />
-        <div>
-          <p className="text-sm font-medium">
-            {report.term} — {report.academicYear}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Generated {generatedDate}
-          </p>
-        </div>
-      </div>
-      <div className="flex items-center gap-2">
-        <Badge className={className}>{label}</Badge>
-        <ChevronRight className="h-4 w-4 text-muted-foreground" />
-      </div>
-    </Link>
-  )
-}
-
 const AGENCY_STATUS_CONFIG: Record<
   AgencyReport['status'],
   { label: string; className: string }
@@ -670,7 +614,6 @@ export function StudentProfile({
   const [primaryContactOpen, setPrimaryContactOpen] = useState(false)
   const { isEnabled } = useFeatureFlags()
 
-  const holisticReportsEnabled = useFeatureFlag('hdp-reports')
   const agencyReportsEnabled = useFeatureFlag('agency-reports')
   const reportGenerationEnabled = useFeatureFlag('report-generation')
   const studentAnalyticsEnabled = useFeatureFlag('student-analytics')
@@ -684,8 +627,6 @@ export function StudentProfile({
   const reportsRiverVisibilityEnabled = useFeatureFlag(
     'reports-river-visibility',
   )
-  // HDP reporting is one flag now; keep the local name for the builder-entry check.
-  const reportBuilderEnabled = holisticReportsEnabled
   // Default "Student Insights" view — applies when both analytics flags are off
   const isStudentInsightsView =
     !studentAnalyticsEnabled && !studentAnalyticsBasicEnabled
@@ -702,9 +643,6 @@ export function StudentProfile({
   const showOthers = importDataEnabled
 
   const gradeCounts = getStudentGradeCounts(student)
-  const studentReports = filterReports({ studentId: student.id })
-  const existingTerms = new Set(studentReports.map((r) => r.term))
-  const missingTerms = TERMS.filter((t): t is Term => !existingTerms.has(t))
   const agencyReports = getAgencyReportsByStudent(student.id)
 
   const fasField = (
@@ -939,9 +877,7 @@ export function StudentProfile({
     // Reports jump-to link: on whenever ANY report surface is active.
     // Report Generation on its own is enough — regardless of any other
     // flag combination — so the YH can always reach the flow.
-    ...(holisticReportsEnabled ||
-    agencyReportsEnabled ||
-    reportGenerationEnabled
+    ...(agencyReportsEnabled || reportGenerationEnabled
       ? [{ id: 'reports', label: 'Reports' }]
       : []),
     ...(showOthers ? [{ id: 'others', label: 'Others' }] : []),
@@ -1764,128 +1700,46 @@ export function StudentProfile({
           </Section>
         )}
 
-        {/* Reports Section — shown whenever ANY of the three report
-            surfaces is on. Report Generation on its own is enough,
-            regardless of any other flag combination, so the YH can
-            always reach the Agency Report flow. The Holistic part is
-            gated on `holisticReportsEnabled`; the Agency Reports
-            subsection on `agencyReportsEnabled` OR
-            `reportGenerationEnabled`. */}
-        {(holisticReportsEnabled ||
-          agencyReportsEnabled ||
-          reportGenerationEnabled) && (
-            <Section
-              id="reports"
-              title="Reports"
-              icon={<FileText className="h-5 w-5" />}
-              iconClassName="bg-crimson-3 text-crimson-11"
-              headerRight={
-                holisticReportsEnabled && studentReports.length > 0 ? (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-muted-foreground"
-                    render={
-                      <Link
-                        to="/reports"
-                        search={{ studentId: student.id, groupBy: 'student' }}
-                      />
-                    }
-                  >
-                    <Eye className="mr-1 h-4 w-4" />
-                    View all in Reports
-                  </Button>
-                ) : undefined
-              }
-            >
-              {/* Holistic Development Reports — gated on holistic flag. */}
-              {holisticReportsEnabled && (
-                <>
-                  {studentReports.length > 0 ? (
-                    <div className="space-y-2">
-                      {studentReports
-                        .sort(
-                          (a, b) =>
-                            TERMS.indexOf(a.term) - TERMS.indexOf(b.term),
-                        )
-                        .map((report) => (
-                          <ReportRow key={report.id} report={report} />
-                        ))}
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center gap-3 py-8 text-center">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-                        <FileText className="h-6 w-6 text-muted-foreground" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">
-                          No reports generated
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Generate a Holistic Development Report for this
-                          student
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {missingTerms.length > 0 && reportBuilderEnabled && (
-                    <div className="mt-4 flex items-center gap-2 border-t pt-4">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        render={<Link to="/reports" />}
-                      >
-                        <Plus className="mr-1 h-4 w-4" />
-                        Generate HDP
-                      </Button>
-                      <span className="text-xs text-muted-foreground">
-                        {missingTerms.length === TERMS.length
-                          ? 'All terms'
-                          : missingTerms.join(', ')}{' '}
-                        not yet generated
-                      </span>
-                    </div>
-                  )}
-                </>
-              )}
-
-              {/* Agency Reports subsection — visible whenever the section
-                  is meant to carry the flow. Report Generation on its
-                  own is sufficient to unlock the subsection + button. */}
-              {(agencyReportsEnabled || reportGenerationEnabled) && (
-                <div
-                  className={cn(holisticReportsEnabled && 'mt-6 border-t pt-5')}
-                >
-                  <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Agency Reports
-                  </p>
-                  {agencyReports.length > 0 && (
-                    <div className="mb-3 space-y-2">
-                      {agencyReports.map((report) => (
-                        <AgencyReportRow key={report.id} report={report} />
-                      ))}
-                    </div>
-                  )}
-                  {reportGenerationEnabled && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      render={
-                        <Link
-                          to="/students/$id/agency-report/new"
-                          params={{ id: student.id }}
-                        />
-                      }
-                    >
-                      <Plus className="mr-1 h-4 w-4" />
-                      New Agency Report
-                    </Button>
-                  )}
+        {/* Reports Section — the legacy Holistic Development Reports list
+            was torn down (plan 034); this is now the Agency Reports
+            surface, shown whenever `agencyReportsEnabled` or
+            `reportGenerationEnabled` is on. */}
+        {(agencyReportsEnabled || reportGenerationEnabled) && (
+          <Section
+            id="reports"
+            title="Reports"
+            icon={<FileText className="h-5 w-5" />}
+            iconClassName="bg-crimson-3 text-crimson-11"
+          >
+            <div>
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Agency Reports
+              </p>
+              {agencyReports.length > 0 && (
+                <div className="mb-3 space-y-2">
+                  {agencyReports.map((report) => (
+                    <AgencyReportRow key={report.id} report={report} />
+                  ))}
                 </div>
               )}
-            </Section>
-          )}
+              {reportGenerationEnabled && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  render={
+                    <Link
+                      to="/students/$id/agency-report/new"
+                      params={{ id: student.id }}
+                    />
+                  }
+                >
+                  <Plus className="mr-1 h-4 w-4" />
+                  New Agency Report
+                </Button>
+              )}
+            </div>
+          </Section>
+        )}
         {/* Observations Section — the HDP river, same Section + flag-gate
             pattern as Reports above (plan 030). */}
         {reportsHdpEnabled && (

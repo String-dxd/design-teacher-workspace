@@ -2,25 +2,32 @@ import * as React from 'react'
 import { Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { ClaimEditor } from './claim-editor'
+import { InsightCuration } from './insight-curation'
 import { SourceTag } from './source-tag'
 import { StudentRiver } from './student-river'
-import type { DraftClaim, HdpTag } from '@/types/hdp'
+import type { DraftClaim, HdpDraft, HdpInsight, HdpTag } from '@/types/hdp'
+import type { ReconcileResult } from '@/lib/hdp-reconcile'
 import { getStudentById } from '@/data/mock-students'
 import { MOCK_STAFF } from '@/data/mock-staff'
 import { CURRENT_TEACHER } from '@/data/hdp'
 import { TIMETABLE } from '@/data/timetable'
+import { insightsForStudent } from '@/data/insights'
 import {
   confirmDraft,
   detectFormingPatterns,
   draftId,
   findDraft,
+  loadMarks,
   reopenDraft,
   saveDraft,
   seedIfEmpty,
   tagsForStudent,
   tagsForStudentVisible,
 } from '@/lib/hdp-store'
-import { composeDraft } from '@/lib/hdp-draft-compose'
+import { composeDraft, composeFromInsights } from '@/lib/hdp-draft-compose'
+import { trendForSubject, trendsForEntries } from '@/lib/hdp-trends'
+import { reconcileCheck } from '@/lib/hdp-reconcile'
+import { useFeatureFlag } from '@/hooks/use-feature-flag'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Select,
@@ -58,6 +65,19 @@ function subjectsForStudentClass(classId: string): Array<string> {
   ).map((t) => t.subject)
 }
 
+/** The F4b reconcile-gate dialog's body copy — names the subject (or "the
+ *  majority of subjects" for an unresolved overall majority) and direction
+ *  (plan 040). Sentiment is deducible from `direction` alone: the gate only
+ *  ever fires on positive-phrasing+easing or struggle-phrasing+climbing. */
+function reconcileMessage(result: ReconcileResult): string {
+  const subjectLabel = result.subject ?? 'the majority of subjects'
+  const isAre = result.subject ? 'is' : 'are'
+  if (result.direction === 'easing') {
+    return `This comment reads as positive progress, but ${subjectLabel} ${isAre} easing this semester.`
+  }
+  return `This comment reads as a struggle, but ${subjectLabel} ${isAre} climbing this semester.`
+}
+
 interface DraftStudioProps {
   studentId: string
 }
@@ -67,7 +87,16 @@ interface DraftStudioProps {
 // and hdp-store's draft persistence. The left-hand evidence column
 // (StudentRiver) is rendered by this same component so the kind switch can
 // keep both columns in sync.
+//
+// Prototype B (plan 040, `reports-hdp-future` only): an Insights curation
+// step slots in between the evidence river and the claim editor. Selection
+// is the authorship act — composeFromInsights (not composeDraft) builds
+// claims ONLY from the insights the teacher checked, and Confirm runs the
+// F4b reconcile gate before freezing the draft. Flag off ⇒ every branch
+// below that reads `showInsights` is false, and this component behaves
+// exactly as the A path (composeDraft, no insights section, no gate).
 export function DraftStudio({ studentId }: DraftStudioProps) {
+  const showInsights = useFeatureFlag('reports-hdp-future')
   const student = getStudentById(studentId)
   const studentClass = student?.class ?? ''
   const availableSubjects = React.useMemo(
@@ -83,9 +112,15 @@ export function DraftStudio({ studentId }: DraftStudioProps) {
   const [regenerateConfirmOpen, setRegenerateConfirmOpen] =
     React.useState(false)
   const [confirmDialogOpen, setConfirmDialogOpen] = React.useState(false)
+  const [reconcileDialogOpen, setReconcileDialogOpen] = React.useState(false)
+  const [reconcileResult, setReconcileResult] =
+    React.useState<ReconcileResult | null>(null)
   const [saveState, setSaveState] = React.useState<'idle' | 'saved'>('idle')
   const [mounted, setMounted] = React.useState(false)
   const [visibleTags, setVisibleTags] = React.useState<Array<HdpTag>>([])
+  const [selectedInsightIds, setSelectedInsightIds] = React.useState<
+    Set<string>
+  >(new Set())
 
   React.useEffect(() => {
     seedIfEmpty()
@@ -104,6 +139,7 @@ export function DraftStudio({ studentId }: DraftStudioProps) {
     if (kind === 'subject' && !subject) {
       setClaims([])
       setStatus('draft')
+      setSelectedInsightIds(new Set())
       return
     }
     const existing = findDraft(
@@ -113,6 +149,7 @@ export function DraftStudio({ studentId }: DraftStudioProps) {
     )
     setClaims(existing?.claims ?? [])
     setStatus(existing?.status ?? 'draft')
+    setSelectedInsightIds(new Set(existing?.insightIds ?? []))
   }, [mounted, studentId, kind, subject])
 
   // Evidence for the active kind: overall draws from every active tag for
@@ -127,6 +164,19 @@ export function DraftStudio({ studentId }: DraftStudioProps) {
       (t) => t.authorId === CURRENT_TEACHER.id && t.lifecycle === 'active',
     )
   }, [mounted, studentId, kind])
+
+  // Prototype B's curation list — per-student, not per-kind (attendance/
+  // CCA/conduct facts aren't tied to a subject the way tags are).
+  const insights = React.useMemo<Array<HdpInsight>>(
+    () => (mounted && showInsights ? insightsForStudent(studentId) : []),
+    [mounted, showInsights, studentId],
+  )
+
+  const insightsById = React.useMemo(() => {
+    const map = new Map<string, HdpInsight>()
+    for (const insight of insights) map.set(insight.id, insight)
+    return map
+  }, [insights])
 
   const tagsById = React.useMemo(() => {
     const map = new Map<string, HdpTag>()
@@ -146,12 +196,29 @@ export function DraftStudio({ studentId }: DraftStudioProps) {
   }, [mounted, studentId, kind])
 
   const hasEvidence = evidenceTags.length > 0
+  // In B mode the insight list (which spans attendance/CCA/conduct facts,
+  // not just tags) is the real evidence backing a draft — a thin-tag
+  // record can still have insights, and the empty state should track that,
+  // not the tag-only signal the A path uses.
+  const effectiveHasEvidence = showInsights ? insights.length > 0 : hasEvidence
   const hasEdits = claims.some((c) => c.edited || !c.source)
   const currentDraftId = draftId(
     studentId,
     kind,
     kind === 'subject' ? subject : undefined,
   )
+
+  function toggleInsight(id: string) {
+    setSelectedInsightIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      return next
+    })
+  }
 
   // Autosave — debounced saveDraft, skipped while confirmed (frozen) or
   // before the initial load has settled (avoids clobbering a just-loaded
@@ -176,13 +243,39 @@ export function DraftStudio({ studentId }: DraftStudioProps) {
         authorId: CURRENT_TEACHER.id,
         claims,
         status,
+        insightIds: showInsights ? Array.from(selectedInsightIds) : undefined,
       })
       setSaveState('saved')
     }, AUTOSAVE_DEBOUNCE_MS)
     return () => clearTimeout(timer)
-  }, [claims, mounted, status, currentDraftId, studentId, kind, subject])
+  }, [
+    claims,
+    mounted,
+    status,
+    currentDraftId,
+    studentId,
+    kind,
+    subject,
+    showInsights,
+    selectedInsightIds,
+  ])
 
   function runCompose() {
+    if (showInsights) {
+      const selected = insights.filter((insight) =>
+        selectedInsightIds.has(insight.id),
+      )
+      const composed = composeFromInsights(
+        selected,
+        kind,
+        student?.name ?? 'This student',
+      )
+      setClaims(composed)
+      toast.success(
+        `Draft suggested from ${selected.length} insight${selected.length === 1 ? '' : 's'}`,
+      )
+      return
+    }
     const patterns = detectFormingPatterns(studentId).filter((p) =>
       evidenceTags.some((t) => p.tagIds.includes(t.id)),
     )
@@ -199,6 +292,7 @@ export function DraftStudio({ studentId }: DraftStudioProps) {
   }
 
   function handleSuggestOrRegenerate() {
+    if (showInsights && selectedInsightIds.size === 0) return
     if (claims.length > 0 && hasEdits) {
       setRegenerateConfirmOpen(true)
       return
@@ -210,7 +304,7 @@ export function DraftStudio({ studentId }: DraftStudioProps) {
     }, SUGGEST_LATENCY_MS)
   }
 
-  function handleConfirmDraft() {
+  function handleConfirmDraft(reconcile?: HdpDraft['reconcile']) {
     // A blank "your addition" sentence (e.g. "Add a sentence" left
     // untouched) carries no content — drop it before it's frozen into the
     // confirmed draft. confirmDraft() also filters defensively, but doing
@@ -224,12 +318,36 @@ export function DraftStudio({ studentId }: DraftStudioProps) {
       authorId: CURRENT_TEACHER.id,
       claims: meaningfulClaims,
       status: 'draft',
+      insightIds: showInsights ? Array.from(selectedInsightIds) : undefined,
+      reconcile,
     })
     confirmDraft(currentDraftId)
     setClaims(meaningfulClaims)
     setStatus('confirmed')
     setConfirmDialogOpen(false)
+    setReconcileDialogOpen(false)
     toast.success('Draft confirmed')
+  }
+
+  // F4b — runs on Confirm, B mode only. Not fired ⇒ the existing "Confirm
+  // this draft?" dialog proceeds unchanged; fired ⇒ the reconcile dialog
+  // intercepts first (a judgement tripwire, not a nag — no red styling).
+  function handleConfirmClick() {
+    if (!showInsights) {
+      setConfirmDialogOpen(true)
+      return
+    }
+    const trends =
+      kind === 'subject' && subject
+        ? [{ subject, ...trendForSubject(loadMarks(studentId), subject) }]
+        : trendsForEntries(loadMarks(studentId))
+    const result = reconcileCheck(claims, trends)
+    if (result.fired) {
+      setReconcileResult(result)
+      setReconcileDialogOpen(true)
+      return
+    }
+    setConfirmDialogOpen(true)
   }
 
   function handleReopenDraft() {
@@ -243,15 +361,20 @@ export function DraftStudio({ studentId }: DraftStudioProps) {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-      <div className="min-w-0">
-        <StudentRiver
-          studentId={studentId}
-          viewerId={CURRENT_TEACHER.id}
-          fullRiver={kind === 'overall'}
-          embedded
-        />
-      </div>
+    <div className="flex min-w-0 flex-col gap-6">
+      <details className="flex flex-col gap-3" open>
+        <summary className="hover:text-muted-foreground motion-safe:transition-colors motion-safe:duration-150 cursor-pointer rounded-sm text-sm font-medium">
+          Evidence
+        </summary>
+        <div className="pt-1">
+          <StudentRiver
+            studentId={studentId}
+            viewerId={CURRENT_TEACHER.id}
+            fullRiver={kind === 'overall'}
+            embedded
+          />
+        </div>
+      </details>
 
       <div className="flex min-w-0 flex-col gap-4">
         <Tabs
@@ -297,24 +420,46 @@ export function DraftStudio({ studentId }: DraftStudioProps) {
           <TabsContent value="overall" className="pt-2" />
         </Tabs>
 
+        {showInsights && insights.length > 0 && status !== 'confirmed' && (
+          <InsightCuration
+            insights={insights}
+            selectedIds={selectedInsightIds}
+            onToggle={toggleInsight}
+          />
+        )}
+
         <DraftBody
-          hasEvidence={hasEvidence}
+          hasEvidence={effectiveHasEvidence}
           claims={claims}
           status={status}
           suggesting={suggesting}
           saveState={saveState}
+          suggestDisabled={showInsights && selectedInsightIds.size === 0}
+          suggestHelperText={
+            showInsights
+              ? 'Select the insights that belong in this comment.'
+              : undefined
+          }
           onChangeClaims={(next) => {
             setSaveState('idle')
             setClaims(next)
           }}
           onSuggestOrRegenerate={handleSuggestOrRegenerate}
-          onConfirm={() => setConfirmDialogOpen(true)}
+          onConfirm={handleConfirmClick}
           onReopen={handleReopenDraft}
           resolveTag={(tagId) => {
             const tag = tagsById.get(tagId)
-            return tag
-              ? { tag, authorName: staffName(tag.authorId) }
-              : undefined
+            if (tag) return { tag, authorName: staffName(tag.authorId) }
+            if (showInsights) {
+              const insight = insightsById.get(tagId)
+              if (insight) {
+                return {
+                  authorName: staffName(CURRENT_TEACHER.id),
+                  insightFact: insight.label,
+                }
+              }
+            }
+            return undefined
           }}
         />
       </div>
@@ -359,8 +504,41 @@ export function DraftStudio({ studentId }: DraftStudioProps) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmDraft}>
+            <AlertDialogAction
+              onClick={() =>
+                handleConfirmDraft(showInsights ? { fired: false } : undefined)
+              }
+            >
               Confirm draft
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={reconcileDialogOpen}
+        onOpenChange={setReconcileDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              The comment and the marks point in different directions
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {reconcileResult ? reconcileMessage(reconcileResult) : ''}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Revise</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() =>
+                handleConfirmDraft({
+                  fired: true,
+                  resolution: 'kept-with-context',
+                })
+              }
+            >
+              Keep — add context
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -375,11 +553,21 @@ interface DraftBodyProps {
   status: 'draft' | 'confirmed'
   suggesting: boolean
   saveState: 'idle' | 'saved'
+  /** Prototype B only: true while the teacher hasn't selected any insight
+   *  yet — "Suggest a draft" stays disabled until ≥1 selection (plan 040). */
+  suggestDisabled?: boolean
+  suggestHelperText?: string
   onChangeClaims: (claims: Array<DraftClaim>) => void
   onSuggestOrRegenerate: () => void
   onConfirm: () => void
   onReopen: () => void
-  resolveTag: (tagId: string) => { tag: HdpTag; authorName: string } | undefined
+  resolveTag: (tagId: string) =>
+    | {
+        tag?: HdpTag
+        authorName?: string
+        insightFact?: string
+      }
+    | undefined
 }
 
 // One filled primary button on screen at any time: "Suggest a draft" before
@@ -391,6 +579,8 @@ function DraftBody({
   status,
   suggesting,
   saveState,
+  suggestDisabled = false,
+  suggestHelperText,
   onChangeClaims,
   onSuggestOrRegenerate,
   onConfirm,
@@ -404,7 +594,10 @@ function DraftBody({
           title="No observations to draft from"
           description="Write from scratch below, or ask colleagues first — a draft is only suggested when there's evidence behind it."
           action={
-            <Button variant="ghost" render={<Link to="/reports/broadcast" />}>
+            <Button
+              variant="ghost"
+              render={<Link to="/reports/students" search={{ tab: 'gaps' }} />}
+            >
               Ask colleagues
             </Button>
           }
@@ -436,6 +629,11 @@ function DraftBody({
                     ? resolveTag(claim.source.tagId)?.authorName
                     : undefined
                 }
+                insightFact={
+                  claim.source
+                    ? resolveTag(claim.source.tagId)?.insightFact
+                    : undefined
+                }
               />
             </li>
           ))}
@@ -450,19 +648,24 @@ function DraftBody({
   return (
     <div className="flex flex-col gap-4">
       {hasEvidence && (
-        <Button
-          type="button"
-          variant={claims.length > 0 ? 'outline' : 'default'}
-          onClick={onSuggestOrRegenerate}
-          disabled={suggesting}
-          className="w-fit"
-        >
-          {suggesting
-            ? 'Suggesting…'
-            : claims.length > 0
-              ? 'Regenerate'
-              : 'Suggest a draft'}
-        </Button>
+        <div className="flex flex-col gap-1.5">
+          <Button
+            type="button"
+            variant={claims.length > 0 ? 'outline' : 'default'}
+            onClick={onSuggestOrRegenerate}
+            disabled={suggesting || suggestDisabled}
+            className="w-fit"
+          >
+            {suggesting
+              ? 'Suggesting…'
+              : claims.length > 0
+                ? 'Regenerate'
+                : 'Suggest a draft'}
+          </Button>
+          {suggestDisabled && suggestHelperText && (
+            <p className="text-muted-foreground text-xs">{suggestHelperText}</p>
+          )}
+        </div>
       )}
 
       <ClaimEditor

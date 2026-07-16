@@ -120,7 +120,12 @@ export function StudentRiver({
               >
                 Add my observation
               </Button>
-              <Button variant="ghost" render={<Link to="/reports/broadcast" />}>
+              <Button
+                variant="ghost"
+                render={
+                  <Link to="/reports/students" search={{ tab: 'gaps' }} />
+                }
+              >
                 Ask colleagues
               </Button>
             </div>
@@ -136,6 +141,7 @@ export function StudentRiver({
                 <PatternCard
                   key={pattern.id}
                   pattern={pattern}
+                  studentFirstName={name.split(' ')[0] ?? name}
                   onConfirm={
                     pattern.status === 'candidate'
                       ? () => {

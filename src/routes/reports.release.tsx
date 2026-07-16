@@ -3,7 +3,9 @@ import { Link, createFileRoute } from '@tanstack/react-router'
 import { BookOpen, PenLine } from 'lucide-react'
 import { toast } from 'sonner'
 import type { HdpReportBook, HdpTag } from '@/types/hdp'
+import { DispositionChip } from '@/components/hdp/disposition-chip'
 import { ReportBook } from '@/components/hdp/report-book'
+import { ReportStory } from '@/components/hdp/report-story'
 import { ToolCard } from '@/components/hdp/tool-card'
 import {
   AlertDialog,
@@ -30,12 +32,19 @@ import { getStudentById, mockStudents } from '@/data/mock-students'
 import { MOCK_STAFF } from '@/data/mock-staff'
 import { CURRENT_TEACHER } from '@/data/hdp'
 import {
+  coverReflection,
   findDraft,
+  loadMarks,
+  loadPatterns,
   loadReportBooks,
   loadTags,
+  previewReportBook,
+  reflectionGatesShare,
+  releaseToStudent,
   seedIfEmpty,
   shareReportBook,
 } from '@/lib/hdp-store'
+import { trendsForEntries } from '@/lib/hdp-trends'
 import { useFeatureFlag } from '@/hooks/use-feature-flag'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
 
@@ -70,6 +79,7 @@ function draftStatusLabel(studentId: string): string {
 
 function ReleasePage() {
   const enabled = useFeatureFlag('reports-hdp')
+  const showFuture = useFeatureFlag('reports-hdp-future')
   const { preview } = Route.useSearch()
   const navigate = Route.useNavigate()
 
@@ -81,6 +91,8 @@ function ReleasePage() {
   const [mounted, setMounted] = React.useState(false)
   const [books, setBooks] = React.useState<Array<HdpReportBook>>([])
   const [shareTarget, setShareTarget] = React.useState<string | null>(null)
+  const [releaseTarget, setReleaseTarget] = React.useState<string | null>(null)
+  const [register, setRegister] = React.useState<'book' | 'story'>('book')
   const previewHeadingRef = React.useRef<HTMLHeadingElement>(null)
 
   const refresh = React.useCallback(() => {
@@ -132,9 +144,14 @@ function ReleasePage() {
     (s) => s.class === CURRENT_TEACHER.formClassId,
   )
   const shareTargetStudent = shareTarget ? getStudentById(shareTarget) : null
-  const previewBook = preview
-    ? books.find((b) => b.studentId === preview)
-    : undefined
+  const releaseTargetStudent = releaseTarget
+    ? getStudentById(releaseTarget)
+    : null
+  // previewReportBook assembles the same confirmed-drafts snapshot
+  // shareReportBook would freeze into the book — without persisting it — so
+  // an unshared book's Preview never omits sections (e.g. "Personal
+  // qualities") that the real parent link would show once shared.
+  const previewBook = preview ? previewReportBook(preview) : undefined
   const previewStudent = preview ? getStudentById(preview) : undefined
 
   function bookFor(studentId: string): HdpReportBook | undefined {
@@ -143,6 +160,10 @@ function ReleasePage() {
 
   function linkFor(studentId: string): string {
     return `${window.location.origin}/hdp-report/hdp-${studentId}`
+  }
+
+  function studentLinkFor(studentId: string): string {
+    return `${window.location.origin}/hdp-student/hdp-student-${studentId}`
   }
 
   function copyLink(studentId: string, studentName: string) {
@@ -154,6 +175,15 @@ function ReleasePage() {
       .catch(() => toast.error('Could not copy the link'))
   }
 
+  function copyStudentLink(studentId: string, studentName: string) {
+    const book = bookFor(studentId)
+    if (!book?.studentReleasedAt) return
+    navigator.clipboard
+      .writeText(studentLinkFor(studentId))
+      .then(() => toast.success(`Student link copied for ${studentName}`))
+      .catch(() => toast.error('Could not copy the link'))
+  }
+
   function handleShareConfirm() {
     if (!shareTarget) return
     shareReportBook(shareTarget)
@@ -161,6 +191,15 @@ function ReleasePage() {
     refresh()
     const name = getStudentById(shareTarget)?.name ?? 'This student'
     toast.success(`${name}'s report book is now shared`)
+  }
+
+  function handleReleaseConfirm() {
+    if (!releaseTarget) return
+    releaseToStudent(releaseTarget)
+    setReleaseTarget(null)
+    refresh()
+    const name = getStudentById(releaseTarget)?.name ?? 'This student'
+    toast.success(`${name}'s report is released to them`)
   }
 
   function openPreview(studentId: string) {
@@ -188,6 +227,7 @@ function ReleasePage() {
                 <TableHead>Student</TableHead>
                 <TableHead>Draft</TableHead>
                 <TableHead>Book</TableHead>
+                {showFuture && <TableHead>Student</TableHead>}
                 <TableHead>Shared</TableHead>
                 <TableHead>Acknowledged</TableHead>
                 <TableHead className="sr-only">Actions</TableHead>
@@ -199,6 +239,24 @@ function ReleasePage() {
                 const draftStatus = draftStatusLabel(student.id)
                 const hasConfirmedOverallDraft =
                   findDraft(student.id, 'overall')?.status === 'confirmed'
+                // Flag off: "Share with parents" is gated only by a
+                // confirmed overall draft, exactly as before this plan.
+                // Flag on: the student must be released first AND their
+                // cover reflection must clear the ≥3-sentence gate (plan
+                // 041) — the UI gate lives here, not in shareReportBook.
+                const reflectionReady = showFuture
+                  ? reflectionGatesShare(student.id)
+                  : true
+                const canShareWithParents = showFuture
+                  ? hasConfirmedOverallDraft &&
+                    Boolean(book?.studentReleasedAt) &&
+                    reflectionReady
+                  : hasConfirmedOverallDraft
+                const shareDisabledTitle = !hasConfirmedOverallDraft
+                  ? 'Confirm a draft first'
+                  : !book?.studentReleasedAt
+                    ? 'Release to the student first'
+                    : `Waiting for ${student.name}'s reflection (at least three sentences)`
                 return (
                   <TableRow key={student.id}>
                     <TableCell className="font-medium">
@@ -206,6 +264,16 @@ function ReleasePage() {
                     </TableCell>
                     <TableCell>{draftStatus}</TableCell>
                     <TableCell>{book ? 'Yes' : '—'}</TableCell>
+                    {showFuture && (
+                      <TableCell className="tabular-nums">
+                        {book?.studentReactedAt &&
+                        reflectionGatesShare(student.id)
+                          ? `Reflected ${formatDate(book.studentReactedAt)}`
+                          : book?.studentReleasedAt
+                            ? `Released to student ${formatDate(book.studentReleasedAt)}`
+                            : '—'}
+                      </TableCell>
+                    )}
                     <TableCell className="tabular-nums">
                       {book?.sharedAt
                         ? `Shared ${formatDate(book.sharedAt)}`
@@ -220,7 +288,7 @@ function ReleasePage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex flex-col items-end gap-2">
-                        <div className="flex justify-end gap-2">
+                        <div className="flex flex-wrap justify-end gap-2">
                           {book ? (
                             <Button
                               type="button"
@@ -238,6 +306,34 @@ function ReleasePage() {
                               Preview
                             </span>
                           )}
+                          {showFuture &&
+                            (book?.studentReleasedAt ? (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() =>
+                                  copyStudentLink(student.id, student.name)
+                                }
+                              >
+                                Copy student link
+                              </Button>
+                            ) : (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                disabled={!hasConfirmedOverallDraft}
+                                title={
+                                  hasConfirmedOverallDraft
+                                    ? undefined
+                                    : 'Confirm a draft first'
+                                }
+                                onClick={() => setReleaseTarget(student.id)}
+                              >
+                                Release to student
+                              </Button>
+                            ))}
                           {book?.sharedAt ? (
                             <Button
                               type="button"
@@ -247,7 +343,7 @@ function ReleasePage() {
                             >
                               Copy link
                             </Button>
-                          ) : hasConfirmedOverallDraft ? (
+                          ) : canShareWithParents ? (
                             <Button
                               type="button"
                               variant="outline"
@@ -262,12 +358,22 @@ function ReleasePage() {
                               variant="outline"
                               size="sm"
                               disabled
-                              title="Confirm a draft first"
+                              title={shareDisabledTitle}
                             >
                               Share with parents
                             </Button>
                           )}
                         </div>
+                        {book?.studentReleasedAt && !book.sharedAt && (
+                          <Input
+                            type="text"
+                            readOnly
+                            value={studentLinkFor(student.id)}
+                            aria-label={`Student report link for ${student.name}`}
+                            onFocus={(e) => e.currentTarget.select()}
+                            className="h-7 w-56 text-xs"
+                          />
+                        )}
                         {book?.sharedAt && (
                           <Input
                             type="text"
@@ -298,46 +404,85 @@ function ReleasePage() {
             >
               Preview — {previewStudent.name}
             </h2>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={closePreview}
-            >
-              Close preview
-            </Button>
+            <div className="flex items-center gap-3">
+              {showFuture && (
+                <div className="flex items-center gap-1.5">
+                  <DispositionChip
+                    label="Report book"
+                    selected={register === 'book'}
+                    onClick={() => setRegister('book')}
+                  />
+                  <DispositionChip
+                    label="Story"
+                    selected={register === 'story'}
+                    onClick={() => setRegister('story')}
+                  />
+                </div>
+              )}
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={closePreview}
+              >
+                Close preview
+              </Button>
+            </div>
           </div>
-          <ReportBook
-            book={previewBook}
-            studentName={previewStudent.name}
-            className={previewStudent.class}
-            viewer="teacher-preview"
-            resolveTag={resolveTag}
-          />
+          {showFuture && register === 'story' ? (
+            <ReportStory
+              book={previewBook}
+              studentName={previewStudent.name}
+              className={previewStudent.class}
+              viewer="teacher-preview"
+              reflection={coverReflection(previewBook.studentId)}
+              patterns={loadPatterns().filter(
+                (p) => p.studentId === previewBook.studentId,
+              )}
+              showFuture={showFuture}
+              trends={trendsForEntries(loadMarks(previewBook.studentId))}
+            />
+          ) : (
+            <ReportBook
+              book={previewBook}
+              studentName={previewStudent.name}
+              className={previewStudent.class}
+              viewer="teacher-preview"
+              resolveTag={resolveTag}
+              showFuture={showFuture}
+              trends={
+                showFuture
+                  ? trendsForEntries(loadMarks(previewBook.studentId))
+                  : []
+              }
+            />
+          )}
         </section>
       )}
 
-      <section className="flex flex-col gap-3 border-t border-border pt-6">
-        <h2 className="text-sm font-medium">
-          Coming later: student-first release
-        </h2>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <ToolCard
-            icon={PenLine}
-            name="Three-act release (student reacts and reflects first)"
-            description="Students see their report first and add a reflection before it goes to parents."
-            state="Planned — Prototype B / Phase 3"
-            locked
-          />
-          <ToolCard
-            icon={BookOpen}
-            name="Story & full-report renderings"
-            description="Wrapped-style and full chaptered report renderings."
-            state="Planned — Prototype B / Phase 3"
-            locked
-          />
-        </div>
-      </section>
+      {!showFuture && (
+        <section className="flex flex-col gap-3 border-t border-border pt-6">
+          <h2 className="text-sm font-medium">
+            Coming later: student-first release
+          </h2>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <ToolCard
+              icon={PenLine}
+              name="Three-act release (student reacts and reflects first)"
+              description="Students see their report first and add a reflection before it goes to parents."
+              state="Planned — Prototype B / Phase 3"
+              locked
+            />
+            <ToolCard
+              icon={BookOpen}
+              name="Story & full-report renderings"
+              description="Wrapped-style and full chaptered report renderings."
+              state="Planned — Prototype B / Phase 3"
+              locked
+            />
+          </div>
+        </section>
+      )}
 
       <AlertDialog
         open={shareTarget !== null}
@@ -349,13 +494,38 @@ function ReleasePage() {
             <AlertDialogDescription>
               This makes {shareTargetStudent?.name ?? 'this student'}'s report
               available at a parent link. In the pilot, links go out via Parents
-              Gateway.
+              Gateway. The report leads with{' '}
+              {shareTargetStudent?.name ?? 'this student'}'s story and
+              conversation starters; results follow as an appendix.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleShareConfirm}>
               Share
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={releaseTarget !== null}
+        onOpenChange={(open) => !open && setReleaseTarget(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Release this report to the student?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {releaseTargetStudent?.name ?? 'This student'} sees their report
+              first and can add a reflection. Parents come after.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleReleaseConfirm}>
+              Release to student
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

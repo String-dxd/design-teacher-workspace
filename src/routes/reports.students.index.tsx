@@ -20,21 +20,47 @@ import {
 } from '@/lib/hdp-store'
 import { useFeatureFlag } from '@/hooks/use-feature-flag'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
+import { TermSummaryPanel } from '@/components/hdp/term-summary-panel'
+import { CoverageBroadcastPanel } from '@/components/hdp/coverage-broadcast-panel'
+import { BroadcastRequestsPanel } from '@/components/hdp/broadcast-requests-panel'
+
+type StudentsTab = 'roster' | 'summary' | 'gaps' | 'requests'
+
+interface StudentsSearch {
+  tab: StudentsTab
+}
 
 export const Route = createFileRoute('/reports/students/')({
   component: StudentsIndexPage,
+  validateSearch: (search: Record<string, unknown>): StudentsSearch => ({
+    tab:
+      search.tab === 'summary' ||
+      search.tab === 'gaps' ||
+      search.tab === 'requests'
+        ? search.tab
+        : 'roster',
+  }),
 })
 
+// The "My students" hub (plan 035) — consolidates the former Students,
+// Term Summary, and Coverage & Broadcast pages into tabs on one destination.
+// Roster stays exactly as it was (unchanged); Summary and Gaps are the
+// former pages' content, moved into presentational panels; Requests is the
+// broadcast page's former responder-facing region (Region 4), split out on
+// its own tab per maintainer feedback 2026-07-16.
 function StudentsIndexPage() {
   const enabled = useFeatureFlag('reports-hdp')
   const fullRiver = useFeatureFlag('reports-river-visibility')
+  const { tab } = Route.useSearch()
+  const navigate = Route.useNavigate()
 
   useSetBreadcrumbs([
     { label: 'Reports', href: '/reports' },
-    { label: 'Students', href: '/reports/students' },
+    { label: 'My students', href: '/reports/students' },
   ])
 
   const [mounted, setMounted] = React.useState(false)
+  const [requestsCount, setRequestsCount] = React.useState(0)
   React.useEffect(() => {
     seedIfEmpty()
     setMounted(true)
@@ -66,26 +92,54 @@ function StudentsIndexPage() {
   return (
     <main className="mx-auto flex max-w-4xl flex-col gap-6 px-4 py-8 sm:px-6">
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold">Students</h1>
+        <h1 className="text-2xl font-semibold">My students</h1>
         <p className="text-muted-foreground text-sm">
-          Every student in your classes, with their river.
+          Know your class, prep for PTM, fill gaps.
         </p>
       </div>
 
       {mounted && (
-        <Tabs defaultValue={classIds[0]}>
+        <Tabs
+          value={tab}
+          onValueChange={(value) =>
+            navigate({
+              search: (prev) => ({ ...prev, tab: value as StudentsTab }),
+            })
+          }
+        >
           <TabsList>
-            {classIds.map((classId) => (
-              <TabsTrigger key={classId} value={classId}>
-                {classId}
-              </TabsTrigger>
-            ))}
+            <TabsTrigger value="roster">Roster</TabsTrigger>
+            <TabsTrigger value="summary">Summary</TabsTrigger>
+            <TabsTrigger value="gaps">Gaps</TabsTrigger>
+            <TabsTrigger value="requests">
+              {requestsCount > 0 ? `Requests (${requestsCount})` : 'Requests'}
+            </TabsTrigger>
           </TabsList>
-          {classIds.map((classId) => (
-            <TabsContent key={classId} value={classId}>
-              <ClassRoster classId={classId} fullRiver={fullRiver} />
-            </TabsContent>
-          ))}
+          <TabsContent value="roster">
+            <Tabs defaultValue={classIds[0]}>
+              <TabsList>
+                {classIds.map((classId) => (
+                  <TabsTrigger key={classId} value={classId}>
+                    {classId}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+              {classIds.map((classId) => (
+                <TabsContent key={classId} value={classId}>
+                  <ClassRoster classId={classId} fullRiver={fullRiver} />
+                </TabsContent>
+              ))}
+            </Tabs>
+          </TabsContent>
+          <TabsContent value="summary">
+            <TermSummaryPanel />
+          </TabsContent>
+          <TabsContent value="gaps">
+            <CoverageBroadcastPanel />
+          </TabsContent>
+          <TabsContent value="requests">
+            <BroadcastRequestsPanel onCountChange={setRequestsCount} />
+          </TabsContent>
         </Tabs>
       )}
     </main>

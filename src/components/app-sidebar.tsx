@@ -147,23 +147,6 @@ const manageItems: Array<MenuItem> = [
     title: 'Reports',
     url: '/reports',
     icon: FileText,
-    stage: 'Release 2',
-    featureFlag: 'reports',
-    excludeSearchView: 'admin',
-  },
-  {
-    title: 'Reports (Admin)',
-    url: '/reports',
-    icon: FileText,
-    stage: 'Release 2',
-    featureFlag: 'reports-admin-view',
-    search: { view: 'admin' },
-    requiredSearchView: 'admin',
-  },
-  {
-    title: 'Reports',
-    url: '/reports',
-    icon: FileText,
     stage: 'Experiment',
     featureFlag: 'reports-hdp',
   },
@@ -193,13 +176,6 @@ const parentsCommItems: Array<MenuItem> = [
     icon: CalendarClock,
     stage: 'Release 2',
     featureFlag: 'meetings',
-  },
-  {
-    title: 'Holistic Development Reports',
-    url: '/reports',
-    icon: FileText,
-    stage: 'Experiment',
-    featureFlag: 'hdp-reports',
   },
 ]
 
@@ -290,18 +266,15 @@ export function AppSidebar() {
   const [feedbackOpen, setFeedbackOpen] = React.useState(false)
   const [showCoachMark, setShowCoachMark] = React.useState(false)
   const postsEnabled = useFeatureFlag('posts')
-  const hdpReportsEnabled = useFeatureFlag('hdp-reports')
   const reportsHdpEnabled = useFeatureFlag('reports-hdp')
   const studentAnalyticsEnabled = useFeatureFlag('student-analytics')
   const studentAnalyticsBasicEnabled = useFeatureFlag('student-analytics-basic')
   const studentGroupsEnabled = useFeatureFlag('student-groups')
   const agencyReportsEnabled = useFeatureFlag('agency-reports')
   const msfUpliftEnabled = useFeatureFlag('msf-uplift-data')
-  const reportsEnabled = useFeatureFlag('reports')
   const calendarEnabled = useFeatureFlag('calendar')
   const meetingsEnabled = useFeatureFlag('meetings')
   const postsAdminViewEnabled = useFeatureFlag('posts-admin-view')
-  const reportsAdminViewEnabled = useFeatureFlag('reports-admin-view')
   const currentView = (location.search as Record<string, unknown>).view as
     | string
     | undefined
@@ -345,24 +318,17 @@ export function AppSidebar() {
       if (!item.featureFlag) return true
       if (item.featureFlag === 'posts') return postsEnabled
       if (item.featureFlag === 'reports-hdp') return reportsHdpEnabled
-      if (item.featureFlag === 'hdp-reports')
-        return hdpReportsEnabled && !reportsHdpEnabled
       if (item.featureFlag === 'student-groups') return studentGroupsEnabled
-      if (item.featureFlag === 'reports') return reportsEnabled
       if (item.featureFlag === 'calendar') return calendarEnabled
       if (item.featureFlag === 'meetings') return meetingsEnabled
       if (item.featureFlag === 'posts-admin-view') return postsAdminViewEnabled
-      if (item.featureFlag === 'reports-admin-view')
-        return reportsAdminViewEnabled
       return true
     })
 
   const filteredMainItems = filterItems(mainNavItems).filter(
     (item) => !(hideAttendanceAndReports && item.title === 'Attendance'),
   )
-  const filteredParentsItems = filterItems(parentsCommItems).filter(
-    (item) => !(hideAttendanceAndReports && item.title === 'Reports'),
-  )
+  const filteredParentsItems = filterItems(parentsCommItems)
   const filteredManageItems = filterItems(manageItems)
   const filteredStudentItems = studentAnalyticsEnabled
     ? studentInsightItemsWithAnalytics.filter((item) =>

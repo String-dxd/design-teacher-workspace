@@ -18,6 +18,11 @@ interface PatternCardProps {
   pattern: FormingPattern
   onConfirm?: () => void
   onDismiss?: () => void
+  /** The student's first name — used only for the quiet "hidden from the
+   *  family report by {name}" line when a student has retired a confirmed
+   *  pattern from their family-facing report (plan 041). The teacher-facing
+   *  record itself is unchanged: this card keeps rendering the pattern. */
+  studentFirstName?: string
 }
 
 // The screen's one accent element (P5: forming patterns render as a
@@ -27,8 +32,10 @@ export function PatternCard({
   pattern,
   onConfirm,
   onDismiss,
+  studentFirstName,
 }: PatternCardProps) {
   const isConfirmed = pattern.status === 'confirmed'
+  const isRetired = pattern.status === 'retired-by-student'
   const basisLine = `${DISPOSITION_LABELS[pattern.disposition]} in ${
     pattern.contexts.length
   } contexts · ${pattern.tagIds.length} observations`
@@ -40,12 +47,17 @@ export function PatternCard({
       )}
     >
       <p className="text-xs font-medium text-primary">
-        {isConfirmed
+        {isConfirmed || isRetired
           ? `Confirmed thread · by ${staffName(pattern.confirmedBy ?? '')}`
           : 'Forming pattern — candidate thread, unconfirmed'}
       </p>
       <p className="text-muted-foreground text-sm">{basisLine}</p>
-      {!isConfirmed && (onConfirm || onDismiss) && (
+      {isRetired && (
+        <p className="text-muted-foreground text-xs">
+          Hidden from the family report by {studentFirstName ?? 'the student'}
+        </p>
+      )}
+      {!isConfirmed && !isRetired && (onConfirm || onDismiss) && (
         <div className="mt-1 flex gap-2">
           {onConfirm && (
             <Button variant="outline" size="sm" onClick={onConfirm}>

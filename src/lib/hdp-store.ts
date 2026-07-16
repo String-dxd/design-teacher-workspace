@@ -6,8 +6,13 @@ import type {
   DraftClaim,
   FormingPattern,
   HdpDraft,
+  HdpMarkEntry,
+  HdpMarksRecord,
   HdpReportBook,
   HdpTag,
+  SchoolYear,
+  Semester,
+  StudentReflection,
   TagContext,
   TagEntryPoint,
 } from '@/types/hdp'
@@ -19,7 +24,9 @@ import {
   SEED_BROADCAST,
   SEED_BROADCAST_FOR_TEACHER,
   SEED_DRAFTS,
+  SEED_MARKS,
   SEED_PATTERNS,
+  SEED_REFLECTIONS,
   SEED_REPORT_BOOKS,
   SEED_TAGS,
 } from '@/data/hdp'
@@ -37,6 +44,8 @@ const BROADCASTS_KEY = 'hdp_broadcasts'
 const DRAFTS_KEY = 'hdp_drafts'
 const REPORT_BOOKS_KEY = 'hdp_report_books'
 const ANALYTICS_KEY = 'hdp_analytics'
+const MARKS_KEY = 'hdp_marks'
+const REFLECTIONS_KEY = 'hdp_reflections'
 
 const CURRENT_TERM = CURRENT_CYCLE.terms[0]
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000
@@ -83,6 +92,12 @@ export function seedIfEmpty(): void {
   }
   if (localStorage.getItem(ANALYTICS_KEY) === null) {
     writeArray(ANALYTICS_KEY, [])
+  }
+  if (localStorage.getItem(MARKS_KEY) === null) {
+    writeArray(MARKS_KEY, SEED_MARKS)
+  }
+  if (localStorage.getItem(REFLECTIONS_KEY) === null) {
+    writeArray(REFLECTIONS_KEY, SEED_REFLECTIONS)
   }
 }
 
@@ -215,13 +230,12 @@ export function detectFormingPatterns(
   for (const [disposition, contexts] of contextsByDisposition) {
     if (contexts.size < 2) continue
     const existing = stored.find((p) => p.disposition === disposition)
-    if (
-      existing &&
-      (existing.status === 'dismissed' ||
-        existing.status === 'retired-by-student')
-    ) {
-      continue
-    }
+    // 'dismissed' means "not a thread" — it never resurfaces as a fresh
+    // candidate. 'retired-by-student' is different (plan 041): the teacher-
+    // facing record is UNCHANGED, so a retired pattern still comes back
+    // here (with its retired status intact) for the river/PatternCard to
+    // render its quiet "hidden from the family report" line.
+    if (existing?.status === 'dismissed') continue
     results.push({
       id: existing?.id ?? `pattern-${studentId}-${disposition}`,
       studentId,
@@ -231,6 +245,9 @@ export function detectFormingPatterns(
       status: existing?.status ?? 'candidate',
       confirmedBy: existing?.confirmedBy,
       schoolYear: CURRENT_CYCLE.schoolYear,
+      headline: existing?.headline,
+      studentNote: existing?.studentNote,
+      studentReaction: existing?.studentReaction,
     })
   }
 
@@ -277,6 +294,112 @@ export function dismissPattern(id: string): FormingPattern {
     patterns.map((p) => (p.id === id ? updated : p)),
   )
   return updated
+}
+
+// ── Student pattern reactions + light curation (plan 041, Prototype B) ──
+
+/** Freezes a student-facing write once their report book has been shared
+ *  with parents — the same rule `submitStudentReflection` already applies
+ *  to reflections. */
+function assertPatternActionAllowed(studentId: string, action: string): void {
+  const book = loadReportBooks().find((b) => b.studentId === studentId)
+  if (book?.sharedAt) {
+    throw new Error(
+      `Cannot ${action} for ${studentId}: already shared with parents`,
+    )
+  }
+}
+
+/**
+ * Records the student's reaction to a validated (confirmed) pattern —
+ * "Agree" / "It's more complicated" / "Add my side" — with an optional
+ * note (≤300 chars, enforced at the composer). `agree` may omit the note;
+ * the other two reactions prompt for one but never require it. One
+ * reaction per pattern; changeable until the student's report book is
+ * shared with parents, same freeze rule as `submitStudentReflection`.
+ */
+export function reactToPattern(
+  patternId: string,
+  reaction: 'agree' | 'more-complicated' | 'add-my-side',
+  note?: string,
+): FormingPattern {
+  const patterns = loadPatterns()
+  const pattern = patterns.find((p) => p.id === patternId)
+  if (!pattern) throw new Error(`Unknown pattern id: ${patternId}`)
+  assertPatternActionAllowed(pattern.studentId, 'react to a pattern')
+  const updated: FormingPattern = {
+    ...pattern,
+    studentReaction: reaction,
+    studentNote: note,
+  }
+  writeArray(
+    PATTERNS_KEY,
+    patterns.map((p) => (p.id === patternId ? updated : p)),
+  )
+  return updated
+}
+
+/**
+ * Hides a confirmed pattern from the family-facing story register (Act 2
+ * light curation, PRD F5). The teacher-facing record is UNCHANGED —
+ * `loadPatterns`/`detectFormingPatterns` still return the pattern, now
+ * carrying `status: 'retired-by-student'`, so the river renders it with a
+ * quiet "hidden from the family report by {name}" line rather than
+ * dropping it. Only a confirmed pattern can be retired (candidates never
+ * reach the story register in the first place). Frozen once shared.
+ */
+export function retirePatternFromFamily(patternId: string): FormingPattern {
+  const patterns = loadPatterns()
+  const pattern = patterns.find((p) => p.id === patternId)
+  if (!pattern) throw new Error(`Unknown pattern id: ${patternId}`)
+  if (pattern.status !== 'confirmed') {
+    throw new Error(
+      `Cannot retire pattern ${patternId}: only confirmed patterns can be hidden`,
+    )
+  }
+  assertPatternActionAllowed(pattern.studentId, 'retire a pattern')
+  const updated: FormingPattern = { ...pattern, status: 'retired-by-student' }
+  writeArray(
+    PATTERNS_KEY,
+    patterns.map((p) => (p.id === patternId ? updated : p)),
+  )
+  return updated
+}
+
+/** Restores a pattern the student previously retired from the family
+ *  report — back to `confirmed`, the only status retire is reachable
+ *  from. */
+export function restorePattern(patternId: string): FormingPattern {
+  const patterns = loadPatterns()
+  const pattern = patterns.find((p) => p.id === patternId)
+  if (!pattern) throw new Error(`Unknown pattern id: ${patternId}`)
+  if (pattern.status !== 'retired-by-student') {
+    throw new Error(`Cannot restore pattern ${patternId}: it is not retired`)
+  }
+  assertPatternActionAllowed(pattern.studentId, 'restore a pattern')
+  const updated: FormingPattern = { ...pattern, status: 'confirmed' }
+  writeArray(
+    PATTERNS_KEY,
+    patterns.map((p) => (p.id === patternId ? updated : p)),
+  )
+  return updated
+}
+
+/**
+ * True once the student's cover reflection (`coverReflection`) has at
+ * least three sentences — the gate that unlocks "Share with parents" in
+ * Release (plan 041). Sentences are split on `.?!`, trimmed, and empty
+ * fragments discarded, so trailing punctuation/whitespace never inflates
+ * the count.
+ */
+export function reflectionGatesShare(studentId: string): boolean {
+  const reflection = coverReflection(studentId)
+  if (!reflection) return false
+  const sentences = reflection.text
+    .split(/[.?!]+/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0)
+  return sentences.length >= 3
 }
 
 // ── Visibility ───────────────────────────────────────────────────────────
@@ -546,6 +669,126 @@ export function saveReportBook(book: HdpReportBook): void {
       books.map((b) => (b.studentId === book.studentId ? book : b)),
     )
   }
+}
+
+// ── Student reflections (plan 037) ──────────────────────────────────────
+
+/** All reflections recorded for a student (usually zero or one — plan 038
+ *  writes through this same signature when students can add their own). */
+export function loadReflections(studentId: string): Array<StudentReflection> {
+  return readArray<StudentReflection>(REFLECTIONS_KEY).filter(
+    (r) => r.studentId === studentId,
+  )
+}
+
+/** Appends a reflection for a student. Keeps the signature plan 038 writes
+ *  through — no upsert-by-id here since a student may write more than one
+ *  over time; `chosenAsCover` picks which one the story register leads
+ *  with. */
+export function saveReflection(reflection: StudentReflection): void {
+  const all = readArray<StudentReflection>(REFLECTIONS_KEY)
+  writeArray(REFLECTIONS_KEY, [...all, reflection])
+}
+
+/** The reflection the story register's cover renders — the one marked
+ *  `chosenAsCover`, else the most recently written, else undefined (no
+ *  fabricated quote — the cover falls back to an honest "No reflection
+ *  yet" line). */
+export function coverReflection(
+  studentId: string,
+): StudentReflection | undefined {
+  const reflections = loadReflections(studentId)
+  const chosen = reflections.find((r) => r.chosenAsCover)
+  if (chosen) return chosen
+  return [...reflections].sort((a, b) =>
+    b.writtenAt.localeCompare(a.writtenAt),
+  )[0]
+}
+
+// ── Student-first release (plan 038, Prototype B Act 1) ─────────────────
+
+const STUDENT_GUEST_TOKEN_PREFIX = 'hdp-student-'
+
+/** Deterministic mock token for a student's OWN report link — distinct
+ *  prefix from the parent token (`hdp-{studentId}`) so the two guest routes
+ *  never collide on the same string. */
+function tokenForStudentRelease(studentId: string): string {
+  return `${STUDENT_GUEST_TOKEN_PREFIX}${studentId}`
+}
+
+/**
+ * Releases a student's report book to the student themselves — Act 1 of the
+ * staged release. Requires a confirmed overall draft (same precondition as
+ * `shareReportBook`); throws otherwise, same as sharing with parents.
+ * Stamps `studentReleasedAt`. Idempotent id: the token is deterministic, so
+ * releasing twice just re-stamps the same book (no duplicate rows).
+ */
+export function releaseToStudent(studentId: string): { token: string } {
+  const overallDraft = findDraft(studentId, 'overall')
+  if (!overallDraft || overallDraft.status !== 'confirmed') {
+    throw new Error(
+      `Cannot release to student ${studentId}: no confirmed overall draft`,
+    )
+  }
+  const books = loadReportBooks()
+  const existing = books.find((b) => b.studentId === studentId)
+  if (!existing) {
+    throw new Error(`No report book found for student ${studentId}`)
+  }
+  saveReportBook({ ...existing, studentReleasedAt: new Date().toISOString() })
+  return { token: tokenForStudentRelease(studentId) }
+}
+
+/** Looks up a report book by its student-release guest token — only ever
+ *  resolves a book that has actually been released to the student
+ *  (`studentReleasedAt` set); an unknown or not-yet-released token renders
+ *  the guest route's calm "not valid" state, same convention as
+ *  `bookByToken`. */
+export function bookByStudentToken(token: string): HdpReportBook | undefined {
+  if (!token.startsWith(STUDENT_GUEST_TOKEN_PREFIX)) return undefined
+  const studentId = token.slice(STUDENT_GUEST_TOKEN_PREFIX.length)
+  const book = loadReportBooks().find((b) => b.studentId === studentId)
+  return book?.studentReleasedAt ? book : undefined
+}
+
+/**
+ * Submits (or replaces) the student's own reflection on their report — the
+ * one they write themselves at their release link, distinct from a
+ * teacher's or parent's. Writes through `saveReflection` (plan 037): the
+ * student's FIRST reflection is marked `chosenAsCover` (it becomes the
+ * story register's cover quote); a second submission replaces it in place
+ * (edit, not append) and keeps whatever cover status the first one had.
+ * Stamps `studentReactedAt` on the book. Throws once the book has been
+ * shared with parents — the reflection freezes at share, same rule as the
+ * report book's own snapshot semantics.
+ */
+export function submitStudentReflection(token: string, text: string): void {
+  const book = bookByStudentToken(token)
+  if (!book) throw new Error(`Unknown or unreleased student token: ${token}`)
+  if (book.sharedAt) {
+    throw new Error(
+      `Cannot submit a reflection for ${book.studentId}: already shared with parents`,
+    )
+  }
+
+  // The student has at most one reflection of their own at a time — a
+  // resubmit replaces it in place (edit), it never appends a second row.
+  // `chosenAsCover` carries forward from whatever they had before (it's
+  // `true` the first time, since it's their only reflection).
+  const previous = coverReflection(book.studentId)
+  const chosenAsCover = previous?.chosenAsCover ?? true
+  const others = readArray<StudentReflection>(REFLECTIONS_KEY).filter(
+    (r) => r.studentId !== book.studentId,
+  )
+  const reflection: StudentReflection = {
+    studentId: book.studentId,
+    text,
+    writtenAt: new Date().toISOString(),
+    chosenAsCover,
+  }
+  writeArray(REFLECTIONS_KEY, [...others, reflection])
+
+  saveReportBook({ ...book, studentReactedAt: new Date().toISOString() })
 }
 
 // ── Analytics ────────────────────────────────────────────────────────────
@@ -831,6 +1074,49 @@ function tokenForStudent(studentId: string): string {
   return `${GUEST_TOKEN_PREFIX}${studentId}`
 }
 
+/** Assembles the `overallComment` + `subjectComments` a book would get if
+ *  shared right now — snapshotting the CONFIRMED drafts (overall + subject)
+ *  for this student — without persisting anything. Shared by `shareReportBook`
+ *  (which freezes this into the saved book) and `previewReportBook` (which
+ *  hands it to the teacher-facing Preview so it never drifts from what
+ *  `shareReportBook` would actually produce). */
+function assembleComments(studentId: string): {
+  overallComment: HdpReportBook['overallComment']
+  subjectComments: HdpReportBook['subjectComments']
+} {
+  const overallDraft = findDraft(studentId, 'overall')
+  const overallComment =
+    overallDraft && overallDraft.status === 'confirmed'
+      ? {
+          authorId: overallDraft.authorId,
+          claims: nonBlankClaims(overallDraft.claims).map((c) => ({ ...c })),
+          // Prototype B (plan 040): carried over only when the source draft
+          // was actually composed via the insight layer — an A-path draft's
+          // `insightIds` is undefined, so this stays undefined too.
+          insightIds: overallDraft.insightIds?.length
+            ? [...overallDraft.insightIds]
+            : undefined,
+        }
+      : undefined
+
+  const subjectComments = loadDrafts()
+    .filter(
+      (d) =>
+        d.studentId === studentId &&
+        d.kind === 'subject' &&
+        d.status === 'confirmed' &&
+        d.subject,
+    )
+    .map((d) => ({
+      subject: d.subject as string,
+      authorId: d.authorId,
+      claims: nonBlankClaims(d.claims).map((c) => ({ ...c })),
+      insightIds: d.insightIds?.length ? [...d.insightIds] : undefined,
+    }))
+
+  return { overallComment, subjectComments }
+}
+
 /**
  * Shares a student's report book with parents: snapshots the CONFIRMED
  * drafts (overall + subject) for this student into the book's comments —
@@ -847,28 +1133,7 @@ export function shareReportBook(studentId: string): { token: string } {
     throw new Error(`No report book found for student ${studentId}`)
   }
 
-  const overallDraft = findDraft(studentId, 'overall')
-  const overallComment =
-    overallDraft && overallDraft.status === 'confirmed'
-      ? {
-          authorId: overallDraft.authorId,
-          claims: nonBlankClaims(overallDraft.claims).map((c) => ({ ...c })),
-        }
-      : undefined
-
-  const subjectComments = loadDrafts()
-    .filter(
-      (d) =>
-        d.studentId === studentId &&
-        d.kind === 'subject' &&
-        d.status === 'confirmed' &&
-        d.subject,
-    )
-    .map((d) => ({
-      subject: d.subject as string,
-      authorId: d.authorId,
-      claims: nonBlankClaims(d.claims).map((c) => ({ ...c })),
-    }))
+  const { overallComment, subjectComments } = assembleComments(studentId)
 
   const updated: HdpReportBook = {
     ...existing,
@@ -878,6 +1143,29 @@ export function shareReportBook(studentId: string): { token: string } {
   }
   saveReportBook(updated)
   return { token: tokenForStudent(studentId) }
+}
+
+/**
+ * The teacher-facing Preview's data source: what a parent would actually see
+ * if this book were shared right now. Once a book has been shared, its
+ * stored comments are already the frozen truth (editing a draft afterwards
+ * must NOT change what a parent with a live link sees), so this simply
+ * returns the stored book unchanged. Before sharing, the stored book's
+ * comments are still empty (only `shareReportBook` populates them), so this
+ * assembles the same CONFIRMED-drafts snapshot `shareReportBook` would
+ * produce — without persisting it — so Preview never omits sections (like
+ * "Personal qualities") that the real parent link would show. Returns
+ * `undefined` if no report book exists yet for the student.
+ */
+export function previewReportBook(
+  studentId: string,
+): HdpReportBook | undefined {
+  const book = loadReportBooks().find((b) => b.studentId === studentId)
+  if (!book) return undefined
+  if (book.sharedAt) return book
+
+  const { overallComment, subjectComments } = assembleComments(studentId)
+  return { ...book, overallComment, subjectComments }
 }
 
 /** Looks up a report book by its guest token — only ever resolves a book
@@ -920,6 +1208,142 @@ export function acknowledgeReport(token: string, note?: string): HdpReportBook {
     }
   } else {
     return book
+  }
+  saveReportBook(updated)
+  return updated
+}
+
+// ── Marks + academic-results sync (plan 036) ────────────────────────────
+
+/** All mark entries recorded for a student, across every subject/semester. */
+export function loadMarks(studentId: string): Array<HdpMarkEntry> {
+  const records = readArray<HdpMarksRecord>(MARKS_KEY)
+  return records.find((r) => r.studentId === studentId)?.entries ?? []
+}
+
+function saveMarksForStudent(
+  studentId: string,
+  entries: Array<HdpMarkEntry>,
+): void {
+  const records = readArray<HdpMarksRecord>(MARKS_KEY)
+  const index = records.findIndex((r) => r.studentId === studentId)
+  const record: HdpMarksRecord = { studentId, entries }
+  if (index === -1) {
+    writeArray(MARKS_KEY, [...records, record])
+  } else {
+    writeArray(
+      MARKS_KEY,
+      records.map((r) => (r.studentId === studentId ? record : r)),
+    )
+  }
+}
+
+/**
+ * Upserts one mark entry for a student — matched on subject + schoolYear +
+ * semester + assessment (all four; two entries that only share
+ * subject/semester but land in different school years must NOT collide).
+ * Autosaved on blur from the marks grid.
+ */
+export function saveMarkEntry(studentId: string, entry: HdpMarkEntry): void {
+  const existing = loadMarks(studentId)
+  const index = existing.findIndex(
+    (e) =>
+      e.subject === entry.subject &&
+      e.schoolYear === entry.schoolYear &&
+      e.semester === entry.semester &&
+      e.assessment === entry.assessment,
+  )
+  const next =
+    index === -1
+      ? [...existing, entry]
+      : existing.map((e, i) => (i === index ? entry : e))
+  saveMarksForStudent(studentId, next)
+}
+
+/** The mean score across whichever assessments (WA1/WA2/Exam) are recorded
+ *  for a subject in a given school year + semester. Returns undefined when
+ *  nothing is recorded yet — callers skip that semester rather than
+ *  treating it as a zero. */
+export function semesterAverage(
+  entries: Array<HdpMarkEntry>,
+  subject: string,
+  schoolYear: SchoolYear,
+  semester: Semester,
+): number | undefined {
+  const matches = entries.filter(
+    (e) =>
+      e.subject === subject &&
+      e.schoolYear === schoolYear &&
+      e.semester === semester,
+  )
+  if (matches.length === 0) return undefined
+  return matches.reduce((sum, e) => sum + e.score, 0) / matches.length
+}
+
+function previousSemester(
+  schoolYear: SchoolYear,
+  semester: Semester,
+): { schoolYear: SchoolYear; semester: Semester } {
+  if (semester === 2) return { schoolYear, semester: 1 }
+  return {
+    schoolYear: String(Number(schoolYear) - 1) as SchoolYear,
+    semester: 2,
+  }
+}
+
+/**
+ * Snapshots the CURRENT semester's per-subject mark averages into a
+ * student's report book `results` — grade is the rounded average as a
+ * string, `change` is the delta vs the previous semester's average (signed,
+ * absent when there's no previous-semester data to compare against), `term`
+ * is the later of the two terms in the current cycle. Stamps
+ * `marksSyncedAt`. Snapshot semantics identical to `shareReportBook`: a
+ * later `saveMarkEntry` does not mutate an already-synced book until this
+ * is called again. Throws if no report book exists yet for the student
+ * (nothing to sync into).
+ */
+export function syncAcademicResults(studentId: string): HdpReportBook {
+  const books = loadReportBooks()
+  const existing = books.find((b) => b.studentId === studentId)
+  if (!existing) {
+    throw new Error(`No report book found for student ${studentId}`)
+  }
+
+  const { schoolYear, semester } = CURRENT_CYCLE
+  const currentTerm = CURRENT_CYCLE.terms[1]
+  const prev = previousSemester(schoolYear, semester)
+  const entries = loadMarks(studentId)
+  const subjects = Array.from(new Set(entries.map((e) => e.subject)))
+
+  const syncedResults = subjects
+    .map((subject) => {
+      const avg = semesterAverage(entries, subject, schoolYear, semester)
+      if (avg === undefined) return undefined
+      const prevAvg = semesterAverage(
+        entries,
+        subject,
+        prev.schoolYear,
+        prev.semester,
+      )
+      const change =
+        prevAvg === undefined ? undefined : Math.round(avg - prevAvg)
+      return {
+        subject,
+        term: currentTerm,
+        grade: String(Math.round(avg)),
+        change,
+      }
+    })
+    .filter((r): r is NonNullable<typeof r> => r !== undefined)
+
+  const untouchedResults = existing.results.filter(
+    (r) => !(r.term === currentTerm && subjects.includes(r.subject)),
+  )
+
+  const updated: HdpReportBook = {
+    ...existing,
+    results: [...untouchedResults, ...syncedResults],
+    marksSyncedAt: new Date().toISOString(),
   }
   saveReportBook(updated)
   return updated

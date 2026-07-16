@@ -144,14 +144,6 @@ export const FEATURE_FLAG_REGISTRY: Record<FeatureFlagKey, FeatureFlagMeta> = {
     module: 'contextual-intelligence',
     defaultValue: false,
   },
-  'hdp-reports': {
-    label: 'HDP reports',
-    description:
-      'Show all Holistic Development reporting: the P1–P2 reporting-cycle hub (class + term picker, two-stage layout/write builder with inline Smart Compose), the parents-first share flow, template management via ?mode=template, and the Holistic Reports section on the student profile. Off hides all of it.',
-    stage: 'Experiment',
-    module: 'reports',
-    defaultValue: true,
-  },
   'agency-reports': {
     label: 'Agency reports',
     description:
@@ -167,21 +159,6 @@ export const FEATURE_FLAG_REGISTRY: Record<FeatureFlagKey, FeatureFlagMeta> = {
     stage: 'Experiment',
     module: 'reports',
     defaultValue: true,
-  },
-  reports: {
-    label: 'Reports',
-    description: 'Show the Reports page in the sidebar under Manage',
-    stage: 'Release 2',
-    module: 'reports',
-    defaultValue: false,
-  },
-  'reports-admin-view': {
-    label: 'Reports admin view',
-    description:
-      'Show a "Reports (Admin)" sidebar link that renders the Reports page with admin layout at /reports?view=admin',
-    stage: 'Release 2',
-    module: 'reports',
-    defaultValue: false,
   },
   posts: {
     label: 'Posts',
@@ -238,6 +215,14 @@ export const FEATURE_FLAG_REGISTRY: Record<FeatureFlagKey, FeatureFlagMeta> = {
     label: 'Full river for subject teachers',
     description:
       'Show subject teachers the full observation river for a student instead of their own tags plus confirmed threads only. Open research question — default off.',
+    stage: 'Experiment',
+    module: 'reports',
+    defaultValue: false,
+  },
+  'reports-hdp-future': {
+    label: 'Future state (Prototype B)',
+    description:
+      'Switch the report rendering and release flow to the Prototype B future state — trend lines, story register with student reflections, student-first release. Off shows the pragmatic Prototype A rendering.',
     stage: 'Experiment',
     module: 'reports',
     defaultValue: false,
