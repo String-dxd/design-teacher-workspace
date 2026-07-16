@@ -181,7 +181,9 @@ function ClassSection({
           <Button
             variant="ghost"
             size="sm"
-            render={<Link to="/reports/students" search={{ tab: 'gaps' }} />}
+            render={
+              <Link to="/reports" search={{ tab: 'students' }} hash="gaps" />
+            }
           >
             Ask colleagues
           </Button>
