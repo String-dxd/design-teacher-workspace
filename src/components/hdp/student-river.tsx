@@ -141,6 +141,7 @@ export function StudentRiver({
                 <PatternCard
                   key={pattern.id}
                   pattern={pattern}
+                  studentFirstName={name.split(' ')[0] ?? name}
                   onConfirm={
                     pattern.status === 'candidate'
                       ? () => {

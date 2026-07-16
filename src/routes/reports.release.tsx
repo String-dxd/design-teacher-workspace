@@ -38,6 +38,7 @@ import {
   loadPatterns,
   loadReportBooks,
   loadTags,
+  reflectionGatesShare,
   releaseToStudent,
   seedIfEmpty,
   shareReportBook,
@@ -237,14 +238,22 @@ function ReleasePage() {
                   findDraft(student.id, 'overall')?.status === 'confirmed'
                 // Flag off: "Share with parents" is gated only by a
                 // confirmed overall draft, exactly as before this plan.
-                // Flag on: the student must be released first — the UI
-                // gate lives here, not in shareReportBook itself.
+                // Flag on: the student must be released first AND their
+                // cover reflection must clear the ≥3-sentence gate (plan
+                // 041) — the UI gate lives here, not in shareReportBook.
+                const reflectionReady = showFuture
+                  ? reflectionGatesShare(student.id)
+                  : true
                 const canShareWithParents = showFuture
-                  ? hasConfirmedOverallDraft && Boolean(book?.studentReleasedAt)
+                  ? hasConfirmedOverallDraft &&
+                    Boolean(book?.studentReleasedAt) &&
+                    reflectionReady
                   : hasConfirmedOverallDraft
                 const shareDisabledTitle = !hasConfirmedOverallDraft
                   ? 'Confirm a draft first'
-                  : 'Release to the student first'
+                  : !book?.studentReleasedAt
+                    ? 'Release to the student first'
+                    : `Waiting for ${student.name}'s reflection (at least three sentences)`
                 return (
                   <TableRow key={student.id}>
                     <TableCell className="font-medium">
@@ -254,7 +263,8 @@ function ReleasePage() {
                     <TableCell>{book ? 'Yes' : '—'}</TableCell>
                     {showFuture && (
                       <TableCell className="tabular-nums">
-                        {book?.studentReactedAt
+                        {book?.studentReactedAt &&
+                        reflectionGatesShare(student.id)
                           ? `Reflected ${formatDate(book.studentReactedAt)}`
                           : book?.studentReleasedAt
                             ? `Released to student ${formatDate(book.studentReleasedAt)}`
