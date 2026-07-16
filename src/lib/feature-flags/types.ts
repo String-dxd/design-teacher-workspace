@@ -3,7 +3,6 @@ export type FeatureFlagKey =
   | 'forms'
   | 'notifications'
   | 'hdp-reports'
-  | 'parents-gateway'
   | 'student-analytics'
   | 'student-analytics-basic'
   | 'lta-intervention'
@@ -27,4 +26,21 @@ export type FeatureFlagKey =
 
 export type FeatureFlags = {
   [K in FeatureFlagKey]: boolean
+}
+
+export type FeatureFlagModule =
+  | 'student-insights'
+  | 'contextual-intelligence'
+  | 'reports'
+  | 'communications'
+  | 'manage'
+
+export type FeatureFlagStage = 'Experiment' | 'Release 2' | 'Release 3'
+
+export interface FeatureFlagMeta {
+  label: string
+  description: string
+  stage: FeatureFlagStage
+  module: FeatureFlagModule
+  defaultValue: boolean
 }
