@@ -120,7 +120,12 @@ export function StudentRiver({
               >
                 Add my observation
               </Button>
-              <Button variant="ghost" render={<Link to="/reports/broadcast" />}>
+              <Button
+                variant="ghost"
+                render={
+                  <Link to="/reports/students" search={{ tab: 'gaps' }} />
+                }
+              >
                 Ask colleagues
               </Button>
             </div>

@@ -404,7 +404,10 @@ function DraftBody({
           title="No observations to draft from"
           description="Write from scratch below, or ask colleagues first — a draft is only suggested when there's evidence behind it."
           action={
-            <Button variant="ghost" render={<Link to="/reports/broadcast" />}>
+            <Button
+              variant="ghost"
+              render={<Link to="/reports/students" search={{ tab: 'gaps' }} />}
+            >
               Ask colleagues
             </Button>
           }
