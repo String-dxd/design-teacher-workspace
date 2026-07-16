@@ -33,6 +33,7 @@ const TOOL_GROUPS: Array<{
     name: string
     description: string
     state: string
+    href?: string
   }>
 }> = [
   {
@@ -42,7 +43,8 @@ const TOOL_GROUPS: Array<{
         icon: Tag,
         name: 'Tag Queue',
         description: 'Every tag you and colleagues have made, searchable.',
-        state: 'Coming in this prototype', // plan 029
+        state: 'Always available',
+        href: '/reports/tag', // plan 029
       },
       {
         icon: BookOpen,
@@ -155,7 +157,8 @@ export function HdpReportsHome() {
                   name={tool.name}
                   description={tool.description}
                   state={tool.state}
-                  locked
+                  href={tool.href}
+                  locked={!tool.href}
                 />
               ))}
             </div>
