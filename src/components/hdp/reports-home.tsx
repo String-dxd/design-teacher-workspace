@@ -20,8 +20,8 @@ import { coverageForClass, seedIfEmpty } from '@/lib/hdp-store'
 
 // Routes for every tool below (/reports/tag, /reports/summary,
 // /reports/students/$studentId, /reports/broadcast, /reports/drafts,
-// /reports/review) don't exist yet — plans 029–033 build them one at a
-// time. To keep this plan self-contained and the home honest (no dead
+// /reports/review) didn't all exist at once — plans 029–033 build them one
+// at a time. To keep each plan self-contained and the home honest (no dead
 // links), every card renders locked with "Coming in this prototype" until
 // its own plan flips it to a live Link; Release Manager and Renderings
 // Preview are out of scope for this prototype entirely and stay "Coming
@@ -75,7 +75,8 @@ const TOOL_GROUPS: Array<{
         icon: PenLine,
         name: 'Draft Studio',
         description: 'Turn tags into evidence-grounded report comments.',
-        state: 'Coming in this prototype', // plan 032
+        state: 'Open — reporting window is open',
+        href: '/reports/drafts', // plan 032
       },
       {
         icon: CircleCheck,
