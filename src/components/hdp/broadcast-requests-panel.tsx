@@ -255,6 +255,11 @@ function RequestForYouRow({
           variant="ghost"
           size="sm"
           disabled={!disposition && !nil}
+          title={
+            !disposition && !nil
+              ? 'Choose a disposition or "Nothing stood out" first'
+              : undefined
+          }
           onClick={handleSend}
         >
           Send

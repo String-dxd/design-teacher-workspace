@@ -241,6 +241,11 @@ export function BroadcastComposer({
         <Button
           type="button"
           disabled={recipientIds.length === 0}
+          title={
+            recipientIds.length === 0
+              ? 'Add at least one teacher first'
+              : undefined
+          }
           onClick={() => setConfirmOpen(true)}
         >
           Send request
