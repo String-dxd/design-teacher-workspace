@@ -51,6 +51,11 @@ export interface FormingPattern {
    *  note on a validated pattern (plan 037). Only meaningful when status
    *  === 'confirmed'. */
   studentNote?: string
+  /** The student's reaction to a validated pattern — "Agree" / "It's more
+   *  complicated" / "Add my side" (plan 041). `agree` may pair with no
+   *  note; the other two prompt for one via `studentNote` but never
+   *  require it. Changeable until the report book is shared with parents. */
+  studentReaction?: 'agree' | 'more-complicated' | 'add-my-side'
 }
 
 export interface BroadcastRequest {

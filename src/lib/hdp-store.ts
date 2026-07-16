@@ -230,13 +230,12 @@ export function detectFormingPatterns(
   for (const [disposition, contexts] of contextsByDisposition) {
     if (contexts.size < 2) continue
     const existing = stored.find((p) => p.disposition === disposition)
-    if (
-      existing &&
-      (existing.status === 'dismissed' ||
-        existing.status === 'retired-by-student')
-    ) {
-      continue
-    }
+    // 'dismissed' means "not a thread" — it never resurfaces as a fresh
+    // candidate. 'retired-by-student' is different (plan 041): the teacher-
+    // facing record is UNCHANGED, so a retired pattern still comes back
+    // here (with its retired status intact) for the river/PatternCard to
+    // render its quiet "hidden from the family report" line.
+    if (existing?.status === 'dismissed') continue
     results.push({
       id: existing?.id ?? `pattern-${studentId}-${disposition}`,
       studentId,
@@ -246,6 +245,9 @@ export function detectFormingPatterns(
       status: existing?.status ?? 'candidate',
       confirmedBy: existing?.confirmedBy,
       schoolYear: CURRENT_CYCLE.schoolYear,
+      headline: existing?.headline,
+      studentNote: existing?.studentNote,
+      studentReaction: existing?.studentReaction,
     })
   }
 
@@ -292,6 +294,112 @@ export function dismissPattern(id: string): FormingPattern {
     patterns.map((p) => (p.id === id ? updated : p)),
   )
   return updated
+}
+
+// ── Student pattern reactions + light curation (plan 041, Prototype B) ──
+
+/** Freezes a student-facing write once their report book has been shared
+ *  with parents — the same rule `submitStudentReflection` already applies
+ *  to reflections. */
+function assertPatternActionAllowed(studentId: string, action: string): void {
+  const book = loadReportBooks().find((b) => b.studentId === studentId)
+  if (book?.sharedAt) {
+    throw new Error(
+      `Cannot ${action} for ${studentId}: already shared with parents`,
+    )
+  }
+}
+
+/**
+ * Records the student's reaction to a validated (confirmed) pattern —
+ * "Agree" / "It's more complicated" / "Add my side" — with an optional
+ * note (≤300 chars, enforced at the composer). `agree` may omit the note;
+ * the other two reactions prompt for one but never require it. One
+ * reaction per pattern; changeable until the student's report book is
+ * shared with parents, same freeze rule as `submitStudentReflection`.
+ */
+export function reactToPattern(
+  patternId: string,
+  reaction: 'agree' | 'more-complicated' | 'add-my-side',
+  note?: string,
+): FormingPattern {
+  const patterns = loadPatterns()
+  const pattern = patterns.find((p) => p.id === patternId)
+  if (!pattern) throw new Error(`Unknown pattern id: ${patternId}`)
+  assertPatternActionAllowed(pattern.studentId, 'react to a pattern')
+  const updated: FormingPattern = {
+    ...pattern,
+    studentReaction: reaction,
+    studentNote: note,
+  }
+  writeArray(
+    PATTERNS_KEY,
+    patterns.map((p) => (p.id === patternId ? updated : p)),
+  )
+  return updated
+}
+
+/**
+ * Hides a confirmed pattern from the family-facing story register (Act 2
+ * light curation, PRD F5). The teacher-facing record is UNCHANGED —
+ * `loadPatterns`/`detectFormingPatterns` still return the pattern, now
+ * carrying `status: 'retired-by-student'`, so the river renders it with a
+ * quiet "hidden from the family report by {name}" line rather than
+ * dropping it. Only a confirmed pattern can be retired (candidates never
+ * reach the story register in the first place). Frozen once shared.
+ */
+export function retirePatternFromFamily(patternId: string): FormingPattern {
+  const patterns = loadPatterns()
+  const pattern = patterns.find((p) => p.id === patternId)
+  if (!pattern) throw new Error(`Unknown pattern id: ${patternId}`)
+  if (pattern.status !== 'confirmed') {
+    throw new Error(
+      `Cannot retire pattern ${patternId}: only confirmed patterns can be hidden`,
+    )
+  }
+  assertPatternActionAllowed(pattern.studentId, 'retire a pattern')
+  const updated: FormingPattern = { ...pattern, status: 'retired-by-student' }
+  writeArray(
+    PATTERNS_KEY,
+    patterns.map((p) => (p.id === patternId ? updated : p)),
+  )
+  return updated
+}
+
+/** Restores a pattern the student previously retired from the family
+ *  report — back to `confirmed`, the only status retire is reachable
+ *  from. */
+export function restorePattern(patternId: string): FormingPattern {
+  const patterns = loadPatterns()
+  const pattern = patterns.find((p) => p.id === patternId)
+  if (!pattern) throw new Error(`Unknown pattern id: ${patternId}`)
+  if (pattern.status !== 'retired-by-student') {
+    throw new Error(`Cannot restore pattern ${patternId}: it is not retired`)
+  }
+  assertPatternActionAllowed(pattern.studentId, 'restore a pattern')
+  const updated: FormingPattern = { ...pattern, status: 'confirmed' }
+  writeArray(
+    PATTERNS_KEY,
+    patterns.map((p) => (p.id === patternId ? updated : p)),
+  )
+  return updated
+}
+
+/**
+ * True once the student's cover reflection (`coverReflection`) has at
+ * least three sentences — the gate that unlocks "Share with parents" in
+ * Release (plan 041). Sentences are split on `.?!`, trimmed, and empty
+ * fragments discarded, so trailing punctuation/whitespace never inflates
+ * the count.
+ */
+export function reflectionGatesShare(studentId: string): boolean {
+  const reflection = coverReflection(studentId)
+  if (!reflection) return false
+  const sentences = reflection.text
+    .split(/[.?!]+/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0)
+  return sentences.length >= 3
 }
 
 // ── Visibility ───────────────────────────────────────────────────────────

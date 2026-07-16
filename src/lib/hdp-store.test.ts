@@ -26,9 +26,13 @@ import {
   logEvent,
   markSynced,
   nilsForStudent,
+  reactToPattern,
+  reflectionGatesShare,
   releaseToStudent,
   reopenDraft,
   respondToBroadcast,
+  restorePattern,
+  retirePatternFromFamily,
   saveDraft,
   saveMarkEntry,
   saveReflection,
@@ -322,6 +326,159 @@ describe('confirmPattern / dismissPattern', () => {
     const [candidate] = detectFormingPatterns('x2')
     dismissPattern(candidate.id)
     expect(detectFormingPatterns('x2')).toEqual([])
+  })
+})
+
+// ── Student pattern reactions + light curation (plan 041) ────────────────
+
+function makeConfirmedPattern(
+  overrides: Partial<FormingPattern> = {},
+): FormingPattern {
+  return {
+    id: 'pattern-react-1',
+    studentId: 'react-1',
+    disposition: 'perseverance',
+    contexts: ['lesson', 'cca'],
+    tagIds: ['t1', 't2'],
+    status: 'confirmed',
+    confirmedBy: 'lee-sy',
+    schoolYear: '2026',
+    ...overrides,
+  }
+}
+
+describe('reactToPattern', () => {
+  it('persists a reaction and an optional note', () => {
+    localStorage.setItem(
+      'hdp_patterns',
+      JSON.stringify([makeConfirmedPattern()]),
+    )
+    const updated = reactToPattern(
+      'pattern-react-1',
+      'add-my-side',
+      'It was harder than it looked.',
+    )
+    expect(updated.studentReaction).toBe('add-my-side')
+    expect(updated.studentNote).toBe('It was harder than it looked.')
+    const reloaded = loadPatterns().find((p) => p.id === 'pattern-react-1')
+    expect(reloaded?.studentReaction).toBe('add-my-side')
+  })
+
+  it('is changeable until the book is parent-shared, then throws (freeze like reflections)', () => {
+    localStorage.setItem(
+      'hdp_patterns',
+      JSON.stringify([
+        makeConfirmedPattern({
+          id: 'pattern-react-2',
+          studentId: 'react-2',
+        }),
+      ]),
+    )
+    saveReportBook(makeReportBook({ studentId: 'react-2' }))
+    reactToPattern('pattern-react-2', 'agree')
+    expect(
+      loadPatterns().find((p) => p.id === 'pattern-react-2')?.studentReaction,
+    ).toBe('agree')
+
+    reactToPattern('pattern-react-2', 'more-complicated', 'Actually, no.')
+    expect(
+      loadPatterns().find((p) => p.id === 'pattern-react-2')?.studentReaction,
+    ).toBe('more-complicated')
+
+    shareReportBook('react-2')
+    expect(() => reactToPattern('pattern-react-2', 'agree')).toThrow()
+  })
+})
+
+describe('retirePatternFromFamily / restorePattern', () => {
+  it('flips status to retired-by-student and back to confirmed', () => {
+    localStorage.setItem(
+      'hdp_patterns',
+      JSON.stringify([
+        makeConfirmedPattern({ id: 'pattern-retire-1', studentId: 'retire-1' }),
+      ]),
+    )
+    const retired = retirePatternFromFamily('pattern-retire-1')
+    expect(retired.status).toBe('retired-by-student')
+
+    const restored = restorePattern('pattern-retire-1')
+    expect(restored.status).toBe('confirmed')
+    expect(restored.confirmedBy).toBe('lee-sy')
+  })
+
+  it('teacher visibility is unaffected — the pattern still appears in loadPatterns', () => {
+    localStorage.setItem(
+      'hdp_patterns',
+      JSON.stringify([
+        makeConfirmedPattern({ id: 'pattern-retire-2', studentId: 'retire-2' }),
+      ]),
+    )
+    retirePatternFromFamily('pattern-retire-2')
+    const stillThere = loadPatterns().find((p) => p.id === 'pattern-retire-2')
+    expect(stillThere).toBeDefined()
+    expect(stillThere?.status).toBe('retired-by-student')
+  })
+
+  it('throws when retiring a non-confirmed pattern, or restoring a non-retired one', () => {
+    localStorage.setItem(
+      'hdp_patterns',
+      JSON.stringify([
+        makeConfirmedPattern({
+          id: 'pattern-retire-3',
+          studentId: 'retire-3',
+          status: 'candidate',
+          confirmedBy: undefined,
+        }),
+      ]),
+    )
+    expect(() => retirePatternFromFamily('pattern-retire-3')).toThrow()
+    expect(() => restorePattern('pattern-retire-3')).toThrow()
+  })
+
+  it('is frozen once the book is parent-shared', () => {
+    localStorage.setItem(
+      'hdp_patterns',
+      JSON.stringify([
+        makeConfirmedPattern({ id: 'pattern-retire-4', studentId: 'retire-4' }),
+      ]),
+    )
+    saveReportBook(makeReportBook({ studentId: 'retire-4' }))
+    shareReportBook('retire-4')
+    expect(() => retirePatternFromFamily('pattern-retire-4')).toThrow()
+  })
+})
+
+describe('reflectionGatesShare', () => {
+  it('is false with fewer than three sentences and true with three or more', () => {
+    saveReflection({
+      studentId: 'gate-1',
+      text: 'One sentence. Two sentences.',
+      writtenAt: '2026-07-16T10:00:00+08:00',
+      chosenAsCover: true,
+    })
+    expect(reflectionGatesShare('gate-1')).toBe(false)
+
+    saveReflection({
+      studentId: 'gate-2',
+      text: 'One sentence. Two sentences. Three sentences.',
+      writtenAt: '2026-07-16T10:00:00+08:00',
+      chosenAsCover: true,
+    })
+    expect(reflectionGatesShare('gate-2')).toBe(true)
+  })
+
+  it('handles trailing whitespace and punctuation without inflating the count', () => {
+    saveReflection({
+      studentId: 'gate-3',
+      text: '  One!   Two? Three...   ',
+      writtenAt: '2026-07-16T10:00:00+08:00',
+      chosenAsCover: true,
+    })
+    expect(reflectionGatesShare('gate-3')).toBe(true)
+  })
+
+  it('is false when the student has no reflection at all', () => {
+    expect(reflectionGatesShare('no-such-student-gate')).toBe(false)
   })
 })
 
