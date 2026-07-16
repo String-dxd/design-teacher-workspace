@@ -358,7 +358,9 @@ function ReleasePage() {
             <AlertDialogDescription>
               This makes {shareTargetStudent?.name ?? 'this student'}'s report
               available at a parent link. In the pilot, links go out via Parents
-              Gateway.
+              Gateway. The report leads with{' '}
+              {shareTargetStudent?.name ?? 'this student'}'s story and
+              conversation starters; results follow as an appendix.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

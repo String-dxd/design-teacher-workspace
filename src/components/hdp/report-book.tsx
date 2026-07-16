@@ -104,8 +104,88 @@ export function ReportBook({
         <p className="text-muted-foreground text-sm">{className}</p>
       </header>
 
+      {hasComments && (
+        <section className="flex flex-col gap-6">
+          <h2 className="text-lg font-semibold">Personal qualities</h2>
+          {book.overallComment && (
+            <CommentSection
+              heading={null}
+              authorId={book.overallComment.authorId}
+              claims={book.overallComment.claims}
+              viewer={viewer}
+              showSourceTags={showSourceTags}
+              resolveTag={resolveTag}
+            />
+          )}
+          {book.subjectComments.map((sc) => (
+            <CommentSection
+              key={sc.subject}
+              heading={sc.subject}
+              authorId={sc.authorId}
+              claims={sc.claims}
+              viewer={viewer}
+              showSourceTags={showSourceTags}
+              resolveTag={resolveTag}
+            />
+          ))}
+        </section>
+      )}
+
+      {book.parentPrompts.length > 0 && (
+        <section className="flex flex-col gap-2">
+          <h2 className="text-lg font-semibold">Ask {firstName} about</h2>
+          <p className="text-muted-foreground text-sm">
+            {firstName} can start the conversation — ask about these.
+          </p>
+          <ul className="text-muted-foreground flex list-disc flex-col gap-1 pl-5 text-sm">
+            {book.parentPrompts.map((prompt, index) => (
+              <li key={index}>{prompt}</li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <section className="flex flex-col gap-1 text-sm">
+        <h2 className="text-lg font-semibold">Attendance & conduct</h2>
+        <p className="tabular-nums">
+          Present {book.attendance.present} of {book.attendance.total} days
+        </p>
+        <p>{book.conduct}</p>
+      </section>
+
+      {showFuture && trends.length > 0 && (
+        <section className="flex flex-col gap-3">
+          <h2 className="text-lg font-semibold">Where things are heading</h2>
+          <div className="flex flex-col gap-3">
+            {trends.map((trend) => (
+              <div
+                key={trend.subject}
+                className="flex items-center justify-between gap-4"
+              >
+                <span className="text-sm font-medium">{trend.subject}</span>
+                <div className="flex items-center gap-3">
+                  <TrendLine points={trend.points} />
+                  <span className="text-sm font-medium">
+                    {DIRECTION_WORDS[trend.direction]}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="text-muted-foreground text-xs">
+            Direction, not numbers, leads. Drawn from weighted assessments
+            already recorded.
+          </p>
+        </section>
+      )}
+
       <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">Results</h2>
+        <div className="flex flex-col gap-0.5">
+          <h2 className="text-lg font-semibold">Results</h2>
+          <p className="text-muted-foreground text-xs">
+            Appendix — the official record
+          </p>
+        </div>
         <div className="border-border max-w-full overflow-x-auto rounded-lg border">
           <Table>
             <TableCaption className="sr-only">
@@ -142,78 +222,6 @@ export function ReportBook({
           </Table>
         </div>
       </section>
-
-      <section className="flex flex-col gap-1 text-sm">
-        <h2 className="text-lg font-semibold">Attendance & conduct</h2>
-        <p className="tabular-nums">
-          Present {book.attendance.present} of {book.attendance.total} days
-        </p>
-        <p>{book.conduct}</p>
-      </section>
-
-      {hasComments && (
-        <section className="flex flex-col gap-6">
-          <h2 className="text-lg font-semibold">Personal qualities</h2>
-          {book.overallComment && (
-            <CommentSection
-              heading={null}
-              authorId={book.overallComment.authorId}
-              claims={book.overallComment.claims}
-              viewer={viewer}
-              showSourceTags={showSourceTags}
-              resolveTag={resolveTag}
-            />
-          )}
-          {book.subjectComments.map((sc) => (
-            <CommentSection
-              key={sc.subject}
-              heading={sc.subject}
-              authorId={sc.authorId}
-              claims={sc.claims}
-              viewer={viewer}
-              showSourceTags={showSourceTags}
-              resolveTag={resolveTag}
-            />
-          ))}
-        </section>
-      )}
-
-      {showFuture && trends.length > 0 && (
-        <section className="flex flex-col gap-3">
-          <h2 className="text-lg font-semibold">Where things are heading</h2>
-          <div className="flex flex-col gap-3">
-            {trends.map((trend) => (
-              <div
-                key={trend.subject}
-                className="flex items-center justify-between gap-4"
-              >
-                <span className="text-sm font-medium">{trend.subject}</span>
-                <div className="flex items-center gap-3">
-                  <TrendLine points={trend.points} />
-                  <span className="text-sm font-medium">
-                    {DIRECTION_WORDS[trend.direction]}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-          <p className="text-muted-foreground text-xs">
-            Direction, not numbers, leads. Drawn from weighted assessments
-            already recorded.
-          </p>
-        </section>
-      )}
-
-      {book.parentPrompts.length > 0 && (
-        <section className="flex flex-col gap-2">
-          <h2 className="text-lg font-semibold">Ask {firstName} about</h2>
-          <ul className="text-muted-foreground flex list-disc flex-col gap-1 pl-5 text-sm">
-            {book.parentPrompts.map((prompt, index) => (
-              <li key={index}>{prompt}</li>
-            ))}
-          </ul>
-        </section>
-      )}
     </div>
   )
 }
