@@ -70,9 +70,21 @@ export function TagQueueProvider({ children }: { children: React.ReactNode }) {
   const [openedAt, setOpenedAt] = React.useState<number | null>(null)
   const [draft, setDraft] = React.useState<ComposerDraft>(EMPTY_DRAFT)
 
+  // Base UI's automatic focus-restore only works for a <Dialog.Trigger>
+  // registered on the same Dialog.Root — our triggers (FAB, top-bar
+  // button, per-row buttons) live in entirely separate subtrees from the
+  // one global overlay, so there's nothing for Base UI to register. This
+  // context remembers whatever was focused right before openTagQueue() was
+  // called and restores it itself once the overlay finishes closing.
+  const triggerElementRef = React.useRef<HTMLElement | null>(null)
+
   const openTagQueue = React.useCallback(
     (prefill: TagQueuePrefill) => {
       if (!moduleEnabled) return
+      triggerElementRef.current =
+        document.activeElement instanceof HTMLElement
+          ? document.activeElement
+          : null
       setEntryPoint(prefill.entryPoint)
       setOpenedAt(Date.now())
       setDraft((prev) => ({
@@ -87,6 +99,15 @@ export function TagQueueProvider({ children }: { children: React.ReactNode }) {
 
   const closeTagQueue = React.useCallback(() => {
     setOpen(false)
+    // Deferred so this runs after Base UI's own close/unmount handling
+    // (which otherwise fights this for the final focus target).
+    const toFocus = triggerElementRef.current
+    requestAnimationFrame(() => {
+      if (toFocus?.isConnected) {
+        toFocus.focus()
+      }
+      triggerElementRef.current = null
+    })
   }, [])
 
   const setDraftStudent = React.useCallback((studentId: string | null) => {

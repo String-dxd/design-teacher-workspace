@@ -204,27 +204,40 @@ export function TagQueueComposer({
     refreshRecentTags()
   }
 
-  function handleComposerKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
-    const target = e.target as HTMLElement
-    const isTextEntry =
-      target.tagName === 'INPUT' || target.tagName === 'TEXTAREA'
-    if (isTextEntry) return
+  // A plain onKeyDown prop only fires while focus is on this element or one
+  // of its descendants. Inside the Dialog, Base UI's focus trap parks DOM
+  // focus on the dialog container itself once the previously-focused
+  // descendant (e.g. a clicked search result) unmounts — an ANCESTOR of
+  // this composer, not a descendant — so a div-level handler would silently
+  // stop receiving these keys the moment that happens. A document-level
+  // listener, scoped to this component's mount lifetime, isn't affected by
+  // where inside (or just outside) the composer's own subtree the trap
+  // happens to park focus.
+  React.useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      const target = e.target as HTMLElement | null
+      const isTextEntry =
+        target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA'
+      if (isTextEntry) return
 
-    if (/^[1-4]$/.test(e.key)) {
-      const index = Number(e.key) - 1
-      if (index >= 0 && index < DISPOSITIONS.length) {
-        const d = DISPOSITIONS[index]
+      if (/^[1-4]$/.test(e.key)) {
+        const index = Number(e.key) - 1
+        if (index >= 0 && index < DISPOSITIONS.length) {
+          const d = DISPOSITIONS[index]
+          e.preventDefault()
+          setDraftDisposition(draft.disposition === d.id ? null : d.id)
+        }
+      } else if (e.key === 'Enter' && saveable) {
         e.preventDefault()
-        setDraftDisposition(draft.disposition === d.id ? null : d.id)
+        handleSave()
       }
-    } else if (e.key === 'Enter' && saveable) {
-      e.preventDefault()
-      handleSave()
     }
-  }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  })
 
   return (
-    <div className="flex flex-col gap-6" onKeyDown={handleComposerKeyDown}>
+    <div className="flex flex-col gap-6">
       {selectedStudent ? (
         <div className="flex items-center justify-between gap-3 rounded-lg border border-border p-3">
           <div className="flex flex-col">
