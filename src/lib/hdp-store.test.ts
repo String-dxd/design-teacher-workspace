@@ -691,6 +691,36 @@ describe('draft confirm/reopen/sync', () => {
     ])
   })
 
+  it('persists insightIds and reconcile (Prototype B, plan 040)', () => {
+    saveDraft(
+      makeDraft({
+        insightIds: ['insight-99-attendance', 'insight-99-observation-tag-1'],
+        reconcile: { fired: true, resolution: 'kept-with-context' },
+      }),
+    )
+    const loaded = loadDrafts().find((d) => d.id === 'draft-test-1')
+    expect(loaded?.insightIds).toEqual([
+      'insight-99-attendance',
+      'insight-99-observation-tag-1',
+    ])
+    expect(loaded?.reconcile).toEqual({
+      fired: true,
+      resolution: 'kept-with-context',
+    })
+
+    // confirmDraft spreads the existing draft, so a reconcile decision set
+    // before confirming survives the freeze.
+    const confirmed = confirmDraft('draft-test-1')
+    expect(confirmed.insightIds).toEqual([
+      'insight-99-attendance',
+      'insight-99-observation-tag-1',
+    ])
+    expect(confirmed.reconcile).toEqual({
+      fired: true,
+      resolution: 'kept-with-context',
+    })
+  })
+
   it('reopenDraft sets status back to draft and clears confirmedAt/syncedAt', () => {
     saveDraft(
       makeDraft({
@@ -837,6 +867,44 @@ describe('shareReportBook', () => {
     expect(shared?.overallComment?.claims).toEqual([
       { text: 'A real sentence.' },
     ])
+  })
+
+  it('snapshots insightIds onto the comment only when the source draft carries them (Prototype B, plan 040)', () => {
+    saveReportBook(makeReportBook({ studentId: '7' }))
+    saveDraft(
+      makeDraft({
+        id: 'draft-share-insights',
+        studentId: '7',
+        kind: 'overall',
+        status: 'confirmed',
+        claims: [{ text: 'Insight-composed sentence.' }],
+        insightIds: ['insight-7-attendance', 'insight-7-observation-tag-x'],
+      }),
+    )
+    shareReportBook('7')
+    const shared = loadReportBooks().find((b) => b.studentId === '7')
+    expect(shared?.overallComment?.insightIds).toEqual([
+      'insight-7-attendance',
+      'insight-7-observation-tag-x',
+    ])
+  })
+
+  it('leaves insightIds absent on the comment for an A-path (composeDraft) draft', () => {
+    saveReportBook(makeReportBook({ studentId: '8' }))
+    saveDraft(
+      makeDraft({
+        id: 'draft-share-a-path',
+        studentId: '8',
+        kind: 'overall',
+        status: 'confirmed',
+        claims: [
+          { text: 'A-path sentence.', source: { tagId: 't1', label: 'x' } },
+        ],
+      }),
+    )
+    shareReportBook('8')
+    const shared = loadReportBooks().find((b) => b.studentId === '8')
+    expect(shared?.overallComment?.insightIds).toBeUndefined()
   })
 
   it('with no confirmed overall draft still shares a results-only book (comments absent)', () => {

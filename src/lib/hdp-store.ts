@@ -988,6 +988,12 @@ export function shareReportBook(studentId: string): { token: string } {
       ? {
           authorId: overallDraft.authorId,
           claims: nonBlankClaims(overallDraft.claims).map((c) => ({ ...c })),
+          // Prototype B (plan 040): carried over only when the source draft
+          // was actually composed via the insight layer — an A-path draft's
+          // `insightIds` is undefined, so this stays undefined too.
+          insightIds: overallDraft.insightIds?.length
+            ? [...overallDraft.insightIds]
+            : undefined,
         }
       : undefined
 
@@ -1003,6 +1009,7 @@ export function shareReportBook(studentId: string): { token: string } {
       subject: d.subject as string,
       authorId: d.authorId,
       claims: nonBlankClaims(d.claims).map((c) => ({ ...c })),
+      insightIds: d.insightIds?.length ? [...d.insightIds] : undefined,
     }))
 
   const updated: HdpReportBook = {

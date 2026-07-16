@@ -46,6 +46,20 @@ const CONTEXT_LABELS: Record<TagContext, string> = {
   other: 'Other',
 }
 
+/** Family-facing provenance, first honest slice (PRD B.4, plan 040): a
+ *  per-SECTION line, copy only — no per-sentence badges (the visual
+ *  language for that is an open design question, PRD §11.12). Renders only
+ *  when the section's source draft actually carried a non-empty
+ *  `insightIds` — i.e. it was composed via Prototype B's insight layer,
+ *  not handwritten or A-path (composeDraft) content. */
+function insightAttributionLine(
+  insightIds: Array<string> | undefined,
+  authorId: string,
+): string | undefined {
+  if (!insightIds || insightIds.length === 0) return undefined
+  return `Drafted from ${insightIds.length} insight${insightIds.length === 1 ? '' : 's'} selected by ${staffName(authorId)}; sentences added by the teacher are their own words.`
+}
+
 function formatChange(change: number | undefined): string {
   if (change === undefined) return '—'
   if (change === 0) return '+0'
@@ -141,6 +155,43 @@ export function ReportStory({
           <p className="text-muted-foreground text-sm">No reflection yet</p>
         )}
       </header>
+
+      {(book.overallComment || book.subjectComments.length > 0) && (
+        <section className="flex flex-col gap-6">
+          <h2 className="text-lg font-semibold">Personal qualities</h2>
+          {book.overallComment && (
+            <div className="flex flex-col gap-2">
+              <p className="text-sm leading-relaxed">
+                {book.overallComment.claims.map((c) => c.text).join(' ')}
+              </p>
+              {insightAttributionLine(
+                book.overallComment.insightIds,
+                book.overallComment.authorId,
+              ) && (
+                <p className="text-muted-foreground text-xs">
+                  {insightAttributionLine(
+                    book.overallComment.insightIds,
+                    book.overallComment.authorId,
+                  )}
+                </p>
+              )}
+            </div>
+          )}
+          {book.subjectComments.map((sc) => (
+            <div key={sc.subject} className="flex flex-col gap-2">
+              <h3 className="text-sm font-medium">{sc.subject}</h3>
+              <p className="text-sm leading-relaxed">
+                {sc.claims.map((c) => c.text).join(' ')}
+              </p>
+              {insightAttributionLine(sc.insightIds, sc.authorId) && (
+                <p className="text-muted-foreground text-xs">
+                  {insightAttributionLine(sc.insightIds, sc.authorId)}
+                </p>
+              )}
+            </div>
+          ))}
+        </section>
+      )}
 
       {confirmedPatterns.length > 0 && (
         <section className="flex flex-col gap-4">
