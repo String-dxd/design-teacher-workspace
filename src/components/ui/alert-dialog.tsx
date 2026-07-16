@@ -30,7 +30,11 @@ function AlertDialogOverlay({
     <AlertDialogPrimitive.Backdrop
       data-slot="alert-dialog-overlay"
       className={cn(
-        'data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 bg-overlay duration-100 supports-backdrop-filter:backdrop-blur-xs fixed inset-0 isolate z-50',
+        // data-closed:pointer-events-none guards against Base UI's
+        // animation-completion promise never settling (see dialog.tsx for
+        // the full explanation) — it keeps a stuck "closed" overlay from
+        // blocking clicks even if the exit animation never finishes.
+        'data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:pointer-events-none bg-overlay duration-100 supports-backdrop-filter:backdrop-blur-xs fixed inset-0 isolate z-50 motion-reduce:animate-none! motion-reduce:transition-none!',
         className,
       )}
       {...props}
@@ -52,7 +56,9 @@ function AlertDialogContent({
         data-slot="alert-dialog-content"
         data-size={size}
         className={cn(
-          'data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 bg-background ring-foreground/5 gap-6 rounded-3xl p-6 ring-1 duration-100 data-[size=default]:max-w-xs data-[size=sm]:max-w-xs data-[size=default]:sm:max-w-md group/alert-dialog-content fixed top-1/2 left-1/2 z-50 grid w-full -translate-x-1/2 -translate-y-1/2 outline-none',
+          // See AlertDialogOverlay above for why
+          // data-closed:pointer-events-none is load-bearing, not cosmetic.
+          'data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 data-closed:pointer-events-none bg-background ring-foreground/5 gap-6 rounded-3xl p-6 ring-1 duration-100 data-[size=default]:max-w-xs data-[size=sm]:max-w-xs data-[size=default]:sm:max-w-md group/alert-dialog-content fixed top-1/2 left-1/2 z-50 grid w-full -translate-x-1/2 -translate-y-1/2 outline-none motion-reduce:animate-none! motion-reduce:transition-none!',
           className,
         )}
         {...props}
