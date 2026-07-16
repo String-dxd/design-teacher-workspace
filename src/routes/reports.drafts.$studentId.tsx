@@ -1,17 +1,23 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
+import { ArrowLeft } from 'lucide-react'
 import { DraftStudio } from '@/components/hdp/draft-studio'
 import { MarksGrid } from '@/components/hdp/marks-grid'
 import { StudentSwitcher } from '@/components/hdp/student-switcher'
 import { getStudentById } from '@/data/mock-students'
 import { useFeatureFlag } from '@/hooks/use-feature-flag'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
-import { buttonVariants } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/reports/drafts/$studentId')({
   component: DraftStudioPage,
 })
 
+// The drafting workspace — reached by clicking a student on the Drafting
+// tab. Two columns in the Posts-detail pattern (maintainer feedback
+// 2026-07-17): the draft (NotebookLM-style summary with inline source
+// chips) leads on the left; marks, trends, and the academic-results sync
+// sit in the right rail. A compact select in the header switches students.
 function DraftStudioPage() {
   const { studentId } = Route.useParams()
   const enabled = useFeatureFlag('reports-hdp')
@@ -19,7 +25,7 @@ function DraftStudioPage() {
 
   useSetBreadcrumbs([
     { label: 'Reports', href: '/reports' },
-    { label: 'Draft Studio', href: '/reports/drafts' },
+    { label: 'Drafting', href: '/reports/drafts' },
     {
       label: student?.name ?? 'Student',
       href: `/reports/drafts/${studentId}`,
@@ -55,28 +61,44 @@ function DraftStudioPage() {
   }
 
   return (
-    <main className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6 lg:flex-row lg:items-start">
-      <StudentSwitcher currentStudentId={studentId} />
-
-      <div className="flex min-w-0 flex-1 flex-col gap-6">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-semibold">{student.name}</h1>
-          <p className="text-muted-foreground text-sm">
-            Draft Studio — turn tags into an evidence-grounded comment.
-          </p>
+    <main className="flex flex-col gap-6 px-6 py-6">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex items-start gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Back to Drafting"
+            className="mt-0.5"
+            render={<Link to="/reports" search={{ tab: 'drafting' }} />}
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div className="flex flex-col gap-1">
+            <h1 className="text-2xl font-semibold">{student.name}</h1>
+            <p className="text-muted-foreground text-sm">
+              {student.class} · Draft an evidence-grounded comment.
+            </p>
+          </div>
         </div>
-        {/* Keyed remount on studentId: the grid's per-cell <Input
-            defaultValue> is intentionally uncontrolled (autosave-on-blur,
-            no per-keystroke re-render) — without a key, switching students
-            would leave stale DOM input values from the previous student
-            (same class of bug plan 019 fixed for the legacy cycle-write
-            pager). */}
-        <MarksGrid
-          key={studentId}
-          studentId={studentId}
-          studentName={student.name}
-        />
+        <StudentSwitcher currentStudentId={studentId} />
+      </div>
+
+      <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_460px]">
         <DraftStudio studentId={studentId} />
+
+        <aside className="flex min-w-0 flex-col gap-6">
+          {/* Keyed remount on studentId: the grid's per-cell <Input
+              defaultValue> is intentionally uncontrolled (autosave-on-blur,
+              no per-keystroke re-render) — without a key, switching students
+              would leave stale DOM input values from the previous student. */}
+          <div className="border-border rounded-lg border p-5">
+            <MarksGrid
+              key={studentId}
+              studentId={studentId}
+              studentName={student.name}
+            />
+          </div>
+        </aside>
       </div>
     </main>
   )

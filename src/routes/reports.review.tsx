@@ -1,11 +1,9 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 
-// Redirect stub (plan 035) — Review & Sync's sync status strip, confirmed-
-// drafts table, and ingest download moved into the Drafting hub
-// (/reports/drafts). Old links to /reports/review keep working.
+// Redirect stub — Review & Sync lives on the /reports Drafting tab now.
 export const Route = createFileRoute('/reports/review')({
   beforeLoad: () => {
-    throw redirect({ to: '/reports/drafts' })
+    throw redirect({ to: '/reports', search: { tab: 'drafting' } })
   },
   component: () => null,
 })

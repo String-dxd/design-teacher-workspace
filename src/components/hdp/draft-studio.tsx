@@ -362,20 +362,6 @@ export function DraftStudio({ studentId }: DraftStudioProps) {
 
   return (
     <div className="flex min-w-0 flex-col gap-6">
-      <details className="flex flex-col gap-3" open>
-        <summary className="hover:text-muted-foreground motion-safe:transition-colors motion-safe:duration-150 cursor-pointer rounded-sm text-sm font-medium">
-          Evidence
-        </summary>
-        <div className="pt-1">
-          <StudentRiver
-            studentId={studentId}
-            viewerId={CURRENT_TEACHER.id}
-            fullRiver={kind === 'overall'}
-            embedded
-          />
-        </div>
-      </details>
-
       <div className="flex min-w-0 flex-col gap-4">
         <Tabs
           value={kind}
@@ -429,6 +415,10 @@ export function DraftStudio({ studentId }: DraftStudioProps) {
         )}
 
         <DraftBody
+          key={currentDraftId}
+          confirmLabel={
+            kind === 'overall' ? 'Confirm remark' : 'Confirm comment'
+          }
           hasEvidence={effectiveHasEvidence}
           claims={claims}
           status={status}
@@ -463,6 +453,23 @@ export function DraftStudio({ studentId }: DraftStudioProps) {
           }}
         />
       </div>
+
+      {/* Sources behind the summary (NotebookLM pattern): the full evidence
+          river sits under a disclosure below the draft — the chips in the
+          prose are the primary way into any single source. */}
+      <details className="flex flex-col gap-3">
+        <summary className="hover:text-muted-foreground motion-safe:transition-colors motion-safe:duration-150 cursor-pointer rounded-sm text-sm font-medium">
+          Evidence
+        </summary>
+        <div className="pt-1">
+          <StudentRiver
+            studentId={studentId}
+            viewerId={CURRENT_TEACHER.id}
+            fullRiver={kind === 'overall'}
+            embedded
+          />
+        </div>
+      </details>
 
       <AlertDialog
         open={regenerateConfirmOpen}
@@ -547,7 +554,79 @@ export function DraftStudio({ studentId }: DraftStudioProps) {
   )
 }
 
+type ResolveTag = (tagId: string) =>
+  | {
+      tag?: HdpTag
+      authorName?: string
+      insightFact?: string
+    }
+  | undefined
+
+/** The NotebookLM-style summary card (maintainer feedback 2026-07-17): the
+ *  draft reads as one flowing paragraph, each sentence followed by its
+ *  inline source chip — clicking a chip opens the existing "Based on:"
+ *  lineage popover (SourceTag). The kicker names where the words came from. */
+function DraftProse({
+  claims,
+  status,
+  resolveTag,
+}: {
+  claims: Array<DraftClaim>
+  status: 'draft' | 'confirmed'
+  resolveTag: ResolveTag
+}) {
+  const meaningful = claims.filter((c) => c.text.trim().length > 0)
+  const sourced = meaningful.filter((c) => c.source)
+  const authors = new Set(
+    sourced
+      .map((c) =>
+        c.source ? resolveTag(c.source.tagId)?.authorName : undefined,
+      )
+      .filter(Boolean),
+  )
+  const kickerParts: Array<string> = []
+  if (sourced.length > 0) {
+    kickerParts.push(
+      `from ${sourced.length} observation${sourced.length === 1 ? '' : 's'}`,
+    )
+    if (authors.size > 0) {
+      kickerParts.push(
+        `by ${authors.size} teacher${authors.size === 1 ? '' : 's'}`,
+      )
+    }
+  } else {
+    kickerParts.push('written by you')
+  }
+  const kicker = `${status === 'confirmed' ? 'Confirmed' : 'Draft'} — ${kickerParts.join(' ')}`
+
+  return (
+    <div className="border-border bg-card flex flex-col gap-3 rounded-lg border p-5">
+      <p className="text-muted-foreground text-xs font-medium">{kicker}</p>
+      <p className="text-sm leading-7">
+        {meaningful.map((claim, index) => {
+          const resolved = claim.source
+            ? resolveTag(claim.source.tagId)
+            : undefined
+          return (
+            <React.Fragment key={index}>
+              {claim.text.trim()}{' '}
+              <SourceTag
+                source={claim.source}
+                edited={claim.edited}
+                tag={resolved?.tag}
+                authorName={resolved?.authorName}
+                insightFact={resolved?.insightFact}
+              />{' '}
+            </React.Fragment>
+          )
+        })}
+      </p>
+    </div>
+  )
+}
+
 interface DraftBodyProps {
+  confirmLabel: string
   hasEvidence: boolean
   claims: Array<DraftClaim>
   status: 'draft' | 'confirmed'
@@ -571,9 +650,12 @@ interface DraftBodyProps {
 }
 
 // One filled primary button on screen at any time: "Suggest a draft" before
-// a draft exists, "Confirm draft" once claims exist and the draft is still
-// open, neither while confirmed (just the outline "Reopen draft").
+// a draft exists, the confirm action once claims exist and the draft is
+// still open, neither while confirmed (just the outline "Reopen draft").
+// With claims present the draft reads as the DraftProse summary card;
+// "Edit" opens the sentence-by-sentence ClaimEditor.
 function DraftBody({
+  confirmLabel,
   hasEvidence,
   claims,
   status,
@@ -587,6 +669,16 @@ function DraftBody({
   onReopen,
   resolveTag,
 }: DraftBodyProps) {
+  const [editing, setEditing] = React.useState(false)
+  const hasContent = claims.some((c) => c.text.trim().length > 0)
+
+  // Adding a first sentence by hand should keep the editor open rather
+  // than flip straight into the read-only prose card.
+  function handleEditorChange(next: Array<DraftClaim>) {
+    if (claims.length === 0 && next.length > 0) setEditing(true)
+    onChangeClaims(next)
+  }
+
   if (!hasEvidence && claims.length === 0) {
     return (
       <div className="flex flex-col gap-4">
@@ -596,7 +688,9 @@ function DraftBody({
           action={
             <Button
               variant="ghost"
-              render={<Link to="/reports/students" search={{ tab: 'gaps' }} />}
+              render={
+                <Link to="/reports" search={{ tab: 'students' }} hash="gaps" />
+              }
             >
               Ask colleagues
             </Button>
@@ -604,7 +698,7 @@ function DraftBody({
         />
         <ClaimEditor
           claims={claims}
-          onChange={onChangeClaims}
+          onChange={handleEditorChange}
           resolveTag={resolveTag}
         />
       </div>
@@ -614,30 +708,11 @@ function DraftBody({
   if (status === 'confirmed') {
     return (
       <div className="flex flex-col gap-4">
-        <ol className="flex flex-col gap-3">
-          {claims.map((claim, index) => (
-            <li key={index} className="flex flex-col gap-1.5">
-              <p className="text-sm">{claim.text}</p>
-              <SourceTag
-                source={claim.source}
-                edited={claim.edited}
-                tag={
-                  claim.source ? resolveTag(claim.source.tagId)?.tag : undefined
-                }
-                authorName={
-                  claim.source
-                    ? resolveTag(claim.source.tagId)?.authorName
-                    : undefined
-                }
-                insightFact={
-                  claim.source
-                    ? resolveTag(claim.source.tagId)?.insightFact
-                    : undefined
-                }
-              />
-            </li>
-          ))}
-        </ol>
+        <DraftProse
+          claims={claims}
+          status="confirmed"
+          resolveTag={resolveTag}
+        />
         <Button variant="outline" onClick={onReopen} className="w-fit">
           Reopen draft
         </Button>
@@ -645,22 +720,60 @@ function DraftBody({
     )
   }
 
+  if (claims.length > 0 && !editing) {
+    return (
+      <div className="flex flex-col gap-3">
+        <DraftProse claims={claims} status="draft" resolveTag={resolveTag} />
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            type="button"
+            onClick={onConfirm}
+            disabled={!hasContent}
+            title={
+              hasContent
+                ? undefined
+                : 'Write at least one sentence before confirming'
+            }
+          >
+            {confirmLabel}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setEditing(true)}
+          >
+            Edit
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onSuggestOrRegenerate}
+            disabled={suggesting || suggestDisabled}
+          >
+            {suggesting ? 'Suggesting…' : 'Regenerate'}
+          </Button>
+          <span aria-live="polite" className="text-muted-foreground text-xs">
+            {saveState === 'saved' ? 'Saved' : ''}
+          </span>
+        </div>
+        <p className="text-muted-foreground text-xs">
+          Unsourced sentences are allowed — they're labelled as yours.
+        </p>
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col gap-4">
-      {hasEvidence && (
+      {hasEvidence && claims.length === 0 && (
         <div className="flex flex-col gap-1.5">
           <Button
             type="button"
-            variant={claims.length > 0 ? 'outline' : 'default'}
             onClick={onSuggestOrRegenerate}
             disabled={suggesting || suggestDisabled}
             className="w-fit"
           >
-            {suggesting
-              ? 'Suggesting…'
-              : claims.length > 0
-                ? 'Regenerate'
-                : 'Suggest a draft'}
+            {suggesting ? 'Suggesting…' : 'Suggest a draft'}
           </Button>
           {suggestDisabled && suggestHelperText && (
             <p className="text-muted-foreground text-xs">{suggestHelperText}</p>
@@ -670,7 +783,7 @@ function DraftBody({
 
       <ClaimEditor
         claims={claims}
-        onChange={onChangeClaims}
+        onChange={handleEditorChange}
         resolveTag={resolveTag}
       />
 
@@ -678,15 +791,24 @@ function DraftBody({
         <Button
           type="button"
           onClick={onConfirm}
-          disabled={!claims.some((c) => c.text.trim().length > 0)}
+          disabled={!hasContent}
           title={
-            claims.length > 0 && !claims.some((c) => c.text.trim().length > 0)
+            claims.length > 0 && !hasContent
               ? 'Write at least one sentence before confirming'
               : undefined
           }
         >
-          Confirm draft
+          {confirmLabel}
         </Button>
+        {editing && claims.length > 0 && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setEditing(false)}
+          >
+            Done editing
+          </Button>
+        )}
         <span aria-live="polite" className="text-muted-foreground text-xs">
           {saveState === 'saved' ? 'Saved' : ''}
         </span>
