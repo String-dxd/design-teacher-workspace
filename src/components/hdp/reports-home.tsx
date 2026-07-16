@@ -50,7 +50,8 @@ const TOOL_GROUPS: Array<{
         icon: BookOpen,
         name: 'Term Summary',
         description: "Each student's tags for the term, grouped and read-only.",
-        state: 'Coming in this prototype', // plan 030
+        state: 'Always available',
+        href: '/reports/summary', // plan 030
       },
       {
         icon: Users,
