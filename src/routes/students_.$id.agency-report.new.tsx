@@ -3549,10 +3549,12 @@ function AgencyReportWizardPage() {
     },
   ])
 
-  if (!agencyReportsEnabled || !reportGenerationEnabled) {
-    const featureLabel = !agencyReportsEnabled
-      ? 'Agency Reports'
-      : 'Report Generation'
+  // Report Generation on its own is sufficient to reach the wizard —
+  // Agency Reports isn't required, so any other flag combination that
+  // hides the section on the profile still lets the flow work if the
+  // YH lands here directly (e.g. via a deep-link).
+  if (!reportGenerationEnabled) {
+    const featureLabel = 'Report Generation'
     return (
       <div className="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center gap-3 px-6 text-center">
         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
