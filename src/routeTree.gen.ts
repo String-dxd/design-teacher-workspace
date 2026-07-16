@@ -63,6 +63,7 @@ import { Route as ReportsDraftsIndexRouteImport } from './routes/reports.drafts.
 import { Route as ReportsStudentsStudentIdRouteImport } from './routes/reports.students.$studentId'
 import { Route as ReportsDraftsStudentIdRouteImport } from './routes/reports.drafts.$studentId'
 import { Route as GroupsStructuredGroupIdRouteImport } from './routes/groups.structured.$groupId'
+import { Route as GuestHdpStudentTokenRouteImport } from './routes/_guest.hdp-student.$token'
 import { Route as GuestHdpReportTokenRouteImport } from './routes/_guest.hdp-report.$token'
 import { Route as StudentsIdAgencyReportNewRouteImport } from './routes/students_.$id.agency-report.new'
 
@@ -336,6 +337,11 @@ const GroupsStructuredGroupIdRoute = GroupsStructuredGroupIdRouteImport.update({
   path: '/structured/$groupId',
   getParentRoute: () => GroupsRoute,
 } as any)
+const GuestHdpStudentTokenRoute = GuestHdpStudentTokenRouteImport.update({
+  id: '/hdp-student/$token',
+  path: '/hdp-student/$token',
+  getParentRoute: () => GuestRoute,
+} as any)
 const GuestHdpReportTokenRoute = GuestHdpReportTokenRouteImport.update({
   id: '/hdp-report/$token',
   path: '/hdp-report/$token',
@@ -398,6 +404,7 @@ export interface FileRoutesByFullPath {
   '/reports/': typeof ReportsIndexRoute
   '/students/': typeof StudentsIndexRoute
   '/hdp-report/$token': typeof GuestHdpReportTokenRoute
+  '/hdp-student/$token': typeof GuestHdpStudentTokenRoute
   '/groups/structured/$groupId': typeof GroupsStructuredGroupIdRoute
   '/reports/drafts/$studentId': typeof ReportsDraftsStudentIdRoute
   '/reports/students/$studentId': typeof ReportsStudentsStudentIdRoute
@@ -447,6 +454,7 @@ export interface FileRoutesByTo {
   '/reports': typeof ReportsIndexRoute
   '/students': typeof StudentsIndexRoute
   '/hdp-report/$token': typeof GuestHdpReportTokenRoute
+  '/hdp-student/$token': typeof GuestHdpStudentTokenRoute
   '/groups/structured/$groupId': typeof GroupsStructuredGroupIdRoute
   '/reports/drafts/$studentId': typeof ReportsDraftsStudentIdRoute
   '/reports/students/$studentId': typeof ReportsStudentsStudentIdRoute
@@ -506,6 +514,7 @@ export interface FileRoutesById {
   '/reports/': typeof ReportsIndexRoute
   '/students/': typeof StudentsIndexRoute
   '/_guest/hdp-report/$token': typeof GuestHdpReportTokenRoute
+  '/_guest/hdp-student/$token': typeof GuestHdpStudentTokenRoute
   '/groups/structured/$groupId': typeof GroupsStructuredGroupIdRoute
   '/reports/drafts/$studentId': typeof ReportsDraftsStudentIdRoute
   '/reports/students/$studentId': typeof ReportsStudentsStudentIdRoute
@@ -565,6 +574,7 @@ export interface FileRouteTypes {
     | '/reports/'
     | '/students/'
     | '/hdp-report/$token'
+    | '/hdp-student/$token'
     | '/groups/structured/$groupId'
     | '/reports/drafts/$studentId'
     | '/reports/students/$studentId'
@@ -614,6 +624,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/students'
     | '/hdp-report/$token'
+    | '/hdp-student/$token'
     | '/groups/structured/$groupId'
     | '/reports/drafts/$studentId'
     | '/reports/students/$studentId'
@@ -672,6 +683,7 @@ export interface FileRouteTypes {
     | '/reports/'
     | '/students/'
     | '/_guest/hdp-report/$token'
+    | '/_guest/hdp-student/$token'
     | '/groups/structured/$groupId'
     | '/reports/drafts/$studentId'
     | '/reports/students/$studentId'
@@ -1085,6 +1097,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GroupsStructuredGroupIdRouteImport
       parentRoute: typeof GroupsRoute
     }
+    '/_guest/hdp-student/$token': {
+      id: '/_guest/hdp-student/$token'
+      path: '/hdp-student/$token'
+      fullPath: '/hdp-student/$token'
+      preLoaderRoute: typeof GuestHdpStudentTokenRouteImport
+      parentRoute: typeof GuestRoute
+    }
     '/_guest/hdp-report/$token': {
       id: '/_guest/hdp-report/$token'
       path: '/hdp-report/$token'
@@ -1108,6 +1127,7 @@ interface GuestRouteChildren {
   GuestPreviewMenuRoute: typeof GuestPreviewMenuRoute
   GuestStudentLoginRoute: typeof GuestStudentLoginRoute
   GuestHdpReportTokenRoute: typeof GuestHdpReportTokenRoute
+  GuestHdpStudentTokenRoute: typeof GuestHdpStudentTokenRoute
 }
 
 const GuestRouteChildren: GuestRouteChildren = {
@@ -1116,6 +1136,7 @@ const GuestRouteChildren: GuestRouteChildren = {
   GuestPreviewMenuRoute: GuestPreviewMenuRoute,
   GuestStudentLoginRoute: GuestStudentLoginRoute,
   GuestHdpReportTokenRoute: GuestHdpReportTokenRoute,
+  GuestHdpStudentTokenRoute: GuestHdpStudentTokenRoute,
 }
 
 const GuestRouteWithChildren = GuestRoute._addFileChildren(GuestRouteChildren)
