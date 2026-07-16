@@ -12,6 +12,8 @@ import type {
 import { mockStudents } from '@/data/mock-students'
 import {
   CURRENT_CYCLE,
+  CURRENT_TEACHER,
+  HDP_COLLEAGUES,
   SEED_BROADCAST,
   SEED_DRAFTS,
   SEED_PATTERNS,
@@ -229,7 +231,218 @@ export function detectFormingPatterns(
     })
   }
 
+  // Write-through: persist any freshly-derived candidate that isn't already
+  // stored, so confirmPattern/dismissPattern (id-only) always have a stored
+  // row to update — this function is always called to render a PatternCard
+  // before a teacher can act on it. Idempotent: skips ids already present.
+  const allStored = loadPatterns()
+  const newlyDerived = results.filter(
+    (r) => !allStored.some((p) => p.id === r.id),
+  )
+  if (newlyDerived.length > 0) {
+    writeArray(PATTERNS_KEY, [...allStored, ...newlyDerived])
+  }
+
   return results
+}
+
+/** Confirms a candidate (or previously stored) pattern as a real thread. */
+export function confirmPattern(id: string, teacherId: string): FormingPattern {
+  const patterns = loadPatterns()
+  const pattern = patterns.find((p) => p.id === id)
+  if (!pattern) throw new Error(`Unknown pattern id: ${id}`)
+  const updated: FormingPattern = {
+    ...pattern,
+    status: 'confirmed',
+    confirmedBy: teacherId,
+  }
+  writeArray(
+    PATTERNS_KEY,
+    patterns.map((p) => (p.id === id ? updated : p)),
+  )
+  return updated
+}
+
+/** Dismisses a candidate as "not a thread" — it will not resurface. */
+export function dismissPattern(id: string): FormingPattern {
+  const patterns = loadPatterns()
+  const pattern = patterns.find((p) => p.id === id)
+  if (!pattern) throw new Error(`Unknown pattern id: ${id}`)
+  const updated: FormingPattern = { ...pattern, status: 'dismissed' }
+  writeArray(
+    PATTERNS_KEY,
+    patterns.map((p) => (p.id === id ? updated : p)),
+  )
+  return updated
+}
+
+// ── Visibility ───────────────────────────────────────────────────────────
+
+/**
+ * One visibility rule, used by the river and (unparameterised) by the Term
+ * Summary: the form teacher of the student's class sees every active tag.
+ * Anyone else sees their own tags plus tags belonging to CONFIRMED patterns
+ * only — unless `fullRiver` is true (the reports-river-visibility flag,
+ * resolved by the caller; this store stays React-free).
+ */
+export function tagsForStudentVisible(
+  studentId: string,
+  viewerId: string,
+  fullRiver: boolean,
+): Array<HdpTag> {
+  const tags = tagsForStudent(studentId).filter((t) => t.lifecycle === 'active')
+  const student = mockStudents.find((s) => s.id === studentId)
+  const viewerIsFormTeacher =
+    viewerId === CURRENT_TEACHER.id &&
+    student?.class === CURRENT_TEACHER.formClassId
+  if (viewerIsFormTeacher || fullRiver) return tags
+
+  const confirmedTagIds = new Set(
+    loadPatterns()
+      .filter((p) => p.studentId === studentId && p.status === 'confirmed')
+      .flatMap((p) => p.tagIds),
+  )
+  return tags.filter(
+    (t) => t.authorId === viewerId || confirmedTagIds.has(t.id),
+  )
+}
+
+// ── Disposition mix ──────────────────────────────────────────────────────
+
+/** Proportions (raw counts) of the four dispositions among a tag set. */
+export function dispositionMix(
+  tags: Array<HdpTag>,
+): Record<DispositionId, number> {
+  const mix: Record<DispositionId, number> = {
+    perseverance: 0,
+    curiosity: 0,
+    collaboration: 0,
+    'self-direction': 0,
+  }
+  for (const tag of tags) {
+    mix[tag.disposition] += 1
+  }
+  return mix
+}
+
+// ── Term Summary ─────────────────────────────────────────────────────────
+
+export interface ClassSummary {
+  classId: string
+  isFormClass: boolean
+  studentCount: number
+  tagCount: number
+  mostNoted: Array<{
+    studentId: string
+    tagCount: number
+    latestNote?: string
+  }>
+  recentQuotes: Array<{
+    tagId: string
+    studentId: string
+    authorId: string
+    note: string
+    context: TagContext
+    createdAt: string
+  }>
+  candidatePatterns: Array<FormingPattern>
+  /** Only set for the form class (P7 — no cross-class coverage view). */
+  thinRecordCount?: number
+}
+
+/**
+ * Per associated class (form class first), everything a teacher needs for
+ * PTM prep this term — never reporting-progress language. Every input
+ * (counts, most-noted, quotes, patterns) is filtered through the same rule
+ * as tagsForStudentVisible: form class sees everything incl. candidate
+ * patterns; teaching classes see only the viewer's own tags + confirmed-
+ * pattern tags, candidates hidden. The Term Summary never surfaces a note
+ * or thread the river would hide from the same viewer.
+ */
+export function summaryForTeacher(teacherId: string): Array<ClassSummary> {
+  const formClassId =
+    teacherId === CURRENT_TEACHER.id ? CURRENT_TEACHER.formClassId : undefined
+  const teachingClasses =
+    teacherId === CURRENT_TEACHER.id
+      ? CURRENT_TEACHER.teachingClasses
+      : (HDP_COLLEAGUES.find((c) => c.id === teacherId)?.teachingClasses ?? [])
+  const classIds = formClassId
+    ? [formClassId, ...teachingClasses.filter((c) => c !== formClassId)]
+    : teachingClasses
+
+  return classIds.map((classId): ClassSummary => {
+    const isFormClass = classId === formClassId
+    const studentIds = mockStudents
+      .filter((s) => s.class === classId)
+      .map((s) => s.id)
+
+    const visibleTagsByStudent = new Map<string, Array<HdpTag>>()
+    for (const studentId of studentIds) {
+      const visible = tagsForStudentVisible(studentId, teacherId, false).filter(
+        (t) => t.term === CURRENT_TERM,
+      )
+      visibleTagsByStudent.set(studentId, visible)
+    }
+
+    const allVisibleTags = Array.from(visibleTagsByStudent.values()).flat()
+
+    const mostNoted = studentIds
+      .map((studentId) => {
+        const tags = visibleTagsByStudent.get(studentId) ?? []
+        const newest = tags.reduce<HdpTag | undefined>((latest, t) => {
+          if (!latest) return t
+          return new Date(t.createdAt) > new Date(latest.createdAt) ? t : latest
+        }, undefined)
+        return {
+          studentId,
+          tagCount: tags.length,
+          latestNote: newest?.note,
+        }
+      })
+      .filter((s) => s.tagCount > 0)
+      .sort((a, b) => b.tagCount - a.tagCount)
+      .slice(0, 3)
+
+    const recentQuotes = allVisibleTags
+      .filter((t) => t.note)
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      )
+      .slice(0, 3)
+      .map((t) => ({
+        tagId: t.id,
+        studentId: t.studentId,
+        authorId: t.authorId,
+        note: t.note ?? '',
+        context: t.context,
+        createdAt: t.createdAt,
+      }))
+
+    const candidatePatterns = isFormClass
+      ? studentIds
+          .flatMap((studentId) => detectFormingPatterns(studentId))
+          .filter((p) => p.status === 'candidate')
+      : []
+
+    const thinRecordCount = isFormClass
+      ? (() => {
+          const snapshot = coverageForClass(classId)
+          return snapshot.total - snapshot.covered
+        })()
+      : undefined
+
+    return {
+      classId,
+      isFormClass,
+      studentCount: studentIds.length,
+      tagCount: allVisibleTags.length,
+      mostNoted,
+      recentQuotes,
+      candidatePatterns,
+      thinRecordCount,
+    }
+  })
 }
 
 // ── Coverage ─────────────────────────────────────────────────────────────

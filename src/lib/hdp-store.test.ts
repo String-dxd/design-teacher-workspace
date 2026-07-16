@@ -1,17 +1,23 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import {
   addTag,
+  confirmPattern,
   coverageForClass,
   deleteTag,
   detectFormingPatterns,
+  dismissPattern,
+  dispositionMix,
   loadPatterns,
   loadTags,
   logEvent,
   seedIfEmpty,
+  summaryForTeacher,
+  tagsForStudentVisible,
   updateTag,
 } from './hdp-store'
 import type { AddTagInput } from './hdp-store'
 import type { FormingPattern, HdpTag } from '@/types/hdp'
+import { CURRENT_TEACHER } from '@/data/hdp'
 
 // Same jsdom/localStorage race as src/lib/draft-storage.test.ts — install a
 // minimal in-memory Storage-compatible stub so these tests exercise the
@@ -247,5 +253,179 @@ describe('logEvent', () => {
     expect(events[0].name).toBe('tag_created')
     expect(events[0].tagId).toBe('tag-1')
     expect(typeof events[0].at).toBe('string')
+  })
+})
+
+describe('confirmPattern / dismissPattern', () => {
+  it('confirmPattern persists and survives a reload (loadPatterns reflects it)', () => {
+    localStorage.setItem(
+      'hdp_tags',
+      JSON.stringify([
+        makeTag({ id: 't1', studentId: 'x1', context: 'lesson' }),
+        makeTag({ id: 't2', studentId: 'x1', context: 'cca' }),
+      ]),
+    )
+    const [candidate] = detectFormingPatterns('x1')
+    const confirmed = confirmPattern(candidate.id, 'lee-sy')
+    expect(confirmed.status).toBe('confirmed')
+    expect(confirmed.confirmedBy).toBe('lee-sy')
+
+    // "Reload": read straight from storage, not the in-memory return value.
+    const reloaded = loadPatterns().find((p) => p.id === candidate.id)
+    expect(reloaded?.status).toBe('confirmed')
+    expect(reloaded?.confirmedBy).toBe('lee-sy')
+  })
+
+  it('dismissPattern persists — the pattern does not resurface as a candidate', () => {
+    localStorage.setItem(
+      'hdp_tags',
+      JSON.stringify([
+        makeTag({ id: 't1', studentId: 'x2', context: 'lesson' }),
+        makeTag({ id: 't2', studentId: 'x2', context: 'cca' }),
+      ]),
+    )
+    const [candidate] = detectFormingPatterns('x2')
+    dismissPattern(candidate.id)
+    expect(detectFormingPatterns('x2')).toEqual([])
+  })
+})
+
+describe('tagsForStudentVisible', () => {
+  it('form-teacher viewer sees all active tags for a student in her form class', () => {
+    // Student '1' is a real 3A student — CURRENT_TEACHER's form class.
+    localStorage.setItem(
+      'hdp_tags',
+      JSON.stringify([
+        makeTag({ id: 't1', studentId: '1', authorId: 'lee-sy' }),
+        makeTag({ id: 't2', studentId: '1', authorId: 'goh-wt' }),
+        makeTag({ id: 't3', studentId: '1', authorId: 'raj-v' }),
+      ]),
+    )
+    const visible = tagsForStudentVisible('1', CURRENT_TEACHER.id, false)
+    expect(visible.map((t) => t.id).sort()).toEqual(['t1', 't2', 't3'])
+  })
+
+  it('a non-form-teacher viewer sees only her own tags plus confirmed-pattern tags', () => {
+    // Student '11' is a real 3B student — not CURRENT_TEACHER's form class.
+    localStorage.setItem(
+      'hdp_tags',
+      JSON.stringify([
+        makeTag({ id: 't1', studentId: '11', authorId: 'goh-wt' }),
+        makeTag({ id: 't2', studentId: '11', authorId: 'raj-v' }),
+        makeTag({ id: 't3', studentId: '11', authorId: 'kumar-a' }),
+      ]),
+    )
+    localStorage.setItem(
+      'hdp_patterns',
+      JSON.stringify([
+        {
+          id: 'pattern-11-curiosity',
+          studentId: '11',
+          disposition: 'curiosity',
+          contexts: ['lesson', 'cca'],
+          tagIds: ['t3'],
+          status: 'confirmed',
+          confirmedBy: 'goh-wt',
+          schoolYear: '2026',
+        } satisfies FormingPattern,
+      ]),
+    )
+    const visible = tagsForStudentVisible('11', 'goh-wt', false)
+    // 'goh-wt' sees her own tag (t1) plus t3 (in a confirmed pattern), not t2.
+    expect(visible.map((t) => t.id).sort()).toEqual(['t1', 't3'])
+  })
+
+  it('fullRiver: true shows the same non-form-teacher viewer every tag', () => {
+    localStorage.setItem(
+      'hdp_tags',
+      JSON.stringify([
+        makeTag({ id: 't1', studentId: '11', authorId: 'goh-wt' }),
+        makeTag({ id: 't2', studentId: '11', authorId: 'raj-v' }),
+      ]),
+    )
+    const visible = tagsForStudentVisible('11', 'goh-wt', true)
+    expect(visible.map((t) => t.id).sort()).toEqual(['t1', 't2'])
+  })
+})
+
+describe('dispositionMix', () => {
+  it('proportions sum to the tag count', () => {
+    const tags = [
+      makeTag({ id: 't1', disposition: 'curiosity' }),
+      makeTag({ id: 't2', disposition: 'curiosity' }),
+      makeTag({ id: 't3', disposition: 'perseverance' }),
+      makeTag({ id: 't4', disposition: 'collaboration' }),
+    ]
+    const mix = dispositionMix(tags)
+    expect(mix.curiosity).toBe(2)
+    expect(mix.perseverance).toBe(1)
+    expect(mix.collaboration).toBe(1)
+    expect(mix['self-direction']).toBe(0)
+    const total = Object.values(mix).reduce((a, b) => a + b, 0)
+    expect(total).toBe(tags.length)
+  })
+})
+
+describe('summaryForTeacher', () => {
+  it('orders most-noted top-3 by tag count, reports thin-record count only for the form class, and includes zero-tag classes as empty sections', () => {
+    localStorage.setItem(
+      'hdp_tags',
+      JSON.stringify([
+        // Student '1' (3A, form class): 3 tags — most-noted.
+        makeTag({ id: 't1', studentId: '1', authorId: 'lee-sy', term: 3 }),
+        makeTag({ id: 't2', studentId: '1', authorId: 'goh-wt', term: 3 }),
+        makeTag({ id: 't3', studentId: '1', authorId: 'raj-v', term: 3 }),
+        // Student '2' (3A): 1 tag.
+        makeTag({ id: 't4', studentId: '2', authorId: 'lee-sy', term: 3 }),
+      ]),
+    )
+    const summary = summaryForTeacher(CURRENT_TEACHER.id)
+    const formClassSummary = summary.find((s) => s.classId === '3A')
+    expect(formClassSummary?.isFormClass).toBe(true)
+    expect(formClassSummary?.mostNoted[0]?.studentId).toBe('1')
+    expect(formClassSummary?.mostNoted[0]?.tagCount).toBe(3)
+    expect(typeof formClassSummary?.thinRecordCount).toBe('number')
+
+    // Teaching classes (3B, 4A) have zero tags here — empty sections, not
+    // omitted from the summary.
+    const teachingClassSummary = summary.find((s) => s.classId === '3B')
+    expect(teachingClassSummary).toBeDefined()
+    expect(teachingClassSummary?.tagCount).toBe(0)
+    expect(teachingClassSummary?.mostNoted).toEqual([])
+    expect(teachingClassSummary?.thinRecordCount).toBeUndefined()
+  })
+
+  it('for a teaching (non-form) class, a colleague note outside any confirmed pattern never appears in quotes or counts; candidate patterns appear only for the form class', () => {
+    localStorage.setItem(
+      'hdp_tags',
+      JSON.stringify([
+        // Student '11' (3B, teaching class): a colleague's unconfirmed note.
+        makeTag({
+          id: 't1',
+          studentId: '11',
+          authorId: 'goh-wt',
+          term: 3,
+          note: 'A note only goh-wt should be able to see',
+          context: 'lesson',
+        }),
+        makeTag({
+          id: 't2',
+          studentId: '11',
+          authorId: 'raj-v',
+          term: 3,
+          note: 'Another distinct-context note from a different colleague',
+          context: 'cca',
+        }),
+      ]),
+    )
+    const summary = summaryForTeacher(CURRENT_TEACHER.id)
+    const teachingClassSummary = summary.find((s) => s.classId === '3B')
+    expect(teachingClassSummary?.tagCount).toBe(0)
+    expect(teachingClassSummary?.recentQuotes).toEqual([])
+    expect(teachingClassSummary?.candidatePatterns).toEqual([])
+
+    const formClassSummary = summary.find((s) => s.classId === '3A')
+    // Candidate patterns are only ever populated for the form class section.
+    expect(formClassSummary).toBeDefined()
   })
 })
