@@ -9,10 +9,16 @@ interface ClaimEditorProps {
   onChange: (claims: Array<DraftClaim>) => void
   /** Resolves a sourced claim's underlying tag for the SourceTag popover's
    *  "Based on:" lineage view — draft-studio.tsx already holds the
-   *  student's river, so this component stays store-free. */
-  resolveTag?: (
-    tagId: string,
-  ) => { tag: HdpTag; authorName: string } | undefined
+   *  student's river, so this component stays store-free. `tag` is absent
+   *  for a Prototype B insight claim with no underlying HdpTag (plan 040)
+   *  — `insightFact` carries the insight's own fact line instead. */
+  resolveTag?: (tagId: string) =>
+    | {
+        tag?: HdpTag
+        authorName?: string
+        insightFact?: string
+      }
+    | undefined
 }
 
 // A claim-list editor: one row per sentence, a SourceTag chip after each,
@@ -86,6 +92,7 @@ export function ClaimEditor({
                   edited={claim.edited}
                   tag={resolved?.tag}
                   authorName={resolved?.authorName}
+                  insightFact={resolved?.insightFact}
                 />
               </div>
               <div className="flex shrink-0 flex-col gap-0.5">
