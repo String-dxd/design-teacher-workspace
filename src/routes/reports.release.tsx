@@ -31,11 +31,13 @@ import { MOCK_STAFF } from '@/data/mock-staff'
 import { CURRENT_TEACHER } from '@/data/hdp'
 import {
   findDraft,
+  loadMarks,
   loadReportBooks,
   loadTags,
   seedIfEmpty,
   shareReportBook,
 } from '@/lib/hdp-store'
+import { trendsForEntries } from '@/lib/hdp-trends'
 import { useFeatureFlag } from '@/hooks/use-feature-flag'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
 
@@ -70,6 +72,7 @@ function draftStatusLabel(studentId: string): string {
 
 function ReleasePage() {
   const enabled = useFeatureFlag('reports-hdp')
+  const showFuture = useFeatureFlag('reports-hdp-future')
   const { preview } = Route.useSearch()
   const navigate = Route.useNavigate()
 
@@ -313,6 +316,12 @@ function ReleasePage() {
             className={previewStudent.class}
             viewer="teacher-preview"
             resolveTag={resolveTag}
+            showFuture={showFuture}
+            trends={
+              showFuture
+                ? trendsForEntries(loadMarks(previewBook.studentId))
+                : []
+            }
           />
         </section>
       )}

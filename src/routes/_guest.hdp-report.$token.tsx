@@ -21,9 +21,12 @@ import { MOCK_STAFF } from '@/data/mock-staff'
 import {
   acknowledgeReport,
   bookByToken,
+  loadMarks,
   loadTags,
   seedIfEmpty,
 } from '@/lib/hdp-store'
+import { trendsForEntries } from '@/lib/hdp-trends'
+import { useFeatureFlag } from '@/hooks/use-feature-flag'
 
 export const Route = createFileRoute('/_guest/hdp-report/$token')({
   component: GuestHdpReportPage,
@@ -46,6 +49,7 @@ function formatDate(iso: string): string {
 
 function GuestHdpReportPage() {
   const { token } = Route.useParams()
+  const showFuture = useFeatureFlag('reports-hdp-future')
 
   const [mounted, setMounted] = React.useState(false)
   const [book, setBook] = React.useState<HdpReportBook | null | undefined>(
@@ -123,6 +127,8 @@ function GuestHdpReportPage() {
         className={student.class}
         viewer="parent"
         resolveTag={resolveTag}
+        showFuture={showFuture}
+        trends={showFuture ? trendsForEntries(loadMarks(book.studentId)) : []}
       />
 
       <section className="border-border flex flex-col gap-4 border-t pt-6">

@@ -219,6 +219,14 @@ export const FEATURE_FLAG_REGISTRY: Record<FeatureFlagKey, FeatureFlagMeta> = {
     module: 'reports',
     defaultValue: false,
   },
+  'reports-hdp-future': {
+    label: 'Future state (Prototype B)',
+    description:
+      'Switch the report rendering and release flow to the Prototype B future state — trend lines, story register with student reflections, student-first release. Off shows the pragmatic Prototype A rendering.',
+    stage: 'Experiment',
+    module: 'reports',
+    defaultValue: false,
+  },
 }
 
 export const DEFAULT_FEATURE_FLAGS: FeatureFlags = Object.fromEntries(

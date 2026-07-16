@@ -1,6 +1,12 @@
 import * as React from 'react'
 import { SourceTag } from './source-tag'
-import type { DraftClaim, HdpReportBook, HdpTag } from '@/types/hdp'
+import { TrendLine } from './trend-line'
+import type {
+  DraftClaim,
+  HdpReportBook,
+  HdpTag,
+  TrendDirection,
+} from '@/types/hdp'
 import { MOCK_STAFF } from '@/data/mock-staff'
 import {
   Table,
@@ -14,6 +20,25 @@ import {
 
 function staffName(id: string): string {
   return MOCK_STAFF.find((s) => s.id === id)?.name ?? 'Unknown teacher'
+}
+
+const DIRECTION_WORDS: Record<TrendDirection, string> = {
+  climbing: 'Climbing',
+  steady: 'Steady',
+  recovering: 'Recovering',
+  easing: 'Easing',
+}
+
+function formatChange(change: number | undefined): string {
+  if (change === undefined) return '—'
+  if (change === 0) return '+0'
+  return change > 0 ? `+${change}` : `−${Math.abs(change)}`
+}
+
+export interface SubjectTrendRow {
+  subject: string
+  direction: TrendDirection
+  points: Array<number>
 }
 
 type ResolveTag = (
@@ -31,6 +56,13 @@ interface ReportBookProps {
    *  chips don't render and the attribution line drops the count rather
    *  than fabricating one. */
   resolveTag?: ResolveTag
+  /** Resolved by the caller from the `reports-hdp-future` flag — this
+   *  component stays flag-free (repo convention). Gates the results table's
+   *  "Change" column AND the "Where things are heading" trends section. */
+  showFuture?: boolean
+  /** Per-subject trend rows (≥2 semesters of data only) — only read when
+   *  `showFuture` is true. */
+  trends?: Array<SubjectTrendRow>
 }
 
 // The shared report-book rendering — a formal, single-column register
@@ -46,6 +78,8 @@ export function ReportBook({
   className,
   viewer,
   resolveTag,
+  showFuture = false,
+  trends = [],
 }: ReportBookProps) {
   const showSourceTags = viewer === 'teacher-preview'
   const firstName = studentName.split(' ')[0] ?? studentName
@@ -54,6 +88,8 @@ export function ReportBook({
   const subjects = Array.from(new Set(book.results.map((r) => r.subject)))
   const gradeFor = (subject: string, term: 3 | 4) =>
     book.results.find((r) => r.subject === subject && r.term === term)?.grade
+  const changeFor = (subject: string) =>
+    book.results.find((r) => r.subject === subject && r.term === 4)?.change
 
   const hasComments =
     Boolean(book.overallComment) || book.subjectComments.length > 0
@@ -80,6 +116,9 @@ export function ReportBook({
                 <TableHead>Subject</TableHead>
                 <TableHead className="text-right">Term 3</TableHead>
                 <TableHead className="text-right">Term 4</TableHead>
+                {showFuture && (
+                  <TableHead className="text-right">Change</TableHead>
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -92,6 +131,11 @@ export function ReportBook({
                   <TableCell className="text-right tabular-nums">
                     {gradeFor(subject, 4) ?? '—'}
                   </TableCell>
+                  {showFuture && (
+                    <TableCell className="text-right tabular-nums">
+                      {formatChange(changeFor(subject))}
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
@@ -131,6 +175,32 @@ export function ReportBook({
               resolveTag={resolveTag}
             />
           ))}
+        </section>
+      )}
+
+      {showFuture && trends.length > 0 && (
+        <section className="flex flex-col gap-3">
+          <h2 className="text-lg font-semibold">Where things are heading</h2>
+          <div className="flex flex-col gap-3">
+            {trends.map((trend) => (
+              <div
+                key={trend.subject}
+                className="flex items-center justify-between gap-4"
+              >
+                <span className="text-sm font-medium">{trend.subject}</span>
+                <div className="flex items-center gap-3">
+                  <TrendLine points={trend.points} />
+                  <span className="text-sm font-medium">
+                    {DIRECTION_WORDS[trend.direction]}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="text-muted-foreground text-xs">
+            Direction, not numbers, leads. Drawn from weighted assessments
+            already recorded.
+          </p>
         </section>
       )}
 

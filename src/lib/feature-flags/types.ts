@@ -22,6 +22,7 @@ export type FeatureFlagKey =
   | 'posts-admin-view'
   | 'reports-hdp'
   | 'reports-river-visibility'
+  | 'reports-hdp-future'
 
 export type FeatureFlags = {
   [K in FeatureFlagKey]: boolean
