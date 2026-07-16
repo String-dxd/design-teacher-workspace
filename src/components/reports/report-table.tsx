@@ -480,7 +480,7 @@ export function ReportTable({
                         onSelect={handleSelectRow}
                         onNavigate={() =>
                           navigate({
-                            to: '/reports/$id',
+                            to: '/holistic-reports/$id',
                             params: { id: report.id },
                           })
                         }
@@ -501,7 +501,7 @@ export function ReportTable({
                 onSelect={handleSelectRow}
                 onNavigate={() =>
                   navigate({
-                    to: '/reports/$id',
+                    to: '/holistic-reports/$id',
                     params: { id: report.id },
                   })
                 }
