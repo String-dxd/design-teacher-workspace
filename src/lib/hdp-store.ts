@@ -565,3 +565,77 @@ export function logEvent(
   }
   writeArray(ANALYTICS_KEY, [...events, event])
 }
+
+// ── Draft Studio / Review & Sync (plan 032) ─────────────────────────────
+
+/** Finds a student's draft of a given kind (and subject, for `kind: 'subject'`). */
+export function findDraft(
+  studentId: string,
+  kind: 'subject' | 'overall',
+  subject?: string,
+): HdpDraft | undefined {
+  return loadDrafts().find(
+    (d) =>
+      d.studentId === studentId &&
+      d.kind === kind &&
+      (kind === 'subject' ? d.subject === subject : true),
+  )
+}
+
+/** Deterministic id for a brand-new draft — findDraft always checks first,
+ *  so an existing seeded draft (e.g. 'draft-1') is reused rather than
+ *  shadowed by a fresh id. */
+export function draftId(
+  studentId: string,
+  kind: 'subject' | 'overall',
+  subject?: string,
+): string {
+  return kind === 'subject'
+    ? `draft-${studentId}-subject-${subject ?? 'none'}`
+    : `draft-${studentId}-overall`
+}
+
+/** Confirms a draft — freezes its claims and their sources for the report
+ *  book. Reversible via reopenDraft before release. */
+export function confirmDraft(id: string): HdpDraft {
+  const drafts = loadDrafts()
+  const draft = drafts.find((d) => d.id === id)
+  if (!draft) throw new Error(`Unknown draft id: ${id}`)
+  const updated: HdpDraft = { ...draft, status: 'confirmed' }
+  writeArray(
+    DRAFTS_KEY,
+    drafts.map((d) => (d.id === id ? updated : d)),
+  )
+  return updated
+}
+
+/** Reopens a confirmed draft for further editing. Clears `syncedAt` — a
+ *  reopened draft's claims may change, so it needs to be reviewed and
+ *  re-synced before it's trusted again. */
+export function reopenDraft(id: string): HdpDraft {
+  const drafts = loadDrafts()
+  const draft = drafts.find((d) => d.id === id)
+  if (!draft) throw new Error(`Unknown draft id: ${id}`)
+  const updated: HdpDraft = { ...draft, status: 'draft', syncedAt: undefined }
+  writeArray(
+    DRAFTS_KEY,
+    drafts.map((d) => (d.id === id ? updated : d)),
+  )
+  return updated
+}
+
+/** Confirmed drafts not yet marked synced — Review & Sync's unsynced count. */
+export function unsyncedConfirmedDrafts(): Array<HdpDraft> {
+  return loadDrafts().filter((d) => d.status === 'confirmed' && !d.syncedAt)
+}
+
+/** Marks a set of confirmed drafts as synced with School Cockpit (mock — no
+ *  real Cockpit integration in this prototype). */
+export function markSynced(draftIds: Array<string>): void {
+  const now = new Date().toISOString()
+  const drafts = loadDrafts()
+  writeArray(
+    DRAFTS_KEY,
+    drafts.map((d) => (draftIds.includes(d.id) ? { ...d, syncedAt: now } : d)),
+  )
+}

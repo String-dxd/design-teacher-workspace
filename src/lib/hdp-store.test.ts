@@ -1,22 +1,30 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import {
   addTag,
+  confirmDraft,
   confirmPattern,
   coverageForClass,
   deleteTag,
   detectFormingPatterns,
   dismissPattern,
   dispositionMix,
+  draftId,
+  findDraft,
+  loadDrafts,
   loadPatterns,
   loadTags,
   logEvent,
+  markSynced,
+  reopenDraft,
+  saveDraft,
   seedIfEmpty,
   summaryForTeacher,
   tagsForStudentVisible,
+  unsyncedConfirmedDrafts,
   updateTag,
 } from './hdp-store'
 import type { AddTagInput } from './hdp-store'
-import type { FormingPattern, HdpTag } from '@/types/hdp'
+import type { FormingPattern, HdpDraft, HdpTag } from '@/types/hdp'
 import { CURRENT_TEACHER } from '@/data/hdp'
 
 // Same jsdom/localStorage race as src/lib/draft-storage.test.ts — install a
@@ -427,5 +435,101 @@ describe('summaryForTeacher', () => {
     const formClassSummary = summary.find((s) => s.classId === '3A')
     // Candidate patterns are only ever populated for the form class section.
     expect(formClassSummary).toBeDefined()
+  })
+})
+
+// ── Draft Studio / Review & Sync (plan 032) ─────────────────────────────
+
+function makeDraft(overrides: Partial<HdpDraft> = {}): HdpDraft {
+  return {
+    id: 'draft-test-1',
+    studentId: '99',
+    kind: 'overall',
+    authorId: CURRENT_TEACHER.id,
+    status: 'draft',
+    claims: [{ text: 'A sourceless sentence.' }],
+    ...overrides,
+  }
+}
+
+describe('draft confirm/reopen/sync', () => {
+  it('confirmDraft sets status to confirmed', () => {
+    saveDraft(makeDraft())
+    const confirmed = confirmDraft('draft-test-1')
+    expect(confirmed.status).toBe('confirmed')
+    expect(loadDrafts().find((d) => d.id === 'draft-test-1')?.status).toBe(
+      'confirmed',
+    )
+  })
+
+  it('reopenDraft sets status back to draft and clears syncedAt', () => {
+    saveDraft(
+      makeDraft({
+        status: 'confirmed',
+        syncedAt: '2026-07-14T09:00:00+08:00',
+      }),
+    )
+    const reopened = reopenDraft('draft-test-1')
+    expect(reopened.status).toBe('draft')
+    expect(reopened.syncedAt).toBeUndefined()
+  })
+
+  it('confirmDraft/reopenDraft throw on an unknown draft id', () => {
+    expect(() => confirmDraft('nope')).toThrow()
+    expect(() => reopenDraft('nope')).toThrow()
+  })
+
+  it('markSynced sets syncedAt on the named drafts only', () => {
+    saveDraft(makeDraft({ id: 'draft-test-1', status: 'confirmed' }))
+    saveDraft(
+      makeDraft({ id: 'draft-test-2', studentId: '98', status: 'confirmed' }),
+    )
+    markSynced(['draft-test-1'])
+    const drafts = loadDrafts()
+    expect(drafts.find((d) => d.id === 'draft-test-1')?.syncedAt).toBeDefined()
+    expect(
+      drafts.find((d) => d.id === 'draft-test-2')?.syncedAt,
+    ).toBeUndefined()
+  })
+
+  it('unsyncedConfirmedDrafts returns only confirmed drafts with no syncedAt', () => {
+    saveDraft(makeDraft({ id: 'draft-test-1', status: 'draft' }))
+    saveDraft(
+      makeDraft({ id: 'draft-test-2', studentId: '98', status: 'confirmed' }),
+    )
+    saveDraft(
+      makeDraft({
+        id: 'draft-test-3',
+        studentId: '97',
+        status: 'confirmed',
+        syncedAt: '2026-07-14T09:00:00+08:00',
+      }),
+    )
+    const unsynced = unsyncedConfirmedDrafts()
+    expect(unsynced.map((d) => d.id)).toEqual(['draft-test-2'])
+  })
+
+  it('findDraft locates a draft by studentId + kind (+ subject for subject drafts)', () => {
+    saveDraft(makeDraft({ id: 'draft-test-1', kind: 'overall' }))
+    saveDraft(
+      makeDraft({
+        id: 'draft-test-2',
+        kind: 'subject',
+        subject: 'Mathematics',
+      }),
+    )
+    expect(findDraft('99', 'overall')?.id).toBe('draft-test-1')
+    expect(findDraft('99', 'subject', 'Mathematics')?.id).toBe('draft-test-2')
+    expect(findDraft('99', 'subject', 'Science')).toBeUndefined()
+  })
+
+  it('draftId is deterministic and distinguishes kind/subject', () => {
+    expect(draftId('99', 'overall')).toBe(draftId('99', 'overall'))
+    expect(draftId('99', 'subject', 'Mathematics')).not.toBe(
+      draftId('99', 'subject', 'Science'),
+    )
+    expect(draftId('99', 'overall')).not.toBe(
+      draftId('99', 'subject', 'Science'),
+    )
   })
 })
