@@ -103,18 +103,27 @@ function BroadcastPage() {
     setLastBroadcastCreatedAt(latest?.createdAt)
     setReplyBroadcast(latest ?? null)
 
-    const pending: Array<PendingRequest> = []
+    // Every (broadcast, student) pair where CURRENT_TEACHER is a recipient,
+    // for any broadcast that still has at least one unanswered pair for her.
+    // Rows the row itself already answered stay in the list and render
+    // collapsed ("Responded (…)") rather than disappearing — the broadcast
+    // only drops out of "Requests for you" once she's answered every pair.
+    const requests: Array<PendingRequest> = []
     for (const broadcast of loadBroadcasts()) {
       if (!broadcast.recipientIds.includes(CURRENT_TEACHER.id)) continue
+      const hasOpenPair = broadcast.studentIds.some(
+        (studentId) =>
+          !broadcast.responses.some(
+            (r) =>
+              r.recipientId === CURRENT_TEACHER.id && r.studentId === studentId,
+          ),
+      )
+      if (!hasOpenPair) continue
       for (const studentId of broadcast.studentIds) {
-        const answered = broadcast.responses.some(
-          (r) =>
-            r.recipientId === CURRENT_TEACHER.id && r.studentId === studentId,
-        )
-        if (!answered) pending.push({ broadcast, studentId })
+        requests.push({ broadcast, studentId })
       }
     }
-    setPendingForYou(pending)
+    setPendingForYou(requests)
   }, [formClassId])
 
   React.useEffect(() => {
@@ -160,7 +169,13 @@ function BroadcastPage() {
   }
 
   const snapshot = mounted ? coverageForClass(formClassId) : null
-  const openRepliesCount = pendingForYou.length
+  const openRepliesCount = pendingForYou.filter(
+    ({ broadcast, studentId }) =>
+      !broadcast.responses.some(
+        (r) =>
+          r.recipientId === CURRENT_TEACHER.id && r.studentId === studentId,
+      ),
+  ).length
 
   return (
     <main className="mx-auto flex max-w-3xl flex-col gap-10 px-4 py-8 sm:px-6">
@@ -337,6 +352,18 @@ const DISPOSITIONS: Array<{ id: DispositionId; label: string }> = [
   { id: 'self-direction', label: 'Self-direction' },
 ]
 
+function responseLabel(
+  response: BroadcastRequest['responses'][number],
+): string {
+  if (response.result.kind === 'nothing-stood-out') return 'Nothing stood out'
+  const tag = loadTags().find(
+    (t) => response.result.kind === 'tag' && t.id === response.result.tagId,
+  )
+  return tag
+    ? (DISPOSITIONS.find((d) => d.id === tag.disposition)?.label ?? 'Tagged')
+    : 'Tagged'
+}
+
 function RequestForYouRow({
   broadcast,
   studentId,
@@ -351,10 +378,15 @@ function RequestForYouRow({
   )
   const [nil, setNil] = React.useState(false)
   const [note, setNote] = React.useState('')
-  const [responded, setResponded] = React.useState<string | null>(null)
 
   const student = getStudentById(studentId)
   const requesterName = staffName(broadcast.requesterId)
+
+  // Prefer what's actually stored — survives a refresh/reload, unlike a
+  // component-local "just responded" flag.
+  const existingResponse = broadcast.responses.find(
+    (r) => r.recipientId === CURRENT_TEACHER.id && r.studentId === studentId,
+  )
 
   function selectDisposition(id: DispositionId) {
     setNil(false)
@@ -371,7 +403,6 @@ function RequestForYouRow({
       respondToBroadcast(broadcast.id, CURRENT_TEACHER.id, studentId, {
         kind: 'nothing-stood-out',
       })
-      setResponded('Nothing stood out')
     } else if (disposition) {
       respondToBroadcast(broadcast.id, CURRENT_TEACHER.id, studentId, {
         kind: 'tag',
@@ -384,17 +415,15 @@ function RequestForYouRow({
           entryPoint: 'topbar',
         },
       })
-      setResponded(
-        DISPOSITIONS.find((d) => d.id === disposition)?.label ?? 'Tagged',
-      )
     }
     onResponded()
   }
 
-  if (responded) {
+  if (existingResponse) {
     return (
       <li className="py-3 text-sm">
-        {student?.name ?? 'Unknown student'} — Responded ({responded})
+        {student?.name ?? 'Unknown student'} — Responded (
+        {responseLabel(existingResponse)})
       </li>
     )
   }
