@@ -930,7 +930,12 @@ export function StudentProfile({
     { id: 'academic', label: 'Academic' },
     { id: 'family', label: 'Family' },
     ...(isStudentInsightsView ? [] : [{ id: 'personal', label: 'Personal' }]),
-    ...(!msfUpliftEnabled && (holisticReportsEnabled || agencyReportsEnabled)
+    // Reports jump-to link: on whenever ANY report surface is active.
+    // Report Generation on its own is enough — regardless of any other
+    // flag combination — so the YH can always reach the flow.
+    ...(holisticReportsEnabled ||
+    agencyReportsEnabled ||
+    reportGenerationEnabled
       ? [{ id: 'reports', label: 'Reports' }]
       : []),
     ...(showOthers ? [{ id: 'others', label: 'Others' }] : []),
@@ -1753,12 +1758,16 @@ export function StudentProfile({
           </Section>
         )}
 
-        {/* Reports Section — shown whenever EITHER the holistic flag or
-            the agency-reports flag is on. The Holistic part is gated on
-            `holisticReportsEnabled`; the Agency Reports subsection on
-            `agencyReportsEnabled`. */}
-        {!msfUpliftEnabled &&
-          (holisticReportsEnabled || agencyReportsEnabled) && (
+        {/* Reports Section — shown whenever ANY of the three report
+            surfaces is on. Report Generation on its own is enough,
+            regardless of any other flag combination, so the YH can
+            always reach the Agency Report flow. The Holistic part is
+            gated on `holisticReportsEnabled`; the Agency Reports
+            subsection on `agencyReportsEnabled` OR
+            `reportGenerationEnabled`. */}
+        {(holisticReportsEnabled ||
+          agencyReportsEnabled ||
+          reportGenerationEnabled) && (
             <Section
               id="reports"
               title="Reports"
@@ -1835,8 +1844,10 @@ export function StudentProfile({
                 </>
               )}
 
-              {/* Agency Reports subsection. */}
-              {agencyReportsEnabled && (
+              {/* Agency Reports subsection — visible whenever the section
+                  is meant to carry the flow. Report Generation on its
+                  own is sufficient to unlock the subsection + button. */}
+              {(agencyReportsEnabled || reportGenerationEnabled) && (
                 <div
                   className={cn(holisticReportsEnabled && 'mt-6 border-t pt-5')}
                 >
