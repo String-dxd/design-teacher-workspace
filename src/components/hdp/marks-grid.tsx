@@ -150,7 +150,7 @@ export function MarksGrid({ studentId, studentName }: MarksGridProps) {
       <div className="border-border min-w-0 max-w-full overflow-x-auto rounded-lg border">
         <Table>
           <TableCaption className="sr-only">
-            Marks entry for {studentName}, semester {CURRENT_CYCLE.semester}
+            Marks entry for {studentName}, semester {CURRENT_CYCLE.semester},{' '}
             {CURRENT_CYCLE.schoolYear}
           </TableCaption>
           <TableHeader>

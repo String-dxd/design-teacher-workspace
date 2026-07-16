@@ -65,7 +65,17 @@ function DraftStudioPage() {
             Draft Studio — turn tags into an evidence-grounded comment.
           </p>
         </div>
-        <MarksGrid studentId={studentId} studentName={student.name} />
+        {/* Keyed remount on studentId: the grid's per-cell <Input
+            defaultValue> is intentionally uncontrolled (autosave-on-blur,
+            no per-keystroke re-render) — without a key, switching students
+            would leave stale DOM input values from the previous student
+            (same class of bug plan 019 fixed for the legacy cycle-write
+            pager). */}
+        <MarksGrid
+          key={studentId}
+          studentId={studentId}
+          studentName={student.name}
+        />
         <DraftStudio studentId={studentId} />
       </div>
     </main>
