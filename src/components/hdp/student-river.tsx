@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { Link } from '@tanstack/react-router'
 import { DispositionMixBar } from './disposition-mix-bar'
 import { PatternCard } from './pattern-card'
 import { StreamItem } from './stream-item'
@@ -119,14 +120,7 @@ export function StudentRiver({
               >
                 Add my observation
               </Button>
-              {/* /reports/broadcast doesn't exist yet (plan 031) — kept as
-                  a non-navigating, honestly-labelled action rather than a
-                  dead link, same convention as reports-home.tsx. */}
-              <Button
-                variant="ghost"
-                disabled
-                title="Coming with Coverage & Broadcast"
-              >
+              <Button variant="ghost" render={<Link to="/reports/broadcast" />}>
                 Ask colleagues
               </Button>
             </div>

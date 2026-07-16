@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { format } from 'date-fns'
+import { Link } from '@tanstack/react-router'
 import {
   BookOpen,
   CircleCheck,
@@ -64,7 +65,8 @@ const TOOL_GROUPS: Array<{
         icon: Megaphone,
         name: 'Coverage & Broadcast',
         description: 'See who has thin records and ask colleagues to help.',
-        state: 'Coming in this prototype', // plan 031
+        state: 'Always available',
+        href: '/reports/broadcast', // plan 031
       },
     ],
   },
@@ -140,11 +142,12 @@ export function HdpReportsHome() {
         ) : (
           <div className="bg-muted h-2 w-full rounded-full" aria-hidden />
         )}
-        {/* /reports/broadcast doesn't exist yet (plan 031) — kept as
-            non-navigating text rather than a dead link. */}
-        <span className="text-muted-foreground text-xs">
-          Review gaps — coming with Coverage & Broadcast
-        </span>
+        <Link
+          to="/reports/broadcast"
+          className="text-muted-foreground text-xs hover:underline"
+        >
+          Review gaps
+        </Link>
       </div>
 
       <div className="flex flex-col gap-8">

@@ -209,14 +209,10 @@ function ClassSection({
             {summary.thinRecordCount} student
             {summary.thinRecordCount === 1 ? '' : 's'} with nothing noted yet
           </span>
-          {/* /reports/broadcast doesn't exist yet (plan 031) — kept as a
-              non-navigating, honestly-labelled action rather than a dead
-              link, same convention as reports-home.tsx / student-river.tsx. */}
           <Button
             variant="ghost"
             size="sm"
-            disabled
-            title="Coming with Coverage & Broadcast"
+            render={<Link to="/reports/broadcast" />}
           >
             Ask colleagues
           </Button>
