@@ -382,7 +382,14 @@ export function TagQueueComposer({
             Close
           </Button>
         )}
-        <Button type="button" onClick={handleSave} disabled={!saveable}>
+        <Button
+          type="button"
+          onClick={handleSave}
+          disabled={!saveable}
+          title={
+            !saveable ? 'Choose a student and a disposition first' : undefined
+          }
+        >
           Save tag
         </Button>
       </div>
