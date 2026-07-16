@@ -40,6 +40,7 @@ import { Route as AnnouncementsIndexRouteImport } from './routes/announcements.i
 import { Route as StudentsIdRouteImport } from './routes/students.$id'
 import { Route as ReportsTagRouteImport } from './routes/reports.tag'
 import { Route as ReportsSummaryRouteImport } from './routes/reports.summary'
+import { Route as ReportsReviewRouteImport } from './routes/reports.review'
 import { Route as MeetingsNewRouteImport } from './routes/meetings.new'
 import { Route as HolisticReportsIdRouteImport } from './routes/holistic-reports.$id'
 import { Route as GroupsUploadRouteImport } from './routes/groups.upload'
@@ -219,6 +220,11 @@ const ReportsSummaryRoute = ReportsSummaryRouteImport.update({
   path: '/summary',
   getParentRoute: () => ReportsRoute,
 } as any)
+const ReportsReviewRoute = ReportsReviewRouteImport.update({
+  id: '/review',
+  path: '/review',
+  getParentRoute: () => ReportsRoute,
+} as any)
 const MeetingsNewRoute = MeetingsNewRouteImport.update({
   id: '/new',
   path: '/new',
@@ -378,6 +384,7 @@ export interface FileRoutesByFullPath {
   '/groups/upload': typeof GroupsUploadRoute
   '/holistic-reports/$id': typeof HolisticReportsIdRoute
   '/meetings/new': typeof MeetingsNewRoute
+  '/reports/review': typeof ReportsReviewRoute
   '/reports/summary': typeof ReportsSummaryRoute
   '/reports/tag': typeof ReportsTagRoute
   '/students/$id': typeof StudentsIdRoute
@@ -426,6 +433,7 @@ export interface FileRoutesByTo {
   '/groups/upload': typeof GroupsUploadRoute
   '/holistic-reports/$id': typeof HolisticReportsIdRoute
   '/meetings/new': typeof MeetingsNewRoute
+  '/reports/review': typeof ReportsReviewRoute
   '/reports/summary': typeof ReportsSummaryRoute
   '/reports/tag': typeof ReportsTagRoute
   '/students/$id': typeof StudentsIdRoute
@@ -484,6 +492,7 @@ export interface FileRoutesById {
   '/groups/upload': typeof GroupsUploadRoute
   '/holistic-reports/$id': typeof HolisticReportsIdRoute
   '/meetings/new': typeof MeetingsNewRoute
+  '/reports/review': typeof ReportsReviewRoute
   '/reports/summary': typeof ReportsSummaryRoute
   '/reports/tag': typeof ReportsTagRoute
   '/students/$id': typeof StudentsIdRoute
@@ -542,6 +551,7 @@ export interface FileRouteTypes {
     | '/groups/upload'
     | '/holistic-reports/$id'
     | '/meetings/new'
+    | '/reports/review'
     | '/reports/summary'
     | '/reports/tag'
     | '/students/$id'
@@ -590,6 +600,7 @@ export interface FileRouteTypes {
     | '/groups/upload'
     | '/holistic-reports/$id'
     | '/meetings/new'
+    | '/reports/review'
     | '/reports/summary'
     | '/reports/tag'
     | '/students/$id'
@@ -647,6 +658,7 @@ export interface FileRouteTypes {
     | '/groups/upload'
     | '/holistic-reports/$id'
     | '/meetings/new'
+    | '/reports/review'
     | '/reports/summary'
     | '/reports/tag'
     | '/students/$id'
@@ -911,6 +923,13 @@ declare module '@tanstack/react-router' {
       path: '/summary'
       fullPath: '/reports/summary'
       preLoaderRoute: typeof ReportsSummaryRouteImport
+      parentRoute: typeof ReportsRoute
+    }
+    '/reports/review': {
+      id: '/reports/review'
+      path: '/review'
+      fullPath: '/reports/review'
+      preLoaderRoute: typeof ReportsReviewRouteImport
       parentRoute: typeof ReportsRoute
     }
     '/meetings/new': {
@@ -1194,6 +1213,7 @@ const MeetingsRouteWithChildren = MeetingsRoute._addFileChildren(
 )
 
 interface ReportsRouteChildren {
+  ReportsReviewRoute: typeof ReportsReviewRoute
   ReportsSummaryRoute: typeof ReportsSummaryRoute
   ReportsTagRoute: typeof ReportsTagRoute
   ReportsIndexRoute: typeof ReportsIndexRoute
@@ -1206,6 +1226,7 @@ interface ReportsRouteChildren {
 }
 
 const ReportsRouteChildren: ReportsRouteChildren = {
+  ReportsReviewRoute: ReportsReviewRoute,
   ReportsSummaryRoute: ReportsSummaryRoute,
   ReportsTagRoute: ReportsTagRoute,
   ReportsIndexRoute: ReportsIndexRoute,

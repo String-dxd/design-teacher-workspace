@@ -601,7 +601,11 @@ export function confirmDraft(id: string): HdpDraft {
   const drafts = loadDrafts()
   const draft = drafts.find((d) => d.id === id)
   if (!draft) throw new Error(`Unknown draft id: ${id}`)
-  const updated: HdpDraft = { ...draft, status: 'confirmed' }
+  const updated: HdpDraft = {
+    ...draft,
+    status: 'confirmed',
+    confirmedAt: new Date().toISOString(),
+  }
   writeArray(
     DRAFTS_KEY,
     drafts.map((d) => (d.id === id ? updated : d)),
@@ -609,14 +613,19 @@ export function confirmDraft(id: string): HdpDraft {
   return updated
 }
 
-/** Reopens a confirmed draft for further editing. Clears `syncedAt` — a
- *  reopened draft's claims may change, so it needs to be reviewed and
- *  re-synced before it's trusted again. */
+/** Reopens a confirmed draft for further editing. Clears `confirmedAt` and
+ *  `syncedAt` — a reopened draft's claims may change, so it needs to be
+ *  reviewed, reconfirmed, and re-synced before it's trusted again. */
 export function reopenDraft(id: string): HdpDraft {
   const drafts = loadDrafts()
   const draft = drafts.find((d) => d.id === id)
   if (!draft) throw new Error(`Unknown draft id: ${id}`)
-  const updated: HdpDraft = { ...draft, status: 'draft', syncedAt: undefined }
+  const updated: HdpDraft = {
+    ...draft,
+    status: 'draft',
+    confirmedAt: undefined,
+    syncedAt: undefined,
+  }
   writeArray(
     DRAFTS_KEY,
     drafts.map((d) => (d.id === id ? updated : d)),

@@ -16,7 +16,7 @@ import { ToolCard } from './tool-card'
 import type { CoverageSnapshot } from '@/types/hdp'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
 import { CURRENT_CYCLE, CURRENT_TEACHER } from '@/data/hdp'
-import { coverageForClass, seedIfEmpty } from '@/lib/hdp-store'
+import { coverageForClass, loadDrafts, seedIfEmpty } from '@/lib/hdp-store'
 
 // Routes for every tool below (/reports/tag, /reports/summary,
 // /reports/students/$studentId, /reports/broadcast, /reports/drafts,
@@ -82,7 +82,7 @@ const TOOL_GROUPS: Array<{
         icon: CircleCheck,
         name: 'Review & Sync',
         description: 'Confirm drafts and sync them into the report book.',
-        state: 'Coming in this prototype', // plan 032
+        state: 'Locked until drafts exist', // plan 032 — flips live once loadDrafts().length > 0
       },
     ],
   },
@@ -109,6 +109,7 @@ export function HdpReportsHome() {
   useSetBreadcrumbs([{ label: 'Reports', href: '/reports' }])
 
   const [snapshot, setSnapshot] = useState<CoverageSnapshot | null>(null)
+  const [reviewUnlocked, setReviewUnlocked] = useState(false)
 
   // Render the coverage bar only after mount — a deterministic SSR-safe
   // initial render with no hydration mismatch (repo's plan-018 rule: never
@@ -116,6 +117,7 @@ export function HdpReportsHome() {
   useEffect(() => {
     seedIfEmpty()
     setSnapshot(coverageForClass(CURRENT_TEACHER.formClassId))
+    setReviewUnlocked(loadDrafts().length > 0)
   }, [])
 
   const windowOpens = format(new Date(CURRENT_CYCLE.windowOpensAt), 'd MMM')
@@ -153,17 +155,28 @@ export function HdpReportsHome() {
           <section key={group.heading} className="flex flex-col gap-3">
             <h2 className="text-sm font-medium">{group.heading}</h2>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {group.tools.map((tool) => (
-                <ToolCard
-                  key={tool.name}
-                  icon={tool.icon}
-                  name={tool.name}
-                  description={tool.description}
-                  state={tool.state}
-                  href={tool.href}
-                  locked={!tool.href}
-                />
-              ))}
+              {group.tools.map((tool) => {
+                // Review & Sync unlocks live once at least one draft exists
+                // (plan 032) — every other card's state/href is static.
+                const isReviewSync = tool.name === 'Review & Sync'
+                const state =
+                  isReviewSync && reviewUnlocked
+                    ? 'Confirm drafts and sync'
+                    : tool.state
+                const href =
+                  isReviewSync && reviewUnlocked ? '/reports/review' : tool.href
+                return (
+                  <ToolCard
+                    key={tool.name}
+                    icon={tool.icon}
+                    name={tool.name}
+                    description={tool.description}
+                    state={state}
+                    href={href}
+                    locked={!href}
+                  />
+                )
+              })}
             </div>
           </section>
         ))}

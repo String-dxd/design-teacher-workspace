@@ -75,6 +75,7 @@ export interface HdpDraft {
   authorId: string
   claims: Array<DraftClaim>
   status: 'draft' | 'confirmed'
+  confirmedAt?: string // set when status transitions to 'confirmed' (plan 032)
   syncedAt?: string // set by Review & Sync (plan 032)
 }
 

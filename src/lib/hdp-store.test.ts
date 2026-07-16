@@ -453,24 +453,27 @@ function makeDraft(overrides: Partial<HdpDraft> = {}): HdpDraft {
 }
 
 describe('draft confirm/reopen/sync', () => {
-  it('confirmDraft sets status to confirmed', () => {
+  it('confirmDraft sets status to confirmed and stamps confirmedAt', () => {
     saveDraft(makeDraft())
     const confirmed = confirmDraft('draft-test-1')
     expect(confirmed.status).toBe('confirmed')
+    expect(confirmed.confirmedAt).toBeDefined()
     expect(loadDrafts().find((d) => d.id === 'draft-test-1')?.status).toBe(
       'confirmed',
     )
   })
 
-  it('reopenDraft sets status back to draft and clears syncedAt', () => {
+  it('reopenDraft sets status back to draft and clears confirmedAt/syncedAt', () => {
     saveDraft(
       makeDraft({
         status: 'confirmed',
+        confirmedAt: '2026-07-14T08:00:00+08:00',
         syncedAt: '2026-07-14T09:00:00+08:00',
       }),
     )
     const reopened = reopenDraft('draft-test-1')
     expect(reopened.status).toBe('draft')
+    expect(reopened.confirmedAt).toBeUndefined()
     expect(reopened.syncedAt).toBeUndefined()
   })
 
