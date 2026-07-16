@@ -38,6 +38,7 @@ import {
   loadPatterns,
   loadReportBooks,
   loadTags,
+  previewReportBook,
   reflectionGatesShare,
   releaseToStudent,
   seedIfEmpty,
@@ -146,9 +147,11 @@ function ReleasePage() {
   const releaseTargetStudent = releaseTarget
     ? getStudentById(releaseTarget)
     : null
-  const previewBook = preview
-    ? books.find((b) => b.studentId === preview)
-    : undefined
+  // previewReportBook assembles the same confirmed-drafts snapshot
+  // shareReportBook would freeze into the book — without persisting it — so
+  // an unshared book's Preview never omits sections (e.g. "Personal
+  // qualities") that the real parent link would show once shared.
+  const previewBook = preview ? previewReportBook(preview) : undefined
   const previewStudent = preview ? getStudentById(preview) : undefined
 
   function bookFor(studentId: string): HdpReportBook | undefined {

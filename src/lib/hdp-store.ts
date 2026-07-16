@@ -1074,22 +1074,16 @@ function tokenForStudent(studentId: string): string {
   return `${GUEST_TOKEN_PREFIX}${studentId}`
 }
 
-/**
- * Shares a student's report book with parents: snapshots the CONFIRMED
- * drafts (overall + subject) for this student into the book's comments —
- * the book is frozen content from this point, not a live view of drafts,
- * so editing/reopening the source draft afterwards never changes what a
- * parent already has a link to. A student with no confirmed drafts still
- * shares a results-only book (comments stay absent, not "undefined").
- * Throws if no report book exists yet for the student (nothing to share).
- */
-export function shareReportBook(studentId: string): { token: string } {
-  const books = loadReportBooks()
-  const existing = books.find((b) => b.studentId === studentId)
-  if (!existing) {
-    throw new Error(`No report book found for student ${studentId}`)
-  }
-
+/** Assembles the `overallComment` + `subjectComments` a book would get if
+ *  shared right now — snapshotting the CONFIRMED drafts (overall + subject)
+ *  for this student — without persisting anything. Shared by `shareReportBook`
+ *  (which freezes this into the saved book) and `previewReportBook` (which
+ *  hands it to the teacher-facing Preview so it never drifts from what
+ *  `shareReportBook` would actually produce). */
+function assembleComments(studentId: string): {
+  overallComment: HdpReportBook['overallComment']
+  subjectComments: HdpReportBook['subjectComments']
+} {
   const overallDraft = findDraft(studentId, 'overall')
   const overallComment =
     overallDraft && overallDraft.status === 'confirmed'
@@ -1120,6 +1114,27 @@ export function shareReportBook(studentId: string): { token: string } {
       insightIds: d.insightIds?.length ? [...d.insightIds] : undefined,
     }))
 
+  return { overallComment, subjectComments }
+}
+
+/**
+ * Shares a student's report book with parents: snapshots the CONFIRMED
+ * drafts (overall + subject) for this student into the book's comments —
+ * the book is frozen content from this point, not a live view of drafts,
+ * so editing/reopening the source draft afterwards never changes what a
+ * parent already has a link to. A student with no confirmed drafts still
+ * shares a results-only book (comments stay absent, not "undefined").
+ * Throws if no report book exists yet for the student (nothing to share).
+ */
+export function shareReportBook(studentId: string): { token: string } {
+  const books = loadReportBooks()
+  const existing = books.find((b) => b.studentId === studentId)
+  if (!existing) {
+    throw new Error(`No report book found for student ${studentId}`)
+  }
+
+  const { overallComment, subjectComments } = assembleComments(studentId)
+
   const updated: HdpReportBook = {
     ...existing,
     overallComment,
@@ -1128,6 +1143,29 @@ export function shareReportBook(studentId: string): { token: string } {
   }
   saveReportBook(updated)
   return { token: tokenForStudent(studentId) }
+}
+
+/**
+ * The teacher-facing Preview's data source: what a parent would actually see
+ * if this book were shared right now. Once a book has been shared, its
+ * stored comments are already the frozen truth (editing a draft afterwards
+ * must NOT change what a parent with a live link sees), so this simply
+ * returns the stored book unchanged. Before sharing, the stored book's
+ * comments are still empty (only `shareReportBook` populates them), so this
+ * assembles the same CONFIRMED-drafts snapshot `shareReportBook` would
+ * produce — without persisting it — so Preview never omits sections (like
+ * "Personal qualities") that the real parent link would show. Returns
+ * `undefined` if no report book exists yet for the student.
+ */
+export function previewReportBook(
+  studentId: string,
+): HdpReportBook | undefined {
+  const book = loadReportBooks().find((b) => b.studentId === studentId)
+  if (!book) return undefined
+  if (book.sharedAt) return book
+
+  const { overallComment, subjectComments } = assembleComments(studentId)
+  return { ...book, overallComment, subjectComments }
 }
 
 /** Looks up a report book by its guest token — only ever resolves a book
