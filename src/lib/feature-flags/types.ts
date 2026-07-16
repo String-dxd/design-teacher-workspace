@@ -23,6 +23,8 @@ export type FeatureFlagKey =
   | 'primary-contact'
   | 'posts-admin-view'
   | 'reports-admin-view'
+  | 'reports-hdp'
+  | 'reports-river-visibility'
 
 export type FeatureFlags = {
   [K in FeatureFlagKey]: boolean

@@ -226,6 +226,22 @@ export const FEATURE_FLAG_REGISTRY: Record<FeatureFlagKey, FeatureFlagMeta> = {
     module: 'manage',
     defaultValue: false,
   },
+  'reports-hdp': {
+    label: 'HDP Reports module',
+    description:
+      'Replace the Reports tab with the new HDP module — ambient tagging, per-student river, coverage broadcast, and in-flow drafting. Turning it off restores the current Reports page.',
+    stage: 'Experiment',
+    module: 'reports',
+    defaultValue: false,
+  },
+  'reports-river-visibility': {
+    label: 'Full river for subject teachers',
+    description:
+      'Show subject teachers the full observation river for a student instead of their own tags plus confirmed threads only. Open research question — default off.',
+    stage: 'Experiment',
+    module: 'reports',
+    defaultValue: false,
+  },
 }
 
 export const DEFAULT_FEATURE_FLAGS: FeatureFlags = Object.fromEntries(
