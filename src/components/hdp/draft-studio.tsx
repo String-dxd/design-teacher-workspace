@@ -243,15 +243,20 @@ export function DraftStudio({ studentId }: DraftStudioProps) {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-      <div className="min-w-0">
-        <StudentRiver
-          studentId={studentId}
-          viewerId={CURRENT_TEACHER.id}
-          fullRiver={kind === 'overall'}
-          embedded
-        />
-      </div>
+    <div className="flex min-w-0 flex-col gap-6">
+      <details className="flex flex-col gap-3" open>
+        <summary className="text-sm font-medium cursor-pointer">
+          Evidence
+        </summary>
+        <div className="pt-1">
+          <StudentRiver
+            studentId={studentId}
+            viewerId={CURRENT_TEACHER.id}
+            fullRiver={kind === 'overall'}
+            embedded
+          />
+        </div>
+      </details>
 
       <div className="flex min-w-0 flex-col gap-4">
         <Tabs
