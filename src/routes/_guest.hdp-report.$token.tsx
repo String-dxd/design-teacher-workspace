@@ -206,6 +206,9 @@ function GuestHdpReportPage() {
                 variant="outline"
                 className="w-fit"
                 disabled={note.trim().length === 0}
+                title={
+                  note.trim().length === 0 ? 'Write a note first' : undefined
+                }
                 onClick={() => setConfirmSendOpen(true)}
               >
                 Send note
