@@ -122,6 +122,8 @@ export interface HdpReportBook {
   sharedAt?: string // set when shared with parents (plan 033)
   acknowledgement?: { at: string; note?: string }
   marksSyncedAt?: string // set by syncAcademicResults (plan 036)
+  studentReleasedAt?: string // set by releaseToStudent (plan 038, Prototype B Act 1)
+  studentReactedAt?: string // set by submitStudentReflection (plan 038)
 }
 
 // ── Student reflections (plan 037, Prototype B story register) ─────────

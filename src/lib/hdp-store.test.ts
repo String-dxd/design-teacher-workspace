@@ -2,6 +2,7 @@ import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import {
   acknowledgeReport,
   addTag,
+  bookByStudentToken,
   bookByToken,
   canBroadcast,
   confirmDraft,
@@ -25,6 +26,7 @@ import {
   logEvent,
   markSynced,
   nilsForStudent,
+  releaseToStudent,
   reopenDraft,
   respondToBroadcast,
   saveDraft,
@@ -34,6 +36,7 @@ import {
   seedIfEmpty,
   semesterAverage,
   shareReportBook,
+  submitStudentReflection,
   summaryForTeacher,
   syncAcademicResults,
   tagsForStudentVisible,
@@ -1094,5 +1097,114 @@ describe('reflections (plan 037)', () => {
 
   it('returns undefined when the student has no reflections', () => {
     expect(coverReflection('no-such-student')).toBeUndefined()
+  })
+})
+
+// ── Student-first release (plan 038) ─────────────────────────────────────
+
+describe('releaseToStudent', () => {
+  it('throws when there is no confirmed overall draft', () => {
+    saveReportBook(makeReportBook({ studentId: 'release-1' }))
+    expect(() => releaseToStudent('release-1')).toThrow()
+  })
+
+  it('stamps studentReleasedAt and returns a deterministic token', () => {
+    saveReportBook(makeReportBook({ studentId: 'release-2' }))
+    saveDraft(
+      makeDraft({
+        id: 'draft-release-2',
+        studentId: 'release-2',
+        kind: 'overall',
+        status: 'confirmed',
+      }),
+    )
+    const { token } = releaseToStudent('release-2')
+    expect(token).toBe('hdp-student-release-2')
+    const book = loadReportBooks().find((b) => b.studentId === 'release-2')
+    expect(book?.studentReleasedAt).toBeDefined()
+  })
+
+  it('throws when no report book exists yet for the student', () => {
+    saveDraft(
+      makeDraft({
+        id: 'draft-release-3',
+        studentId: 'release-3',
+        kind: 'overall',
+        status: 'confirmed',
+      }),
+    )
+    expect(() => releaseToStudent('release-3')).toThrow()
+  })
+})
+
+describe('bookByStudentToken', () => {
+  it('resolves a released book by its student token', () => {
+    saveReportBook(makeReportBook({ studentId: 'release-4' }))
+    saveDraft(
+      makeDraft({
+        id: 'draft-release-4',
+        studentId: 'release-4',
+        kind: 'overall',
+        status: 'confirmed',
+      }),
+    )
+    const { token } = releaseToStudent('release-4')
+    expect(bookByStudentToken(token)?.studentId).toBe('release-4')
+  })
+
+  it('returns undefined for an unknown or not-yet-released token', () => {
+    expect(bookByStudentToken('hdp-student-nope')).toBeUndefined()
+    saveReportBook(makeReportBook({ studentId: 'release-5' }))
+    expect(bookByStudentToken('hdp-student-release-5')).toBeUndefined()
+  })
+
+  it('does not resolve a parent token as a student token', () => {
+    expect(bookByStudentToken('hdp-release-5')).toBeUndefined()
+  })
+})
+
+describe('submitStudentReflection', () => {
+  function releasedToken(studentId: string): string {
+    saveReportBook(makeReportBook({ studentId }))
+    saveDraft(
+      makeDraft({
+        id: `draft-${studentId}`,
+        studentId,
+        kind: 'overall',
+        status: 'confirmed',
+      }),
+    )
+    return releaseToStudent(studentId).token
+  }
+
+  it('round-trips a reflection and stamps studentReactedAt', () => {
+    const token = releasedToken('reflect-1')
+    submitStudentReflection(token, 'My honest reflection.')
+    expect(coverReflection('reflect-1')?.text).toBe('My honest reflection.')
+    expect(coverReflection('reflect-1')?.chosenAsCover).toBe(true)
+    const book = loadReportBooks().find((b) => b.studentId === 'reflect-1')
+    expect(book?.studentReactedAt).toBeDefined()
+  })
+
+  it('replaces the reflection in place on a second submission', () => {
+    const token = releasedToken('reflect-2')
+    submitStudentReflection(token, 'First draft of my reflection.')
+    submitStudentReflection(token, 'Rewritten reflection.')
+    expect(loadReflections('reflect-2')).toHaveLength(1)
+    expect(coverReflection('reflect-2')?.text).toBe('Rewritten reflection.')
+    expect(coverReflection('reflect-2')?.chosenAsCover).toBe(true)
+  })
+
+  it('throws once the book has been shared with parents (frozen)', () => {
+    const token = releasedToken('reflect-3')
+    submitStudentReflection(token, 'Before sharing.')
+    shareReportBook('reflect-3')
+    expect(() => submitStudentReflection(token, 'After sharing.')).toThrow()
+  })
+
+  it('throws for an unknown token', () => {
+    expect(() =>
+      submitStudentReflection('hdp-student-no-such-student', 'Text.'),
+    ).toThrow()
   })
 })

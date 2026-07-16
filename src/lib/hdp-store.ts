@@ -597,6 +597,92 @@ export function coverReflection(
   )[0]
 }
 
+// ── Student-first release (plan 038, Prototype B Act 1) ─────────────────
+
+const STUDENT_GUEST_TOKEN_PREFIX = 'hdp-student-'
+
+/** Deterministic mock token for a student's OWN report link — distinct
+ *  prefix from the parent token (`hdp-{studentId}`) so the two guest routes
+ *  never collide on the same string. */
+function tokenForStudentRelease(studentId: string): string {
+  return `${STUDENT_GUEST_TOKEN_PREFIX}${studentId}`
+}
+
+/**
+ * Releases a student's report book to the student themselves — Act 1 of the
+ * staged release. Requires a confirmed overall draft (same precondition as
+ * `shareReportBook`); throws otherwise, same as sharing with parents.
+ * Stamps `studentReleasedAt`. Idempotent id: the token is deterministic, so
+ * releasing twice just re-stamps the same book (no duplicate rows).
+ */
+export function releaseToStudent(studentId: string): { token: string } {
+  const overallDraft = findDraft(studentId, 'overall')
+  if (!overallDraft || overallDraft.status !== 'confirmed') {
+    throw new Error(
+      `Cannot release to student ${studentId}: no confirmed overall draft`,
+    )
+  }
+  const books = loadReportBooks()
+  const existing = books.find((b) => b.studentId === studentId)
+  if (!existing) {
+    throw new Error(`No report book found for student ${studentId}`)
+  }
+  saveReportBook({ ...existing, studentReleasedAt: new Date().toISOString() })
+  return { token: tokenForStudentRelease(studentId) }
+}
+
+/** Looks up a report book by its student-release guest token — only ever
+ *  resolves a book that has actually been released to the student
+ *  (`studentReleasedAt` set); an unknown or not-yet-released token renders
+ *  the guest route's calm "not valid" state, same convention as
+ *  `bookByToken`. */
+export function bookByStudentToken(token: string): HdpReportBook | undefined {
+  if (!token.startsWith(STUDENT_GUEST_TOKEN_PREFIX)) return undefined
+  const studentId = token.slice(STUDENT_GUEST_TOKEN_PREFIX.length)
+  const book = loadReportBooks().find((b) => b.studentId === studentId)
+  return book?.studentReleasedAt ? book : undefined
+}
+
+/**
+ * Submits (or replaces) the student's own reflection on their report — the
+ * one they write themselves at their release link, distinct from a
+ * teacher's or parent's. Writes through `saveReflection` (plan 037): the
+ * student's FIRST reflection is marked `chosenAsCover` (it becomes the
+ * story register's cover quote); a second submission replaces it in place
+ * (edit, not append) and keeps whatever cover status the first one had.
+ * Stamps `studentReactedAt` on the book. Throws once the book has been
+ * shared with parents — the reflection freezes at share, same rule as the
+ * report book's own snapshot semantics.
+ */
+export function submitStudentReflection(token: string, text: string): void {
+  const book = bookByStudentToken(token)
+  if (!book) throw new Error(`Unknown or unreleased student token: ${token}`)
+  if (book.sharedAt) {
+    throw new Error(
+      `Cannot submit a reflection for ${book.studentId}: already shared with parents`,
+    )
+  }
+
+  // The student has at most one reflection of their own at a time — a
+  // resubmit replaces it in place (edit), it never appends a second row.
+  // `chosenAsCover` carries forward from whatever they had before (it's
+  // `true` the first time, since it's their only reflection).
+  const previous = coverReflection(book.studentId)
+  const chosenAsCover = previous?.chosenAsCover ?? true
+  const others = readArray<StudentReflection>(REFLECTIONS_KEY).filter(
+    (r) => r.studentId !== book.studentId,
+  )
+  const reflection: StudentReflection = {
+    studentId: book.studentId,
+    text,
+    writtenAt: new Date().toISOString(),
+    chosenAsCover,
+  }
+  writeArray(REFLECTIONS_KEY, [...others, reflection])
+
+  saveReportBook({ ...book, studentReactedAt: new Date().toISOString() })
+}
+
 // ── Analytics ────────────────────────────────────────────────────────────
 
 interface AnalyticsEvent {
