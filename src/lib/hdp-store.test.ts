@@ -1,6 +1,8 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import {
+  acknowledgeReport,
   addTag,
+  bookByToken,
   canBroadcast,
   confirmDraft,
   confirmPattern,
@@ -15,6 +17,7 @@ import {
   loadBroadcasts,
   loadDrafts,
   loadPatterns,
+  loadReportBooks,
   loadTags,
   logEvent,
   markSynced,
@@ -22,7 +25,9 @@ import {
   reopenDraft,
   respondToBroadcast,
   saveDraft,
+  saveReportBook,
   seedIfEmpty,
+  shareReportBook,
   summaryForTeacher,
   tagsForStudentVisible,
   unsyncedConfirmedDrafts,
@@ -33,6 +38,7 @@ import type {
   BroadcastRequest,
   FormingPattern,
   HdpDraft,
+  HdpReportBook,
   HdpTag,
 } from '@/types/hdp'
 import { CURRENT_TEACHER } from '@/data/hdp'
@@ -727,5 +733,118 @@ describe('draft confirm/reopen/sync', () => {
     expect(draftId('99', 'overall')).not.toBe(
       draftId('99', 'subject', 'Science'),
     )
+  })
+})
+
+// ── Report book sharing + acknowledgement (plan 033) ─────────────────────
+
+function makeReportBook(overrides: Partial<HdpReportBook> = {}): HdpReportBook {
+  return {
+    studentId: '1',
+    schoolYear: '2026',
+    semester: 2,
+    results: [{ subject: 'Mathematics', term: 3, grade: 'A2' }],
+    attendance: { present: 58, total: 60 },
+    conduct: 'Good',
+    subjectComments: [],
+    parentPrompts: ['Ask me about the science fair.'],
+    ...overrides,
+  }
+}
+
+describe('shareReportBook', () => {
+  it('snapshots confirmed-draft claims into the book — mutating the draft afterwards does not change the shared book', () => {
+    saveReportBook(makeReportBook({ studentId: '1' }))
+    saveDraft(
+      makeDraft({
+        id: 'draft-share-1',
+        studentId: '1',
+        kind: 'overall',
+        status: 'confirmed',
+        claims: [{ text: 'Original sentence.' }],
+      }),
+    )
+
+    const { token } = shareReportBook('1')
+    expect(token).toBe('hdp-1')
+
+    const shared = loadReportBooks().find((b) => b.studentId === '1')
+    expect(shared?.overallComment?.claims).toEqual([
+      { text: 'Original sentence.' },
+    ])
+
+    // Mutate the underlying draft after sharing.
+    saveDraft(
+      makeDraft({
+        id: 'draft-share-1',
+        studentId: '1',
+        kind: 'overall',
+        status: 'confirmed',
+        claims: [{ text: 'Changed sentence.' }],
+      }),
+    )
+
+    const stillShared = loadReportBooks().find((b) => b.studentId === '1')
+    expect(stillShared?.overallComment?.claims).toEqual([
+      { text: 'Original sentence.' },
+    ])
+  })
+
+  it('with no confirmed overall draft still shares a results-only book (comments absent)', () => {
+    saveReportBook(makeReportBook({ studentId: '2' }))
+    const { token } = shareReportBook('2')
+    expect(token).toBe('hdp-2')
+    const shared = loadReportBooks().find((b) => b.studentId === '2')
+    expect(shared?.overallComment).toBeUndefined()
+    expect(shared?.subjectComments).toEqual([])
+    expect(shared?.sharedAt).toBeDefined()
+    expect(shared?.results).toEqual(makeReportBook().results)
+  })
+
+  it('throws when no report book exists yet for the student', () => {
+    expect(() => shareReportBook('no-such-student')).toThrow()
+  })
+})
+
+describe('bookByToken', () => {
+  it('returns undefined for an unknown token', () => {
+    expect(bookByToken('hdp-unknown')).toBeUndefined()
+  })
+
+  it('returns undefined for a book that exists but has not been shared', () => {
+    saveReportBook(makeReportBook({ studentId: '3' }))
+    expect(bookByToken('hdp-3')).toBeUndefined()
+  })
+
+  it('returns the book once shared', () => {
+    saveReportBook(makeReportBook({ studentId: '3' }))
+    shareReportBook('3')
+    expect(bookByToken('hdp-3')?.studentId).toBe('3')
+  })
+})
+
+describe('acknowledgeReport', () => {
+  it('idempotence: a second call leaves `at` and `note` unchanged', () => {
+    saveReportBook(makeReportBook({ studentId: '4' }))
+    shareReportBook('4')
+    const first = acknowledgeReport('hdp-4', 'Thank you.')
+    const second = acknowledgeReport('hdp-4', 'A different note.')
+    expect(second.acknowledgement?.at).toBe(first.acknowledgement?.at)
+    expect(second.acknowledgement?.note).toBe(first.acknowledgement?.note)
+    expect(second.acknowledgement?.note).toBe('Thank you.')
+  })
+
+  it('fills in the one-shot note on a later call when the first call had none', () => {
+    saveReportBook(makeReportBook({ studentId: '5' }))
+    shareReportBook('5')
+    const ack = acknowledgeReport('hdp-5')
+    expect(ack.acknowledgement?.note).toBeUndefined()
+    const withNote = acknowledgeReport('hdp-5', 'Noted, thanks.')
+    expect(withNote.acknowledgement?.at).toBe(ack.acknowledgement?.at)
+    expect(withNote.acknowledgement?.note).toBe('Noted, thanks.')
+  })
+
+  it('throws for an unknown or unshared token', () => {
+    expect(() => acknowledgeReport('hdp-unknown')).toThrow()
   })
 })

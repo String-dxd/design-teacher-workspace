@@ -805,3 +805,109 @@ export function markSynced(draftIds: Array<string>): void {
     drafts.map((d) => (draftIds.includes(d.id) ? { ...d, syncedAt: now } : d)),
   )
 }
+
+// ── Report book sharing + acknowledgement (plan 033) ────────────────────
+
+const GUEST_TOKEN_PREFIX = 'hdp-'
+const PARENT_NOTE_MAX_LENGTH = 500
+
+/** Deterministic mock token for a student's report book — matches the
+ *  legacy guest route's "by-design mock, no real data" convention (no
+ *  crypto; a real pilot needs real tokens + auth, flagged not built). */
+function tokenForStudent(studentId: string): string {
+  return `${GUEST_TOKEN_PREFIX}${studentId}`
+}
+
+/**
+ * Shares a student's report book with parents: snapshots the CONFIRMED
+ * drafts (overall + subject) for this student into the book's comments —
+ * the book is frozen content from this point, not a live view of drafts,
+ * so editing/reopening the source draft afterwards never changes what a
+ * parent already has a link to. A student with no confirmed drafts still
+ * shares a results-only book (comments stay absent, not "undefined").
+ * Throws if no report book exists yet for the student (nothing to share).
+ */
+export function shareReportBook(studentId: string): { token: string } {
+  const books = loadReportBooks()
+  const existing = books.find((b) => b.studentId === studentId)
+  if (!existing) {
+    throw new Error(`No report book found for student ${studentId}`)
+  }
+
+  const overallDraft = findDraft(studentId, 'overall')
+  const overallComment =
+    overallDraft && overallDraft.status === 'confirmed'
+      ? {
+          authorId: overallDraft.authorId,
+          claims: overallDraft.claims.map((c) => ({ ...c })),
+        }
+      : undefined
+
+  const subjectComments = loadDrafts()
+    .filter(
+      (d) =>
+        d.studentId === studentId &&
+        d.kind === 'subject' &&
+        d.status === 'confirmed' &&
+        d.subject,
+    )
+    .map((d) => ({
+      subject: d.subject as string,
+      authorId: d.authorId,
+      claims: d.claims.map((c) => ({ ...c })),
+    }))
+
+  const updated: HdpReportBook = {
+    ...existing,
+    overallComment,
+    subjectComments,
+    sharedAt: new Date().toISOString(),
+  }
+  saveReportBook(updated)
+  return { token: tokenForStudent(studentId) }
+}
+
+/** Looks up a report book by its guest token — only ever resolves a book
+ *  that has actually been shared (sharedAt set); an unshared or unknown
+ *  token renders the guest route's calm "not valid" state. */
+export function bookByToken(token: string): HdpReportBook | undefined {
+  if (!token.startsWith(GUEST_TOKEN_PREFIX)) return undefined
+  const studentId = token.slice(GUEST_TOKEN_PREFIX.length)
+  const book = loadReportBooks().find((b) => b.studentId === studentId)
+  return book?.sharedAt ? book : undefined
+}
+
+/**
+ * Records a parent's acknowledgement of a shared report book — replaces the
+ * printed signature slip. First acknowledgement wins: once `acknowledgement`
+ * is set, later calls with no note yet supplied fill in the one-shot note
+ * (the "Acknowledge" button and the later "Send note" action are two
+ * separate calls into this same function); once a note is present, further
+ * calls change nothing (idempotent, PRD Act 3 — one note only).
+ */
+export function acknowledgeReport(token: string, note?: string): HdpReportBook {
+  const book = bookByToken(token)
+  if (!book) throw new Error(`Unknown or unshared report token: ${token}`)
+
+  const trimmed = note?.trim()
+  const clippedNote = trimmed
+    ? trimmed.slice(0, PARENT_NOTE_MAX_LENGTH)
+    : undefined
+
+  let updated: HdpReportBook
+  if (!book.acknowledgement) {
+    updated = {
+      ...book,
+      acknowledgement: { at: new Date().toISOString(), note: clippedNote },
+    }
+  } else if (!book.acknowledgement.note && clippedNote) {
+    updated = {
+      ...book,
+      acknowledgement: { ...book.acknowledgement, note: clippedNote },
+    }
+  } else {
+    return book
+  }
+  saveReportBook(updated)
+  return updated
+}
