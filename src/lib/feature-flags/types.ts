@@ -29,8 +29,9 @@ export type FeatureFlags = {
 }
 
 export type FeatureFlagModule =
-  | 'general'
   | 'student-insights'
+  | 'contextual-intelligence'
+  | 'reports'
   | 'communications'
   | 'manage'
 
