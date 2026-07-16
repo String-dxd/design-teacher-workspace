@@ -14,6 +14,7 @@ import type {
 import type { ProfileGroup } from '@/types/profile-group'
 import type { ColumnConfig } from './column-visibility-popover'
 import { cn } from '@/lib/utils'
+import { RowQuickTag } from '@/components/hdp/row-quick-tag'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -770,6 +771,13 @@ export function StudentTable({
               >
                 <FileText className="size-4" />
               </Link>
+            )}
+            {isEnabled('reports-hdp') && (
+              <RowQuickTag
+                studentId={student.id}
+                studentName={student.name}
+                className="text-muted-foreground hover:text-foreground inline-flex size-6 items-center justify-center opacity-0 transition-opacity focus-visible:opacity-100 group-hover:opacity-100 group-focus-within:opacity-100 max-[640px]:opacity-100"
+              />
             )}
           </div>
         </TableCell>
