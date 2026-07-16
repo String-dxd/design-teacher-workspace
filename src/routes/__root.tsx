@@ -26,6 +26,7 @@ import { AuthProvider } from '@/lib/auth'
 import { BreadcrumbProvider } from '@/hooks/use-breadcrumbs'
 import { HeyTaliaPanel } from '@/components/heytalia/heytalia-panel'
 import { HeyTaliaProvider } from '@/components/heytalia/heytalia-context'
+import { HdpCaptureProvider, HdpShell } from '@/components/hdp/hdp-shell'
 
 const AUTO_COLLAPSE_ROUTES = [
   '/announcements',
@@ -172,24 +173,27 @@ function RootComponent() {
           <FeatureFlagProvider>
             <BreadcrumbProvider>
               <HeyTaliaProvider>
-                <SidebarProvider>
-                  <SidebarAutoCollapse />
-                  <AppSidebar />
-                  <SidebarInset className="h-screen overflow-hidden">
-                    <div
-                      data-scroll-container
-                      className="flex min-h-0 flex-1 flex-col overflow-auto bg-slate-1"
-                    >
-                      <AppHeader />
-                      <ErrorBoundary>
-                        <Outlet />
-                      </ErrorBoundary>
-                    </div>
-                  </SidebarInset>
-                  <HeyTaliaPanel />
-                  <Toaster position="bottom-right" />
-                  <WelcomeModal />
-                </SidebarProvider>
+                <HdpCaptureProvider>
+                  <SidebarProvider>
+                    <SidebarAutoCollapse />
+                    <AppSidebar />
+                    <SidebarInset className="h-screen overflow-hidden">
+                      <div
+                        data-scroll-container
+                        className="flex min-h-0 flex-1 flex-col overflow-auto bg-slate-1"
+                      >
+                        <AppHeader />
+                        <ErrorBoundary>
+                          <Outlet />
+                        </ErrorBoundary>
+                      </div>
+                    </SidebarInset>
+                    <HeyTaliaPanel />
+                    <HdpShell />
+                    <Toaster position="bottom-right" offset={{ bottom: 88 }} />
+                    <WelcomeModal />
+                  </SidebarProvider>
+                </HdpCaptureProvider>
               </HeyTaliaProvider>
             </BreadcrumbProvider>
           </FeatureFlagProvider>

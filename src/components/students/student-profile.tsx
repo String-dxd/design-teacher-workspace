@@ -45,6 +45,8 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { InterventionBanner } from '@/components/students/intervention-banner'
+import { StudentRiver } from '@/components/hdp/student-river'
+import { CURRENT_TEACHER } from '@/data/hdp'
 import { useFeatureFlags } from '@/lib/feature-flags'
 import {
   Sheet,
@@ -678,6 +680,10 @@ export function StudentProfile({
   const overallPercentageEnabled = useFeatureFlag('overall-percentage')
   const socialLinksEnabled = useFeatureFlag('social-links')
   const primaryContactEnabled = useFeatureFlag('primary-contact')
+  const reportsHdpEnabled = useFeatureFlag('reports-hdp')
+  const reportsRiverVisibilityEnabled = useFeatureFlag(
+    'reports-river-visibility',
+  )
   // HDP reporting is one flag now; keep the local name for the builder-entry check.
   const reportBuilderEnabled = holisticReportsEnabled
   // Default "Student Insights" view — applies when both analytics flags are off
@@ -1880,6 +1886,23 @@ export function StudentProfile({
               )}
             </Section>
           )}
+        {/* Observations Section — the HDP river, same Section + flag-gate
+            pattern as Reports above (plan 030). */}
+        {reportsHdpEnabled && (
+          <Section
+            id="observations"
+            title="Observations"
+            icon={<Eye className="h-5 w-5" />}
+            iconClassName="bg-orange-3 text-orange-11"
+          >
+            <StudentRiver
+              studentId={student.id}
+              viewerId={CURRENT_TEACHER.id}
+              fullRiver={reportsRiverVisibilityEnabled}
+              embedded
+            />
+          </Section>
+        )}
         {/* Others Section — imported fields */}
         {showOthers && (
           <Section
