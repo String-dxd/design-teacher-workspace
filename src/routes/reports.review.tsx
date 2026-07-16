@@ -168,42 +168,47 @@ function ReviewPage() {
           />
         ) : (
           mounted && (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Student</TableHead>
-                  <TableHead>Kind</TableHead>
-                  <TableHead className="text-right">Sentences</TableHead>
-                  <TableHead>Confirmed</TableHead>
-                  <TableHead className="sr-only">Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {drafts.map((draft) => (
-                  <TableRow key={draft.id}>
-                    <TableCell className="font-medium">
-                      {getStudentById(draft.studentId)?.name ?? draft.studentId}
-                    </TableCell>
-                    <TableCell>{kindLabel(draft)}</TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {draft.claims.length}
-                    </TableCell>
-                    <TableCell>
-                      {draft.confirmedAt ? formatDate(draft.confirmedAt) : '—'}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Link
-                        to="/reports/drafts/$studentId"
-                        params={{ studentId: draft.studentId }}
-                        className="text-primary text-sm font-medium hover:underline"
-                      >
-                        View
-                      </Link>
-                    </TableCell>
+            <div className="border-border min-w-0 max-w-full overflow-x-auto rounded-lg border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Student</TableHead>
+                    <TableHead>Kind</TableHead>
+                    <TableHead className="text-right">Sentences</TableHead>
+                    <TableHead>Confirmed</TableHead>
+                    <TableHead className="sr-only">Action</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {drafts.map((draft) => (
+                    <TableRow key={draft.id}>
+                      <TableCell className="font-medium">
+                        {getStudentById(draft.studentId)?.name ??
+                          draft.studentId}
+                      </TableCell>
+                      <TableCell>{kindLabel(draft)}</TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {draft.claims.length}
+                      </TableCell>
+                      <TableCell>
+                        {draft.confirmedAt
+                          ? formatDate(draft.confirmedAt)
+                          : '—'}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Link
+                          to="/reports/drafts/$studentId"
+                          params={{ studentId: draft.studentId }}
+                          className="text-primary text-sm font-medium hover:underline"
+                        >
+                          View
+                        </Link>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )
         )}
       </div>

@@ -118,49 +118,51 @@ function ClassWorklist({ classId }: { classId: string }) {
   const { kind, subject } = draftKindForClass(classId)
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Name</TableHead>
-          <TableHead className="text-right">Evidence this cycle</TableHead>
-          <TableHead>Draft status</TableHead>
-          <TableHead className="sr-only">Action</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {students.map((student) => {
-          const evidenceCount =
-            kind === 'overall'
-              ? tagsForStudentVisible(student.id, CURRENT_TEACHER.id, true)
-                  .length
-              : tagsForStudent(student.id).filter(
-                  (t) =>
-                    t.authorId === CURRENT_TEACHER.id &&
-                    t.lifecycle === 'active',
-                ).length
-          const draft = findDraft(student.id, kind, subject)
-          const status = draft ? draft.status : 'none'
+    <div className="border-border min-w-0 max-w-full overflow-x-auto rounded-lg border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead className="text-right">Evidence this cycle</TableHead>
+            <TableHead>Draft status</TableHead>
+            <TableHead className="sr-only">Action</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {students.map((student) => {
+            const evidenceCount =
+              kind === 'overall'
+                ? tagsForStudentVisible(student.id, CURRENT_TEACHER.id, true)
+                    .length
+                : tagsForStudent(student.id).filter(
+                    (t) =>
+                      t.authorId === CURRENT_TEACHER.id &&
+                      t.lifecycle === 'active',
+                  ).length
+            const draft = findDraft(student.id, kind, subject)
+            const status = draft ? draft.status : 'none'
 
-          return (
-            <TableRow key={student.id}>
-              <TableCell className="font-medium">{student.name}</TableCell>
-              <TableCell className="text-right tabular-nums">
-                {evidenceCount}
-              </TableCell>
-              <TableCell>{statusLabel(status)}</TableCell>
-              <TableCell className="text-right">
-                <Link
-                  to="/reports/drafts/$studentId"
-                  params={{ studentId: student.id }}
-                  className="text-primary text-sm font-medium hover:underline"
-                >
-                  Draft
-                </Link>
-              </TableCell>
-            </TableRow>
-          )
-        })}
-      </TableBody>
-    </Table>
+            return (
+              <TableRow key={student.id}>
+                <TableCell className="font-medium">{student.name}</TableCell>
+                <TableCell className="text-right tabular-nums">
+                  {evidenceCount}
+                </TableCell>
+                <TableCell>{statusLabel(status)}</TableCell>
+                <TableCell className="text-right">
+                  <Link
+                    to="/reports/drafts/$studentId"
+                    params={{ studentId: student.id }}
+                    className="text-primary text-sm font-medium hover:underline"
+                  >
+                    Draft
+                  </Link>
+                </TableCell>
+              </TableRow>
+            )
+          })}
+        </TableBody>
+      </Table>
+    </div>
   )
 }

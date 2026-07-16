@@ -103,53 +103,55 @@ function ClassRoster({
   const broadcasts = loadBroadcasts()
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Name</TableHead>
-          <TableHead>Class</TableHead>
-          <TableHead className="text-right">Tags this term</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {students.map((student) => {
-          const visibleTags = tagsForStudentVisible(
-            student.id,
-            CURRENT_TEACHER.id,
-            fullRiver,
-          )
-          const hasNil = broadcasts.some((b) =>
-            b.responses.some(
-              (r) =>
-                r.studentId === student.id &&
-                r.result.kind === 'nothing-stood-out',
-            ),
-          )
-          const nilOnly = visibleTags.length === 0 && hasNil
-          return (
-            <TableRow key={student.id}>
-              <TableCell>
-                <Link
-                  to="/reports/students/$studentId"
-                  params={{ studentId: student.id }}
-                  className="font-medium hover:underline"
-                >
-                  {student.name}
-                </Link>
-                {nilOnly && (
-                  <p className="text-muted-foreground text-xs">
-                    Reviewed — nothing noted
-                  </p>
-                )}
-              </TableCell>
-              <TableCell>{student.class}</TableCell>
-              <TableCell className="text-right tabular-nums">
-                {visibleTags.length}
-              </TableCell>
-            </TableRow>
-          )
-        })}
-      </TableBody>
-    </Table>
+    <div className="border-border min-w-0 max-w-full overflow-x-auto rounded-lg border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead>Class</TableHead>
+            <TableHead className="text-right">Tags this term</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {students.map((student) => {
+            const visibleTags = tagsForStudentVisible(
+              student.id,
+              CURRENT_TEACHER.id,
+              fullRiver,
+            )
+            const hasNil = broadcasts.some((b) =>
+              b.responses.some(
+                (r) =>
+                  r.studentId === student.id &&
+                  r.result.kind === 'nothing-stood-out',
+              ),
+            )
+            const nilOnly = visibleTags.length === 0 && hasNil
+            return (
+              <TableRow key={student.id}>
+                <TableCell>
+                  <Link
+                    to="/reports/students/$studentId"
+                    params={{ studentId: student.id }}
+                    className="font-medium hover:underline"
+                  >
+                    {student.name}
+                  </Link>
+                  {nilOnly && (
+                    <p className="text-muted-foreground text-xs">
+                      Reviewed — nothing noted
+                    </p>
+                  )}
+                </TableCell>
+                <TableCell>{student.class}</TableCell>
+                <TableCell className="text-right tabular-nums">
+                  {visibleTags.length}
+                </TableCell>
+              </TableRow>
+            )
+          })}
+        </TableBody>
+      </Table>
+    </div>
   )
 }

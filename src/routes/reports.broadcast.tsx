@@ -212,7 +212,7 @@ function BroadcastPage() {
             Every student in {formClassId} is reviewed this term.
           </p>
         ) : (
-          <div className="max-w-full overflow-x-auto rounded-lg border border-border">
+          <div className="min-w-0 max-w-full overflow-x-auto rounded-lg border border-border">
             <Table>
               <TableHeader>
                 <TableRow>
