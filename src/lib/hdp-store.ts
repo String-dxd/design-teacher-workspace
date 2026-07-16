@@ -3,6 +3,7 @@ import type {
   BroadcastResponse,
   CoverageSnapshot,
   DispositionId,
+  DraftClaim,
   FormingPattern,
   HdpDraft,
   HdpReportBook,
@@ -752,14 +753,26 @@ export function draftId(
     : `draft-${studentId}-overall`
 }
 
+/** Drops claims whose text is empty or whitespace-only — a blank "your
+ *  addition" sentence (e.g. from "Add a sentence" left untouched) carries
+ *  no content and should never persist into a confirmed draft or a shared
+ *  report book. Applied at every point claims are frozen/snapshotted:
+ *  confirmDraft and shareReportBook. */
+function nonBlankClaims(claims: Array<DraftClaim>): Array<DraftClaim> {
+  return claims.filter((c) => c.text.trim().length > 0)
+}
+
 /** Confirms a draft — freezes its claims and their sources for the report
- *  book. Reversible via reopenDraft before release. */
+ *  book, dropping any blank-text claims first (empty "your addition"
+ *  sentences never make it into a confirmed draft). Reversible via
+ *  reopenDraft before release. */
 export function confirmDraft(id: string): HdpDraft {
   const drafts = loadDrafts()
   const draft = drafts.find((d) => d.id === id)
   if (!draft) throw new Error(`Unknown draft id: ${id}`)
   const updated: HdpDraft = {
     ...draft,
+    claims: nonBlankClaims(draft.claims),
     status: 'confirmed',
     confirmedAt: new Date().toISOString(),
   }
@@ -839,7 +852,7 @@ export function shareReportBook(studentId: string): { token: string } {
     overallDraft && overallDraft.status === 'confirmed'
       ? {
           authorId: overallDraft.authorId,
-          claims: overallDraft.claims.map((c) => ({ ...c })),
+          claims: nonBlankClaims(overallDraft.claims).map((c) => ({ ...c })),
         }
       : undefined
 
@@ -854,7 +867,7 @@ export function shareReportBook(studentId: string): { token: string } {
     .map((d) => ({
       subject: d.subject as string,
       authorId: d.authorId,
-      claims: d.claims.map((c) => ({ ...c })),
+      claims: nonBlankClaims(d.claims).map((c) => ({ ...c })),
     }))
 
   const updated: HdpReportBook = {

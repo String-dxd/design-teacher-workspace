@@ -211,16 +211,22 @@ export function DraftStudio({ studentId }: DraftStudioProps) {
   }
 
   function handleConfirmDraft() {
+    // A blank "your addition" sentence (e.g. "Add a sentence" left
+    // untouched) carries no content — drop it before it's frozen into the
+    // confirmed draft. confirmDraft() also filters defensively, but doing
+    // it here keeps the on-screen list in sync with what's actually saved.
+    const meaningfulClaims = claims.filter((c) => c.text.trim().length > 0)
     saveDraft({
       id: currentDraftId,
       studentId,
       kind,
       subject: kind === 'subject' ? subject : undefined,
       authorId: CURRENT_TEACHER.id,
-      claims,
+      claims: meaningfulClaims,
       status: 'draft',
     })
     confirmDraft(currentDraftId)
+    setClaims(meaningfulClaims)
     setStatus('confirmed')
     setConfirmDialogOpen(false)
     toast.success('Draft confirmed')
@@ -469,7 +475,12 @@ function DraftBody({
         <Button
           type="button"
           onClick={onConfirm}
-          disabled={claims.length === 0}
+          disabled={!claims.some((c) => c.text.trim().length > 0)}
+          title={
+            claims.length > 0 && !claims.some((c) => c.text.trim().length > 0)
+              ? 'Write at least one sentence before confirming'
+              : undefined
+          }
         >
           Confirm draft
         </Button>

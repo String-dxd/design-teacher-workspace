@@ -662,6 +662,25 @@ describe('draft confirm/reopen/sync', () => {
     )
   })
 
+  it('confirmDraft drops claims with blank or whitespace-only text', () => {
+    saveDraft(
+      makeDraft({
+        claims: [
+          { text: 'A real sentence with content.' },
+          { text: '' },
+          { text: '   ' },
+        ],
+      }),
+    )
+    const confirmed = confirmDraft('draft-test-1')
+    expect(confirmed.claims).toEqual([
+      { text: 'A real sentence with content.' },
+    ])
+    expect(loadDrafts().find((d) => d.id === 'draft-test-1')?.claims).toEqual([
+      { text: 'A real sentence with content.' },
+    ])
+  })
+
   it('reopenDraft sets status back to draft and clears confirmedAt/syncedAt', () => {
     saveDraft(
       makeDraft({
@@ -787,6 +806,26 @@ describe('shareReportBook', () => {
     const stillShared = loadReportBooks().find((b) => b.studentId === '1')
     expect(stillShared?.overallComment?.claims).toEqual([
       { text: 'Original sentence.' },
+    ])
+  })
+
+  it('drops blank-text claims when snapshotting — defense in depth even if a confirmed draft still carries one', () => {
+    saveReportBook(makeReportBook({ studentId: '6' }))
+    // Bypasses confirmDraft (which already strips blanks) to prove
+    // shareReportBook filters independently at the snapshot point too.
+    saveDraft(
+      makeDraft({
+        id: 'draft-share-blank',
+        studentId: '6',
+        kind: 'overall',
+        status: 'confirmed',
+        claims: [{ text: 'A real sentence.' }, { text: '   ' }],
+      }),
+    )
+    shareReportBook('6')
+    const shared = loadReportBooks().find((b) => b.studentId === '6')
+    expect(shared?.overallComment?.claims).toEqual([
+      { text: 'A real sentence.' },
     ])
   })
 
