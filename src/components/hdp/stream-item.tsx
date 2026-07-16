@@ -64,7 +64,7 @@ export function StreamItem({
       </time>
       <div className="flex flex-col gap-1">
         <div className="flex flex-wrap items-center gap-1.5 text-sm">
-          <span className="text-[13px] font-semibold">{authorName}</span>
+          <span className="text-sm font-semibold">{authorName}</span>
           <TagPill disposition={tag.disposition} />
           <span className="text-muted-foreground text-xs">
             · {CONTEXT_LABELS[tag.context]}
