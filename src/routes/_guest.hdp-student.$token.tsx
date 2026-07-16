@@ -207,6 +207,11 @@ function GuestHdpStudentPage() {
                 <Button
                   type="button"
                   disabled={draftText.trim().length === 0}
+                  title={
+                    draftText.trim().length === 0
+                      ? 'Write a reflection first'
+                      : undefined
+                  }
                   onClick={handleSaveClick}
                 >
                   Add to my report

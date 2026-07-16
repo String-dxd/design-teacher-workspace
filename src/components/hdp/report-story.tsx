@@ -387,7 +387,11 @@ export function ReportStory({
   locked = false,
 }: ReportStoryProps) {
   const firstName = studentName.split(' ')[0] ?? studentName
-  const CoverHeading = viewer === 'parent' ? 'h1' : 'h2'
+  // Both guest routes ('parent' and 'student') render this as the page's
+  // only top-level heading — 'teacher-preview' is the exception, embedded
+  // inside /reports/release's own page (which already carries its own h1
+  // plus an h2 "Preview — {name}" wrapper), so it stays h2 there.
+  const CoverHeading = viewer === 'teacher-preview' ? 'h2' : 'h1'
 
   // Parents never see a pattern the student hid; teachers (previewing) and
   // the student themselves still see it, collapsed (plan 041).
