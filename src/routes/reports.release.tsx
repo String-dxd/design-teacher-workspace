@@ -16,6 +16,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Button, buttonVariants } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
   Table,
   TableBody,
@@ -140,12 +141,15 @@ function ReleasePage() {
     return books.find((b) => b.studentId === studentId)
   }
 
+  function linkFor(studentId: string): string {
+    return `${window.location.origin}/hdp-report/hdp-${studentId}`
+  }
+
   function copyLink(studentId: string, studentName: string) {
     const book = bookFor(studentId)
     if (!book?.sharedAt) return
-    const link = `${window.location.origin}/hdp-report/hdp-${studentId}`
     navigator.clipboard
-      .writeText(link)
+      .writeText(linkFor(studentId))
       .then(() => toast.success(`Link copied for ${studentName}`))
       .catch(() => toast.error('Could not copy the link'))
   }
@@ -214,53 +218,67 @@ function ReleasePage() {
                           ? 'Awaiting'
                           : '—'}
                     </TableCell>
-                    <TableCell className="flex justify-end gap-2 text-right">
-                      {book ? (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => openPreview(student.id)}
-                        >
-                          Preview
-                        </Button>
-                      ) : (
-                        <span
-                          className="text-muted-foreground text-xs"
-                          title="No report book yet"
-                        >
-                          Preview
-                        </span>
-                      )}
-                      {book?.sharedAt ? (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => copyLink(student.id, student.name)}
-                        >
-                          Copy link
-                        </Button>
-                      ) : hasConfirmedOverallDraft ? (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setShareTarget(student.id)}
-                        >
-                          Share with parents
-                        </Button>
-                      ) : (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          disabled
-                          title="Confirm a draft first"
-                        >
-                          Share with parents
-                        </Button>
-                      )}
+                    <TableCell className="text-right">
+                      <div className="flex flex-col items-end gap-2">
+                        <div className="flex justify-end gap-2">
+                          {book ? (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => openPreview(student.id)}
+                            >
+                              Preview
+                            </Button>
+                          ) : (
+                            <span
+                              className="text-muted-foreground text-xs"
+                              title="No report book yet"
+                            >
+                              Preview
+                            </span>
+                          )}
+                          {book?.sharedAt ? (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => copyLink(student.id, student.name)}
+                            >
+                              Copy link
+                            </Button>
+                          ) : hasConfirmedOverallDraft ? (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setShareTarget(student.id)}
+                            >
+                              Share with parents
+                            </Button>
+                          ) : (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              disabled
+                              title="Confirm a draft first"
+                            >
+                              Share with parents
+                            </Button>
+                          )}
+                        </div>
+                        {book?.sharedAt && (
+                          <Input
+                            type="text"
+                            readOnly
+                            value={linkFor(student.id)}
+                            aria-label={`Report link for ${student.name}`}
+                            onFocus={(e) => e.currentTarget.select()}
+                            className="h-7 w-56 text-xs"
+                          />
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 )
