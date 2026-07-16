@@ -112,6 +112,14 @@ export const FEATURE_FLAG_REGISTRY: Record<FeatureFlagKey, FeatureFlagMeta> = {
     module: 'student-insights',
     defaultValue: false,
   },
+  'student-groups': {
+    label: 'Student groups',
+    description:
+      'Show the Groups page in the sidebar for organising students into reusable groups',
+    stage: 'Release 2',
+    module: 'student-insights',
+    defaultValue: false,
+  },
   'lta-intervention': {
     label: 'LTA intervention',
     description:
@@ -210,14 +218,6 @@ export const FEATURE_FLAG_REGISTRY: Record<FeatureFlagKey, FeatureFlagMeta> = {
     stage: 'Release 2',
     module: 'communications',
     defaultValue: true,
-  },
-  'student-groups': {
-    label: 'Student groups',
-    description:
-      'Show the Groups page in the sidebar for organising students into reusable groups',
-    stage: 'Release 2',
-    module: 'manage',
-    defaultValue: false,
   },
   calendar: {
     label: 'Calendar',
