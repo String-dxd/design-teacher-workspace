@@ -64,6 +64,7 @@ import { Route as ReportsDraftsStudentIdRouteImport } from './routes/reports.dra
 import { Route as ReportsCycleLayoutRouteImport } from './routes/reports.cycle.layout'
 import { Route as GroupsStructuredGroupIdRouteImport } from './routes/groups.structured.$groupId'
 import { Route as GuestReportViewTokenRouteImport } from './routes/_guest.report-view.$token'
+import { Route as GuestHdpReportTokenRouteImport } from './routes/_guest.hdp-report.$token'
 import { Route as StudentsIdAgencyReportNewRouteImport } from './routes/students_.$id.agency-report.new'
 import { Route as ReportsCycleWriteStudentIdRouteImport } from './routes/reports.cycle.write.$studentId'
 
@@ -342,6 +343,11 @@ const GuestReportViewTokenRoute = GuestReportViewTokenRouteImport.update({
   path: '/report-view/$token',
   getParentRoute: () => GuestRoute,
 } as any)
+const GuestHdpReportTokenRoute = GuestHdpReportTokenRouteImport.update({
+  id: '/hdp-report/$token',
+  path: '/hdp-report/$token',
+  getParentRoute: () => GuestRoute,
+} as any)
 const StudentsIdAgencyReportNewRoute =
   StudentsIdAgencyReportNewRouteImport.update({
     id: '/students_/$id/agency-report/new',
@@ -403,6 +409,7 @@ export interface FileRoutesByFullPath {
   '/meetings/': typeof MeetingsIndexRoute
   '/reports/': typeof ReportsIndexRoute
   '/students/': typeof StudentsIndexRoute
+  '/hdp-report/$token': typeof GuestHdpReportTokenRoute
   '/report-view/$token': typeof GuestReportViewTokenRoute
   '/groups/structured/$groupId': typeof GroupsStructuredGroupIdRoute
   '/reports/cycle/layout': typeof ReportsCycleLayoutRoute
@@ -453,6 +460,7 @@ export interface FileRoutesByTo {
   '/meetings': typeof MeetingsIndexRoute
   '/reports': typeof ReportsIndexRoute
   '/students': typeof StudentsIndexRoute
+  '/hdp-report/$token': typeof GuestHdpReportTokenRoute
   '/report-view/$token': typeof GuestReportViewTokenRoute
   '/groups/structured/$groupId': typeof GroupsStructuredGroupIdRoute
   '/reports/cycle/layout': typeof ReportsCycleLayoutRoute
@@ -513,6 +521,7 @@ export interface FileRoutesById {
   '/meetings/': typeof MeetingsIndexRoute
   '/reports/': typeof ReportsIndexRoute
   '/students/': typeof StudentsIndexRoute
+  '/_guest/hdp-report/$token': typeof GuestHdpReportTokenRoute
   '/_guest/report-view/$token': typeof GuestReportViewTokenRoute
   '/groups/structured/$groupId': typeof GroupsStructuredGroupIdRoute
   '/reports/cycle/layout': typeof ReportsCycleLayoutRoute
@@ -573,6 +582,7 @@ export interface FileRouteTypes {
     | '/meetings/'
     | '/reports/'
     | '/students/'
+    | '/hdp-report/$token'
     | '/report-view/$token'
     | '/groups/structured/$groupId'
     | '/reports/cycle/layout'
@@ -623,6 +633,7 @@ export interface FileRouteTypes {
     | '/meetings'
     | '/reports'
     | '/students'
+    | '/hdp-report/$token'
     | '/report-view/$token'
     | '/groups/structured/$groupId'
     | '/reports/cycle/layout'
@@ -682,6 +693,7 @@ export interface FileRouteTypes {
     | '/meetings/'
     | '/reports/'
     | '/students/'
+    | '/_guest/hdp-report/$token'
     | '/_guest/report-view/$token'
     | '/groups/structured/$groupId'
     | '/reports/cycle/layout'
@@ -1105,6 +1117,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GuestReportViewTokenRouteImport
       parentRoute: typeof GuestRoute
     }
+    '/_guest/hdp-report/$token': {
+      id: '/_guest/hdp-report/$token'
+      path: '/hdp-report/$token'
+      fullPath: '/hdp-report/$token'
+      preLoaderRoute: typeof GuestHdpReportTokenRouteImport
+      parentRoute: typeof GuestRoute
+    }
     '/students_/$id/agency-report/new': {
       id: '/students_/$id/agency-report/new'
       path: '/students/$id/agency-report/new'
@@ -1127,6 +1146,7 @@ interface GuestRouteChildren {
   GuestLoginRoute: typeof GuestLoginRoute
   GuestPreviewMenuRoute: typeof GuestPreviewMenuRoute
   GuestStudentLoginRoute: typeof GuestStudentLoginRoute
+  GuestHdpReportTokenRoute: typeof GuestHdpReportTokenRoute
   GuestReportViewTokenRoute: typeof GuestReportViewTokenRoute
 }
 
@@ -1135,6 +1155,7 @@ const GuestRouteChildren: GuestRouteChildren = {
   GuestLoginRoute: GuestLoginRoute,
   GuestPreviewMenuRoute: GuestPreviewMenuRoute,
   GuestStudentLoginRoute: GuestStudentLoginRoute,
+  GuestHdpReportTokenRoute: GuestHdpReportTokenRoute,
   GuestReportViewTokenRoute: GuestReportViewTokenRoute,
 }
 
