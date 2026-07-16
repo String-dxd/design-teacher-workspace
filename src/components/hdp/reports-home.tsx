@@ -56,7 +56,8 @@ const TOOL_GROUPS: Array<{
         icon: Users,
         name: 'Students',
         description: 'Every student in your classes, with their river.',
-        state: 'Coming in this prototype', // plan 030
+        state: 'Always available',
+        href: '/reports/students', // plan 030
       },
       {
         icon: Megaphone,
