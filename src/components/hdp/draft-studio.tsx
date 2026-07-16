@@ -363,7 +363,7 @@ export function DraftStudio({ studentId }: DraftStudioProps) {
   return (
     <div className="flex min-w-0 flex-col gap-6">
       <details className="flex flex-col gap-3" open>
-        <summary className="text-sm font-medium cursor-pointer">
+        <summary className="hover:text-muted-foreground motion-safe:transition-colors motion-safe:duration-150 cursor-pointer rounded-sm text-sm font-medium">
           Evidence
         </summary>
         <div className="pt-1">
