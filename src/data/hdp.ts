@@ -12,6 +12,7 @@ import type {
   HdpTag,
   SchoolYear,
   Semester,
+  StudentReflection,
 } from '@/types/hdp'
 
 // Fresh, self-contained fixtures for the HDP Reports module. Zero imports
@@ -1215,6 +1216,26 @@ export const SEED_PATTERNS: Array<FormingPattern> = [
     status: 'candidate',
     schoolYear: '2026',
   },
+  // pattern-3: student B (Vincent, '2') — the story register's confirmed
+  // pattern chapter (plan 037). Reuses the same collaboration tags already
+  // cited by his overall draft claim ("Has become the groupmate others go
+  // to first when they get stuck") so the chapter's evidence matches the
+  // book's own comment thread. tag-9/tag-10 (lee-sy, context 'other') +
+  // tag-12 (raj-v, context 'marking') — 2 distinct contexts, confirmed by
+  // both teachers who logged them.
+  {
+    id: 'pattern-3',
+    studentId: '2',
+    disposition: 'collaboration',
+    contexts: ['other', 'marking'],
+    tagIds: ['tag-9', 'tag-10', 'tag-12'],
+    status: 'confirmed',
+    confirmedBy: 'lee-sy',
+    schoolYear: '2026',
+    headline: 'Steps in when a groupmate gets stuck',
+    studentNote:
+      "I like being the one people ask when they're confused — it means I actually get it.",
+  },
 ]
 
 // ── SEED_BROADCAST ───────────────────────────────────────────────────────
@@ -1543,3 +1564,30 @@ function marksForStudent(studentId: string): HdpMarksRecord {
 
 export const SEED_MARKS: Array<HdpMarksRecord> =
   CLASS_3A_STUDENT_IDS.map(marksForStudent)
+
+// ── SEED_REFLECTIONS (plan 037) ─────────────────────────────────────────
+// First-person, age-plausible reflections for the 3 report-book students
+// (see the "Staged funnel" note above). Student B ('2', Vincent) is marked
+// `chosenAsCover: true` — the story register's cover quote. Behaviour-in-
+// context language, no trait vocabulary, matches the "Ask … about" prompts
+// already seeded for these three.
+export const SEED_REFLECTIONS: Array<StudentReflection> = [
+  {
+    studentId: '1',
+    text: 'This term I finally got the geometry proof to work after redoing it a few times. I want to try explaining my working out loud more, not just writing it down.',
+    writtenAt: '2026-07-10T20:15:00+08:00',
+    chosenAsCover: false,
+  },
+  {
+    studentId: '2',
+    text: 'I kept going back to that geometry proof at CCA training until it made sense, even when it was frustrating. I also started noticing when people around me look lost, and I like being the one they ask.',
+    writtenAt: '2026-07-11T19:40:00+08:00',
+    chosenAsCover: true,
+  },
+  {
+    studentId: '3',
+    text: 'I let someone else present our group project this time, even though I wanted to. I think I understand the formula better when I ask why it works, not just how to use it.',
+    writtenAt: '2026-07-12T21:05:00+08:00',
+    chosenAsCover: false,
+  },
+]

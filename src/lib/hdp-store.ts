@@ -12,6 +12,7 @@ import type {
   HdpTag,
   SchoolYear,
   Semester,
+  StudentReflection,
   TagContext,
   TagEntryPoint,
 } from '@/types/hdp'
@@ -25,6 +26,7 @@ import {
   SEED_DRAFTS,
   SEED_MARKS,
   SEED_PATTERNS,
+  SEED_REFLECTIONS,
   SEED_REPORT_BOOKS,
   SEED_TAGS,
 } from '@/data/hdp'
@@ -43,6 +45,7 @@ const DRAFTS_KEY = 'hdp_drafts'
 const REPORT_BOOKS_KEY = 'hdp_report_books'
 const ANALYTICS_KEY = 'hdp_analytics'
 const MARKS_KEY = 'hdp_marks'
+const REFLECTIONS_KEY = 'hdp_reflections'
 
 const CURRENT_TERM = CURRENT_CYCLE.terms[0]
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000
@@ -92,6 +95,9 @@ export function seedIfEmpty(): void {
   }
   if (localStorage.getItem(MARKS_KEY) === null) {
     writeArray(MARKS_KEY, SEED_MARKS)
+  }
+  if (localStorage.getItem(REFLECTIONS_KEY) === null) {
+    writeArray(REFLECTIONS_KEY, SEED_REFLECTIONS)
   }
 }
 
@@ -555,6 +561,40 @@ export function saveReportBook(book: HdpReportBook): void {
       books.map((b) => (b.studentId === book.studentId ? book : b)),
     )
   }
+}
+
+// ── Student reflections (plan 037) ──────────────────────────────────────
+
+/** All reflections recorded for a student (usually zero or one — plan 038
+ *  writes through this same signature when students can add their own). */
+export function loadReflections(studentId: string): Array<StudentReflection> {
+  return readArray<StudentReflection>(REFLECTIONS_KEY).filter(
+    (r) => r.studentId === studentId,
+  )
+}
+
+/** Appends a reflection for a student. Keeps the signature plan 038 writes
+ *  through — no upsert-by-id here since a student may write more than one
+ *  over time; `chosenAsCover` picks which one the story register leads
+ *  with. */
+export function saveReflection(reflection: StudentReflection): void {
+  const all = readArray<StudentReflection>(REFLECTIONS_KEY)
+  writeArray(REFLECTIONS_KEY, [...all, reflection])
+}
+
+/** The reflection the story register's cover renders — the one marked
+ *  `chosenAsCover`, else the most recently written, else undefined (no
+ *  fabricated quote — the cover falls back to an honest "No reflection
+ *  yet" line). */
+export function coverReflection(
+  studentId: string,
+): StudentReflection | undefined {
+  const reflections = loadReflections(studentId)
+  const chosen = reflections.find((r) => r.chosenAsCover)
+  if (chosen) return chosen
+  return [...reflections].sort((a, b) =>
+    b.writtenAt.localeCompare(a.writtenAt),
+  )[0]
 }
 
 // ── Analytics ────────────────────────────────────────────────────────────

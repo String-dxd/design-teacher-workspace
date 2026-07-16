@@ -43,6 +43,14 @@ export interface FormingPattern {
   status: 'candidate' | 'confirmed' | 'dismissed' | 'retired-by-student'
   confirmedBy?: string
   schoolYear: SchoolYear
+  /** The story register's chapter claim, e.g. "Keeps coming back to hard
+   *  problems" — behaviour phrasing, never trait words (plan 037). Only
+   *  meaningful when status === 'confirmed'. */
+  headline?: string
+  /** The story register's "{FirstName} adds" annotation — the student's own
+   *  note on a validated pattern (plan 037). Only meaningful when status
+   *  === 'confirmed'. */
+  studentNote?: string
 }
 
 export interface BroadcastRequest {
@@ -114,6 +122,14 @@ export interface HdpReportBook {
   sharedAt?: string // set when shared with parents (plan 033)
   acknowledgement?: { at: string; note?: string }
   marksSyncedAt?: string // set by syncAcademicResults (plan 036)
+}
+
+// ── Student reflections (plan 037, Prototype B story register) ─────────
+export interface StudentReflection {
+  studentId: string
+  text: string
+  writtenAt: string
+  chosenAsCover: boolean // the one reflection the story register leads with
 }
 
 // ── Marks + trends (plan 036) ───────────────────────────────────────────

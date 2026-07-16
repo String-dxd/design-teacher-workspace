@@ -6,6 +6,7 @@ import {
   canBroadcast,
   confirmDraft,
   confirmPattern,
+  coverReflection,
   coverageForClass,
   createBroadcast,
   deleteTag,
@@ -18,6 +19,7 @@ import {
   loadDrafts,
   loadMarks,
   loadPatterns,
+  loadReflections,
   loadReportBooks,
   loadTags,
   logEvent,
@@ -27,6 +29,7 @@ import {
   respondToBroadcast,
   saveDraft,
   saveMarkEntry,
+  saveReflection,
   saveReportBook,
   seedIfEmpty,
   semesterAverage,
@@ -1033,5 +1036,63 @@ describe('syncAcademicResults', () => {
 
   it('throws when no report book exists yet for the student', () => {
     expect(() => syncAcademicResults('no-such-student')).toThrow()
+  })
+})
+
+describe('reflections (plan 037)', () => {
+  it('seeds from SEED_REFLECTIONS and round-trips a save', () => {
+    seedIfEmpty()
+    expect(loadReflections('2').length).toBeGreaterThan(0)
+
+    saveReflection({
+      studentId: 'refl-1',
+      text: 'Sample reflection text.',
+      writtenAt: '2026-07-16T10:00:00+08:00',
+      chosenAsCover: false,
+    })
+    expect(loadReflections('refl-1')).toEqual([
+      {
+        studentId: 'refl-1',
+        text: 'Sample reflection text.',
+        writtenAt: '2026-07-16T10:00:00+08:00',
+        chosenAsCover: false,
+      },
+    ])
+  })
+
+  it('coverReflection returns exactly the chosenAsCover one, even when others are newer', () => {
+    saveReflection({
+      studentId: 'refl-2',
+      text: 'Older, not the cover.',
+      writtenAt: '2026-01-01T09:00:00+08:00',
+      chosenAsCover: true,
+    })
+    saveReflection({
+      studentId: 'refl-2',
+      text: 'Newer, but not chosen.',
+      writtenAt: '2026-07-01T09:00:00+08:00',
+      chosenAsCover: false,
+    })
+    expect(coverReflection('refl-2')?.text).toBe('Older, not the cover.')
+  })
+
+  it('falls back to the most recent reflection when none is chosenAsCover', () => {
+    saveReflection({
+      studentId: 'refl-3',
+      text: 'First.',
+      writtenAt: '2026-01-01T09:00:00+08:00',
+      chosenAsCover: false,
+    })
+    saveReflection({
+      studentId: 'refl-3',
+      text: 'Second, most recent.',
+      writtenAt: '2026-07-01T09:00:00+08:00',
+      chosenAsCover: false,
+    })
+    expect(coverReflection('refl-3')?.text).toBe('Second, most recent.')
+  })
+
+  it('returns undefined when the student has no reflections', () => {
+    expect(coverReflection('no-such-student')).toBeUndefined()
   })
 })
