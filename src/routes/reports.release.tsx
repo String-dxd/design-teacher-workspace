@@ -3,7 +3,9 @@ import { Link, createFileRoute } from '@tanstack/react-router'
 import { BookOpen, PenLine } from 'lucide-react'
 import { toast } from 'sonner'
 import type { HdpReportBook, HdpTag } from '@/types/hdp'
+import { DispositionChip } from '@/components/hdp/disposition-chip'
 import { ReportBook } from '@/components/hdp/report-book'
+import { ReportStory } from '@/components/hdp/report-story'
 import { ToolCard } from '@/components/hdp/tool-card'
 import {
   AlertDialog,
@@ -30,8 +32,10 @@ import { getStudentById, mockStudents } from '@/data/mock-students'
 import { MOCK_STAFF } from '@/data/mock-staff'
 import { CURRENT_TEACHER } from '@/data/hdp'
 import {
+  coverReflection,
   findDraft,
   loadMarks,
+  loadPatterns,
   loadReportBooks,
   loadTags,
   seedIfEmpty,
@@ -84,6 +88,7 @@ function ReleasePage() {
   const [mounted, setMounted] = React.useState(false)
   const [books, setBooks] = React.useState<Array<HdpReportBook>>([])
   const [shareTarget, setShareTarget] = React.useState<string | null>(null)
+  const [register, setRegister] = React.useState<'book' | 'story'>('book')
   const previewHeadingRef = React.useRef<HTMLHeadingElement>(null)
 
   const refresh = React.useCallback(() => {
@@ -301,28 +306,59 @@ function ReleasePage() {
             >
               Preview — {previewStudent.name}
             </h2>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={closePreview}
-            >
-              Close preview
-            </Button>
+            <div className="flex items-center gap-3">
+              {showFuture && (
+                <div className="flex items-center gap-1.5">
+                  <DispositionChip
+                    label="Report book"
+                    selected={register === 'book'}
+                    onClick={() => setRegister('book')}
+                  />
+                  <DispositionChip
+                    label="Story"
+                    selected={register === 'story'}
+                    onClick={() => setRegister('story')}
+                  />
+                </div>
+              )}
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={closePreview}
+              >
+                Close preview
+              </Button>
+            </div>
           </div>
-          <ReportBook
-            book={previewBook}
-            studentName={previewStudent.name}
-            className={previewStudent.class}
-            viewer="teacher-preview"
-            resolveTag={resolveTag}
-            showFuture={showFuture}
-            trends={
-              showFuture
-                ? trendsForEntries(loadMarks(previewBook.studentId))
-                : []
-            }
-          />
+          {showFuture && register === 'story' ? (
+            <ReportStory
+              book={previewBook}
+              studentName={previewStudent.name}
+              className={previewStudent.class}
+              viewer="teacher-preview"
+              reflection={coverReflection(previewBook.studentId)}
+              patterns={loadPatterns().filter(
+                (p) => p.studentId === previewBook.studentId,
+              )}
+              showFuture={showFuture}
+              trends={trendsForEntries(loadMarks(previewBook.studentId))}
+            />
+          ) : (
+            <ReportBook
+              book={previewBook}
+              studentName={previewStudent.name}
+              className={previewStudent.class}
+              viewer="teacher-preview"
+              resolveTag={resolveTag}
+              showFuture={showFuture}
+              trends={
+                showFuture
+                  ? trendsForEntries(loadMarks(previewBook.studentId))
+                  : []
+              }
+            />
+          )}
         </section>
       )}
 

@@ -3,6 +3,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import type { HdpReportBook, HdpTag } from '@/types/hdp'
 import { ReportBook } from '@/components/hdp/report-book'
+import { ReportStory } from '@/components/hdp/report-story'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,7 +22,9 @@ import { MOCK_STAFF } from '@/data/mock-staff'
 import {
   acknowledgeReport,
   bookByToken,
+  coverReflection,
   loadMarks,
+  loadPatterns,
   loadTags,
   seedIfEmpty,
 } from '@/lib/hdp-store'
@@ -121,15 +124,30 @@ function GuestHdpReportPage() {
 
   return (
     <main className="mx-auto flex max-w-2xl flex-col gap-10 px-4 py-10 sm:px-6">
-      <ReportBook
-        book={book}
-        studentName={student.name}
-        className={student.class}
-        viewer="parent"
-        resolveTag={resolveTag}
-        showFuture={showFuture}
-        trends={showFuture ? trendsForEntries(loadMarks(book.studentId)) : []}
-      />
+      {showFuture ? (
+        <ReportStory
+          book={book}
+          studentName={student.name}
+          className={student.class}
+          viewer="parent"
+          reflection={coverReflection(book.studentId)}
+          patterns={loadPatterns().filter(
+            (p) => p.studentId === book.studentId,
+          )}
+          showFuture={showFuture}
+          trends={trendsForEntries(loadMarks(book.studentId))}
+        />
+      ) : (
+        <ReportBook
+          book={book}
+          studentName={student.name}
+          className={student.class}
+          viewer="parent"
+          resolveTag={resolveTag}
+          showFuture={showFuture}
+          trends={[]}
+        />
+      )}
 
       <section className="border-border flex flex-col gap-4 border-t pt-6">
         <h2 className="text-lg font-semibold">Acknowledge this report</h2>
