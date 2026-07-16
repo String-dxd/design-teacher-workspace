@@ -80,6 +80,7 @@ function ReleasePage() {
   const [mounted, setMounted] = React.useState(false)
   const [books, setBooks] = React.useState<Array<HdpReportBook>>([])
   const [shareTarget, setShareTarget] = React.useState<string | null>(null)
+  const previewHeadingRef = React.useRef<HTMLHeadingElement>(null)
 
   const refresh = React.useCallback(() => {
     seedIfEmpty()
@@ -90,6 +91,19 @@ function ReleasePage() {
     setMounted(true)
     refresh()
   }, [refresh])
+
+  // The preview region can open ~1100px below the click point with no other
+  // feedback — scroll it into view and move focus to its heading (context
+  // replacement, matching the broadcast composer's success-panel pattern),
+  // so opening a preview is never a silent, easy-to-miss jump.
+  React.useEffect(() => {
+    if (!preview) return
+    previewHeadingRef.current?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    })
+    previewHeadingRef.current?.focus()
+  }, [preview])
 
   const resolveTag = React.useCallback((tagId: string) => {
     const tag = loadTags().find((t: HdpTag) => t.id === tagId)
@@ -259,7 +273,11 @@ function ReleasePage() {
       {mounted && previewBook && previewStudent && (
         <section className="border-border flex flex-col gap-4 rounded-lg border p-6">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-sm font-medium">
+            <h2
+              ref={previewHeadingRef}
+              tabIndex={-1}
+              className="text-sm font-medium outline-none"
+            >
               Preview — {previewStudent.name}
             </h2>
             <Button
