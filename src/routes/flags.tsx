@@ -1,6 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
 
-import type { FeatureFlagKey, FeatureFlagMeta } from '@/lib/feature-flags'
+import type {
+  FeatureFlagKey,
+  FeatureFlagMeta,
+  FeatureFlagStage,
+} from '@/lib/feature-flags'
 import {
   FEATURE_FLAG_MODULES,
   FEATURE_FLAG_REGISTRY,
@@ -25,9 +29,17 @@ const flagEntries = Object.entries(FEATURE_FLAG_REGISTRY) as Array<
   [FeatureFlagKey, FeatureFlagMeta]
 >
 
+const STAGE_ORDER: Record<FeatureFlagStage, number> = {
+  'Release 2': 0,
+  'Release 3': 1,
+  Experiment: 2,
+}
+
 const flagGroups = FEATURE_FLAG_MODULES.map((module) => ({
   ...module,
-  flags: flagEntries.filter(([, meta]) => meta.module === module.id),
+  flags: flagEntries
+    .filter(([, meta]) => meta.module === module.id)
+    .sort(([, a], [, b]) => STAGE_ORDER[a.stage] - STAGE_ORDER[b.stage]),
 }))
 
 function FeatureFlagsPage() {
