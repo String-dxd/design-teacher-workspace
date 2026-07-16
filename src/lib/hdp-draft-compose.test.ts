@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { composeDraft } from './hdp-draft-compose'
-import type { FormingPattern, HdpTag } from '@/types/hdp'
+import { composeDraft, composeFromInsights } from './hdp-draft-compose'
+import type { FormingPattern, HdpInsight, HdpTag } from '@/types/hdp'
 
 const DENYLIST = ['resilient', 'gifted', 'weak', 'lazy', 'brilliant', 'natural']
 const COMPARATIVE_WORDS = ['best', 'better than', 'top']
@@ -177,5 +177,128 @@ describe('composeDraft', () => {
     )
     expect(crossContextClaim).toBeDefined()
     expect(tagIds.has(crossContextClaim!.source!.tagId)).toBe(true)
+  })
+})
+
+function makeInsight(overrides: Partial<HdpInsight> = {}): HdpInsight {
+  return {
+    id: 'insight-1',
+    studentId: '1',
+    kind: 'observation',
+    label: 'returned to failed problems during lessons',
+    sourceRef: { system: 'tw-river', recordId: 'tag-1' },
+    selectable: true,
+    ...overrides,
+  }
+}
+
+describe('composeFromInsights', () => {
+  it('returns [] when there are zero (selected) insights (P4)', () => {
+    expect(composeFromInsights([], 'overall', 'Chen Jun Kai')).toEqual([])
+  })
+
+  it('claims come only from the selected insights it is given — feed 5, select 2, no claim references the unselected 3', () => {
+    const allFive: Array<HdpInsight> = [
+      makeInsight({
+        id: 'insight-a',
+        kind: 'observation',
+        label: 'returned to failed problems during lessons',
+        sourceRef: { system: 'tw-river', recordId: 'tag-a' },
+      }),
+      makeInsight({
+        id: 'insight-b',
+        kind: 'pattern',
+        label: 'has shown perseverance across lesson and marking',
+        sourceRef: { system: 'tw-river', recordId: 'tag-b' },
+      }),
+      makeInsight({
+        id: 'insight-c',
+        kind: 'trajectory',
+        label: 'Mathematics recovering across 3 semesters',
+        sourceRef: { system: 'sdt', recordId: 'trend-mathematics' },
+      }),
+      makeInsight({
+        id: 'insight-d',
+        kind: 'attendance',
+        label: '96% attendance this term',
+        sourceRef: { system: 'cockpit', recordId: 'attendance-1' },
+      }),
+      makeInsight({
+        id: 'insight-e',
+        kind: 'conduct',
+        label: 'Good conduct grading, Semester 2',
+        sourceRef: { system: 'cockpit', recordId: 'conduct-1' },
+      }),
+    ]
+    const selected = [allFive[1], allFive[3]] // insight-b, insight-d
+    const claims = composeFromInsights(selected, 'overall', 'Chen Jun Kai')
+
+    expect(claims.length).toBe(2)
+    const referencedIds = new Set(claims.map((c) => c.source!.tagId))
+    // insight-b is tw-river ⇒ resolves to its real tag id; insight-d is a
+    // cockpit fact with no HdpTag to resolve ⇒ resolves to its own insight id.
+    expect(referencedIds.has('tag-b')).toBe(true)
+    expect(referencedIds.has('insight-d')).toBe(true)
+    // None of the excluded three's underlying records ever appear.
+    for (const excludedId of [
+      'tag-a',
+      'insight-a',
+      'trend-mathematics',
+      'insight-c',
+      'conduct-1',
+      'insight-e',
+    ]) {
+      expect(referencedIds.has(excludedId)).toBe(false)
+    }
+  })
+
+  it('output text contains no trait/comparative vocabulary from the denylist', () => {
+    const insights: Array<HdpInsight> = [
+      makeInsight({
+        kind: 'observation',
+        label: 'returned to failed problems during lessons',
+      }),
+      makeInsight({
+        id: 'insight-2',
+        kind: 'trajectory',
+        label: 'Mathematics recovering across 3 semesters',
+        sourceRef: { system: 'sdt', recordId: 'trend-mathematics' },
+      }),
+    ]
+    const claims = composeFromInsights(insights, 'overall', 'Chen Jun Kai')
+    const allText = claims.map((c) => c.text.toLowerCase()).join(' ')
+    for (const word of [...DENYLIST, ...COMPARATIVE_WORDS]) {
+      expect(allText).not.toContain(word)
+    }
+  })
+
+  it('is deterministic across two runs on the same input', () => {
+    const insights: Array<HdpInsight> = [
+      makeInsight({ id: 'insight-a' }),
+      makeInsight({
+        id: 'insight-b',
+        kind: 'attendance',
+        label: '96% attendance this term',
+        sourceRef: { system: 'cockpit', recordId: 'attendance-1' },
+      }),
+    ]
+    const a = composeFromInsights(insights, 'overall', 'Chen Jun Kai')
+    const b = composeFromInsights(insights, 'overall', 'Chen Jun Kai')
+    expect(a).toEqual(b)
+  })
+
+  it('sources a non-tw-river insight to itself (no fabricated tag id)', () => {
+    const insight = makeInsight({
+      id: 'insight-x',
+      kind: 'attendance',
+      label: '96% attendance this term',
+      sourceRef: { system: 'cockpit', recordId: 'attendance-9' },
+    })
+    const claims = composeFromInsights([insight], 'subject', 'Chen Jun Kai')
+    // No real HdpTag backs a cockpit fact — the claim resolves through the
+    // insight's own id (not a fabricated tag id, and not the opaque
+    // cockpit recordId, which the app has no way to look up).
+    expect(claims[0].source?.tagId).toBe('insight-x')
+    expect(claims[0].source?.label).toBe('Insight 1 · attendance')
   })
 })

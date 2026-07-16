@@ -87,6 +87,14 @@ export interface HdpDraft {
   status: 'draft' | 'confirmed'
   confirmedAt?: string // set when status transitions to 'confirmed' (plan 032)
   syncedAt?: string // set by Review & Sync (plan 032)
+  /** The teacher's curated selection when this draft was composed via
+   *  Prototype B's insight layer (plan 040, `reports-hdp-future` only).
+   *  Absent for A-path (composeDraft) drafts. */
+  insightIds?: Array<string>
+  /** F4b reconcile gate outcome, recorded on Confirm (plan 040,
+   *  `reports-hdp-future` only). Absent when the gate never ran (A path or
+   *  flag off). */
+  reconcile?: { fired: boolean; resolution?: 'revised' | 'kept-with-context' }
 }
 
 export interface CoverageSnapshot {
@@ -112,11 +120,19 @@ export interface HdpReportBook {
   results: Array<HdpSubjectResult>
   attendance: { present: number; total: number }
   conduct: string
-  overallComment?: { claims: Array<DraftClaim>; authorId: string }
+  overallComment?: {
+    claims: Array<DraftClaim>
+    authorId: string
+    /** Snapshotted from the source draft's `insightIds` at share time (plan
+     *  040) — present + non-empty only when that draft was composed via
+     *  Prototype B's insight layer. */
+    insightIds?: Array<string>
+  }
   subjectComments: Array<{
     subject: string
     authorId: string
     claims: Array<DraftClaim>
+    insightIds?: Array<string>
   }>
   parentPrompts: Array<string> // "ask me about…"
   sharedAt?: string // set when shared with parents (plan 033)
@@ -155,4 +171,28 @@ export interface HdpCycle {
   stage: CycleStage
   windowOpensAt: string
   releaseAt: string
+}
+
+// ── Prototype B — insight layer (plan 040, PRD §7) ──────────────────────
+export type InsightKind =
+  | 'observation' // river tag/note
+  | 'pattern' // forming pattern
+  | 'trajectory' // trend/inflection, self-referential
+  | 'attendance'
+  | 'cca'
+  | 'conduct'
+  | 'via'
+  | 'competition'
+  | 'promotion'
+
+export interface HdpInsight {
+  id: string
+  studentId: string
+  kind: InsightKind
+  label: string // one-line, numbered in UI
+  sourceRef: {
+    system: 'tw-river' | 'cockpit' | 'sdt' | 'sei' | 'sdp'
+    recordId: string
+  }
+  selectable: boolean
 }
