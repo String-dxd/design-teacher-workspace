@@ -41,6 +41,7 @@ import { Route as StudentsIdRouteImport } from './routes/students.$id'
 import { Route as ReportsTagRouteImport } from './routes/reports.tag'
 import { Route as ReportsSummaryRouteImport } from './routes/reports.summary'
 import { Route as ReportsReviewRouteImport } from './routes/reports.review'
+import { Route as ReportsReleaseRouteImport } from './routes/reports.release'
 import { Route as ReportsBroadcastRouteImport } from './routes/reports.broadcast'
 import { Route as MeetingsNewRouteImport } from './routes/meetings.new'
 import { Route as HolisticReportsIdRouteImport } from './routes/holistic-reports.$id'
@@ -227,6 +228,11 @@ const ReportsReviewRoute = ReportsReviewRouteImport.update({
   path: '/review',
   getParentRoute: () => ReportsRoute,
 } as any)
+const ReportsReleaseRoute = ReportsReleaseRouteImport.update({
+  id: '/release',
+  path: '/release',
+  getParentRoute: () => ReportsRoute,
+} as any)
 const ReportsBroadcastRoute = ReportsBroadcastRouteImport.update({
   id: '/broadcast',
   path: '/broadcast',
@@ -397,6 +403,7 @@ export interface FileRoutesByFullPath {
   '/holistic-reports/$id': typeof HolisticReportsIdRoute
   '/meetings/new': typeof MeetingsNewRoute
   '/reports/broadcast': typeof ReportsBroadcastRoute
+  '/reports/release': typeof ReportsReleaseRoute
   '/reports/review': typeof ReportsReviewRoute
   '/reports/summary': typeof ReportsSummaryRoute
   '/reports/tag': typeof ReportsTagRoute
@@ -448,6 +455,7 @@ export interface FileRoutesByTo {
   '/holistic-reports/$id': typeof HolisticReportsIdRoute
   '/meetings/new': typeof MeetingsNewRoute
   '/reports/broadcast': typeof ReportsBroadcastRoute
+  '/reports/release': typeof ReportsReleaseRoute
   '/reports/review': typeof ReportsReviewRoute
   '/reports/summary': typeof ReportsSummaryRoute
   '/reports/tag': typeof ReportsTagRoute
@@ -509,6 +517,7 @@ export interface FileRoutesById {
   '/holistic-reports/$id': typeof HolisticReportsIdRoute
   '/meetings/new': typeof MeetingsNewRoute
   '/reports/broadcast': typeof ReportsBroadcastRoute
+  '/reports/release': typeof ReportsReleaseRoute
   '/reports/review': typeof ReportsReviewRoute
   '/reports/summary': typeof ReportsSummaryRoute
   '/reports/tag': typeof ReportsTagRoute
@@ -570,6 +579,7 @@ export interface FileRouteTypes {
     | '/holistic-reports/$id'
     | '/meetings/new'
     | '/reports/broadcast'
+    | '/reports/release'
     | '/reports/review'
     | '/reports/summary'
     | '/reports/tag'
@@ -621,6 +631,7 @@ export interface FileRouteTypes {
     | '/holistic-reports/$id'
     | '/meetings/new'
     | '/reports/broadcast'
+    | '/reports/release'
     | '/reports/review'
     | '/reports/summary'
     | '/reports/tag'
@@ -681,6 +692,7 @@ export interface FileRouteTypes {
     | '/holistic-reports/$id'
     | '/meetings/new'
     | '/reports/broadcast'
+    | '/reports/release'
     | '/reports/review'
     | '/reports/summary'
     | '/reports/tag'
@@ -954,6 +966,13 @@ declare module '@tanstack/react-router' {
       path: '/review'
       fullPath: '/reports/review'
       preLoaderRoute: typeof ReportsReviewRouteImport
+      parentRoute: typeof ReportsRoute
+    }
+    '/reports/release': {
+      id: '/reports/release'
+      path: '/release'
+      fullPath: '/reports/release'
+      preLoaderRoute: typeof ReportsReleaseRouteImport
       parentRoute: typeof ReportsRoute
     }
     '/reports/broadcast': {
@@ -1254,6 +1273,7 @@ const MeetingsRouteWithChildren = MeetingsRoute._addFileChildren(
 
 interface ReportsRouteChildren {
   ReportsBroadcastRoute: typeof ReportsBroadcastRoute
+  ReportsReleaseRoute: typeof ReportsReleaseRoute
   ReportsReviewRoute: typeof ReportsReviewRoute
   ReportsSummaryRoute: typeof ReportsSummaryRoute
   ReportsTagRoute: typeof ReportsTagRoute
@@ -1268,6 +1288,7 @@ interface ReportsRouteChildren {
 
 const ReportsRouteChildren: ReportsRouteChildren = {
   ReportsBroadcastRoute: ReportsBroadcastRoute,
+  ReportsReleaseRoute: ReportsReleaseRoute,
   ReportsReviewRoute: ReportsReviewRoute,
   ReportsSummaryRoute: ReportsSummaryRoute,
   ReportsTagRoute: ReportsTagRoute,

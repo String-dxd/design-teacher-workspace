@@ -21,12 +21,12 @@ import { coverageForClass, loadDrafts, seedIfEmpty } from '@/lib/hdp-store'
 
 // Routes for every tool below (/reports/tag, /reports/summary,
 // /reports/students/$studentId, /reports/broadcast, /reports/drafts,
-// /reports/review) didn't all exist at once — plans 029–033 build them one
-// at a time. To keep each plan self-contained and the home honest (no dead
-// links), every card renders locked with "Coming in this prototype" until
-// its own plan flips it to a live Link; Release Manager and Renderings
-// Preview are out of scope for this prototype entirely and stay "Coming
-// later".
+// /reports/review, /reports/release) didn't all exist at once — plans
+// 029–033 build them one at a time. To keep each plan self-contained and
+// the home honest (no dead links), every card renders locked with "Coming
+// in this prototype" until its own plan flips it to a live Link; Renderings
+// Preview (Wrapped/full-report renderings, Phase 3) stays "Coming later"
+// entirely, out of this prototype's scope.
 const TOOL_GROUPS: Array<{
   heading: string
   tools: Array<{
@@ -95,7 +95,8 @@ const TOOL_GROUPS: Array<{
         icon: Send,
         name: 'Release Manager',
         description: 'Share finished report books with parents.',
-        state: 'Coming later',
+        state: 'Share report books',
+        href: '/reports/release', // plan 033
       },
       {
         icon: Eye,
