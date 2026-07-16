@@ -87,6 +87,7 @@ import {
 import { ensureCycle, loadCycle, patchStudent } from '@/lib/hdp-cycle-store'
 import { pushHdpNotification } from '@/lib/hdp-notifications'
 import { commitCycleReport } from '@/lib/hdp-report-commit'
+import { HdpReportsHome } from '@/components/hdp/reports-home'
 
 type GroupBy = 'none' | 'student' | 'term'
 
@@ -98,7 +99,7 @@ interface ReportsSearchParams {
 }
 
 export const Route = createFileRoute('/reports/')({
-  component: ReportsPage,
+  component: ReportsIndexSwitch,
   validateSearch: (search: Record<string, unknown>): ReportsSearchParams => {
     return {
       studentId: search.studentId as string | undefined,
@@ -108,6 +109,16 @@ export const Route = createFileRoute('/reports/')({
     }
   },
 })
+
+// The new HDP Reports module takes over /reports when its flag is on; the
+// legacy cycle hub (ReportsPage) keeps working unchanged when it's off —
+// rollback safety (plan 028). Hook-safe: this flag hook runs unconditionally
+// and ReportsPage's own hooks only run when it actually renders.
+function ReportsIndexSwitch() {
+  const hdpModuleEnabled = useFeatureFlag('reports-hdp')
+  if (hdpModuleEnabled) return <HdpReportsHome />
+  return <ReportsPage />
+}
 
 function ReportsPage() {
   const {
@@ -779,9 +790,7 @@ function CycleHub({
   const [refreshKey, setRefreshKey] = useState(0)
   // Clicking a row previews that student's report — own-class rows only,
   // since sibling-class pupils have no underlying report to render.
-  const [previewStudentId, setPreviewStudentId] = useState<string | null>(
-    null,
-  )
+  const [previewStudentId, setPreviewStudentId] = useState<string | null>(null)
 
   // Scope: a class id or the whole-of-P1 level view. The teacher is P1-A's
   // form teacher, so interactive pieces (layout, share, review, ack) always
@@ -1306,9 +1315,7 @@ function CycleHub({
         ownClassId="P1-A"
         seededStates={seededStates}
         onSendToParents={ownCycleClass ? setSendTarget : undefined}
-        onRowClick={
-          ownCycleClass && cycle ? setPreviewStudentId : undefined
-        }
+        onRowClick={ownCycleClass && cycle ? setPreviewStudentId : undefined}
       />
 
       {previewReport && cycle && (

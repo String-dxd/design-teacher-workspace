@@ -26,6 +26,7 @@ import { AuthProvider } from '@/lib/auth'
 import { BreadcrumbProvider } from '@/hooks/use-breadcrumbs'
 import { HeyTaliaPanel } from '@/components/heytalia/heytalia-panel'
 import { HeyTaliaProvider } from '@/components/heytalia/heytalia-context'
+import { HdpShell } from '@/components/hdp/hdp-shell'
 
 const AUTO_COLLAPSE_ROUTES = [
   '/announcements',
@@ -187,6 +188,7 @@ function RootComponent() {
                     </div>
                   </SidebarInset>
                   <HeyTaliaPanel />
+                  <HdpShell />
                   <Toaster position="bottom-right" />
                   <WelcomeModal />
                 </SidebarProvider>
