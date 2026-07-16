@@ -1,4 +1,4 @@
-import { Tag } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { useTagQueue } from './tag-queue-context'
 
 // The module's single-purpose, ambient capture affordance. Never badges,
@@ -19,7 +19,7 @@ export function TagFab() {
       }}
       className="fixed z-40 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
-      <Tag className="size-6" aria-hidden />
+      <Plus className="size-6" aria-hidden />
     </button>
   )
 }
