@@ -209,7 +209,7 @@ export const FEATURE_FLAG_REGISTRY: Record<FeatureFlagKey, FeatureFlagMeta> = {
       'Replace the Reports tab with the new HDP module — ambient tagging, per-student river, coverage broadcast, and in-flow drafting. Turning it off restores the current Reports page.',
     stage: 'Experiment',
     module: 'reports',
-    defaultValue: false,
+    defaultValue: true,
   },
   'reports-river-visibility': {
     label: 'Full river for subject teachers',
