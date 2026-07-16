@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import type { HdpReportBook, StudentReflection } from '@/types/hdp'
+import type { PatternReaction } from '@/components/hdp/report-story'
 import { ReportStory } from '@/components/hdp/report-story'
 import {
   AlertDialog,
@@ -21,6 +22,9 @@ import {
   coverReflection,
   loadMarks,
   loadPatterns,
+  reactToPattern,
+  restorePattern,
+  retirePatternFromFamily,
   seedIfEmpty,
   submitStudentReflection,
 } from '@/lib/hdp-store'
@@ -112,17 +116,47 @@ function GuestHdpStudentPage() {
     refresh()
   }
 
+  const sentenceCount = draftText
+    .split(/[.?!]+/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0).length
+
   return (
     <main className="mx-auto flex max-w-2xl flex-col gap-10 px-4 py-10 sm:px-6">
       <ReportStory
         book={book}
         studentName={student.name}
         className={student.class}
-        viewer="parent"
+        viewer={showFuture ? 'student' : 'parent'}
         reflection={reflection}
         patterns={loadPatterns().filter((p) => p.studentId === book.studentId)}
         showFuture={showFuture}
         trends={trendsForEntries(loadMarks(book.studentId))}
+        locked={locked}
+        onReact={
+          showFuture
+            ? (patternId: string, reaction: PatternReaction, note?: string) => {
+                reactToPattern(patternId, reaction, note)
+                refresh()
+              }
+            : undefined
+        }
+        onRetire={
+          showFuture
+            ? (patternId: string) => {
+                retirePatternFromFamily(patternId)
+                refresh()
+              }
+            : undefined
+        }
+        onRestore={
+          showFuture
+            ? (patternId: string) => {
+                restorePattern(patternId)
+                refresh()
+              }
+            : undefined
+        }
       />
 
       <section className="border-border flex flex-col gap-4 border-t pt-6">
@@ -132,6 +166,11 @@ function GuestHdpStudentPage() {
             A few honest sentences about this semester. It appears on your
             report exactly as you write it — nobody edits it.
           </p>
+          {showFuture && (
+            <p className="text-muted-foreground text-xs">
+              At least three sentences — this becomes the cover of your report.
+            </p>
+          )}
         </div>
 
         {showForm ? (
@@ -152,6 +191,8 @@ function GuestHdpStudentPage() {
                 className="text-muted-foreground text-xs tabular-nums"
               >
                 {draftText.length}/{REFLECTION_MAX_LENGTH}
+                {showFuture &&
+                  ` · ${sentenceCount} sentence${sentenceCount === 1 ? '' : 's'}`}
               </p>
               <div className="flex gap-2">
                 {editing && (

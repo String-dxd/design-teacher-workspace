@@ -1,3 +1,5 @@
+import * as React from 'react'
+import { DispositionChip } from './disposition-chip'
 import { TagPill } from './tag-pill'
 import { TrendLine } from './trend-line'
 import type { SubjectTrendRow } from './report-book'
@@ -10,6 +12,19 @@ import type {
 } from '@/types/hdp'
 import { MOCK_STAFF } from '@/data/mock-staff'
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { Button } from '@/components/ui/button'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import {
   Table,
   TableBody,
   TableCaption,
@@ -18,6 +33,28 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+
+export type PatternReaction = 'agree' | 'more-complicated' | 'add-my-side'
+
+const REACTION_NOTE_MAX_LENGTH = 300
+
+const REACTION_LABELS: Record<PatternReaction, string> = {
+  agree: 'Agree',
+  'more-complicated': "It's more complicated",
+  'add-my-side': 'Add my side',
+}
+
+/** Quiet meta line shown above the "adds" callout when the reaction isn't
+ *  a plain agreement (plan 041) — agreement needs no extra annotation. */
+function reactionMetaLine(
+  reaction: PatternReaction | undefined,
+  firstName: string,
+): string | undefined {
+  if (reaction === 'more-complicated')
+    return `${firstName} says it's more complicated`
+  if (reaction === 'add-my-side') return `${firstName} adds their own side`
+  return undefined
+}
 
 function staffName(id: string): string {
   return MOCK_STAFF.find((s) => s.id === id)?.name ?? 'Unknown teacher'
@@ -77,24 +114,254 @@ function evidenceSentence(pattern: FormingPattern): string {
   return `Noticed ${pattern.tagIds.length} time${pattern.tagIds.length === 1 ? '' : 's'}, across ${contextList}.`
 }
 
+interface PatternChapterProps {
+  pattern: FormingPattern
+  firstName: string
+  viewer: 'teacher-preview' | 'parent' | 'student'
+  onReact?: (
+    patternId: string,
+    reaction: PatternReaction,
+    note?: string,
+  ) => void
+  onRetire?: (patternId: string) => void
+  onRestore?: (patternId: string) => void
+  locked: boolean
+}
+
+const REACTIONS: Array<PatternReaction> = [
+  'agree',
+  'more-complicated',
+  'add-my-side',
+]
+
+/** One pattern's rendering — a full chapter when confirmed (interactive
+ *  reaction/retire controls appear for the student viewer only, plan 041),
+ *  or a quiet collapsed row when retired-by-student. Text nodes only for
+ *  user-authored content (CMP-9) — never vetted, never edited here. */
+function PatternChapter({
+  pattern,
+  firstName,
+  viewer,
+  onReact,
+  onRetire,
+  onRestore,
+  locked,
+}: PatternChapterProps) {
+  const isStudentViewer = viewer === 'student'
+  const [noteDraft, setNoteDraft] = React.useState(pattern.studentNote ?? '')
+  const [confirmRetireOpen, setConfirmRetireOpen] = React.useState(false)
+
+  React.useEffect(() => {
+    setNoteDraft(pattern.studentNote ?? '')
+  }, [pattern.studentNote])
+
+  if (pattern.status === 'retired-by-student') {
+    return (
+      <div className="border-border flex flex-wrap items-center justify-between gap-3 rounded-lg border border-dashed p-3">
+        <p className="text-muted-foreground text-sm">
+          {isStudentViewer
+            ? 'Hidden from your family report'
+            : `Hidden from ${firstName}'s family report`}
+        </p>
+        {isStudentViewer && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            disabled={locked}
+            onClick={() => onRestore?.(pattern.id)}
+          >
+            Undo
+          </Button>
+        )}
+      </div>
+    )
+  }
+
+  const uniqueContexts = Array.from(new Set(pattern.contexts))
+  const metaLine = reactionMetaLine(pattern.studentReaction, firstName)
+  const showNoteField =
+    isStudentViewer &&
+    (pattern.studentReaction === 'more-complicated' ||
+      pattern.studentReaction === 'add-my-side')
+
+  return (
+    <div className="border-border flex flex-col gap-2 rounded-lg border p-4">
+      {pattern.headline && (
+        <h3 className="text-base font-semibold">{pattern.headline}</h3>
+      )}
+      <p className="text-muted-foreground text-sm">
+        {evidenceSentence(pattern)}
+      </p>
+      <div className="flex flex-wrap gap-1.5">
+        {uniqueContexts.map((context) => (
+          <TagPill key={context} label={CONTEXT_LABELS[context]} />
+        ))}
+      </div>
+      {metaLine && <p className="text-muted-foreground text-xs">{metaLine}</p>}
+      {pattern.studentNote && (
+        <div className="border-border border-l-2 pl-3">
+          <p className="text-sm">
+            <span className="font-medium">{firstName} adds: </span>
+            {pattern.studentNote}
+          </p>
+        </div>
+      )}
+      {pattern.confirmedBy && (
+        <div>
+          <TagPill
+            variant="key"
+            label={`Validated · ${staffName(pattern.confirmedBy)}`}
+          />
+        </div>
+      )}
+
+      {isStudentViewer && (
+        <div className="border-border mt-2 flex flex-col gap-3 border-t pt-3">
+          <div
+            className="flex flex-wrap gap-2"
+            role="group"
+            aria-label={`Your reaction to this pattern`}
+          >
+            {REACTIONS.map((reaction) => (
+              <DispositionChip
+                key={reaction}
+                label={REACTION_LABELS[reaction]}
+                selected={pattern.studentReaction === reaction}
+                disabled={locked}
+                onClick={() =>
+                  onReact?.(
+                    pattern.id,
+                    reaction,
+                    reaction === 'agree' ? undefined : pattern.studentNote,
+                  )
+                }
+              />
+            ))}
+          </div>
+          {showNoteField && (
+            <div className="flex flex-col gap-2">
+              <Label htmlFor={`pattern-note-${pattern.id}`}>
+                Your side (optional)
+              </Label>
+              <Textarea
+                id={`pattern-note-${pattern.id}`}
+                value={noteDraft}
+                disabled={locked}
+                onChange={(e) =>
+                  setNoteDraft(
+                    e.target.value.slice(0, REACTION_NOTE_MAX_LENGTH),
+                  )
+                }
+                rows={3}
+              />
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-muted-foreground text-xs tabular-nums">
+                  {noteDraft.length}/{REACTION_NOTE_MAX_LENGTH}
+                </p>
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={locked}
+                  onClick={() =>
+                    onReact?.(
+                      pattern.id,
+                      pattern.studentReaction ?? 'add-my-side',
+                      noteDraft.trim().length > 0
+                        ? noteDraft.trim()
+                        : undefined,
+                    )
+                  }
+                >
+                  Save your side
+                </Button>
+              </div>
+            </div>
+          )}
+          <div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground"
+              disabled={locked}
+              onClick={() => setConfirmRetireOpen(true)}
+            >
+              Don't show my family this one
+            </Button>
+          </div>
+
+          <AlertDialog
+            open={confirmRetireOpen}
+            onOpenChange={setConfirmRetireOpen}
+          >
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>
+                  Hide this from your family report?
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  This hides the pattern from the report your family sees. Your
+                  teachers still see it.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => {
+                    onRetire?.(pattern.id)
+                    setConfirmRetireOpen(false)
+                  }}
+                >
+                  Hide it
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      )}
+    </div>
+  )
+}
+
 interface ReportStoryProps {
   book: HdpReportBook
   studentName: string
   className: string
-  viewer: 'teacher-preview' | 'parent'
+  /** 'student' is the student's own guest-route rendering (plan 041) —
+   *  interactive reaction chips + retire controls appear only there.
+   *  'parent' never shows a retired-by-student pattern. 'teacher-preview'
+   *  shows one collapsed with its quiet hidden-by line (read-only audit),
+   *  same as 'student' minus the interactivity. */
+  viewer: 'teacher-preview' | 'parent' | 'student'
   /** The reflection the cover leads with — resolved by the caller via
    *  `coverReflection(book.studentId)` (repo convention: components stay
    *  store-read-free). Absent ⇒ the honest "No reflection yet" fallback,
    *  never a fabricated quote. */
   reflection?: StudentReflection
-  /** CONFIRMED patterns only — the caller filters `loadPatterns()` by
-   *  studentId AND status === 'confirmed' (P5: candidates/dismissed never
-   *  render in the story register). */
+  /** Confirmed patterns render as full chapters; retired-by-student
+   *  patterns render collapsed (viewer-dependent, see above). Candidates/
+   *  dismissed never render in the story register (P5) — the caller
+   *  filters `loadPatterns()` by studentId only, this component does the
+   *  status filtering. */
   patterns?: Array<FormingPattern>
   /** Resolved by the caller from the `reports-hdp-future` flag — same
    *  convention as ReportBook; this component stays flag-free. */
   showFuture?: boolean
   trends?: Array<SubjectTrendRow>
+  /** Student-only interactive handlers (plan 041) — wired by the guest
+   *  route to hdp-store writes + a refresh; present only when
+   *  `viewer === 'student'`. This component stays store-read-free. */
+  onReact?: (
+    patternId: string,
+    reaction: PatternReaction,
+    note?: string,
+  ) => void
+  onRetire?: (patternId: string) => void
+  onRestore?: (patternId: string) => void
+  /** Freezes the student's reaction/retire controls once the book has
+   *  been shared with parents — same rule as the reflection form. */
+  locked?: boolean
 }
 
 // Prototype B's story register (plan 037) — leads with the student's own
@@ -114,11 +381,22 @@ export function ReportStory({
   patterns = [],
   showFuture = false,
   trends = [],
+  onReact,
+  onRetire,
+  onRestore,
+  locked = false,
 }: ReportStoryProps) {
   const firstName = studentName.split(' ')[0] ?? studentName
   const CoverHeading = viewer === 'parent' ? 'h1' : 'h2'
 
-  const confirmedPatterns = patterns.filter((p) => p.status === 'confirmed')
+  // Parents never see a pattern the student hid; teachers (previewing) and
+  // the student themselves still see it, collapsed (plan 041).
+  const visiblePatterns =
+    viewer === 'parent'
+      ? patterns.filter((p) => p.status === 'confirmed')
+      : patterns.filter(
+          (p) => p.status === 'confirmed' || p.status === 'retired-by-student',
+        )
 
   const subjects = Array.from(new Set(book.results.map((r) => r.subject)))
   const gradeFor = (subject: string, term: 3 | 4) =>
@@ -193,50 +471,23 @@ export function ReportStory({
         </section>
       )}
 
-      {confirmedPatterns.length > 0 && (
+      {visiblePatterns.length > 0 && (
         <section className="flex flex-col gap-4">
           <h2 className="text-lg font-semibold">
             Patterns this semester — validated by teachers
           </h2>
-          {confirmedPatterns.map((pattern) => {
-            const uniqueContexts = Array.from(new Set(pattern.contexts))
-            return (
-              <div
-                key={pattern.id}
-                className="border-border flex flex-col gap-2 rounded-lg border p-4"
-              >
-                {pattern.headline && (
-                  <h3 className="text-base font-semibold">
-                    {pattern.headline}
-                  </h3>
-                )}
-                <p className="text-muted-foreground text-sm">
-                  {evidenceSentence(pattern)}
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {uniqueContexts.map((context) => (
-                    <TagPill key={context} label={CONTEXT_LABELS[context]} />
-                  ))}
-                </div>
-                {pattern.studentNote && (
-                  <div className="border-border border-l-2 pl-3">
-                    <p className="text-sm">
-                      <span className="font-medium">{firstName} adds: </span>
-                      {pattern.studentNote}
-                    </p>
-                  </div>
-                )}
-                {pattern.confirmedBy && (
-                  <div>
-                    <TagPill
-                      variant="key"
-                      label={`Validated · ${staffName(pattern.confirmedBy)}`}
-                    />
-                  </div>
-                )}
-              </div>
-            )
-          })}
+          {visiblePatterns.map((pattern) => (
+            <PatternChapter
+              key={pattern.id}
+              pattern={pattern}
+              firstName={firstName}
+              viewer={viewer}
+              onReact={onReact}
+              onRetire={onRetire}
+              onRestore={onRestore}
+              locked={locked}
+            />
+          ))}
         </section>
       )}
 
