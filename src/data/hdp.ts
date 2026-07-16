@@ -1,12 +1,17 @@
 import { mockStudents } from './mock-students'
 import { MOCK_STAFF } from './mock-staff'
 import type {
+  AssessmentKind,
   BroadcastRequest,
   FormingPattern,
   HdpCycle,
   HdpDraft,
+  HdpMarkEntry,
+  HdpMarksRecord,
   HdpReportBook,
   HdpTag,
+  SchoolYear,
+  Semester,
 } from '@/types/hdp'
 
 // Fresh, self-contained fixtures for the HDP Reports module. Zero imports
@@ -1426,3 +1431,115 @@ export const SEED_REPORT_BOOKS: Array<HdpReportBook> = [
     ],
   },
 ]
+
+// ── SEED_MARKS (plan 036) ────────────────────────────────────────────────
+// Four semesters of marks history per 3A student (2025 S1 → 2026 S2, the
+// current semester) across 5 subjects — realistic 45–90 scores, deterministic
+// (no Date.now/Math.random) so the fixture is stable across reloads. Each
+// (student, subject) pair is mapped to one of the four trend shapes below via
+// a plain string hash, so across 14 students × 5 subjects every trend
+// direction (climbing/steady/recovering/easing) shows up at least once.
+const MARK_SUBJECTS = [
+  'English',
+  'Mathematics',
+  'Science',
+  'Mother Tongue',
+  'Humanities',
+]
+
+const MARK_SEMESTERS: Array<{ schoolYear: SchoolYear; semester: Semester }> = [
+  { schoolYear: '2025', semester: 1 },
+  { schoolYear: '2025', semester: 2 },
+  { schoolYear: '2026', semester: 1 },
+  { schoolYear: '2026', semester: 2 }, // current — partially filled (WA1 only)
+]
+
+type MarkTrendShape = 'climbing' | 'steady' | 'recovering' | 'easing'
+const MARK_TREND_SHAPES: Array<MarkTrendShape> = [
+  'climbing',
+  'steady',
+  'recovering',
+  'easing',
+]
+
+// Per-semester deltas off a base score, one per shape. `recovering`'s last
+// delta is kept inside ±2 on purpose — it dips then recovers to roughly
+// where it started, distinct from a `climbing` shape whose last delta is
+// what pushes it past the +2 threshold.
+function marksDeltasForShape(
+  shape: MarkTrendShape,
+): [number, number, number, number] {
+  switch (shape) {
+    case 'climbing':
+      return [0, 3, 6, 9]
+    case 'easing':
+      return [9, 6, 3, 0]
+    case 'recovering':
+      return [0, -6, -1, 0]
+    case 'steady':
+    default:
+      return [0, 1, 0, 1]
+  }
+}
+
+/** Deterministic, dependency-free string hash — spreads (student, subject)
+ *  pairs across the four trend shapes and a small score jitter. Not for
+ *  anything cryptographic; purely a stable fixture-shaping tool. */
+function seedHash(input: string): number {
+  let hash = 0
+  for (let i = 0; i < input.length; i++) {
+    hash = (hash * 31 + input.charCodeAt(i)) | 0
+  }
+  return Math.abs(hash)
+}
+
+function clampScore(score: number): number {
+  return Math.max(45, Math.min(90, Math.round(score)))
+}
+
+function marksForStudent(studentId: string): HdpMarksRecord {
+  const entries: Array<HdpMarkEntry> = []
+  for (const subject of MARK_SUBJECTS) {
+    const hash = seedHash(`${studentId}-${subject}`)
+    const base = 55 + (hash % 15) // 55..69 starting band
+    const shape = MARK_TREND_SHAPES[Math.floor(hash / 15) % 4]
+    const jitter = Math.floor(hash / 60) % 3 // 0..2, keeps clamping rare
+    const deltas = marksDeltasForShape(shape)
+
+    MARK_SEMESTERS.forEach((sem, index) => {
+      const target = base + deltas[index]
+      const isCurrent = index === MARK_SEMESTERS.length - 1
+      if (isCurrent) {
+        // The current semester's marking window has only just opened — WA1
+        // is the only assessment recorded so far.
+        entries.push({
+          subject,
+          schoolYear: sem.schoolYear,
+          semester: sem.semester,
+          assessment: 'wa1',
+          score: clampScore(target),
+        })
+        return
+      }
+      const assessments: Array<{ assessment: AssessmentKind; score: number }> =
+        [
+          { assessment: 'wa1', score: clampScore(target - jitter) },
+          { assessment: 'wa2', score: clampScore(target) },
+          { assessment: 'exam', score: clampScore(target + jitter) },
+        ]
+      for (const { assessment, score } of assessments) {
+        entries.push({
+          subject,
+          schoolYear: sem.schoolYear,
+          semester: sem.semester,
+          assessment,
+          score,
+        })
+      }
+    })
+  }
+  return { studentId, entries }
+}
+
+export const SEED_MARKS: Array<HdpMarksRecord> =
+  CLASS_3A_STUDENT_IDS.map(marksForStudent)

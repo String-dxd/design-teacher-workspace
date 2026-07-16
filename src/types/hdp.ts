@@ -14,6 +14,8 @@ export type CycleStage =
   | 'review'
   | 'released'
 export type TagEntryPoint = 'fab' | 'topbar' | 'row' | 'cmdk' // cmdk reserved, unused this round
+export type AssessmentKind = 'wa1' | 'wa2' | 'exam'
+export type TrendDirection = 'climbing' | 'steady' | 'recovering' | 'easing'
 
 export interface HdpTag {
   id: string
@@ -92,6 +94,7 @@ export interface HdpSubjectResult {
   term: HdpTerm
   grade: string // realistic format, e.g. 'B4', '72'
   remark?: string
+  change?: number // delta vs previous semester's semester-average, signed (plan 036)
 }
 
 export interface HdpReportBook {
@@ -110,6 +113,21 @@ export interface HdpReportBook {
   parentPrompts: Array<string> // "ask me about…"
   sharedAt?: string // set when shared with parents (plan 033)
   acknowledgement?: { at: string; note?: string }
+  marksSyncedAt?: string // set by syncAcademicResults (plan 036)
+}
+
+// ── Marks + trends (plan 036) ───────────────────────────────────────────
+export interface HdpMarkEntry {
+  subject: string
+  schoolYear: SchoolYear
+  semester: Semester
+  assessment: AssessmentKind
+  score: number
+}
+
+export interface HdpMarksRecord {
+  studentId: string
+  entries: Array<HdpMarkEntry>
 }
 
 export interface HdpCycle {

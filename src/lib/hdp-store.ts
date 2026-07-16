@@ -6,8 +6,12 @@ import type {
   DraftClaim,
   FormingPattern,
   HdpDraft,
+  HdpMarkEntry,
+  HdpMarksRecord,
   HdpReportBook,
   HdpTag,
+  SchoolYear,
+  Semester,
   TagContext,
   TagEntryPoint,
 } from '@/types/hdp'
@@ -19,6 +23,7 @@ import {
   SEED_BROADCAST,
   SEED_BROADCAST_FOR_TEACHER,
   SEED_DRAFTS,
+  SEED_MARKS,
   SEED_PATTERNS,
   SEED_REPORT_BOOKS,
   SEED_TAGS,
@@ -37,6 +42,7 @@ const BROADCASTS_KEY = 'hdp_broadcasts'
 const DRAFTS_KEY = 'hdp_drafts'
 const REPORT_BOOKS_KEY = 'hdp_report_books'
 const ANALYTICS_KEY = 'hdp_analytics'
+const MARKS_KEY = 'hdp_marks'
 
 const CURRENT_TERM = CURRENT_CYCLE.terms[0]
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000
@@ -83,6 +89,9 @@ export function seedIfEmpty(): void {
   }
   if (localStorage.getItem(ANALYTICS_KEY) === null) {
     writeArray(ANALYTICS_KEY, [])
+  }
+  if (localStorage.getItem(MARKS_KEY) === null) {
+    writeArray(MARKS_KEY, SEED_MARKS)
   }
 }
 
@@ -920,6 +929,142 @@ export function acknowledgeReport(token: string, note?: string): HdpReportBook {
     }
   } else {
     return book
+  }
+  saveReportBook(updated)
+  return updated
+}
+
+// ── Marks + academic-results sync (plan 036) ────────────────────────────
+
+/** All mark entries recorded for a student, across every subject/semester. */
+export function loadMarks(studentId: string): Array<HdpMarkEntry> {
+  const records = readArray<HdpMarksRecord>(MARKS_KEY)
+  return records.find((r) => r.studentId === studentId)?.entries ?? []
+}
+
+function saveMarksForStudent(
+  studentId: string,
+  entries: Array<HdpMarkEntry>,
+): void {
+  const records = readArray<HdpMarksRecord>(MARKS_KEY)
+  const index = records.findIndex((r) => r.studentId === studentId)
+  const record: HdpMarksRecord = { studentId, entries }
+  if (index === -1) {
+    writeArray(MARKS_KEY, [...records, record])
+  } else {
+    writeArray(
+      MARKS_KEY,
+      records.map((r) => (r.studentId === studentId ? record : r)),
+    )
+  }
+}
+
+/**
+ * Upserts one mark entry for a student — matched on subject + schoolYear +
+ * semester + assessment (all four; two entries that only share
+ * subject/semester but land in different school years must NOT collide).
+ * Autosaved on blur from the marks grid.
+ */
+export function saveMarkEntry(studentId: string, entry: HdpMarkEntry): void {
+  const existing = loadMarks(studentId)
+  const index = existing.findIndex(
+    (e) =>
+      e.subject === entry.subject &&
+      e.schoolYear === entry.schoolYear &&
+      e.semester === entry.semester &&
+      e.assessment === entry.assessment,
+  )
+  const next =
+    index === -1
+      ? [...existing, entry]
+      : existing.map((e, i) => (i === index ? entry : e))
+  saveMarksForStudent(studentId, next)
+}
+
+/** The mean score across whichever assessments (WA1/WA2/Exam) are recorded
+ *  for a subject in a given school year + semester. Returns undefined when
+ *  nothing is recorded yet — callers skip that semester rather than
+ *  treating it as a zero. */
+export function semesterAverage(
+  entries: Array<HdpMarkEntry>,
+  subject: string,
+  schoolYear: SchoolYear,
+  semester: Semester,
+): number | undefined {
+  const matches = entries.filter(
+    (e) =>
+      e.subject === subject &&
+      e.schoolYear === schoolYear &&
+      e.semester === semester,
+  )
+  if (matches.length === 0) return undefined
+  return matches.reduce((sum, e) => sum + e.score, 0) / matches.length
+}
+
+function previousSemester(
+  schoolYear: SchoolYear,
+  semester: Semester,
+): { schoolYear: SchoolYear; semester: Semester } {
+  if (semester === 2) return { schoolYear, semester: 1 }
+  return {
+    schoolYear: String(Number(schoolYear) - 1) as SchoolYear,
+    semester: 2,
+  }
+}
+
+/**
+ * Snapshots the CURRENT semester's per-subject mark averages into a
+ * student's report book `results` — grade is the rounded average as a
+ * string, `change` is the delta vs the previous semester's average (signed,
+ * absent when there's no previous-semester data to compare against), `term`
+ * is the later of the two terms in the current cycle. Stamps
+ * `marksSyncedAt`. Snapshot semantics identical to `shareReportBook`: a
+ * later `saveMarkEntry` does not mutate an already-synced book until this
+ * is called again. Throws if no report book exists yet for the student
+ * (nothing to sync into).
+ */
+export function syncAcademicResults(studentId: string): HdpReportBook {
+  const books = loadReportBooks()
+  const existing = books.find((b) => b.studentId === studentId)
+  if (!existing) {
+    throw new Error(`No report book found for student ${studentId}`)
+  }
+
+  const { schoolYear, semester } = CURRENT_CYCLE
+  const currentTerm = CURRENT_CYCLE.terms[1]
+  const prev = previousSemester(schoolYear, semester)
+  const entries = loadMarks(studentId)
+  const subjects = Array.from(new Set(entries.map((e) => e.subject)))
+
+  const syncedResults = subjects
+    .map((subject) => {
+      const avg = semesterAverage(entries, subject, schoolYear, semester)
+      if (avg === undefined) return undefined
+      const prevAvg = semesterAverage(
+        entries,
+        subject,
+        prev.schoolYear,
+        prev.semester,
+      )
+      const change =
+        prevAvg === undefined ? undefined : Math.round(avg - prevAvg)
+      return {
+        subject,
+        term: currentTerm,
+        grade: String(Math.round(avg)),
+        change,
+      }
+    })
+    .filter((r): r is NonNullable<typeof r> => r !== undefined)
+
+  const untouchedResults = existing.results.filter(
+    (r) => !(r.term === currentTerm && subjects.includes(r.subject)),
+  )
+
+  const updated: HdpReportBook = {
+    ...existing,
+    results: [...untouchedResults, ...syncedResults],
+    marksSyncedAt: new Date().toISOString(),
   }
   saveReportBook(updated)
   return updated

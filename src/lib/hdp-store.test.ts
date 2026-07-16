@@ -16,6 +16,7 @@ import {
   findDraft,
   loadBroadcasts,
   loadDrafts,
+  loadMarks,
   loadPatterns,
   loadReportBooks,
   loadTags,
@@ -25,10 +26,13 @@ import {
   reopenDraft,
   respondToBroadcast,
   saveDraft,
+  saveMarkEntry,
   saveReportBook,
   seedIfEmpty,
+  semesterAverage,
   shareReportBook,
   summaryForTeacher,
+  syncAcademicResults,
   tagsForStudentVisible,
   unsyncedConfirmedDrafts,
   updateTag,
@@ -885,5 +889,149 @@ describe('acknowledgeReport', () => {
 
   it('throws for an unknown or unshared token', () => {
     expect(() => acknowledgeReport('hdp-unknown')).toThrow()
+  })
+})
+
+describe('saveMarkEntry', () => {
+  it('upserts by subject + schoolYear + semester + assessment — no duplicate rows', () => {
+    saveMarkEntry('marks-1', {
+      subject: 'English',
+      schoolYear: '2026',
+      semester: 2,
+      assessment: 'wa1',
+      score: 70,
+    })
+    saveMarkEntry('marks-1', {
+      subject: 'English',
+      schoolYear: '2026',
+      semester: 2,
+      assessment: 'wa1',
+      score: 75,
+    })
+    const entries = loadMarks('marks-1').filter(
+      (e) =>
+        e.subject === 'English' && e.schoolYear === '2026' && e.semester === 2,
+    )
+    expect(entries).toHaveLength(1)
+    expect(entries[0].score).toBe(75)
+  })
+
+  it('does not collide entries that share subject + semester across different school years', () => {
+    saveMarkEntry('marks-2', {
+      subject: 'Mathematics',
+      schoolYear: '2025',
+      semester: 1,
+      assessment: 'wa1',
+      score: 60,
+    })
+    saveMarkEntry('marks-2', {
+      subject: 'Mathematics',
+      schoolYear: '2026',
+      semester: 1,
+      assessment: 'wa1',
+      score: 80,
+    })
+    const entries = loadMarks('marks-2')
+    expect(entries).toHaveLength(2)
+    expect(entries.find((e) => e.schoolYear === '2025')?.score).toBe(60)
+    expect(entries.find((e) => e.schoolYear === '2026')?.score).toBe(80)
+  })
+})
+
+describe('semesterAverage', () => {
+  it('averages every assessment recorded for a subject/semester', () => {
+    const entries = [
+      {
+        subject: 'Science',
+        schoolYear: '2026' as const,
+        semester: 2 as const,
+        assessment: 'wa1' as const,
+        score: 60,
+      },
+      {
+        subject: 'Science',
+        schoolYear: '2026' as const,
+        semester: 2 as const,
+        assessment: 'wa2' as const,
+        score: 70,
+      },
+    ]
+    expect(semesterAverage(entries, 'Science', '2026', 2)).toBe(65)
+  })
+
+  it('returns undefined when nothing is recorded for that semester', () => {
+    expect(semesterAverage([], 'Science', '2026', 2)).toBeUndefined()
+  })
+})
+
+describe('syncAcademicResults', () => {
+  it('writes results with a grade + change vs the previous semester, and stamps marksSyncedAt', () => {
+    saveReportBook(
+      makeReportBook({
+        studentId: 'marks-sync-1',
+        results: [{ subject: 'English', term: 3, grade: 'B3' }],
+      }),
+    )
+    saveMarkEntry('marks-sync-1', {
+      subject: 'English',
+      schoolYear: '2026',
+      semester: 1,
+      assessment: 'wa1',
+      score: 60,
+    })
+    saveMarkEntry('marks-sync-1', {
+      subject: 'English',
+      schoolYear: '2026',
+      semester: 2,
+      assessment: 'wa1',
+      score: 70,
+    })
+
+    const book = syncAcademicResults('marks-sync-1')
+    const english = book.results.find(
+      (r) => r.subject === 'English' && r.term === 4,
+    )
+    expect(english?.grade).toBe('70')
+    expect(english?.change).toBe(10)
+    expect(book.marksSyncedAt).toBeDefined()
+    // The pre-existing term-3 result is untouched.
+    expect(
+      book.results.find((r) => r.subject === 'English' && r.term === 3)?.grade,
+    ).toBe('B3')
+  })
+
+  it('is a snapshot — a later saveMarkEntry does not change the synced book until re-synced', () => {
+    saveReportBook(makeReportBook({ studentId: 'marks-sync-2', results: [] }))
+    saveMarkEntry('marks-sync-2', {
+      subject: 'Mathematics',
+      schoolYear: '2026',
+      semester: 2,
+      assessment: 'wa1',
+      score: 70,
+    })
+    syncAcademicResults('marks-sync-2')
+
+    saveMarkEntry('marks-sync-2', {
+      subject: 'Mathematics',
+      schoolYear: '2026',
+      semester: 2,
+      assessment: 'wa1',
+      score: 90,
+    })
+    const book = loadReportBooks().find((b) => b.studentId === 'marks-sync-2')
+    expect(
+      book?.results.find((r) => r.subject === 'Mathematics' && r.term === 4)
+        ?.grade,
+    ).toBe('70')
+
+    const resynced = syncAcademicResults('marks-sync-2')
+    expect(
+      resynced.results.find((r) => r.subject === 'Mathematics' && r.term === 4)
+        ?.grade,
+    ).toBe('90')
+  })
+
+  it('throws when no report book exists yet for the student', () => {
+    expect(() => syncAcademicResults('no-such-student')).toThrow()
   })
 })
