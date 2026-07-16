@@ -284,7 +284,6 @@ export function AppSidebar() {
   const [showCoachMark, setShowCoachMark] = React.useState(false)
   const postsEnabled = useFeatureFlag('posts')
   const hdpReportsEnabled = useFeatureFlag('hdp-reports')
-  const parentsGatewayEnabled = useFeatureFlag('parents-gateway')
   const studentAnalyticsEnabled = useFeatureFlag('student-analytics')
   const studentAnalyticsBasicEnabled = useFeatureFlag('student-analytics-basic')
   const studentGroupsEnabled = useFeatureFlag('student-groups')
@@ -338,7 +337,6 @@ export function AppSidebar() {
       if (!item.featureFlag) return true
       if (item.featureFlag === 'posts') return postsEnabled
       if (item.featureFlag === 'hdp-reports') return hdpReportsEnabled
-      if (item.featureFlag === 'parents-gateway') return parentsGatewayEnabled
       if (item.featureFlag === 'student-groups') return studentGroupsEnabled
       if (item.featureFlag === 'reports') return reportsEnabled
       if (item.featureFlag === 'calendar') return calendarEnabled

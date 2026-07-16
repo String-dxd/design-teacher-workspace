@@ -22,8 +22,15 @@ function loadFlags(): FeatureFlags {
   try {
     const stored = localStorage.getItem(FEATURE_FLAGS_STORAGE_KEY)
     if (stored) {
-      const parsed = JSON.parse(stored) as Partial<FeatureFlags>
-      return { ...DEFAULT_FEATURE_FLAGS, ...parsed }
+      const parsed = JSON.parse(stored) as Partial<Record<string, boolean>>
+      const merged: FeatureFlags = { ...DEFAULT_FEATURE_FLAGS }
+      for (const key of Object.keys(
+        DEFAULT_FEATURE_FLAGS,
+      ) as Array<FeatureFlagKey>) {
+        const value = parsed[key]
+        if (typeof value === 'boolean') merged[key] = value
+      }
+      return merged
     }
   } catch {
     // Ignore parse errors, use defaults
