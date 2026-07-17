@@ -360,10 +360,7 @@ export function ReleaseManager() {
                   : 'min-w-0'
               }
             >
-              {showFuture &&
-              register === 'story' &&
-              previewBook &&
-              previewStudent ? (
+              {showFuture && register === 'story' ? (
                 <ReportStory
                   book={previewBook}
                   studentName={previewStudent.name}
@@ -376,7 +373,7 @@ export function ReleaseManager() {
                   showFuture={showFuture}
                   trends={trendsForEntries(loadMarks(previewBook.studentId))}
                 />
-              ) : previewBook && previewStudent ? (
+              ) : (
                 <ReportBook
                   book={previewBook}
                   studentName={previewStudent.name}
@@ -390,7 +387,7 @@ export function ReleaseManager() {
                       : []
                   }
                 />
-              ) : null}
+              )}
             </div>
           )}
         </DialogContent>
