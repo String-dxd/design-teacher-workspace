@@ -7,7 +7,6 @@ import {
   loadReportBooks,
   saveMarkEntry,
   seedIfEmpty,
-  syncAcademicResults,
 } from '@/lib/hdp-store'
 import { trendForSubject } from '@/lib/hdp-trends'
 import {
@@ -60,16 +59,12 @@ export function MarksGrid({ studentId, studentName }: MarksGridProps) {
 
   React.useEffect(() => {
     seedIfEmpty()
+    // Read-only surface: back-fill any cells the fixture didn't key so the
+    // grid always demos as "already pulled", but never write to the report
+    // book here. The parent Results table derives from the seeded grades, so
+    // syncing on mount only rewrote a book the teacher was merely viewing
+    // (and left ReportStory showing a numeric grade beside a letter one).
     fillEmptyMarks(studentId)
-    // Keep the report book's results snapshot in step with the pulled
-    // marks so the parent preview's Results table always has data.
-    if (
-      loadReportBooks().some(
-        (b) => b.studentId === studentId && !b.marksSyncedAt,
-      )
-    ) {
-      syncAcademicResults(studentId)
-    }
     setEntries(loadMarks(studentId))
     setPulledAt(
       loadReportBooks().find((b) => b.studentId === studentId)?.marksSyncedAt,

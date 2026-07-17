@@ -120,6 +120,18 @@ export function StudentRiver({
     return <div aria-hidden className="h-24" />
   }
 
+  // One provenance line reused by both the embedded and standalone layouts,
+  // so the count and pluralization can never drift between them.
+  const countLine =
+    visibleTags.length > 0 ? (
+      <p className="text-muted-foreground text-sm tabular-nums">
+        {visibleTags.length} observation
+        {visibleTags.length === 1 ? '' : 's'} · {teacherCount} teacher
+        {teacherCount === 1 ? '' : 's'} · {contextCount} context
+        {contextCount === 1 ? '' : 's'}
+      </p>
+    ) : null
+
   return (
     <div className="flex flex-col gap-6">
       {/* Embedded (inside the draft workspace / student profile) the page
@@ -128,12 +140,7 @@ export function StudentRiver({
       {embedded ? (
         visibleTags.length > 0 && (
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-muted-foreground text-sm tabular-nums">
-              {visibleTags.length} observation
-              {visibleTags.length === 1 ? '' : 's'} · {teacherCount} teacher
-              {teacherCount === 1 ? '' : 's'} · {contextCount} context
-              {contextCount === 1 ? '' : 's'}
-            </p>
+            {countLine}
             <Button
               variant="secondary"
               size="sm"
@@ -155,14 +162,7 @@ export function StudentRiver({
               + Add my observation
             </Button>
           </div>
-          {visibleTags.length > 0 && (
-            <p className="text-muted-foreground text-sm tabular-nums">
-              {visibleTags.length} observation
-              {visibleTags.length === 1 ? '' : 's'} · {teacherCount} teacher
-              {teacherCount === 1 ? '' : 's'} · {contextCount} context
-              {contextCount === 1 ? '' : 's'}
-            </p>
-          )}
+          {countLine}
         </div>
       )}
 
