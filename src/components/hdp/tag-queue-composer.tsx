@@ -1,36 +1,18 @@
 import * as React from 'react'
-import { Paperclip, Search } from 'lucide-react'
+import { ArrowLeft, Paperclip, Search } from 'lucide-react'
 import { toast } from 'sonner'
 import { DispositionChip } from './disposition-chip'
 import { useTagQueue } from './tag-queue-context'
-import type { DispositionId, HdpTag, TagContext } from '@/types/hdp'
+import type { DispositionId, TagContext } from '@/types/hdp'
 import { getStudentById } from '@/data/mock-students'
 import { CURRENT_TEACHER } from '@/data/hdp'
-import {
-  addTag,
-  deleteTag,
-  logEvent,
-  seedIfEmpty,
-  tagsByAuthor,
-  tagsForStudent,
-  updateTag,
-} from '@/lib/hdp-store'
+import { addTag, logEvent, seedIfEmpty, tagsForStudent } from '@/lib/hdp-store'
 import { cn } from '@/lib/utils'
 import { searchAllStudents, searchAssociatedStudents } from '@/lib/hdp-search'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
 
 const DISPOSITIONS: Array<{ id: DispositionId; label: string }> = [
   { id: 'perseverance', label: 'Perseverance' },
@@ -83,27 +65,9 @@ export function TagQueueComposer({
   const searchInputRef = React.useRef<HTMLInputElement>(null)
   const [searchQuery, setSearchQuery] = React.useState('')
   const [highlightedIndex, setHighlightedIndex] = React.useState(0)
-  const [recentTags, setRecentTags] = React.useState<Array<HdpTag>>([])
-  const [editingTagId, setEditingTagId] = React.useState<string | null>(null)
-  const [deleteCandidate, setDeleteCandidate] = React.useState<HdpTag | null>(
-    null,
-  )
-
-  const refreshRecentTags = React.useCallback(() => {
-    const mine = tagsByAuthor(CURRENT_TEACHER.id)
-      .filter((t) => t.lifecycle === 'active')
-      .sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-      )
-      .slice(0, 5)
-    setRecentTags(mine)
-  }, [])
-
   React.useEffect(() => {
     seedIfEmpty()
-    refreshRecentTags()
-  }, [refreshRecentTags])
+  }, [])
 
   const selectedStudent = draft.studentId
     ? getStudentById(draft.studentId)
@@ -144,16 +108,7 @@ export function TagQueueComposer({
     const student = getStudentById(draft.studentId)
     if (!student) return
 
-    if (editingTagId) {
-      updateTag(editingTagId, {
-        disposition: draft.disposition,
-        context: draft.context,
-        note: draft.note.trim() || undefined,
-        evidenceIds: draft.evidenceAttached ? ['mock-evidence-1'] : [],
-      })
-      setEditingTagId(null)
-      toast.success(`Updated tag · ${student.name}`)
-    } else {
+    {
       addTag({
         studentId: draft.studentId,
         authorId: CURRENT_TEACHER.id,
@@ -177,32 +132,12 @@ export function TagQueueComposer({
       )
     }
 
-    refreshRecentTags()
-
     if (effectiveEntryPoint === 'row') {
       onSaveClose?.()
     } else {
       resetDraftForNextTag()
       searchInputRef.current?.focus()
     }
-  }
-
-  function handleEdit(tag: HdpTag) {
-    setEditingTagId(tag.id)
-    setDraftStudent(tag.studentId)
-    setDraftDisposition(tag.disposition)
-    setDraftContext(tag.context)
-    setDraftNote(tag.note ?? '')
-    if (tag.evidenceIds.length > 0 && !draft.evidenceAttached) {
-      toggleDraftEvidence()
-    }
-  }
-
-  function handleConfirmDelete() {
-    if (!deleteCandidate) return
-    deleteTag(deleteCandidate.id)
-    setDeleteCandidate(null)
-    refreshRecentTags()
   }
 
   // A plain onKeyDown prop only fires while focus is on this element or one
@@ -250,12 +185,10 @@ export function TagQueueComposer({
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => {
-              setDraftStudent(null)
-              setEditingTagId(null)
-            }}
+            onClick={() => setDraftStudent(null)}
           >
-            Change
+            <ArrowLeft aria-hidden />
+            Back
           </Button>
         </div>
       ) : (
@@ -405,83 +338,6 @@ export function TagQueueComposer({
           </Button>
         </div>
       </div>
-
-      {recentTags.length > 0 && (
-        <div className="flex flex-col gap-2 border-t border-border pt-4">
-          <h3 className="text-sm font-medium">Your recent tags</h3>
-          <ul className="flex flex-col gap-2">
-            {recentTags.map((tag) => {
-              const student = getStudentById(tag.studentId)
-              const editable =
-                Date.now() < new Date(tag.editableUntil).getTime()
-              return (
-                <li
-                  key={tag.id}
-                  className="flex items-center justify-between gap-2 text-sm"
-                >
-                  <span className="min-w-0 truncate">
-                    <span className="font-medium">
-                      {student?.name ?? 'Unknown student'}
-                    </span>{' '}
-                    <span className="text-muted-foreground">
-                      · {dispositionLabel(tag.disposition)}
-                    </span>
-                  </span>
-                  {editable && (
-                    <div className="flex shrink-0 gap-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEdit(tag)}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setDeleteCandidate(tag)}
-                      >
-                        Delete
-                      </Button>
-                    </div>
-                  )}
-                </li>
-              )
-            })}
-          </ul>
-        </div>
-      )}
-
-      <AlertDialog
-        open={deleteCandidate != null}
-        onOpenChange={(open) => {
-          if (!open) setDeleteCandidate(null)
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete this tag?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This removes your observation of{' '}
-              {deleteCandidate
-                ? (getStudentById(deleteCandidate.studentId)?.name ??
-                  'this student')
-                : ''}{' '}
-              (
-              {deleteCandidate
-                ? dispositionLabel(deleteCandidate.disposition)
-                : ''}
-              ). This can't be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmDelete}>
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   )
 }

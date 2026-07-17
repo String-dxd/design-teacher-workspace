@@ -8,8 +8,7 @@ export const Route = createFileRoute('/reports/broadcast')({
   beforeLoad: () => {
     throw redirect({
       to: '/reports',
-      search: { tab: 'students' },
-      hash: 'gaps',
+      search: { tab: 'drafting' },
     })
   },
   component: () => null,

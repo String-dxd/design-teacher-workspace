@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { format } from 'date-fns'
-import { Link, useNavigate } from '@tanstack/react-router'
+import { useNavigate } from '@tanstack/react-router'
 import { ChevronRight, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { CycleStages } from './cycle-stages'
@@ -14,6 +14,12 @@ import type { HdpDraft } from '@/types/hdp'
 import { AttendanceRing } from '@/components/reports/attendance-ring'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Table,
@@ -67,11 +73,14 @@ export function HdpReportsHome({ tab, onTabChange }: HdpReportsHomeProps) {
   const { openTagQueue } = useTagQueue()
 
   const [mounted, setMounted] = React.useState(false)
-  const [requestsCount, setRequestsCount] = React.useState(0)
   React.useEffect(() => {
     seedIfEmpty()
     setMounted(true)
   }, [])
+
+  // Requests moved to a second-level tab under Drafting (maintainer
+  // direct-edit feedback) — old /reports?tab=requests links land there.
+  const effectiveTab = tab === 'requests' ? 'drafting' : tab
 
   const windowOpens = format(new Date(CURRENT_CYCLE.windowOpensAt), 'd MMM')
   const releases = format(new Date(CURRENT_CYCLE.releaseAt), 'd MMM')
@@ -102,7 +111,7 @@ export function HdpReportsHome({ tab, onTabChange }: HdpReportsHomeProps) {
       </div>
 
       <Tabs
-        value={tab}
+        value={effectiveTab}
         onValueChange={(value) => onTabChange(value as ReportsTab)}
         className="mt-4"
       >
@@ -110,10 +119,7 @@ export function HdpReportsHome({ tab, onTabChange }: HdpReportsHomeProps) {
           <TabsList>
             <TabsTrigger value="students">My students</TabsTrigger>
             <TabsTrigger value="drafting">Drafting</TabsTrigger>
-            <TabsTrigger value="send">Send to parents</TabsTrigger>
-            <TabsTrigger value="requests">
-              {requestsCount > 0 ? `Requests (${requestsCount})` : 'Requests'}
-            </TabsTrigger>
+            <TabsTrigger value="send">Release</TabsTrigger>
           </TabsList>
         </div>
 
@@ -121,15 +127,14 @@ export function HdpReportsHome({ tab, onTabChange }: HdpReportsHomeProps) {
           {mounted && <MyStudentsPanel onTabChange={onTabChange} />}
         </TabsContent>
         <TabsContent value="drafting">
-          {mounted && <DraftingPanel />}
+          {mounted && (
+            <DraftingPanel
+              initialSubTab={tab === 'requests' ? 'requests' : undefined}
+            />
+          )}
         </TabsContent>
         <TabsContent value="send" className="px-6 py-6">
           {mounted && <ReleaseManager />}
-        </TabsContent>
-        <TabsContent value="requests" className="px-6 py-6">
-          {mounted && (
-            <BroadcastRequestsPanel onCountChange={setRequestsCount} />
-          )}
         </TabsContent>
       </Tabs>
     </div>
@@ -191,15 +196,14 @@ function MyStudentsPanel({
               <div className="flex items-baseline gap-2">
                 <dt className="font-semibold tabular-nums">{notReviewed}</dt>
                 <dd className="text-muted-foreground">
-                  <Link
-                    to="/reports"
-                    search={{ tab: 'students' }}
-                    hash="gaps"
+                  <button
+                    type="button"
+                    onClick={() => onTabChange('drafting')}
                     className="hover:text-foreground inline-flex items-center gap-0.5 hover:underline"
                   >
                     Nothing noted yet
                     <ChevronRight className="h-3.5 w-3.5" aria-hidden />
-                  </Link>
+                  </button>
                 </dd>
               </div>
               {snapshot.reviewedNil > 0 && (
@@ -280,13 +284,6 @@ function MyStudentsPanel({
           </TabsContent>
         ))}
       </Tabs>
-
-      <section id="gaps" className="border-border mt-8 border-t px-6 py-6">
-        <div className="flex flex-col gap-4">
-          <h2 className="text-lg font-semibold">Fill gaps</h2>
-          <CoverageBroadcastPanel />
-        </div>
-      </section>
     </div>
   )
 }
@@ -404,8 +401,13 @@ function StatusCell({ status }: { status: 'none' | 'draft' | 'confirmed' }) {
   return <span className="text-muted-foreground text-sm">—</span>
 }
 
-function DraftingPanel() {
+function DraftingPanel({ initialSubTab }: { initialSubTab?: 'requests' }) {
   const [drafts, setDrafts] = React.useState<Array<HdpDraft>>([])
+  const [requestsCount, setRequestsCount] = React.useState(0)
+  const [gapsOpen, setGapsOpen] = React.useState(false)
+  const [subTab, setSubTab] = React.useState<string>(
+    initialSubTab ?? CURRENT_TEACHER.formClassId,
+  )
 
   const refresh = React.useCallback(() => {
     setDrafts(
@@ -418,6 +420,10 @@ function DraftingPanel() {
   React.useEffect(() => {
     refresh()
   }, [refresh])
+
+  // Gaps = form-class students with nothing noted yet this term.
+  const gapsSnapshot = coverageForClass(CURRENT_TEACHER.formClassId)
+  const gapCount = gapsSnapshot.total - gapsSnapshot.covered
 
   const classIds = [
     CURRENT_TEACHER.formClassId,
@@ -486,14 +492,33 @@ function DraftingPanel() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3 px-6 pt-6">
+      {gapCount > 0 && (
+        <div className="border-border mx-6 mt-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border p-4">
+          <p className="text-sm">
+            <span className="font-medium tabular-nums">
+              {gapCount} gap{gapCount === 1 ? '' : 's'} found
+            </span>{' '}
+            <span className="text-muted-foreground">
+              — students in {CURRENT_TEACHER.formClassId} with nothing noted yet
+              this term.
+            </span>
+          </p>
+          <Button variant="outline" size="sm" onClick={() => setGapsOpen(true)}>
+            Fill gaps
+          </Button>
+        </div>
+      )}
+
+      <div
+        className={`flex flex-wrap items-center justify-between gap-3 px-6 ${gapCount > 0 ? '' : 'pt-6'}`}
+      >
         <SyncStatus state={syncState} onSyncNow={handleSyncNow} />
         <Button variant="ghost" size="sm" onClick={handleDownloadIngestFile}>
           Download ingest file
         </Button>
       </div>
 
-      <Tabs defaultValue={classIds[0]}>
+      <Tabs value={subTab} onValueChange={(v) => setSubTab(v as string)}>
         <div className="px-6">
           <TabsList>
             {classIds.map((classId) => (
@@ -501,6 +526,9 @@ function DraftingPanel() {
                 {classId}
               </TabsTrigger>
             ))}
+            <TabsTrigger value="requests">
+              {requestsCount > 0 ? `Requests (${requestsCount})` : 'Requests'}
+            </TabsTrigger>
           </TabsList>
         </div>
         {classIds.map((classId) => (
@@ -508,7 +536,22 @@ function DraftingPanel() {
             <ClassWorklist classId={classId} />
           </TabsContent>
         ))}
+        <TabsContent value="requests" className="px-6 py-4">
+          <BroadcastRequestsPanel onCountChange={setRequestsCount} />
+        </TabsContent>
       </Tabs>
+
+      {/* Fill gaps lives in a dialog off the banner (maintainer direct-edit
+          feedback) — the coverage diagnostic, ask-colleagues composer, and
+          replies, unchanged inside. */}
+      <Dialog open={gapsOpen} onOpenChange={setGapsOpen}>
+        <DialogContent className="flex max-h-[85vh] w-full flex-col overflow-y-auto sm:w-[640px] sm:max-w-[calc(100vw-2rem)]">
+          <DialogHeader>
+            <DialogTitle>Fill gaps</DialogTitle>
+          </DialogHeader>
+          <CoverageBroadcastPanel />
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
