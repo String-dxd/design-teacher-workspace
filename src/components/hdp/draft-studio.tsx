@@ -140,6 +140,9 @@ export function DraftStudio({ studentId }: DraftStudioProps) {
   const [existingDraftId, setExistingDraftId] = React.useState<string | null>(
     null,
   )
+  // The evidence disclosure opens itself when selection matters (the
+  // checkboxes live inside it); the teacher can still collapse it.
+  const [evidenceOpen, setEvidenceOpen] = React.useState(false)
 
   // Load the relevant draft whenever the kind/subject tab changes.
   React.useEffect(() => {
@@ -149,6 +152,7 @@ export function DraftStudio({ studentId }: DraftStudioProps) {
       setStatus('draft')
       setSelectedInsightIds(new Set())
       setExistingDraftId(null)
+      setEvidenceOpen(false)
       return
     }
     const existing = findDraft(
@@ -156,11 +160,16 @@ export function DraftStudio({ studentId }: DraftStudioProps) {
       kind,
       kind === 'subject' ? subject : undefined,
     )
+    const loadedStatus = existing?.status ?? 'draft'
     setClaims(existing?.claims ?? [])
-    setStatus(existing?.status ?? 'draft')
+    setStatus(loadedStatus)
     setSelectedInsightIds(new Set(existing?.insightIds ?? []))
     setExistingDraftId(existing?.id ?? null)
-  }, [mounted, studentId, kind, subject])
+    // Open Evidence only when this freshly-loaded draft is actually in
+    // selection mode — keyed off the loaded status, not the stale 'draft'
+    // default, so a confirmed draft defaults collapsed.
+    setEvidenceOpen(showInsights && loadedStatus !== 'confirmed')
+  }, [mounted, studentId, kind, subject, showInsights])
 
   // Evidence for the active kind: overall draws from every active tag for
   // this student regardless of the river-visibility flag (multi-teacher by
@@ -233,13 +242,6 @@ export function DraftStudio({ studentId }: DraftStudioProps) {
   // draft to write here — the river's checkboxes and the School records
   // list drive selectedInsightIds.
   const selectionMode = showInsights && status !== 'confirmed' && canDraftHere
-
-  // The evidence disclosure opens itself when selection matters (the
-  // checkboxes are inside it); the teacher can still collapse it.
-  const [evidenceOpen, setEvidenceOpen] = React.useState(false)
-  React.useEffect(() => {
-    if (selectionMode) setEvidenceOpen(true)
-  }, [selectionMode])
 
   const hasEvidence = evidenceTags.length > 0
   // In B mode the insight list (which spans attendance/CCA/conduct facts,

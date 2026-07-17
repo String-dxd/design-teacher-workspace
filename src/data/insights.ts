@@ -328,11 +328,26 @@ function gradeForMark(mark: number): string {
   return 'C6'
 }
 
-function pctlForMark(mark: number): string {
-  if (mark >= 80) return '80–100'
-  if (mark >= 60) return '60–80'
-  if (mark >= 40) return '40–60'
-  return '20–40'
+// Lower bound of each grade's mark band (mirrors gradeForMark's thresholds).
+// Used to clamp the derived Overall mark so it can never render a grade below
+// the seeded one (or below the same row's Sem 2).
+const GRADE_FLOOR: Record<string, number> = {
+  A1: 75,
+  A2: 70,
+  B3: 65,
+  B4: 60,
+  C5: 55,
+}
+
+// Percentile band per grade tier. The Overall percentile is taken from the
+// seeded grade (not the derived mark), so a top grade always lands in the top
+// band and grade/percentile can never contradict each other.
+const GRADE_PCTL: Record<string, string> = {
+  A1: '80–100',
+  A2: '60–80',
+  B3: '40–60',
+  B4: '20–40',
+  C5: '20–40',
 }
 
 export interface SlipResultRow {
@@ -355,15 +370,21 @@ export function slipResultsForStudent(
     const base = GRADE_BASE[result.grade] ?? 62
     const sem2Mark = base + (h % 3) - 1 // stays within the seeded grade's band
     const sem1Mark = sem2Mark - 2 - (h % 4)
-    const overallMark = Math.round(sem1Mark * 0.4 + sem2Mark * 0.6)
+    // Overall is anchored to the seeded grade (the roster's source of truth):
+    // clamp the weighted mark into that grade's band so mark, grade and
+    // percentile always agree, and Overall never dips below the same row's
+    // Sem 2 grade.
+    const overallRaw = Math.round(sem1Mark * 0.4 + sem2Mark * 0.6)
+    const floor = GRADE_FLOOR[result.grade] ?? 55
+    const overallMark = Math.min(base, Math.max(floor, overallRaw))
     rows.push({
       subject: result.subject,
       sem1: { mark: sem1Mark, grade: gradeForMark(sem1Mark) },
       sem2: { mark: sem2Mark, grade: gradeForMark(sem2Mark) },
       overall: {
         mark: overallMark,
-        grade: gradeForMark(overallMark),
-        pctl: pctlForMark(overallMark),
+        grade: result.grade,
+        pctl: GRADE_PCTL[result.grade] ?? '40–60',
       },
     })
   }
