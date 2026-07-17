@@ -47,13 +47,21 @@ const CONTEXT_LABELS: Record<TagContext, string> = {
  *  handful of records, not just the funnel's staged three. Every value is
  *  a plain, positively-or-neutrally framed fact — no trait words, no
  *  comparisons across students. */
-interface StaticFacts {
+export interface StaticFacts {
   attendance: string
   cca: string
   conduct: string
   via: string
   competition?: string
   promotion: string
+}
+
+/** The report-book rendering reads these directly (physical-slip parity:
+ *  CCA, VIA, promotion all appear on today's result slip). */
+export function staticRecordsForStudent(
+  studentId: string,
+): Partial<StaticFacts> {
+  return STATIC_FACTS[studentId] ?? {}
 }
 
 const STATIC_FACTS: Partial<Record<string, StaticFacts>> = {
@@ -101,6 +109,271 @@ const STATIC_FACTS: Partial<Record<string, StaticFacts>> = {
     via: 'Value-in-Action: 7 hours logged this year',
     promotion: 'On track for promotion to Secondary 4',
   },
+}
+
+// ── Physical-slip details (HDP mockup parity, 2026-07-17) ──────────────
+// The official HDP report (MOE mockup, 6 pages) carries far more than this
+// prototype's store: particulars, mark/grade/percentile results, conduct,
+// personal qualities, CCA remarks + attendance, physical fitness, VIA,
+// enrichment, programmes, awards. Everything below is a deterministic
+// fixture derived from the studentId (same hash trick as the seed) plus
+// STATIC_FACTS where a student has curated ones — so every parent preview
+// renders complete, and repeat loads agree.
+
+function hashCode(s: string): number {
+  let h = 0
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0
+  return h
+}
+
+const CCA_POOL: Array<{ name: string; domain: string }> = [
+  { name: 'Basketball', domain: 'Physical Sports' },
+  { name: 'Track and Field', domain: 'Physical Sports' },
+  { name: 'Robotics Club', domain: 'Clubs & Societies' },
+  { name: 'Choir', domain: 'Aesthetics' },
+  { name: 'Debate Club', domain: 'Clubs & Societies' },
+  { name: 'Art Club', domain: 'Aesthetics' },
+  { name: 'Guitar Ensemble', domain: 'Aesthetics' },
+  { name: 'Badminton', domain: 'Physical Sports' },
+]
+
+const VIA_POOL: Array<{ title: string; partner: string }> = [
+  { title: 'Community Green Day', partner: 'National Environment Agency' },
+  { title: 'Elderly Befriending Visits', partner: 'Lions Befrienders' },
+  { title: 'East Coast Beach Clean-up', partner: 'NParks' },
+  { title: 'Food from the Heart Drive', partner: 'Food from the Heart' },
+]
+
+const ENRICHMENT_POOL: Array<{
+  area: string
+  activity: string
+  domain: string
+}> = [
+  {
+    area: 'Self-Management and Social Skills',
+    activity: 'Beyond Speaking',
+    domain: 'Social/Moral',
+  },
+  {
+    area: 'Critical Thinking',
+    activity: 'Future Problem Solving',
+    domain: 'Cognitive',
+  },
+  {
+    area: 'Digital Literacy',
+    activity: 'Coding for Good',
+    domain: 'Cognitive',
+  },
+]
+
+const PROGRAMME_POOL: Array<{ programme: string; domain: string }> = [
+  { programme: 'Creative Arts Programme', domain: 'Others – Arts' },
+  { programme: 'Debate Competition', domain: 'English Language' },
+  { programme: 'Environmental Science', domain: 'Science' },
+  { programme: 'Mathematics Mastery', domain: 'Mathematics' },
+]
+
+const QUALITY_REMARKS: Array<string> = [
+  'Demonstrates this consistently in class and during group work.',
+  'Showed this more often in the second half of the term.',
+  'A clear strength this semester.',
+  'Developing — responds well when given the chance to lead.',
+]
+
+const CCA_REMARK_TEMPLATES: Array<(cca: string) => string> = [
+  (cca) =>
+    `Takes responsibility for own preparation in ${cca} — arrives ready and helps pack up without being asked.`,
+  (cca) =>
+    `A dependable member of ${cca} who encourages newer members and keeps the group on task during sessions.`,
+  (cca) =>
+    `Shows steady commitment to ${cca}, volunteering for roles during school events and following through on them.`,
+]
+
+export interface SlipViaRow {
+  type: string
+  title: string
+  partner: string
+  role: string
+  hours: number
+}
+
+export interface SlipDetails {
+  age: number
+  serialNo: number
+  idNo: string
+  course: string
+  daysLate: number
+  nextClass: string
+  nextCourse: string
+  cca: {
+    name: string
+    domain: string
+    involvement: string
+    event?: string
+    attendanceByTerm: Array<string>
+    attendanceOverall: string
+  }
+  ccaRemarks: string
+  bmi: string
+  fitnessAward: string
+  via: Array<SlipViaRow>
+  personalQualities: Array<{ quality: string; remark: string }>
+  enrichment: Array<{ area: string; activity: string; domain: string }>
+  programmes: Array<{ programme: string; domain: string }>
+  awards: Array<{ type: string; category: string; award: string }>
+}
+
+export function slipDetailsForStudent(studentId: string): SlipDetails {
+  const h = hashCode(`slip-${studentId}`)
+  const facts = STATIC_FACTS[studentId]
+
+  // Students with curated STATIC_FACTS keep their CCA name (format is
+  // always '<CCA> — attended …'); everyone else draws from the pool.
+  const factsCcaName = facts?.cca.split(' — ')[0]
+  const pooled = CCA_POOL[h % CCA_POOL.length]
+  const ccaName = factsCcaName ?? pooled.name
+  const ccaDomain =
+    CCA_POOL.find((c) => c.name === ccaName)?.domain ?? pooled.domain
+
+  const viaHours = facts
+    ? Number(/(\d+) hours/.exec(facts.via)?.[1] ?? 12)
+    : 8 + (h % 10)
+  const viaPick = VIA_POOL[h % VIA_POOL.length]
+
+  const termTotals = [8, 6, 6, 4]
+  const attendanceByTerm = termTotals.map(
+    (total, i) => `${total - ((h >> i) & 1)}/${total}`,
+  )
+  const attended = termTotals.reduce(
+    (sum, total, i) => sum + total - ((h >> i) & 1),
+    0,
+  )
+  const totalSessions = termTotals.reduce((a, b) => a + b, 0)
+
+  const serialFromId = Number(studentId)
+  return {
+    age: 15,
+    serialNo: Number.isFinite(serialFromId) ? serialFromId : (h % 30) + 1,
+    idNo: `TXXXX${String(100 + ((h * 37) % 900))}${'ABDFGHJ'[h % 7]}`,
+    course: 'Express',
+    daysLate: h % 2,
+    nextClass: '4A',
+    nextCourse: 'Express',
+    cca: {
+      name: ccaName,
+      domain: ccaDomain,
+      involvement: h % 4 === 0 ? 'Vice-Captain' : 'Member',
+      event: facts?.competition,
+      attendanceByTerm,
+      attendanceOverall: `${Math.round((attended / totalSessions) * 100)}%`,
+    },
+    ccaRemarks: CCA_REMARK_TEMPLATES[h % CCA_REMARK_TEMPLATES.length](ccaName),
+    bmi: 'Acceptable',
+    fitnessAward: ['Gold', 'Silver', 'Bronze'][h % 3],
+    via: [
+      {
+        type: 'Project (School Initiated)',
+        title: viaPick.title,
+        partner: viaPick.partner,
+        role: 'Participant',
+        hours: viaHours,
+      },
+    ],
+    personalQualities: [
+      'Perseverance',
+      'Curiosity',
+      'Collaboration',
+      'Self-direction',
+    ].map((quality, i) => ({
+      quality,
+      remark: QUALITY_REMARKS[(h + i) % QUALITY_REMARKS.length],
+    })),
+    enrichment: [ENRICHMENT_POOL[h % ENRICHMENT_POOL.length]],
+    programmes: [
+      PROGRAMME_POOL[h % PROGRAMME_POOL.length],
+      PROGRAMME_POOL[(h + 2) % PROGRAMME_POOL.length],
+    ],
+    awards: facts?.competition
+      ? [
+          {
+            type: 'Inter-Schools',
+            category: ccaDomain,
+            award: facts.competition,
+          },
+        ]
+      : [],
+  }
+}
+
+// ── Slip results (mark · grade · percentile, HDP mockup parity) ────────
+// The seeded book only carries one letter grade per subject; the official
+// slip shows Mark/Grade per semester plus an Overall with a percentile
+// band. Marks are derived deterministically from the seeded grade so the
+// derived grade always agrees with what the roster already shows.
+
+const GRADE_BASE: Record<string, number> = {
+  A1: 78,
+  A2: 72,
+  B3: 67,
+  B4: 62,
+  C5: 57,
+}
+
+function gradeForMark(mark: number): string {
+  if (mark >= 75) return 'A1'
+  if (mark >= 70) return 'A2'
+  if (mark >= 65) return 'B3'
+  if (mark >= 60) return 'B4'
+  if (mark >= 55) return 'C5'
+  return 'C6'
+}
+
+function pctlForMark(mark: number): string {
+  if (mark >= 80) return '80–100'
+  if (mark >= 60) return '60–80'
+  if (mark >= 40) return '40–60'
+  return '20–40'
+}
+
+export interface SlipResultRow {
+  subject: string
+  sem1: { mark: number; grade: string }
+  sem2: { mark: number; grade: string }
+  overall: { mark: number; grade: string; pctl: string }
+}
+
+export function slipResultsForStudent(
+  studentId: string,
+  results: Array<{ subject: string; grade: string }>,
+): { rows: Array<SlipResultRow>; percentage: number } {
+  const seen = new Set<string>()
+  const rows: Array<SlipResultRow> = []
+  for (const result of results) {
+    if (seen.has(result.subject)) continue
+    seen.add(result.subject)
+    const h = hashCode(`${studentId}-${result.subject}`)
+    const base = GRADE_BASE[result.grade] ?? 62
+    const sem2Mark = base + (h % 3) - 1 // stays within the seeded grade's band
+    const sem1Mark = sem2Mark - 2 - (h % 4)
+    const overallMark = Math.round(sem1Mark * 0.4 + sem2Mark * 0.6)
+    rows.push({
+      subject: result.subject,
+      sem1: { mark: sem1Mark, grade: gradeForMark(sem1Mark) },
+      sem2: { mark: sem2Mark, grade: gradeForMark(sem2Mark) },
+      overall: {
+        mark: overallMark,
+        grade: gradeForMark(overallMark),
+        pctl: pctlForMark(overallMark),
+      },
+    })
+  }
+  const percentage =
+    rows.length > 0
+      ? Math.round(
+          rows.reduce((sum, r) => sum + r.overall.mark, 0) / rows.length,
+        )
+      : 0
+  return { rows, percentage }
 }
 
 /** One-line, behaviour-in-context clause (lowercase, ready to follow a

@@ -71,12 +71,14 @@ export function ReleaseManager() {
   const [mounted, setMounted] = React.useState(false)
   const [books, setBooks] = React.useState<Array<HdpReportBook>>([])
   const [shareTarget, setShareTarget] = React.useState<string | null>(null)
+  const [bulkShareOpen, setBulkShareOpen] = React.useState(false)
   const [releaseTarget, setReleaseTarget] = React.useState<string | null>(null)
   const [preview, setPreview] = React.useState<string | null>(null)
   const [register, setRegister] = React.useState<'book' | 'story'>('book')
-  const [viewport, setViewport] = React.useState<'desktop' | 'mobile'>(
-    'desktop',
-  )
+  // Mobile-first: parents open this from Parents Gateway on a phone, and
+  // the phone frame makes "this is the parent-facing view" legible in a
+  // deck screenshot (walkthrough decision 2026-07-17).
+  const [viewport, setViewport] = React.useState<'desktop' | 'mobile'>('mobile')
 
   const refresh = React.useCallback(() => {
     seedIfEmpty()
@@ -137,6 +139,35 @@ export function ReleaseManager() {
       .catch(() => toast.error('Could not copy the link'))
   }
 
+  // Same gate the per-row button uses — a bulk share can never sneak a
+  // student past the confirmed-draft (and, flag on, reflection) gate.
+  function canShareWith(studentId: string): boolean {
+    const confirmed = findDraft(studentId, 'overall')?.status === 'confirmed'
+    if (!showFuture) return confirmed
+    const book = bookFor(studentId)
+    return (
+      confirmed &&
+      Boolean(book?.studentReleasedAt) &&
+      reflectionGatesShare(studentId)
+    )
+  }
+
+  const shareableIds = mounted
+    ? students
+        .filter((s) => canShareWith(s.id) && !bookFor(s.id)?.sharedAt)
+        .map((s) => s.id)
+    : []
+  const sharedCount = students.filter((s) => bookFor(s.id)?.sharedAt).length
+
+  function handleBulkShareConfirm() {
+    for (const id of shareableIds) shareReportBook(id)
+    setBulkShareOpen(false)
+    refresh()
+    toast.success(
+      `Shared ${shareableIds.length} report book${shareableIds.length === 1 ? '' : 's'} with parents`,
+    )
+  }
+
   function handleShareConfirm() {
     if (!shareTarget) return
     shareReportBook(shareTarget)
@@ -156,7 +187,28 @@ export function ReleaseManager() {
   }
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-4">
+      {mounted && (
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-muted-foreground text-sm tabular-nums">
+            {sharedCount} of {students.length} shared with parents
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={shareableIds.length === 0}
+            title={
+              shareableIds.length === 0
+                ? 'Every ready report is already shared'
+                : undefined
+            }
+            onClick={() => setBulkShareOpen(true)}
+          >
+            Share with class ({shareableIds.length} ready)
+          </Button>
+        </div>
+      )}
       {mounted && (
         <ul className="flex flex-col gap-3">
           {students.map((student) => {
@@ -352,42 +404,57 @@ export function ReleaseManager() {
               />
             </div>
           </div>
+          {previewBook && previewStudent && viewport === 'mobile' && (
+            <div className="flex flex-col items-center gap-2">
+              <p className="text-muted-foreground text-xs">
+                How parents see it in Parents Gateway
+              </p>
+            </div>
+          )}
           {previewBook && previewStudent && (
             <div
               className={
                 viewport === 'mobile'
-                  ? 'border-border mx-auto w-[375px] max-w-full overflow-y-auto rounded-2xl border p-4 shadow-sm'
+                  ? 'mx-auto w-[390px] max-w-full rounded-[2.25rem] border-[8px] border-slate-950/90 bg-background shadow-md dark:border-slate-200/20'
                   : 'min-w-0'
               }
             >
-              {showFuture && register === 'story' ? (
-                <ReportStory
-                  book={previewBook}
-                  studentName={previewStudent.name}
-                  className={previewStudent.class}
-                  viewer="teacher-preview"
-                  reflection={coverReflection(previewBook.studentId)}
-                  patterns={loadPatterns().filter(
-                    (p) => p.studentId === previewBook.studentId,
-                  )}
-                  showFuture={showFuture}
-                  trends={trendsForEntries(loadMarks(previewBook.studentId))}
-                />
-              ) : (
-                <ReportBook
-                  book={previewBook}
-                  studentName={previewStudent.name}
-                  className={previewStudent.class}
-                  viewer="teacher-preview"
-                  resolveTag={resolveTag}
-                  showFuture={showFuture}
-                  trends={
-                    showFuture
-                      ? trendsForEntries(loadMarks(previewBook.studentId))
-                      : []
-                  }
-                />
-              )}
+              <div
+                className={
+                  viewport === 'mobile'
+                    ? 'max-h-[62vh] overflow-y-auto rounded-[1.75rem] px-4 pt-6 pb-6'
+                    : 'min-w-0'
+                }
+              >
+                {showFuture && register === 'story' ? (
+                  <ReportStory
+                    book={previewBook}
+                    studentName={previewStudent.name}
+                    className={previewStudent.class}
+                    viewer="teacher-preview"
+                    reflection={coverReflection(previewBook.studentId)}
+                    patterns={loadPatterns().filter(
+                      (p) => p.studentId === previewBook.studentId,
+                    )}
+                    showFuture={showFuture}
+                    trends={trendsForEntries(loadMarks(previewBook.studentId))}
+                  />
+                ) : (
+                  <ReportBook
+                    book={previewBook}
+                    studentName={previewStudent.name}
+                    className={previewStudent.class}
+                    viewer="teacher-preview"
+                    resolveTag={resolveTag}
+                    showFuture={showFuture}
+                    trends={
+                      showFuture
+                        ? trendsForEntries(loadMarks(previewBook.studentId))
+                        : []
+                    }
+                  />
+                )}
+              </div>
             </div>
           )}
         </DialogContent>
@@ -415,6 +482,29 @@ export function ReleaseManager() {
           </div>
         </section>
       )}
+
+      <AlertDialog open={bulkShareOpen} onOpenChange={setBulkShareOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Share {shareableIds.length} report book
+              {shareableIds.length === 1 ? '' : 's'} with parents?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Every {CURRENT_TEACHER.formClassId} student with a confirmed
+              remark gets a parent link. In the pilot, links go out via Parents
+              Gateway. Students without a confirmed remark are skipped — share
+              them one by one once their comments are in.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleBulkShareConfirm}>
+              Share with class
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog
         open={shareTarget !== null}

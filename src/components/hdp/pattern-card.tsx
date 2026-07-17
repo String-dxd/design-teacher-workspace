@@ -1,6 +1,7 @@
 import type { DispositionId, FormingPattern } from '@/types/hdp'
 import { MOCK_STAFF } from '@/data/mock-staff'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { cn } from '@/lib/utils'
 
 const DISPOSITION_LABELS: Record<DispositionId, string> = {
@@ -18,6 +19,11 @@ interface PatternCardProps {
   pattern: FormingPattern
   onConfirm?: () => void
   onDismiss?: () => void
+  /** Draft-studio selection mode (Prototype B): a confirmed thread is a
+   *  selectable insight — when both are given the card leads with a
+   *  checkbox, same grammar as the stream items around it. */
+  selected?: boolean
+  onSelectedChange?: () => void
   /** The student's first name — used only for the quiet "hidden from the
    *  family report by {name}" line when a student has retired a confirmed
    *  pattern from their family-facing report (plan 041). The teacher-facing
@@ -33,9 +39,12 @@ export function PatternCard({
   onConfirm,
   onDismiss,
   studentFirstName,
+  selected,
+  onSelectedChange,
 }: PatternCardProps) {
   const isConfirmed = pattern.status === 'confirmed'
   const isRetired = pattern.status === 'retired-by-student'
+  const selectable = onSelectedChange !== undefined
   const basisLine = `${DISPOSITION_LABELS[pattern.disposition]} in ${
     pattern.contexts.length
   } contexts · ${pattern.tagIds.length} observations`
@@ -43,34 +52,49 @@ export function PatternCard({
   return (
     <div
       className={cn(
-        'flex flex-col gap-1.5 rounded-lg border-[1.5px] border-primary/50 p-3',
+        'border-primary/40 bg-primary/[0.03] flex gap-3 rounded-lg border-[1.5px] p-3.5',
       )}
     >
-      <p className="text-xs font-medium text-primary">
-        {isConfirmed || isRetired
-          ? `Confirmed thread · by ${staffName(pattern.confirmedBy ?? '')}`
-          : 'Forming pattern — candidate thread, unconfirmed'}
-      </p>
-      <p className="text-muted-foreground text-sm">{basisLine}</p>
-      {isRetired && (
-        <p className="text-muted-foreground text-xs">
-          Hidden from the family report by {studentFirstName ?? 'the student'}
+      {selectable && (
+        <Checkbox
+          checked={selected ?? false}
+          onCheckedChange={onSelectedChange}
+          aria-label="Include this confirmed thread in the draft"
+          className="mt-0.5"
+        />
+      )}
+      <div className="flex min-w-0 flex-col gap-1">
+        <p className="text-primary text-xs font-medium">
+          {isConfirmed || isRetired
+            ? `Confirmed thread · by ${staffName(pattern.confirmedBy ?? '')}`
+            : 'Forming pattern'}
         </p>
-      )}
-      {!isConfirmed && !isRetired && (onConfirm || onDismiss) && (
-        <div className="mt-1 flex gap-2">
-          {onConfirm && (
-            <Button variant="outline" size="sm" onClick={onConfirm}>
-              Confirm
-            </Button>
-          )}
-          {onDismiss && (
-            <Button variant="ghost" size="sm" onClick={onDismiss}>
-              Not a thread
-            </Button>
-          )}
-        </div>
-      )}
+        <p className="text-sm font-medium">{basisLine}</p>
+        {isRetired && (
+          <p className="text-muted-foreground text-xs">
+            Hidden from the family report by {studentFirstName ?? 'the student'}
+          </p>
+        )}
+        {!isConfirmed && !isRetired && (
+          <p className="text-muted-foreground text-xs">
+            Unconfirmed — it only counts as a thread once a teacher confirms it.
+          </p>
+        )}
+        {!isConfirmed && !isRetired && (onConfirm || onDismiss) && (
+          <div className="mt-1.5 flex gap-2">
+            {onConfirm && (
+              <Button variant="outline" size="sm" onClick={onConfirm}>
+                Confirm thread
+              </Button>
+            )}
+            {onDismiss && (
+              <Button variant="ghost" size="sm" onClick={onDismiss}>
+                Not a thread
+              </Button>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

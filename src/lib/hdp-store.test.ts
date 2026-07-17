@@ -275,10 +275,20 @@ describe('seedIfEmpty', () => {
     expect(afterSecond).toBe(afterFirst)
   })
 
-  it('does not overwrite existing data', () => {
+  it('does not overwrite existing data from the current seed version', () => {
+    // First call stamps hdp_seed_version; in-session edits after that must
+    // survive later calls.
+    seedIfEmpty()
     localStorage.setItem('hdp_patterns', JSON.stringify([]))
     seedIfEmpty()
     expect(loadPatterns()).toEqual([])
+  })
+
+  it('wipes and reseeds a store from an older seed version', () => {
+    localStorage.setItem('hdp_seed_version', 'stale')
+    localStorage.setItem('hdp_patterns', JSON.stringify([]))
+    seedIfEmpty()
+    expect(loadPatterns().length).toBeGreaterThan(0)
   })
 })
 

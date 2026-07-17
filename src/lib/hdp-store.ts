@@ -47,6 +47,13 @@ const ANALYTICS_KEY = 'hdp_analytics'
 const MARKS_KEY = 'hdp_marks'
 const REFLECTIONS_KEY = 'hdp_reflections'
 
+// Bump when the seed fixture changes shape or coverage — stale stores are
+// wiped and reseeded on next load, so a browser that seeded an older
+// fixture (e.g. before every 3A student shipped release-ready) catches up
+// without a manual localStorage clear.
+const SEED_VERSION_KEY = 'hdp_seed_version'
+const SEED_VERSION = '2026-07-17-distinct-notes'
+
 const CURRENT_TERM = CURRENT_CYCLE.terms[0]
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000
 
@@ -75,6 +82,21 @@ function writeArray<T>(key: string, value: Array<T>): void {
 /** Seeds every collection from src/data/hdp.ts the first time it's empty. Idempotent — a second call adds nothing. */
 export function seedIfEmpty(): void {
   if (typeof window === 'undefined') return
+  if (localStorage.getItem(SEED_VERSION_KEY) !== SEED_VERSION) {
+    for (const key of [
+      TAGS_KEY,
+      PATTERNS_KEY,
+      BROADCASTS_KEY,
+      DRAFTS_KEY,
+      REPORT_BOOKS_KEY,
+      ANALYTICS_KEY,
+      MARKS_KEY,
+      REFLECTIONS_KEY,
+    ]) {
+      localStorage.removeItem(key)
+    }
+    localStorage.setItem(SEED_VERSION_KEY, SEED_VERSION)
+  }
   if (localStorage.getItem(TAGS_KEY) === null) {
     writeArray(TAGS_KEY, SEED_TAGS)
   }

@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { Link } from '@tanstack/react-router'
+import { ChevronRight } from 'lucide-react'
 import { toast } from 'sonner'
 import { ClaimEditor } from './claim-editor'
 import { InsightCuration } from './insight-curation'
@@ -133,6 +134,13 @@ export function DraftStudio({ studentId }: DraftStudioProps) {
     }
   }, [availableSubjects, subject])
 
+  // A pre-existing draft keeps its own id (seeded drafts use e.g.
+  // 'draft-1', not the computed 'draft-1-overall') — confirm/reopen/save
+  // must target the record that actually exists in the store.
+  const [existingDraftId, setExistingDraftId] = React.useState<string | null>(
+    null,
+  )
+
   // Load the relevant draft whenever the kind/subject tab changes.
   React.useEffect(() => {
     if (!mounted) return
@@ -140,6 +148,7 @@ export function DraftStudio({ studentId }: DraftStudioProps) {
       setClaims([])
       setStatus('draft')
       setSelectedInsightIds(new Set())
+      setExistingDraftId(null)
       return
     }
     const existing = findDraft(
@@ -150,6 +159,7 @@ export function DraftStudio({ studentId }: DraftStudioProps) {
     setClaims(existing?.claims ?? [])
     setStatus(existing?.status ?? 'draft')
     setSelectedInsightIds(new Set(existing?.insightIds ?? []))
+    setExistingDraftId(existing?.id ?? null)
   }, [mounted, studentId, kind, subject])
 
   // Evidence for the active kind: overall draws from every active tag for
@@ -178,6 +188,29 @@ export function DraftStudio({ studentId }: DraftStudioProps) {
     return map
   }, [insights])
 
+  // The river is the curation surface (one evidence surface, no separate
+  // insights list): these maps resolve a river tag / confirmed pattern to
+  // its insight id so the checkboxes drive the same selection set the
+  // composer reads. Non-river facts render as the School records list.
+  const riverInsightIds = React.useMemo(() => {
+    const byTag = new Map<string, string>()
+    const byPattern = new Map<string, string>()
+    for (const insight of insights) {
+      if (insight.kind === 'observation') {
+        byTag.set(insight.sourceRef.recordId, insight.id)
+      } else if (insight.kind === 'pattern') {
+        byPattern.set(insight.sourceRef.recordId, insight.id)
+      }
+    }
+    return { byTag, byPattern }
+  }, [insights])
+
+  const recordInsights = React.useMemo(
+    () =>
+      insights.filter((i) => i.kind !== 'observation' && i.kind !== 'pattern'),
+    [insights],
+  )
+
   const tagsById = React.useMemo(() => {
     const map = new Map<string, HdpTag>()
     for (const tag of visibleTags) map.set(tag.id, tag)
@@ -195,6 +228,19 @@ export function DraftStudio({ studentId }: DraftStudioProps) {
     )
   }, [mounted, studentId, kind])
 
+  const canDraftHere = !(kind === 'subject' && availableSubjects.length === 0)
+  // Selection mode: B flag on, the draft is still open, and there is a
+  // draft to write here — the river's checkboxes and the School records
+  // list drive selectedInsightIds.
+  const selectionMode = showInsights && status !== 'confirmed' && canDraftHere
+
+  // The evidence disclosure opens itself when selection matters (the
+  // checkboxes are inside it); the teacher can still collapse it.
+  const [evidenceOpen, setEvidenceOpen] = React.useState(false)
+  React.useEffect(() => {
+    if (selectionMode) setEvidenceOpen(true)
+  }, [selectionMode])
+
   const hasEvidence = evidenceTags.length > 0
   // In B mode the insight list (which spans attendance/CCA/conduct facts,
   // not just tags) is the real evidence backing a draft — a thin-tag
@@ -202,11 +248,9 @@ export function DraftStudio({ studentId }: DraftStudioProps) {
   // not the tag-only signal the A path uses.
   const effectiveHasEvidence = showInsights ? insights.length > 0 : hasEvidence
   const hasEdits = claims.some((c) => c.edited || !c.source)
-  const currentDraftId = draftId(
-    studentId,
-    kind,
-    kind === 'subject' ? subject : undefined,
-  )
+  const currentDraftId =
+    existingDraftId ??
+    draftId(studentId, kind, kind === 'subject' ? subject : undefined)
 
   function toggleInsight(id: string) {
     setSelectedInsightIds((prev) => {
@@ -361,7 +405,7 @@ export function DraftStudio({ studentId }: DraftStudioProps) {
   }
 
   return (
-    <div className="flex min-w-0 flex-col gap-6">
+    <div className="flex min-w-0 max-w-3xl flex-col gap-6">
       <div className="flex min-w-0 flex-col gap-4">
         <Tabs
           value={kind}
@@ -404,14 +448,6 @@ export function DraftStudio({ studentId }: DraftStudioProps) {
           <TabsContent value="overall" className="pt-2" />
         </Tabs>
 
-        {showInsights && insights.length > 0 && status !== 'confirmed' && (
-          <InsightCuration
-            insights={insights}
-            selectedIds={selectedInsightIds}
-            onToggle={toggleInsight}
-          />
-        )}
-
         {kind === 'subject' && availableSubjects.length === 0 ? null : (
           <DraftBody
             key={currentDraftId}
@@ -426,7 +462,12 @@ export function DraftStudio({ studentId }: DraftStudioProps) {
             suggestDisabled={showInsights && selectedInsightIds.size === 0}
             suggestHelperText={
               showInsights
-                ? 'Select the insights that belong in this comment.'
+                ? 'Tick the evidence below that belongs in this comment.'
+                : undefined
+            }
+            suggestLabel={
+              showInsights && selectedInsightIds.size > 0
+                ? `Suggest a draft from ${selectedInsightIds.size} selected`
                 : undefined
             }
             onChangeClaims={(next) => {
@@ -456,18 +497,67 @@ export function DraftStudio({ studentId }: DraftStudioProps) {
 
       {/* Sources behind the summary (NotebookLM pattern): the full evidence
           river sits under a disclosure below the draft — the chips in the
-          prose are the primary way into any single source. */}
-      <details className="flex flex-col gap-3">
-        <summary className="hover:text-muted-foreground motion-safe:transition-colors motion-safe:duration-150 cursor-pointer rounded-sm text-sm font-medium">
+          prose are the primary way into any single source. In selection
+          mode (Prototype B) this same surface carries the curation
+          checkboxes, so it opens itself. */}
+      <details
+        className="group border-border flex flex-col gap-3 border-t pt-4"
+        open={evidenceOpen}
+        onToggle={(e) => setEvidenceOpen(e.currentTarget.open)}
+      >
+        <summary className="focus-visible:ring-ring/50 inline-flex cursor-pointer list-none items-center gap-1.5 rounded-sm text-sm font-medium outline-none focus-visible:ring-[3px] [&::-webkit-details-marker]:hidden">
+          <ChevronRight
+            className="text-muted-foreground h-4 w-4 motion-safe:transition-transform motion-safe:duration-150 group-open:rotate-90"
+            aria-hidden
+          />
           Evidence
+          <span className="text-muted-foreground font-normal tabular-nums">
+            ({visibleTags.length})
+          </span>
+          {selectionMode && (
+            <span className="text-muted-foreground font-normal">
+              — tick what belongs in this comment
+            </span>
+          )}
         </summary>
-        <div className="pt-1">
+        <div className="flex flex-col gap-6 pt-1 pl-[22px]">
           <StudentRiver
             studentId={studentId}
             viewerId={CURRENT_TEACHER.id}
             fullRiver={kind === 'overall'}
             embedded
+            selection={
+              selectionMode
+                ? {
+                    isTagSelected: (tagId) => {
+                      const id = riverInsightIds.byTag.get(tagId)
+                      return id ? selectedInsightIds.has(id) : false
+                    },
+                    onToggleTag: (tagId) => {
+                      const id = riverInsightIds.byTag.get(tagId)
+                      if (id) toggleInsight(id)
+                    },
+                    isPatternSelected: (patternId) => {
+                      const id = riverInsightIds.byPattern.get(patternId)
+                      return id ? selectedInsightIds.has(id) : false
+                    },
+                    onTogglePattern: (patternId) => {
+                      const id = riverInsightIds.byPattern.get(patternId)
+                      if (id) toggleInsight(id)
+                    },
+                  }
+                : undefined
+            }
           />
+          {selectionMode && recordInsights.length > 0 && (
+            <div className="border-border border-t pt-4">
+              <InsightCuration
+                insights={recordInsights}
+                selectedIds={selectedInsightIds}
+                onToggle={toggleInsight}
+              />
+            </div>
+          )}
         </div>
       </details>
 
@@ -636,6 +726,9 @@ interface DraftBodyProps {
    *  yet — "Suggest a draft" stays disabled until ≥1 selection (plan 040). */
   suggestDisabled?: boolean
   suggestHelperText?: string
+  /** Overrides the suggest button's label — carries the live selection
+   *  count in B mode ("Suggest a draft from 4 selected"). */
+  suggestLabel?: string
   onChangeClaims: (claims: Array<DraftClaim>) => void
   onSuggestOrRegenerate: () => void
   onConfirm: () => void
@@ -663,6 +756,7 @@ function DraftBody({
   saveState,
   suggestDisabled = false,
   suggestHelperText,
+  suggestLabel,
   onChangeClaims,
   onSuggestOrRegenerate,
   onConfirm,
@@ -771,7 +865,7 @@ function DraftBody({
             disabled={suggesting || suggestDisabled}
             className="w-fit"
           >
-            {suggesting ? 'Suggesting…' : 'Suggest a draft'}
+            {suggesting ? 'Suggesting…' : (suggestLabel ?? 'Suggest a draft')}
           </Button>
           {suggestDisabled && suggestHelperText && (
             <p className="text-muted-foreground text-xs">{suggestHelperText}</p>

@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { Link } from '@tanstack/react-router'
+import { format, startOfISOWeek } from 'date-fns'
 import { DispositionMixBar } from './disposition-mix-bar'
 import { PatternCard } from './pattern-card'
 import { StreamItem } from './stream-item'
@@ -22,6 +23,36 @@ function staffName(id: string): string {
   return MOCK_STAFF.find((s) => s.id === id)?.name ?? 'Unknown teacher'
 }
 
+/** Newest week first, tags newest-first within each week. The header names
+ *  the week by its Monday ("Week of 6 Jul") — a real date beats the bare
+ *  ISO week number the stream used to show per row. */
+function groupTagsByWeek(
+  tags: Array<HdpTag>,
+): Array<{ key: string; label: string; tags: Array<HdpTag> }> {
+  const sorted = tags
+    .slice()
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    )
+  const groups: Array<{ key: string; label: string; tags: Array<HdpTag> }> = []
+  for (const tag of sorted) {
+    const weekStart = startOfISOWeek(new Date(tag.createdAt))
+    const key = format(weekStart, 'yyyy-MM-dd')
+    const current = groups.at(-1)
+    if (current && current.key === key) {
+      current.tags.push(tag)
+    } else {
+      groups.push({
+        key,
+        label: `Week of ${format(weekStart, 'd MMM')}`,
+        tags: [tag],
+      })
+    }
+  }
+  return groups
+}
+
 interface StudentRiverProps {
   studentId: string
   viewerId: string
@@ -32,6 +63,15 @@ interface StudentRiverProps {
   /** true when rendered inside the student profile (h2 header, no page
    *  chrome); false on the dedicated route (h1 header). */
   embedded?: boolean
+  /** Draft-studio selection mode (Prototype B): the river doubles as the
+   *  insight-curation surface — observations and confirmed threads lead
+   *  with checkboxes. Absent everywhere else (river page, profile tab). */
+  selection?: {
+    isTagSelected: (tagId: string) => boolean
+    onToggleTag: (tagId: string) => void
+    isPatternSelected: (patternId: string) => boolean
+    onTogglePattern: (patternId: string) => void
+  }
 }
 
 export function StudentRiver({
@@ -39,6 +79,7 @@ export function StudentRiver({
   viewerId,
   fullRiver,
   embedded = false,
+  selection,
 }: StudentRiverProps) {
   const { openTagQueue } = useTagQueue()
   const [mounted, setMounted] = React.useState(false)
@@ -81,32 +122,49 @@ export function StudentRiver({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <Heading
-            className={
-              embedded ? 'text-lg font-semibold' : 'text-2xl font-semibold'
-            }
-          >
-            {name}
-          </Heading>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => openTagQueue({ studentId, entryPoint: 'row' })}
-          >
-            + Add my observation
-          </Button>
+      {/* Embedded (inside the draft workspace / student profile) the page
+          already names the student — lead with the provenance line instead
+          of repeating the name. */}
+      {embedded ? (
+        visibleTags.length > 0 && (
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-muted-foreground text-sm tabular-nums">
+              {visibleTags.length} observation
+              {visibleTags.length === 1 ? '' : 's'} · {teacherCount} teacher
+              {teacherCount === 1 ? '' : 's'} · {contextCount} context
+              {contextCount === 1 ? '' : 's'}
+            </p>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => openTagQueue({ studentId, entryPoint: 'row' })}
+            >
+              + Add my observation
+            </Button>
+          </div>
+        )
+      ) : (
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <Heading className="text-2xl font-semibold">{name}</Heading>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => openTagQueue({ studentId, entryPoint: 'row' })}
+            >
+              + Add my observation
+            </Button>
+          </div>
+          {visibleTags.length > 0 && (
+            <p className="text-muted-foreground text-sm tabular-nums">
+              {visibleTags.length} observation
+              {visibleTags.length === 1 ? '' : 's'} · {teacherCount} teacher
+              {teacherCount === 1 ? '' : 's'} · {contextCount} context
+              {contextCount === 1 ? '' : 's'}
+            </p>
+          )}
         </div>
-        {visibleTags.length > 0 && (
-          <p className="text-muted-foreground text-sm tabular-nums">
-            {visibleTags.length} observation
-            {visibleTags.length === 1 ? '' : 's'} · {teacherCount} teacher
-            {teacherCount === 1 ? '' : 's'} · {contextCount} context
-            {contextCount === 1 ? '' : 's'}
-          </p>
-        )}
-      </div>
+      )}
 
       {visibleTags.length === 0 ? (
         <EmptyState
@@ -131,7 +189,9 @@ export function StudentRiver({
         />
       ) : (
         <div className="flex flex-col gap-6">
-          <DispositionMixBar tags={visibleTags} />
+          <div className="max-w-md">
+            <DispositionMixBar tags={visibleTags} />
+          </div>
 
           {patterns.length > 0 && (
             <div className="flex flex-col gap-2">
@@ -140,6 +200,16 @@ export function StudentRiver({
                   key={pattern.id}
                   pattern={pattern}
                   studentFirstName={name.split(' ')[0] ?? name}
+                  selected={
+                    selection && pattern.status === 'confirmed'
+                      ? selection.isPatternSelected(pattern.id)
+                      : undefined
+                  }
+                  onSelectedChange={
+                    selection && pattern.status === 'confirmed'
+                      ? () => selection.onTogglePattern(pattern.id)
+                      : undefined
+                  }
                   onConfirm={
                     pattern.status === 'candidate'
                       ? () => {
@@ -161,51 +231,63 @@ export function StudentRiver({
             </div>
           )}
 
-          <ol className="flex flex-col divide-y divide-border">
-            {visibleTags
-              .slice()
-              .sort(
-                (a, b) =>
-                  new Date(b.createdAt).getTime() -
-                  new Date(a.createdAt).getTime(),
-              )
-              .map((tag) => {
-                const editable =
-                  Date.now() < new Date(tag.editableUntil).getTime() &&
-                  tag.authorId === viewerId
-                return (
-                  <StreamItem
-                    key={tag.id}
-                    tag={tag}
-                    authorName={staffName(tag.authorId)}
-                    editable={editable}
-                    onEdit={
-                      editable
-                        ? () => {
-                            // The Tag Queue composer's own "recent tags"
-                            // list (tag-queue-context.tsx, out of scope for
-                            // this plan) is where an author edits a recent
-                            // tag's fields; from the river we can only
-                            // reopen that same composer pinned to this
-                            // student — there's no prefill hook yet for
-                            // "edit this exact tag" from an arbitrary
-                            // caller.
-                            openTagQueue({ studentId, entryPoint: 'row' })
-                          }
-                        : undefined
-                    }
-                    onDelete={
-                      editable
-                        ? () => {
-                            deleteTag(tag.id)
-                            refresh()
-                          }
-                        : undefined
-                    }
-                  />
-                )
-              })}
-          </ol>
+          <div className="flex flex-col gap-5">
+            {groupTagsByWeek(visibleTags).map((group) => (
+              <section key={group.key} className="flex flex-col gap-1">
+                <h3 className="text-muted-foreground text-xs font-medium">
+                  {group.label}
+                </h3>
+                <ol className="divide-border flex flex-col divide-y">
+                  {group.tags.map((tag) => {
+                    const editable =
+                      Date.now() < new Date(tag.editableUntil).getTime() &&
+                      tag.authorId === viewerId
+                    return (
+                      <StreamItem
+                        key={tag.id}
+                        tag={tag}
+                        authorName={staffName(tag.authorId)}
+                        editable={editable}
+                        selected={
+                          selection
+                            ? selection.isTagSelected(tag.id)
+                            : undefined
+                        }
+                        onSelectedChange={
+                          selection
+                            ? () => selection.onToggleTag(tag.id)
+                            : undefined
+                        }
+                        onEdit={
+                          editable
+                            ? () => {
+                                // The Tag Queue composer's own "recent tags"
+                                // list (tag-queue-context.tsx, out of scope
+                                // for this plan) is where an author edits a
+                                // recent tag's fields; from the river we can
+                                // only reopen that same composer pinned to
+                                // this student — there's no prefill hook yet
+                                // for "edit this exact tag" from an
+                                // arbitrary caller.
+                                openTagQueue({ studentId, entryPoint: 'row' })
+                              }
+                            : undefined
+                        }
+                        onDelete={
+                          editable
+                            ? () => {
+                                deleteTag(tag.id)
+                                refresh()
+                              }
+                            : undefined
+                        }
+                      />
+                    )
+                  })}
+                </ol>
+              </section>
+            ))}
+          </div>
         </div>
       )}
     </div>

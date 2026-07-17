@@ -3,6 +3,8 @@ import { MOCK_STAFF } from './mock-staff'
 import type {
   AssessmentKind,
   BroadcastRequest,
+  DispositionId,
+  DraftClaim,
   FormingPattern,
   HdpCycle,
   HdpDraft,
@@ -13,6 +15,7 @@ import type {
   SchoolYear,
   Semester,
   StudentReflection,
+  TagContext,
 } from '@/types/hdp'
 
 // Fresh, self-contained fixtures for the HDP Reports module. Zero imports
@@ -172,7 +175,7 @@ export const SEED_TAGS: Array<HdpTag> = [
     authorId: 'goh-wt',
     disposition: 'self-direction',
     context: 'lesson',
-    note: "Set up the next CCA session's equipment without being asked.",
+    note: 'Started on the extension questions before the class got to them.',
     evidenceIds: [],
     source: 'self',
     entryPoint: 'fab',
@@ -268,7 +271,7 @@ export const SEED_TAGS: Array<HdpTag> = [
     authorId: 'raj-v',
     disposition: 'collaboration',
     context: 'marking',
-    note: 'Noticed a teammate was stuck and re-explained the instructions patiently.',
+    note: 'Annotated a shared worksheet so the rest of the group could follow the method.',
     evidenceIds: [],
     source: 'self',
     entryPoint: 'row',
@@ -428,7 +431,7 @@ export const SEED_TAGS: Array<HdpTag> = [
     authorId: 'goh-wt',
     disposition: 'collaboration',
     context: 'marking',
-    note: 'Stepped back from leading so a quieter groupmate could present.',
+    note: "Credited a groupmate's idea in the write-up instead of claiming it.",
     evidenceIds: [],
     source: 'self',
     entryPoint: 'fab',
@@ -748,7 +751,7 @@ export const SEED_TAGS: Array<HdpTag> = [
     authorId: 'goh-wt',
     disposition: 'collaboration',
     context: 'other',
-    note: 'Helped a groupmate catch up on the lab steps without taking over.',
+    note: 'Stayed back to help reset the room and got others to join in.',
     evidenceIds: [],
     source: 'self',
     entryPoint: 'topbar',
@@ -780,7 +783,7 @@ export const SEED_TAGS: Array<HdpTag> = [
     authorId: 'kumar-a',
     disposition: 'self-direction',
     context: 'marking',
-    note: 'Followed up on a returned test with a self-made corrections page.',
+    note: 'Attempted the optional challenge section without being asked.',
     evidenceIds: [],
     source: 'self',
     entryPoint: 'fab',
@@ -924,7 +927,7 @@ export const SEED_TAGS: Array<HdpTag> = [
     authorId: 'kumar-a',
     disposition: 'curiosity',
     context: 'marking',
-    note: 'Brought in a follow-up question from a documentary about the topic.',
+    note: 'Asked whether the method would still work with a different data set.',
     evidenceIds: [],
     source: 'self',
     entryPoint: 'row',
@@ -956,7 +959,7 @@ export const SEED_TAGS: Array<HdpTag> = [
     authorId: 'goh-wt',
     disposition: 'curiosity',
     context: 'other',
-    note: 'Brought in a follow-up question from a documentary about the topic.',
+    note: "Stayed after class to ask how the topic connects to next term's unit.",
     evidenceIds: [],
     source: 'self',
     entryPoint: 'topbar',
@@ -972,7 +975,7 @@ export const SEED_TAGS: Array<HdpTag> = [
     authorId: 'kumar-a',
     disposition: 'self-direction',
     context: 'marking',
-    note: "Set up the next CCA session's equipment without being asked.",
+    note: 'Resubmitted the corrections with each fix explained in the margin.',
     evidenceIds: [],
     source: 'self',
     entryPoint: 'topbar',
@@ -1054,7 +1057,7 @@ export const SEED_TAGS: Array<HdpTag> = [
     authorId: 'raj-v',
     disposition: 'self-direction',
     context: 'marking',
-    note: 'Picked a harder practice set instead of the assigned one.',
+    note: 'Set a personal target at the top of the practice paper and tracked it.',
     evidenceIds: [],
     source: 'self',
     entryPoint: 'fab',
@@ -1183,7 +1186,7 @@ export const SEED_TAGS: Array<HdpTag> = [
     authorId: 'raj-v',
     disposition: 'curiosity',
     context: 'other',
-    note: 'Wanted to know what happens if you change one variable in the experiment.',
+    note: 'Asked to borrow the equipment list to test a variation at home.',
     evidenceIds: [],
     source: 'broadcast',
     entryPoint: 'topbar',
@@ -1452,6 +1455,105 @@ export const SEED_REPORT_BOOKS: Array<HdpReportBook> = [
     ],
   },
 ]
+
+// ── Generated seeds (walkthrough decision 2026-07-17) ───────────────────
+// The Release tab shows the whole class ready to share and preview: every
+// 3A student ships with a report book AND a confirmed overall draft.
+// Students with noted observations get evidence-sourced claims; the
+// thin-record students get a plain teacher-written remark (unsourced —
+// rendered "your addition", never a fabricated source).
+
+const SEED_DISPOSITION_LABELS: Record<DispositionId, string> = {
+  perseverance: 'Perseverance',
+  curiosity: 'Curiosity',
+  collaboration: 'Collaboration',
+  'self-direction': 'Self-direction',
+}
+
+const SEED_CONTEXT_SHORT: Record<TagContext, string> = {
+  lesson: 'lesson',
+  marking: 'marking',
+  cca: 'cca',
+  'form-time': 'form time',
+  other: 'other',
+}
+
+function seedSourceLabel(tag: HdpTag): string {
+  const date = new Date(tag.createdAt).toLocaleDateString('en-SG', {
+    day: 'numeric',
+    month: 'short',
+  })
+  return `${SEED_DISPOSITION_LABELS[tag.disposition]} — ${SEED_CONTEXT_SHORT[tag.context]}, ${date}`
+}
+
+const FORM_CLASS_STUDENT_IDS = mockStudents
+  .filter((s) => s.class === '3A')
+  .map((s) => s.id)
+
+for (const studentId of FORM_CLASS_STUDENT_IDS) {
+  if (
+    SEED_DRAFTS.some((d) => d.studentId === studentId && d.kind === 'overall')
+  ) {
+    continue
+  }
+  const noted = SEED_TAGS.filter(
+    (t) => t.studentId === studentId && t.lifecycle === 'active' && t.note,
+  ).slice(0, 2)
+  const claims: Array<DraftClaim> =
+    noted.length > 0
+      ? noted.map((tag) => ({
+          text: tag.note ?? '',
+          source: { tagId: tag.id, label: seedSourceLabel(tag) },
+        }))
+      : [
+          {
+            text: 'Settled well into the term and kept up with class routines consistently.',
+          },
+          {
+            text: 'Took feedback on board and applied it in later work.',
+          },
+        ]
+  SEED_DRAFTS.push({
+    id: `draft-${studentId}-overall`,
+    studentId,
+    kind: 'overall',
+    authorId: 'lee-sy',
+    status: 'confirmed',
+    confirmedAt: '2026-07-16T09:00:00+08:00',
+    claims,
+  })
+}
+
+const SEED_GRADES = ['A1', 'A2', 'B3', 'B4', 'C5'] as const
+const SEED_BOOK_SUBJECTS = [
+  'English',
+  'Mathematics',
+  'Science',
+  'Mother Tongue',
+  'Humanities',
+]
+
+for (const studentId of FORM_CLASS_STUDENT_IDS) {
+  if (SEED_REPORT_BOOKS.some((b) => b.studentId === studentId)) continue
+  const hash = [...studentId].reduce((acc, c) => acc + c.charCodeAt(0), 0)
+  SEED_REPORT_BOOKS.push({
+    studentId,
+    schoolYear: '2026',
+    semester: 2,
+    results: SEED_BOOK_SUBJECTS.map((subject, index) => ({
+      subject,
+      term: 3,
+      grade: SEED_GRADES[(hash + index * 2) % SEED_GRADES.length],
+    })),
+    attendance: { present: 55 + (hash % 5), total: 60 },
+    conduct: hash % 3 === 0 ? 'Very good' : 'Good',
+    subjectComments: [],
+    parentPrompts: [
+      'Ask me about a moment this term where I kept trying.',
+      'Ask me what I want to do differently next term.',
+    ],
+  })
+}
 
 // ── SEED_MARKS (plan 036) ────────────────────────────────────────────────
 // Four semesters of marks history per 3A student (2025 S1 → 2026 S2, the
