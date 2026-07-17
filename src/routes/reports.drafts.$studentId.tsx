@@ -60,9 +60,13 @@ function DraftStudioPage() {
     )
   }
 
+  // One column, one task (the old draft-left / marks-rail-right split left a
+  // tall floating card and dead space): the draft leads, evidence sits under
+  // its disclosure, and marks follow as a reference section — all on the
+  // same readable measure.
   return (
     <main className="flex flex-col gap-6 px-6 py-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
+      <div className="flex max-w-3xl flex-wrap items-start justify-between gap-4">
         <div className="flex items-start gap-2">
           <Button
             variant="ghost"
@@ -83,22 +87,20 @@ function DraftStudioPage() {
         <StudentSwitcher currentStudentId={studentId} />
       </div>
 
-      <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_460px]">
+      <div className="flex max-w-3xl flex-col gap-6">
         <DraftStudio studentId={studentId} />
 
-        <aside className="flex min-w-0 flex-col gap-6">
+        <section className="border-border border-t pt-4">
           {/* Keyed remount on studentId: the grid's per-cell <Input
               defaultValue> is intentionally uncontrolled (autosave-on-blur,
               no per-keystroke re-render) — without a key, switching students
               would leave stale DOM input values from the previous student. */}
-          <div className="border-border rounded-lg border p-5">
-            <MarksGrid
-              key={studentId}
-              studentId={studentId}
-              studentName={student.name}
-            />
-          </div>
-        </aside>
+          <MarksGrid
+            key={studentId}
+            studentId={studentId}
+            studentName={student.name}
+          />
+        </section>
       </div>
     </main>
   )

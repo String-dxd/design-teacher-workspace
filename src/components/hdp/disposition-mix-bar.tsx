@@ -1,4 +1,3 @@
-import { TagPill } from './tag-pill'
 import type { DispositionId, HdpTag } from '@/types/hdp'
 import { dispositionMix } from '@/lib/hdp-store'
 
@@ -11,6 +10,8 @@ const DISPOSITION_LABELS: Record<DispositionId, string> = {
 
 // Largest slice gets the one accent; the rest step down in a muted scale.
 // No numeric axis, no percentages, no legend counts (P6) — proportions only.
+// The legend dots reuse the exact segment classes so each label maps to a
+// slice without needing numbers.
 const SEGMENT_CLASSES = [
   'bg-primary',
   'bg-muted-foreground/40',
@@ -53,11 +54,19 @@ export function DispositionMixBar({ tags }: DispositionMixBarProps) {
           />
         ))}
       </div>
-      <div className="flex flex-wrap gap-1.5">
-        {ordered.map(([id]) => (
-          <TagPill key={id} disposition={id} />
+      <ul className="flex flex-wrap gap-x-4 gap-y-1">
+        {ordered.map(([id], index) => (
+          <li key={id} className="flex items-center gap-1.5">
+            <span
+              aria-hidden
+              className={`size-2 rounded-full ${SEGMENT_CLASSES[index] ?? 'bg-muted'}`}
+            />
+            <span className="text-muted-foreground text-xs">
+              {DISPOSITION_LABELS[id]}
+            </span>
+          </li>
         ))}
-      </div>
+      </ul>
     </div>
   )
 }

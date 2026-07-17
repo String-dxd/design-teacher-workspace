@@ -56,12 +56,15 @@ function StudentRiverPage() {
   }
 
   return (
-    <main className="flex flex-col gap-4 px-6 py-6">
-      <div>
+    <main className="flex flex-col gap-3 px-6 py-6">
+      <div className="-ml-2.5">
         <Link
           to="/reports"
           search={{ tab: 'students' }}
-          className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }))}
+          className={cn(
+            buttonVariants({ variant: 'ghost', size: 'sm' }),
+            'text-muted-foreground hover:text-foreground',
+          )}
         >
           <ArrowLeft aria-hidden />
           My students

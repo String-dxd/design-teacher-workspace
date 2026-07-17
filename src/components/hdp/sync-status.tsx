@@ -16,16 +16,20 @@ function minutesAgo(iso: string): number {
   return Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000))
 }
 
-// One line describing the sync state. A stale count is normal, expected
-// state — not an error — so it renders in text-foreground font-medium,
-// never red; "none" (nothing confirmed yet) is plain neutral text.
+// One line describing the send state. Comments are SENT to School Cockpit
+// (one direction — marks come the other way and are never pushed), so the
+// copy says "send", never "sync" (walkthrough decision 2026-07-17). A
+// pending count is normal, expected state — not an error — so it renders
+// in text-foreground font-medium, never red; "none" (nothing confirmed
+// yet) is plain neutral text.
 export function SyncStatus({ state, onSyncNow }: SyncStatusProps) {
   const [syncing, setSyncing] = React.useState(false)
 
   if (state.kind === 'none') {
     return (
       <p className="text-muted-foreground text-sm">
-        Nothing confirmed yet — synced drafts will show up here.
+        Nothing confirmed yet — confirmed comments are sent to School Cockpit
+        from here.
       </p>
     )
   }
@@ -34,7 +38,7 @@ export function SyncStatus({ state, onSyncNow }: SyncStatusProps) {
     return (
       <p className="text-muted-foreground flex items-center gap-1.5 text-sm">
         <Check className="size-4" aria-hidden />
-        Synced with School Cockpit · {minutesAgo(state.at)}m ago ·{' '}
+        Sent to School Cockpit · {minutesAgo(state.at)}m ago ·{' '}
         {state.studentCount} student{state.studentCount === 1 ? '' : 's'}
       </p>
     )
@@ -43,8 +47,8 @@ export function SyncStatus({ state, onSyncNow }: SyncStatusProps) {
   return (
     <div className="flex flex-wrap items-center gap-3">
       <p className="text-foreground text-sm font-medium">
-        {state.unsyncedCount} change{state.unsyncedCount === 1 ? '' : 's'} not
-        yet synced
+        {state.unsyncedCount} comment{state.unsyncedCount === 1 ? '' : 's'} not
+        yet sent to School Cockpit
       </p>
       <Button
         type="button"
@@ -57,7 +61,7 @@ export function SyncStatus({ state, onSyncNow }: SyncStatusProps) {
           setSyncing(false)
         }}
       >
-        {syncing ? 'Syncing…' : 'Sync now'}
+        {syncing ? 'Sending…' : 'Send now'}
       </Button>
     </div>
   )

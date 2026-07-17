@@ -1,8 +1,8 @@
 import * as React from 'react'
-import { getISOWeek } from 'date-fns'
 import { TagPill } from './tag-pill'
 import type { HdpTag, TagContext } from '@/types/hdp'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,43 +35,56 @@ interface StreamItemProps {
   editable: boolean
   onEdit?: () => void
   onDelete?: () => void
+  /** Draft-studio selection mode (Prototype B): when both are given, the
+   *  item leads with a checkbox — the river itself is the curation surface,
+   *  there is no separate insights list. */
+  selected?: boolean
+  onSelectedChange?: () => void
 }
 
-// One entry in a student's river. Left column: a bare week marker (not tied
-// to reporting progress — a lightweight temporal anchor, ISO week number of
-// createdAt, since the fixture has no term-start calendar to derive a
-// term-relative week from). Right column: author + context meta, the quoted
-// note, an evidence chip, and Edit/Delete when this tag is still within its
-// 24h editable window.
+// One entry in a student's river — the temporal anchor lives on the group
+// header the river renders above each week's items ("Week of 7 Jul"), not
+// on the item itself. Meta line (author + disposition + context), the
+// quoted note, an evidence chip, and Edit/Delete when this tag is still
+// within its 24h editable window.
 export function StreamItem({
   tag,
   authorName,
   editable,
   onEdit,
   onDelete,
+  selected,
+  onSelectedChange,
 }: StreamItemProps) {
   const [confirmingDelete, setConfirmingDelete] = React.useState(false)
-  const createdAt = new Date(tag.createdAt)
-  const weekLabel = `W${getISOWeek(createdAt)}`
+  const selectable = onSelectedChange !== undefined
 
   return (
-    <li className="grid grid-cols-[34px_minmax(0,1fr)_auto] gap-3 py-3">
-      <time
-        dateTime={tag.createdAt}
-        className="text-muted-foreground pt-0.5 text-xs tabular-nums"
-      >
-        {weekLabel}
-      </time>
+    <li
+      className={
+        selectable
+          ? 'grid grid-cols-[auto_minmax(0,1fr)_auto] gap-3 py-3.5'
+          : 'grid grid-cols-[minmax(0,1fr)_auto] gap-3 py-3.5'
+      }
+    >
+      {selectable && (
+        <Checkbox
+          checked={selected ?? false}
+          onCheckedChange={onSelectedChange}
+          aria-label={`Include this observation by ${authorName} in the draft`}
+          className="mt-0.5"
+        />
+      )}
       <div className="flex min-w-0 flex-col gap-1">
         <div className="flex flex-wrap items-center gap-1.5 text-sm">
-          <span className="text-sm font-semibold">{authorName}</span>
+          <span className="text-sm font-medium">{authorName}</span>
           <TagPill disposition={tag.disposition} />
           <span className="text-muted-foreground text-xs">
-            · {CONTEXT_LABELS[tag.context]}
+            {CONTEXT_LABELS[tag.context]}
           </span>
         </div>
         {tag.note && (
-          <p className="text-muted-foreground line-clamp-3 text-sm">
+          <p className="text-foreground/80 line-clamp-3 text-sm">
             “{tag.note}”
           </p>
         )}

@@ -143,6 +143,47 @@ export function HdpReportsHome({ tab, onTabChange }: HdpReportsHomeProps) {
 
 /* ── My students ─────────────────────────────────────────────────────── */
 
+/** One row of a summary card's breakdown — value in a fixed tabular column
+ *  so the labels align, clickable rows revealing their chevron on hover. */
+function SummaryStat({
+  value,
+  label,
+  onClick,
+}: {
+  value: number
+  label: string
+  onClick?: () => void
+}) {
+  const body = (
+    <>
+      <span className="w-6 shrink-0 text-right font-semibold tabular-nums">
+        {value}
+      </span>
+      <span className="text-muted-foreground flex items-center gap-0.5">
+        {label}
+        {onClick && (
+          <ChevronRight
+            className="h-3.5 w-3.5 opacity-0 transition-opacity group-hover:opacity-100"
+            aria-hidden
+          />
+        )}
+      </span>
+    </>
+  )
+  if (!onClick) {
+    return <div className="flex items-baseline gap-2.5 py-0.5">{body}</div>
+  }
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group focus-visible:ring-ring/50 -mx-1.5 flex items-baseline gap-2.5 rounded-md px-1.5 py-0.5 text-left outline-none focus-visible:ring-[3px] hover:[&>span:last-child]:text-foreground"
+    >
+      {body}
+    </button>
+  )
+}
+
 function MyStudentsPanel({
   onTabChange,
 }: {
@@ -172,104 +213,74 @@ function MyStudentsPanel({
     <div className="flex flex-col">
       {/* Status + gaps at a glance — rings are progress, rows are the
           diagnostic breakdown (P7: coverage stays a diagnostic, so the ring
-          uses the product accent, never a traffic-light judgement colour). */}
-      <div className="grid gap-4 px-6 py-6 sm:grid-cols-2">
-        <section className="border-border flex flex-col gap-4 rounded-lg border p-5">
-          <h2 className="text-sm font-medium">
-            Reviewed this term — {formClassId}
-          </h2>
-          <div className="flex items-center gap-6">
-            <AttendanceRing
-              percentage={coveragePct}
-              size={96}
-              strokeWidth={8}
-              color="var(--primary)"
-              label={`${snapshot.covered}/${snapshot.total}`}
-            />
-            <dl className="flex flex-col gap-1.5 text-sm">
-              <div className="flex items-baseline gap-2">
-                <dt className="font-semibold tabular-nums">
-                  {snapshot.covered}
-                </dt>
-                <dd className="text-muted-foreground">Reviewed</dd>
+          uses the product accent, never a traffic-light judgement colour).
+          One joined card, divided: the two halves are stages of the same
+          cycle, not separate widgets. */}
+      <div className="px-6 py-6">
+        <div className="border-border divide-border grid divide-y rounded-lg border lg:grid-cols-2 lg:divide-x lg:divide-y-0">
+          <section className="flex flex-col gap-4 p-5">
+            <h2 className="text-sm font-medium">
+              Reviewed this term
+              <span className="text-muted-foreground font-normal">
+                {' '}
+                · {formClassId}
+              </span>
+            </h2>
+            <div className="flex items-center gap-5">
+              <AttendanceRing
+                percentage={coveragePct}
+                size={72}
+                strokeWidth={6}
+                color="var(--primary)"
+                label={`${snapshot.covered}/${snapshot.total}`}
+              />
+              <div className="flex flex-col gap-1 text-sm">
+                <SummaryStat value={snapshot.covered} label="Reviewed" />
+                <SummaryStat
+                  value={notReviewed}
+                  label="Nothing noted yet"
+                  onClick={() => onTabChange('drafting')}
+                />
+                {snapshot.reviewedNil > 0 && (
+                  <SummaryStat
+                    value={snapshot.reviewedNil}
+                    label="Reviewed — nothing stood out"
+                  />
+                )}
               </div>
-              <div className="flex items-baseline gap-2">
-                <dt className="font-semibold tabular-nums">{notReviewed}</dt>
-                <dd className="text-muted-foreground">
-                  <button
-                    type="button"
-                    onClick={() => onTabChange('drafting')}
-                    className="hover:text-foreground inline-flex items-center gap-0.5 hover:underline"
-                  >
-                    Nothing noted yet
-                    <ChevronRight className="h-3.5 w-3.5" aria-hidden />
-                  </button>
-                </dd>
-              </div>
-              {snapshot.reviewedNil > 0 && (
-                <div className="flex items-baseline gap-2">
-                  <dt className="font-semibold tabular-nums">
-                    {snapshot.reviewedNil}
-                  </dt>
-                  <dd className="text-muted-foreground">
-                    Reviewed — nothing stood out
-                  </dd>
-                </div>
-              )}
-            </dl>
-          </div>
-        </section>
+            </div>
+          </section>
 
-        <section className="border-border flex flex-col gap-4 rounded-lg border p-5">
-          <h2 className="text-sm font-medium">Sent to parents</h2>
-          <div className="flex items-center gap-6">
-            <AttendanceRing
-              percentage={sentPct}
-              size={96}
-              strokeWidth={8}
-              color="var(--primary)"
-              label={`${shared}/${classSize}`}
-            />
-            <dl className="flex flex-col gap-1.5 text-sm">
-              <div className="flex items-baseline gap-2">
-                <dt className="font-semibold tabular-nums">
-                  {confirmedOverall}
-                </dt>
-                <dd className="text-muted-foreground">
-                  <button
-                    type="button"
-                    onClick={() => onTabChange('drafting')}
-                    className="hover:text-foreground inline-flex items-center gap-0.5 hover:underline"
-                  >
-                    Remarks confirmed ({myDrafts.length} drafts)
-                    <ChevronRight className="h-3.5 w-3.5" aria-hidden />
-                  </button>
-                </dd>
+          <section className="flex flex-col gap-4 p-5">
+            <h2 className="text-sm font-medium">Sent to parents</h2>
+            <div className="flex items-center gap-5">
+              <AttendanceRing
+                percentage={sentPct}
+                size={72}
+                strokeWidth={6}
+                color="var(--primary)"
+                label={`${shared}/${classSize}`}
+              />
+              <div className="flex flex-col gap-1 text-sm">
+                <SummaryStat
+                  value={confirmedOverall}
+                  label={`Remarks confirmed (${myDrafts.length} drafts)`}
+                  onClick={() => onTabChange('drafting')}
+                />
+                <SummaryStat
+                  value={shared}
+                  label="Shared with parents"
+                  onClick={() => onTabChange('send')}
+                />
+                <SummaryStat value={acknowledged} label="Acknowledged" />
               </div>
-              <div className="flex items-baseline gap-2">
-                <dt className="font-semibold tabular-nums">{shared}</dt>
-                <dd className="text-muted-foreground">
-                  <button
-                    type="button"
-                    onClick={() => onTabChange('send')}
-                    className="hover:text-foreground inline-flex items-center gap-0.5 hover:underline"
-                  >
-                    Shared with parents
-                    <ChevronRight className="h-3.5 w-3.5" aria-hidden />
-                  </button>
-                </dd>
-              </div>
-              <div className="flex items-baseline gap-2">
-                <dt className="font-semibold tabular-nums">{acknowledged}</dt>
-                <dd className="text-muted-foreground">Acknowledged</dd>
-              </div>
-            </dl>
-          </div>
-        </section>
+            </div>
+          </section>
+        </div>
       </div>
 
       <Tabs defaultValue={classIds[0]}>
-        <div className="px-6">
+        <div className="px-6 pb-3">
           <TabsList>
             {classIds.map((classId) => (
               <TabsTrigger key={classId} value={classId}>
@@ -305,7 +316,7 @@ function ClassRoster({
         <TableHeader className="bg-background border-b">
           <TableRow className="border-0 hover:bg-transparent">
             <TableHead className="pl-6">Name</TableHead>
-            <TableHead className="w-[120px]">Class</TableHead>
+            <TableHead className="w-[200px]">Latest observation</TableHead>
             <TableHead className="w-[160px] text-right">
               Tags this term
             </TableHead>
@@ -327,6 +338,10 @@ function ClassRoster({
               ),
             )
             const nilOnly = visibleTags.length === 0 && hasNil
+            const latest = visibleTags.reduce<string | undefined>(
+              (acc, t) => (!acc || t.createdAt > acc ? t.createdAt : acc),
+              undefined,
+            )
             return (
               <TableRow
                 key={student.id}
@@ -347,10 +362,14 @@ function ClassRoster({
                   )}
                 </TableCell>
                 <TableCell className="text-muted-foreground text-sm">
-                  {student.class}
+                  {latest ? formatDate(latest) : '—'}
                 </TableCell>
                 <TableCell className="text-right tabular-nums">
-                  {visibleTags.length}
+                  {visibleTags.length > 0 ? (
+                    visibleTags.length
+                  ) : (
+                    <span className="text-muted-foreground">0</span>
+                  )}
                 </TableCell>
                 <TableCell className="pr-6 text-right">
                   <ChevronRight
@@ -458,7 +477,7 @@ function DraftingPanel({ initialSubTab }: { initialSubTab?: 'requests' }) {
     markSynced(idsToSync)
     refresh()
     toast.success(
-      `Synced ${idsToSync.length} change${idsToSync.length === 1 ? '' : 's'}`,
+      `Sent ${idsToSync.length} comment${idsToSync.length === 1 ? '' : 's'} to School Cockpit`,
     )
   }
 
@@ -493,7 +512,7 @@ function DraftingPanel({ initialSubTab }: { initialSubTab?: 'requests' }) {
   return (
     <div className="flex flex-col gap-4">
       {gapCount > 0 && (
-        <div className="border-border mx-6 mt-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border p-4">
+        <div className="bg-muted/40 border-border mx-6 mt-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border px-4 py-3">
           <p className="text-sm">
             <span className="font-medium tabular-nums">
               {gapCount} gap{gapCount === 1 ? '' : 's'} found
@@ -519,7 +538,7 @@ function DraftingPanel({ initialSubTab }: { initialSubTab?: 'requests' }) {
       </div>
 
       <Tabs value={subTab} onValueChange={(v) => setSubTab(v as string)}>
-        <div className="px-6">
+        <div className="px-6 pb-3">
           <TabsList>
             {classIds.map((classId) => (
               <TabsTrigger key={classId} value={classId}>
