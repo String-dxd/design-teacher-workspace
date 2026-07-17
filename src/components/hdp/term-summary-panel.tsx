@@ -67,7 +67,7 @@ export function TermSummaryPanel() {
           description="Your Term Summary fills up as you tag moments worth remembering."
           action={
             <Button onClick={() => openTagQueue({ entryPoint: 'topbar' })}>
-              Tag a student
+              Add observation
             </Button>
           }
         />

@@ -16,15 +16,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { getStudentById, mockStudents } from '@/data/mock-students'
 import { MOCK_STAFF } from '@/data/mock-staff'
 import { CURRENT_TEACHER } from '@/data/hdp'
@@ -75,7 +74,9 @@ export function ReleaseManager() {
   const [releaseTarget, setReleaseTarget] = React.useState<string | null>(null)
   const [preview, setPreview] = React.useState<string | null>(null)
   const [register, setRegister] = React.useState<'book' | 'story'>('book')
-  const previewHeadingRef = React.useRef<HTMLHeadingElement>(null)
+  const [viewport, setViewport] = React.useState<'desktop' | 'mobile'>(
+    'desktop',
+  )
 
   const refresh = React.useCallback(() => {
     seedIfEmpty()
@@ -86,19 +87,6 @@ export function ReleaseManager() {
     setMounted(true)
     refresh()
   }, [refresh])
-
-  // The preview region can open ~1100px below the click point with no other
-  // feedback — scroll it into view and move focus to its heading (context
-  // replacement, matching the broadcast composer's success-panel pattern),
-  // so opening a preview is never a silent, easy-to-miss jump.
-  React.useEffect(() => {
-    if (!preview) return
-    previewHeadingRef.current?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start',
-    })
-    previewHeadingRef.current?.focus()
-  }, [preview])
 
   const resolveTag = React.useCallback((tagId: string) => {
     const tag = loadTags().find((t: HdpTag) => t.id === tagId)
@@ -170,224 +158,243 @@ export function ReleaseManager() {
   return (
     <div className="flex flex-col gap-8">
       {mounted && (
-        <div className="border-border min-w-0 max-w-full overflow-x-auto rounded-lg border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Student</TableHead>
-                <TableHead>Draft</TableHead>
-                <TableHead>Book</TableHead>
-                {showFuture && <TableHead>Student copy</TableHead>}
-                <TableHead>Shared</TableHead>
-                <TableHead>Acknowledged</TableHead>
-                <TableHead className="sr-only">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {students.map((student) => {
-                const book = bookFor(student.id)
-                const draftStatus = draftStatusLabel(student.id)
-                const hasConfirmedOverallDraft =
-                  findDraft(student.id, 'overall')?.status === 'confirmed'
-                // Flag off: "Share with parents" is gated only by a
-                // confirmed overall draft, exactly as before this plan.
-                // Flag on: the student must be released first AND their
-                // cover reflection must clear the ≥3-sentence gate (plan
-                // 041) — the UI gate lives here, not in shareReportBook.
-                const reflectionReady = showFuture
-                  ? reflectionGatesShare(student.id)
-                  : true
-                const canShareWithParents = showFuture
-                  ? hasConfirmedOverallDraft &&
-                    Boolean(book?.studentReleasedAt) &&
-                    reflectionReady
-                  : hasConfirmedOverallDraft
-                const shareDisabledTitle = !hasConfirmedOverallDraft
-                  ? 'Confirm a draft first'
-                  : !book?.studentReleasedAt
-                    ? 'Release to the student first'
-                    : `Waiting for ${student.name}'s reflection (at least three sentences)`
-                return (
-                  <TableRow key={student.id}>
-                    <TableCell className="font-medium">
-                      {student.name}
-                    </TableCell>
-                    <TableCell>{draftStatus}</TableCell>
-                    <TableCell>{book ? 'Yes' : '—'}</TableCell>
-                    {showFuture && (
-                      <TableCell className="tabular-nums">
-                        {book?.studentReactedAt &&
-                        reflectionGatesShare(student.id)
-                          ? `Reflected ${formatDate(book.studentReactedAt)}`
-                          : book?.studentReleasedAt
-                            ? `Released to student ${formatDate(book.studentReleasedAt)}`
-                            : '—'}
-                      </TableCell>
-                    )}
-                    <TableCell className="tabular-nums">
-                      {book?.sharedAt
-                        ? `Shared ${formatDate(book.sharedAt)}`
-                        : '—'}
-                    </TableCell>
-                    <TableCell className="tabular-nums">
-                      {book?.acknowledgement
-                        ? `Acknowledged ${formatDate(book.acknowledgement.at)}`
-                        : book?.sharedAt
-                          ? 'Awaiting'
-                          : '—'}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex flex-nowrap justify-end gap-1.5 whitespace-nowrap">
-                        {book ? (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setPreview(student.id)}
-                          >
-                            Preview
-                          </Button>
-                        ) : (
-                          <span
-                            className="text-muted-foreground text-xs"
-                            title="No report book yet"
-                          >
-                            Preview
-                          </span>
-                        )}
-                        {showFuture &&
-                          (book?.studentReleasedAt ? (
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() =>
-                                copyStudentLink(student.id, student.name)
-                              }
-                            >
-                              Copy student link
-                            </Button>
-                          ) : (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              disabled={!hasConfirmedOverallDraft}
-                              title={
-                                hasConfirmedOverallDraft
-                                  ? undefined
-                                  : 'Confirm a draft first'
-                              }
-                              onClick={() => setReleaseTarget(student.id)}
-                            >
-                              Release to student
-                            </Button>
-                          ))}
-                        {book?.sharedAt ? (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => copyLink(student.id, student.name)}
-                          >
-                            Copy link
-                          </Button>
-                        ) : canShareWithParents ? (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setShareTarget(student.id)}
-                          >
-                            Share with parents
-                          </Button>
-                        ) : (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            disabled
-                            title={shareDisabledTitle}
-                          >
-                            Share with parents
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
-            </TableBody>
-          </Table>
-        </div>
+        <ul className="flex flex-col gap-3">
+          {students.map((student) => {
+            const book = bookFor(student.id)
+            const draftStatus = draftStatusLabel(student.id)
+            const hasConfirmedOverallDraft =
+              findDraft(student.id, 'overall')?.status === 'confirmed'
+            // Flag off: "Share with parents" is gated only by a confirmed
+            // overall draft. Flag on: the student must be released first AND
+            // their cover reflection must clear the >=3-sentence gate (plan
+            // 041) — the UI gate lives here, not in shareReportBook.
+            const reflectionReady = showFuture
+              ? reflectionGatesShare(student.id)
+              : true
+            const canShareWithParents = showFuture
+              ? hasConfirmedOverallDraft &&
+                Boolean(book?.studentReleasedAt) &&
+                reflectionReady
+              : hasConfirmedOverallDraft
+            const shareDisabledTitle = !hasConfirmedOverallDraft
+              ? 'Confirm a draft first'
+              : !book?.studentReleasedAt
+                ? 'Release to the student first'
+                : `Waiting for ${student.name}'s reflection (at least three sentences)`
+
+            const metaParts: Array<string> = [
+              draftStatus === 'Confirmed'
+                ? 'Draft confirmed'
+                : draftStatus === 'Drafting'
+                  ? 'Draft in progress'
+                  : 'No draft yet',
+            ]
+            if (showFuture && book?.studentReleasedAt) {
+              metaParts.push(
+                book.studentReactedAt && reflectionGatesShare(student.id)
+                  ? `Reflected ${formatDate(book.studentReactedAt)}`
+                  : `Released to student ${formatDate(book.studentReleasedAt)}`,
+              )
+            }
+            if (book?.sharedAt) {
+              metaParts.push(`Shared ${formatDate(book.sharedAt)}`)
+            }
+
+            return (
+              <li
+                key={student.id}
+                className="border-border flex flex-wrap items-center justify-between gap-3 rounded-lg border p-4"
+              >
+                <div className="flex min-w-0 flex-col gap-0.5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-sm font-medium">{student.name}</span>
+                    {book?.acknowledgement ? (
+                      <Badge className="bg-lime-3 text-lime-11 hover:bg-lime-3">
+                        Acknowledged
+                      </Badge>
+                    ) : book?.sharedAt ? (
+                      <Badge className="bg-twblue-3 text-twblue-11 hover:bg-twblue-3">
+                        Shared — awaiting
+                      </Badge>
+                    ) : hasConfirmedOverallDraft ? (
+                      <Badge className="bg-muted text-muted-foreground hover:bg-muted">
+                        Ready
+                      </Badge>
+                    ) : null}
+                  </div>
+                  <p className="text-muted-foreground text-xs tabular-nums">
+                    {metaParts.join(' · ')}
+                    {book?.acknowledgement &&
+                      ` · Acknowledged ${formatDate(book.acknowledgement.at)}`}
+                  </p>
+                </div>
+                <div className="flex shrink-0 flex-nowrap items-center gap-1.5 whitespace-nowrap">
+                  {book ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setPreview(student.id)}
+                    >
+                      Preview
+                    </Button>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      disabled
+                      title="No report book yet"
+                    >
+                      Preview
+                    </Button>
+                  )}
+                  {showFuture &&
+                    (book?.studentReleasedAt ? (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() =>
+                          copyStudentLink(student.id, student.name)
+                        }
+                      >
+                        Copy student link
+                      </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={!hasConfirmedOverallDraft}
+                        title={
+                          hasConfirmedOverallDraft
+                            ? undefined
+                            : 'Confirm a draft first'
+                        }
+                        onClick={() => setReleaseTarget(student.id)}
+                      >
+                        Release to student
+                      </Button>
+                    ))}
+                  {book?.sharedAt ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => copyLink(student.id, student.name)}
+                    >
+                      Copy link
+                    </Button>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={!canShareWithParents}
+                      title={
+                        canShareWithParents ? undefined : shareDisabledTitle
+                      }
+                      onClick={() => setShareTarget(student.id)}
+                    >
+                      Share with parents
+                    </Button>
+                  )}
+                </div>
+              </li>
+            )
+          })}
+        </ul>
       )}
 
-      {mounted && previewBook && previewStudent && (
-        <section className="border-border flex flex-col gap-4 rounded-lg border p-6">
-          <div className="flex items-center justify-between gap-3">
-            <h2
-              ref={previewHeadingRef}
-              tabIndex={-1}
-              className="text-sm font-medium outline-none"
-            >
-              Preview — {previewStudent.name}
-            </h2>
-            <div className="flex items-center gap-3">
-              {showFuture && (
-                <div className="flex items-center gap-1.5">
-                  <DispositionChip
-                    label="Report book"
-                    selected={register === 'book'}
-                    onClick={() => setRegister('book')}
-                  />
-                  <DispositionChip
-                    label="Story"
-                    selected={register === 'story'}
-                    onClick={() => setRegister('story')}
-                  />
-                </div>
-              )}
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setPreview(null)}
-              >
-                Close preview
-              </Button>
+      {/* The preview opens as a dialog (maintainer feedback 2026-07-17):
+          register toggle (flag on) plus a desktop/mobile viewport toggle so
+          the teacher can see the report the way a parent's phone will. */}
+      <Dialog
+        open={Boolean(mounted && previewBook && previewStudent)}
+        onOpenChange={(open) => {
+          if (!open) setPreview(null)
+        }}
+      >
+        <DialogContent className="flex max-h-[90vh] w-full flex-col overflow-y-auto sm:w-[880px] sm:max-w-[calc(100vw-2rem)]">
+          <DialogHeader>
+            <DialogTitle>
+              Preview — {previewStudent?.name ?? 'Report'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            {showFuture ? (
+              <div className="flex items-center gap-1.5">
+                <DispositionChip
+                  label="Report book"
+                  selected={register === 'book'}
+                  onClick={() => setRegister('book')}
+                />
+                <DispositionChip
+                  label="Story"
+                  selected={register === 'story'}
+                  onClick={() => setRegister('story')}
+                />
+              </div>
+            ) : (
+              <span aria-hidden />
+            )}
+            <div className="flex items-center gap-1.5">
+              <DispositionChip
+                label="Desktop"
+                selected={viewport === 'desktop'}
+                onClick={() => setViewport('desktop')}
+              />
+              <DispositionChip
+                label="Mobile"
+                selected={viewport === 'mobile'}
+                onClick={() => setViewport('mobile')}
+              />
             </div>
           </div>
-          {showFuture && register === 'story' ? (
-            <ReportStory
-              book={previewBook}
-              studentName={previewStudent.name}
-              className={previewStudent.class}
-              viewer="teacher-preview"
-              reflection={coverReflection(previewBook.studentId)}
-              patterns={loadPatterns().filter(
-                (p) => p.studentId === previewBook.studentId,
-              )}
-              showFuture={showFuture}
-              trends={trendsForEntries(loadMarks(previewBook.studentId))}
-            />
-          ) : (
-            <ReportBook
-              book={previewBook}
-              studentName={previewStudent.name}
-              className={previewStudent.class}
-              viewer="teacher-preview"
-              resolveTag={resolveTag}
-              showFuture={showFuture}
-              trends={
-                showFuture
-                  ? trendsForEntries(loadMarks(previewBook.studentId))
-                  : []
+          {previewBook && previewStudent && (
+            <div
+              className={
+                viewport === 'mobile'
+                  ? 'border-border mx-auto w-[375px] max-w-full overflow-y-auto rounded-2xl border p-4 shadow-sm'
+                  : 'min-w-0'
               }
-            />
+            >
+              {showFuture &&
+              register === 'story' &&
+              previewBook &&
+              previewStudent ? (
+                <ReportStory
+                  book={previewBook}
+                  studentName={previewStudent.name}
+                  className={previewStudent.class}
+                  viewer="teacher-preview"
+                  reflection={coverReflection(previewBook.studentId)}
+                  patterns={loadPatterns().filter(
+                    (p) => p.studentId === previewBook.studentId,
+                  )}
+                  showFuture={showFuture}
+                  trends={trendsForEntries(loadMarks(previewBook.studentId))}
+                />
+              ) : previewBook && previewStudent ? (
+                <ReportBook
+                  book={previewBook}
+                  studentName={previewStudent.name}
+                  className={previewStudent.class}
+                  viewer="teacher-preview"
+                  resolveTag={resolveTag}
+                  showFuture={showFuture}
+                  trends={
+                    showFuture
+                      ? trendsForEntries(loadMarks(previewBook.studentId))
+                      : []
+                  }
+                />
+              ) : null}
+            </div>
           )}
-        </section>
-      )}
-
+        </DialogContent>
+      </Dialog>
       {!showFuture && (
         <section className="border-border flex flex-col gap-3 border-t pt-6">
           <h2 className="text-sm font-medium">

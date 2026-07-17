@@ -23,7 +23,7 @@ export function TagQueueOverlay() {
     >
       <DialogContent className="flex h-dvh w-full max-w-full flex-col overflow-y-auto rounded-none duration-150 motion-reduce:animate-none motion-reduce:transition-none data-open:zoom-in-[98%] data-closed:zoom-out-[98%] sm:h-auto sm:max-h-[85vh] sm:w-[560px] sm:max-w-[calc(100vw-2rem)] sm:rounded-3xl">
         <DialogHeader>
-          <DialogTitle>Tag a student</DialogTitle>
+          <DialogTitle>Add observation</DialogTitle>
         </DialogHeader>
         <TagQueueComposer onSaveClose={closeTagQueue} />
       </DialogContent>

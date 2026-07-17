@@ -105,7 +105,7 @@ export function HdpReportsHome({ tab, onTabChange }: HdpReportsHomeProps) {
             onClick={() => openTagQueue({ entryPoint: 'topbar' })}
           >
             <Plus className="mr-1.5 h-4 w-4" />
-            Tag student
+            Add observation
           </Button>
         </div>
       </div>

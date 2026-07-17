@@ -55,14 +55,14 @@ export function StreamItem({
   const weekLabel = `W${getISOWeek(createdAt)}`
 
   return (
-    <li className="grid grid-cols-[34px_1fr] gap-3 py-3">
+    <li className="grid grid-cols-[34px_minmax(0,1fr)_auto] gap-3 py-3">
       <time
         dateTime={tag.createdAt}
         className="text-muted-foreground pt-0.5 text-xs tabular-nums"
       >
         {weekLabel}
       </time>
-      <div className="flex flex-col gap-1">
+      <div className="flex min-w-0 flex-col gap-1">
         <div className="flex flex-wrap items-center gap-1.5 text-sm">
           <span className="text-sm font-semibold">{authorName}</span>
           <TagPill disposition={tag.disposition} />
@@ -80,25 +80,27 @@ export function StreamItem({
             Evidence attached
           </span>
         )}
-        {editable && (onEdit || onDelete) && (
-          <div className="-ml-2 flex gap-1">
-            {onEdit && (
-              <Button variant="ghost" size="sm" onClick={onEdit}>
-                Edit
-              </Button>
-            )}
-            {onDelete && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setConfirmingDelete(true)}
-              >
-                Delete
-              </Button>
-            )}
-          </div>
-        )}
       </div>
+      {editable && (onEdit || onDelete) ? (
+        <div className="flex shrink-0 items-start gap-1">
+          {onEdit && (
+            <Button variant="ghost" size="sm" onClick={onEdit}>
+              Edit
+            </Button>
+          )}
+          {onDelete && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setConfirmingDelete(true)}
+            >
+              Delete
+            </Button>
+          )}
+        </div>
+      ) : (
+        <span aria-hidden />
+      )}
 
       <AlertDialog open={confirmingDelete} onOpenChange={setConfirmingDelete}>
         <AlertDialogContent>
