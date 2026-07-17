@@ -57,7 +57,7 @@ function StudentAnalyticsPage() {
   useEffect(() => {
     document.title = 'Analytics | MOE Workspace'
     return () => {
-      document.title = 'MOE Workspace Homepage'
+      document.title = 'Teacher Workspace'
     }
   }, [])
 

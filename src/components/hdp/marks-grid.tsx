@@ -73,6 +73,9 @@ export function MarksGrid({ studentId, studentName }: MarksGridProps) {
   const [saveState, setSaveState] = React.useState<'idle' | 'saved'>('idle')
   const [confirmOpen, setConfirmOpen] = React.useState(false)
   const [syncedAt, setSyncedAt] = React.useState<string | undefined>(undefined)
+  // The per-cell inputs are uncontrolled (defaultValue) — bump this key to
+  // remount the table after a sync fills empty cells, so they show up.
+  const [gridKey, setGridKey] = React.useState(0)
 
   const refresh = React.useCallback(() => {
     setEntries(loadMarks(studentId))
@@ -127,9 +130,56 @@ export function MarksGrid({ studentId, studentName }: MarksGridProps) {
     setSaveState('saved')
   }
 
+  /** Demo helper: syncing pulls the "official" record, so any assessment the
+   *  teacher hasn't keyed yet comes back filled — plausible dummy scores
+   *  derived from the subject's WA1 (deterministic, so repeat syncs and
+   *  reloads agree). */
+  function fillEmptyMarks() {
+    const current = loadMarks(studentId)
+    const allSubjects = Array.from(new Set(current.map((e) => e.subject)))
+    for (const subject of allSubjects) {
+      const wa1 = current.find(
+        (e) =>
+          e.subject === subject &&
+          e.schoolYear === CURRENT_CYCLE.schoolYear &&
+          e.semester === CURRENT_CYCLE.semester &&
+          e.assessment === 'wa1',
+      )
+      const base = wa1?.score ?? 60
+      // Small per-subject offset from the name so subjects don't all move
+      // in lockstep.
+      const drift = (subject.length * 3 + studentId.length) % 7
+      const dummy: Record<AssessmentKind, number> = {
+        wa1: base,
+        wa2: Math.min(95, Math.max(35, base + drift - 2)),
+        exam: Math.min(95, Math.max(35, base + 4 - (drift % 5))),
+      }
+      for (const a of ASSESSMENTS) {
+        const exists = current.some(
+          (e) =>
+            e.subject === subject &&
+            e.schoolYear === CURRENT_CYCLE.schoolYear &&
+            e.semester === CURRENT_CYCLE.semester &&
+            e.assessment === a.key,
+        )
+        if (!exists) {
+          saveMarkEntry(studentId, {
+            subject,
+            schoolYear: CURRENT_CYCLE.schoolYear,
+            semester: CURRENT_CYCLE.semester,
+            assessment: a.key,
+            score: dummy[a.key],
+          })
+        }
+      }
+    }
+  }
+
   function handleSyncConfirm() {
+    fillEmptyMarks()
     syncAcademicResults(studentId)
     setConfirmOpen(false)
+    setGridKey((k) => k + 1)
     refresh()
     toast.success(`Synced ${studentName}'s academic results`)
   }
@@ -147,7 +197,10 @@ export function MarksGrid({ studentId, studentName }: MarksGridProps) {
         </span>
       </div>
 
-      <div className="border-border min-w-0 max-w-full overflow-x-auto rounded-lg border">
+      <div
+        key={gridKey}
+        className="border-border min-w-0 max-w-full overflow-x-auto rounded-lg border"
+      >
         <Table>
           <TableCaption className="sr-only">
             Marks entry for {studentName}, semester {CURRENT_CYCLE.semester},{' '}

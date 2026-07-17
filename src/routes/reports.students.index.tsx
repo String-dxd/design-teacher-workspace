@@ -18,8 +18,14 @@ export const Route = createFileRoute('/reports/students/')({
   beforeLoad: ({ search }) => {
     throw redirect({
       to: '/reports',
-      search: { tab: search.tab === 'requests' ? 'requests' : 'students' },
-      hash: search.tab === 'gaps' ? 'gaps' : undefined,
+      search: {
+        tab:
+          search.tab === 'requests'
+            ? 'requests'
+            : search.tab === 'gaps'
+              ? 'drafting'
+              : 'students',
+      },
     })
   },
   component: () => null,

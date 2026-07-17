@@ -67,7 +67,7 @@ export function TermSummaryPanel() {
           description="Your Term Summary fills up as you tag moments worth remembering."
           action={
             <Button onClick={() => openTagQueue({ entryPoint: 'topbar' })}>
-              Tag a student
+              Add observation
             </Button>
           }
         />
@@ -181,9 +181,7 @@ function ClassSection({
           <Button
             variant="ghost"
             size="sm"
-            render={
-              <Link to="/reports" search={{ tab: 'students' }} hash="gaps" />
-            }
+            render={<Link to="/reports" search={{ tab: 'drafting' }} />}
           >
             Ask colleagues
           </Button>

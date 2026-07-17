@@ -122,13 +122,7 @@ export function StudentRiver({
               </Button>
               <Button
                 variant="ghost"
-                render={
-                  <Link
-                    to="/reports"
-                    search={{ tab: 'students' }}
-                    hash="gaps"
-                  />
-                }
+                render={<Link to="/reports" search={{ tab: 'drafting' }} />}
               >
                 Ask colleagues
               </Button>
