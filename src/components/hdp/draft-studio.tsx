@@ -368,12 +368,10 @@ export function DraftStudio({ studentId }: DraftStudioProps) {
           onValueChange={(value) => setKind(value as DraftKind)}
         >
           <TabsList>
-            <TabsTrigger
-              value="subject"
-              disabled={availableSubjects.length === 0}
-            >
-              Subject comment
-            </TabsTrigger>
+            {/* Not disabled when the teacher has no subject for this class —
+                the panel itself explains why there's nothing to draft here.
+                A disabled tab can't show a tooltip, so it just reads broken. */}
+            <TabsTrigger value="subject">Subject comment</TabsTrigger>
             <TabsTrigger value="overall">Overall remark</TabsTrigger>
           </TabsList>
 
@@ -414,44 +412,46 @@ export function DraftStudio({ studentId }: DraftStudioProps) {
           />
         )}
 
-        <DraftBody
-          key={currentDraftId}
-          confirmLabel={
-            kind === 'overall' ? 'Confirm remark' : 'Confirm comment'
-          }
-          hasEvidence={effectiveHasEvidence}
-          claims={claims}
-          status={status}
-          suggesting={suggesting}
-          saveState={saveState}
-          suggestDisabled={showInsights && selectedInsightIds.size === 0}
-          suggestHelperText={
-            showInsights
-              ? 'Select the insights that belong in this comment.'
-              : undefined
-          }
-          onChangeClaims={(next) => {
-            setSaveState('idle')
-            setClaims(next)
-          }}
-          onSuggestOrRegenerate={handleSuggestOrRegenerate}
-          onConfirm={handleConfirmClick}
-          onReopen={handleReopenDraft}
-          resolveTag={(tagId) => {
-            const tag = tagsById.get(tagId)
-            if (tag) return { tag, authorName: staffName(tag.authorId) }
-            if (showInsights) {
-              const insight = insightsById.get(tagId)
-              if (insight) {
-                return {
-                  authorName: staffName(CURRENT_TEACHER.id),
-                  insightFact: insight.label,
+        {kind === 'subject' && availableSubjects.length === 0 ? null : (
+          <DraftBody
+            key={currentDraftId}
+            confirmLabel={
+              kind === 'overall' ? 'Confirm remark' : 'Confirm comment'
+            }
+            hasEvidence={effectiveHasEvidence}
+            claims={claims}
+            status={status}
+            suggesting={suggesting}
+            saveState={saveState}
+            suggestDisabled={showInsights && selectedInsightIds.size === 0}
+            suggestHelperText={
+              showInsights
+                ? 'Select the insights that belong in this comment.'
+                : undefined
+            }
+            onChangeClaims={(next) => {
+              setSaveState('idle')
+              setClaims(next)
+            }}
+            onSuggestOrRegenerate={handleSuggestOrRegenerate}
+            onConfirm={handleConfirmClick}
+            onReopen={handleReopenDraft}
+            resolveTag={(tagId) => {
+              const tag = tagsById.get(tagId)
+              if (tag) return { tag, authorName: staffName(tag.authorId) }
+              if (showInsights) {
+                const insight = insightsById.get(tagId)
+                if (insight) {
+                  return {
+                    authorName: staffName(CURRENT_TEACHER.id),
+                    insightFact: insight.label,
+                  }
                 }
               }
-            }
-            return undefined
-          }}
-        />
+              return undefined
+            }}
+          />
+        )}
       </div>
 
       {/* Sources behind the summary (NotebookLM pattern): the full evidence

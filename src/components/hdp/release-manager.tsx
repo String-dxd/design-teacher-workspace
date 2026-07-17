@@ -17,7 +17,6 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import {
   Table,
   TableBody,
@@ -238,102 +237,80 @@ export function ReleaseManager() {
                           : '—'}
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex flex-col items-end gap-2">
-                        <div className="flex flex-wrap justify-end gap-2">
-                          {book ? (
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setPreview(student.id)}
-                            >
-                              Preview
-                            </Button>
-                          ) : (
-                            <span
-                              className="text-muted-foreground text-xs"
-                              title="No report book yet"
-                            >
-                              Preview
-                            </span>
-                          )}
-                          {showFuture &&
-                            (book?.studentReleasedAt ? (
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() =>
-                                  copyStudentLink(student.id, student.name)
-                                }
-                              >
-                                Copy student link
-                              </Button>
-                            ) : (
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                disabled={!hasConfirmedOverallDraft}
-                                title={
-                                  hasConfirmedOverallDraft
-                                    ? undefined
-                                    : 'Confirm a draft first'
-                                }
-                                onClick={() => setReleaseTarget(student.id)}
-                              >
-                                Release to student
-                              </Button>
-                            ))}
-                          {book?.sharedAt ? (
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => copyLink(student.id, student.name)}
-                            >
-                              Copy link
-                            </Button>
-                          ) : canShareWithParents ? (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setShareTarget(student.id)}
-                            >
-                              Share with parents
-                            </Button>
-                          ) : (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              disabled
-                              title={shareDisabledTitle}
-                            >
-                              Share with parents
-                            </Button>
-                          )}
-                        </div>
-                        {book?.studentReleasedAt && !book.sharedAt && (
-                          <Input
-                            type="text"
-                            readOnly
-                            value={studentLinkFor(student.id)}
-                            aria-label={`Student report link for ${student.name}`}
-                            onFocus={(e) => e.currentTarget.select()}
-                            className="h-7 w-56 text-xs"
-                          />
+                      <div className="flex flex-nowrap justify-end gap-1.5 whitespace-nowrap">
+                        {book ? (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setPreview(student.id)}
+                          >
+                            Preview
+                          </Button>
+                        ) : (
+                          <span
+                            className="text-muted-foreground text-xs"
+                            title="No report book yet"
+                          >
+                            Preview
+                          </span>
                         )}
-                        {book?.sharedAt && (
-                          <Input
-                            type="text"
-                            readOnly
-                            value={linkFor(student.id)}
-                            aria-label={`Report link for ${student.name}`}
-                            onFocus={(e) => e.currentTarget.select()}
-                            className="h-7 w-56 text-xs"
-                          />
+                        {showFuture &&
+                          (book?.studentReleasedAt ? (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() =>
+                                copyStudentLink(student.id, student.name)
+                              }
+                            >
+                              Copy student link
+                            </Button>
+                          ) : (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              disabled={!hasConfirmedOverallDraft}
+                              title={
+                                hasConfirmedOverallDraft
+                                  ? undefined
+                                  : 'Confirm a draft first'
+                              }
+                              onClick={() => setReleaseTarget(student.id)}
+                            >
+                              Release to student
+                            </Button>
+                          ))}
+                        {book?.sharedAt ? (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => copyLink(student.id, student.name)}
+                          >
+                            Copy link
+                          </Button>
+                        ) : canShareWithParents ? (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setShareTarget(student.id)}
+                          >
+                            Share with parents
+                          </Button>
+                        ) : (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled
+                            title={shareDisabledTitle}
+                          >
+                            Share with parents
+                          </Button>
                         )}
                       </div>
                     </TableCell>

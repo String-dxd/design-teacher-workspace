@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { Paperclip, Search } from 'lucide-react'
 import { toast } from 'sonner'
 import { DispositionChip } from './disposition-chip'
 import { useTagQueue } from './tag-queue-context'
@@ -260,16 +261,20 @@ export function TagQueueComposer({
       ) : (
         <div className="flex flex-col gap-2">
           <Label htmlFor="tag-queue-search">Student</Label>
-          <Input
-            id="tag-queue-search"
-            ref={searchInputRef}
-            autoFocus
-            placeholder="Search by name"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={handleSearchKeyDown}
-            autoComplete="off"
-          />
+          <div className="relative">
+            <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+            <Input
+              id="tag-queue-search"
+              ref={searchInputRef}
+              autoFocus
+              placeholder="Search by name"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleSearchKeyDown}
+              autoComplete="off"
+              className="pl-9"
+            />
+          </div>
           <ul className="flex max-h-48 flex-col gap-1 overflow-y-auto">
             {/* ui/combobox does not support async row meta — plain list */}
             {showEscapeHatch && (
@@ -368,30 +373,37 @@ export function TagQueueComposer({
       <div>
         <Button
           type="button"
-          variant="ghost"
+          variant="outline"
           size="sm"
+          aria-pressed={draft.evidenceAttached}
           onClick={toggleDraftEvidence}
         >
+          <Paperclip aria-hidden />
           {draft.evidenceAttached ? '1 attachment (mock)' : 'Attach evidence'}
         </Button>
       </div>
 
-      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-        {onRequestClose && (
-          <Button type="button" variant="ghost" onClick={onRequestClose}>
-            Close
+      <div className="border-border flex flex-col-reverse gap-2 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-muted-foreground text-xs">
+          {saveable ? '' : 'Choose a student and a disposition to save.'}
+        </p>
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          {onRequestClose && (
+            <Button type="button" variant="ghost" onClick={onRequestClose}>
+              Close
+            </Button>
+          )}
+          <Button
+            type="button"
+            onClick={handleSave}
+            disabled={!saveable}
+            title={
+              !saveable ? 'Choose a student and a disposition first' : undefined
+            }
+          >
+            Save tag
           </Button>
-        )}
-        <Button
-          type="button"
-          onClick={handleSave}
-          disabled={!saveable}
-          title={
-            !saveable ? 'Choose a student and a disposition first' : undefined
-          }
-        >
-          Save tag
-        </Button>
+        </div>
       </div>
 
       {recentTags.length > 0 && (
@@ -407,9 +419,13 @@ export function TagQueueComposer({
                   key={tag.id}
                   className="flex items-center justify-between gap-2 text-sm"
                 >
-                  <span>
-                    {student?.name ?? 'Unknown student'} ·{' '}
-                    {dispositionLabel(tag.disposition)}
+                  <span className="min-w-0 truncate">
+                    <span className="font-medium">
+                      {student?.name ?? 'Unknown student'}
+                    </span>{' '}
+                    <span className="text-muted-foreground">
+                      · {dispositionLabel(tag.disposition)}
+                    </span>
                   </span>
                   {editable && (
                     <div className="flex shrink-0 gap-1">

@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { Check } from 'lucide-react'
 import type { BroadcastRequest, DispositionId } from '@/types/hdp'
 import { DispositionChip } from '@/components/hdp/disposition-chip'
 import { EmptyState } from '@/components/empty-state'
@@ -112,7 +113,7 @@ export function BroadcastRequestsPanel({
   if (!mounted) return <div aria-hidden className="h-24" />
 
   return (
-    <section id="requests-for-you" className="flex flex-col gap-3">
+    <section id="requests-for-you" className="flex max-w-2xl flex-col gap-3">
       <div className="flex flex-col gap-1">
         <h2 className="text-sm font-medium">Requests for you</h2>
         <p className="text-muted-foreground text-sm">
@@ -197,9 +198,14 @@ function RequestForYouRow({
 
   if (existingResponse) {
     return (
-      <li className="py-3 text-sm">
-        {student?.name ?? 'Unknown student'} — Responded (
-        {responseLabel(existingResponse)})
+      <li className="text-muted-foreground flex items-center gap-2 py-3 text-sm">
+        <Check className="text-lime-11 size-4 shrink-0" aria-hidden />
+        <span>
+          <span className="text-foreground font-medium">
+            {student?.name ?? 'Unknown student'}
+          </span>{' '}
+          — responded ({responseLabel(existingResponse)})
+        </span>
       </li>
     )
   }
@@ -252,7 +258,7 @@ function RequestForYouRow({
       <div className="flex justify-end">
         <Button
           type="button"
-          variant="ghost"
+          variant="outline"
           size="sm"
           disabled={!disposition && !nil}
           title={

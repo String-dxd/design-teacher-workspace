@@ -81,7 +81,10 @@ export function HdpReportsHome({ tab, onTabChange }: HdpReportsHomeProps) {
       <div className="shrink-0 pt-6">
         <div className="flex items-start justify-between gap-4 px-6">
           <div className="flex flex-col gap-1">
-            <h1 className="text-2xl font-semibold">Reports</h1>
+            <div className="flex items-center gap-2.5">
+              <h1 className="text-2xl font-semibold">Reports</h1>
+              <CycleStages stage={CURRENT_CYCLE.stage} />
+            </div>
             <p className="text-muted-foreground text-sm">
               Turn everyday observations into report books for parents. Semester{' '}
               {CURRENT_CYCLE.semester}, {CURRENT_CYCLE.schoolYear} · Window{' '}
@@ -95,9 +98,6 @@ export function HdpReportsHome({ tab, onTabChange }: HdpReportsHomeProps) {
             <Plus className="mr-1.5 h-4 w-4" />
             Tag student
           </Button>
-        </div>
-        <div className="mt-3 px-6">
-          <CycleStages stage={CURRENT_CYCLE.stage} />
         </div>
       </div>
 

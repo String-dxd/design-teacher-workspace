@@ -1,4 +1,5 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
+import { ArrowLeft } from 'lucide-react'
 import { StudentRiver } from '@/components/hdp/student-river'
 import { getStudentById } from '@/data/mock-students'
 import { CURRENT_TEACHER } from '@/data/hdp'
@@ -55,12 +56,24 @@ function StudentRiverPage() {
   }
 
   return (
-    <main className="mx-auto flex max-w-2xl flex-col gap-6 px-4 py-8 sm:px-6">
-      <StudentRiver
-        studentId={studentId}
-        viewerId={CURRENT_TEACHER.id}
-        fullRiver={fullRiver}
-      />
+    <main className="flex flex-col gap-4 px-6 py-6">
+      <div>
+        <Link
+          to="/reports"
+          search={{ tab: 'students' }}
+          className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }))}
+        >
+          <ArrowLeft aria-hidden />
+          My students
+        </Link>
+      </div>
+      <div className="max-w-3xl">
+        <StudentRiver
+          studentId={studentId}
+          viewerId={CURRENT_TEACHER.id}
+          fullRiver={fullRiver}
+        />
+      </div>
     </main>
   )
 }
