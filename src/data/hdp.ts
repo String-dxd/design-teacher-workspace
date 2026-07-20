@@ -3,7 +3,6 @@ import { MOCK_STAFF } from './mock-staff'
 import type {
   AssessmentKind,
   BroadcastRequest,
-  DispositionId,
   DraftClaim,
   FormingPattern,
   HdpCycle,
@@ -17,6 +16,7 @@ import type {
   StudentReflection,
   TagContext,
 } from '@/types/hdp'
+import { DISPOSITION_LABELS } from '@/lib/hdp-labels'
 
 // Fresh, self-contained fixtures for the HDP Reports module. Zero imports
 // from the legacy mock-reports.ts / report-layouts.ts (plan 028, grill
@@ -64,7 +64,7 @@ export const HDP_COLLEAGUES = [
 // in mock-students.ts rather than growing it (recorded tradeoff, plan 028).
 // Exported so the store and later plans (e.g. 030's class list) don't have
 // to re-derive the roster from mock-students themselves.
-export const CLASS_3A_STUDENT_IDS = mockStudents
+const CLASS_3A_STUDENT_IDS = mockStudents
   .filter((s) => s.class === '3A')
   .map((s) => s.id)
 
@@ -1463,13 +1463,6 @@ export const SEED_REPORT_BOOKS: Array<HdpReportBook> = [
 // thin-record students get a plain teacher-written remark (unsourced —
 // rendered "your addition", never a fabricated source).
 
-const SEED_DISPOSITION_LABELS: Record<DispositionId, string> = {
-  perseverance: 'Perseverance',
-  curiosity: 'Curiosity',
-  collaboration: 'Collaboration',
-  'self-direction': 'Self-direction',
-}
-
 const SEED_CONTEXT_SHORT: Record<TagContext, string> = {
   lesson: 'lesson',
   marking: 'marking',
@@ -1483,7 +1476,7 @@ function seedSourceLabel(tag: HdpTag): string {
     day: 'numeric',
     month: 'short',
   })
-  return `${SEED_DISPOSITION_LABELS[tag.disposition]} — ${SEED_CONTEXT_SHORT[tag.context]}, ${date}`
+  return `${DISPOSITION_LABELS[tag.disposition]} — ${SEED_CONTEXT_SHORT[tag.context]}, ${date}`
 }
 
 const FORM_CLASS_STUDENT_IDS = mockStudents

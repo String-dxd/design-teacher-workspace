@@ -32,6 +32,7 @@ import {
 import { getStudentById, mockStudents } from '@/data/mock-students'
 import { CURRENT_CYCLE, CURRENT_TEACHER } from '@/data/hdp'
 import { TIMETABLE } from '@/data/timetable'
+import { formatDate } from '@/lib/format'
 import {
   coverageForClass,
   findDraft,
@@ -50,14 +51,6 @@ import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
 export type ReportsTab = 'students' | 'drafting' | 'send' | 'requests'
 
 const SYNC_LATENCY_MS = 1000
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-SG', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })
-}
 
 interface HdpReportsHomeProps {
   tab: ReportsTab

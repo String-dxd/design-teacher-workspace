@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 
-export interface BreadcrumbItem {
+interface BreadcrumbItem {
   label: string
   href: string
 }

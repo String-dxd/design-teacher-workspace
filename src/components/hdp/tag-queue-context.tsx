@@ -8,13 +8,13 @@ import { useFeatureFlag } from '@/hooks/use-feature-flag'
 // session (plan 029 behaviour requirement) — closing the overlay never
 // silently destroys typed content.
 
-export interface TagQueuePrefill {
+interface TagQueuePrefill {
   studentId?: string
   context?: TagContext
   entryPoint: TagEntryPoint
 }
 
-export interface ComposerDraft {
+interface ComposerDraft {
   studentId: string | null
   context: TagContext
   disposition: DispositionId | null
@@ -48,14 +48,6 @@ const EMPTY_DRAFT: ComposerDraft = {
   disposition: null,
   note: '',
   evidenceAttached: false,
-}
-
-/** PRD F0.1.3: default TagContext derived from the invoking route.
- *  '/groups' → 'cca' (CCA is a first-class tag context); everything else →
- *  'lesson'. Always editable afterwards in the composer. */
-export function contextFromPath(pathname: string): TagContext {
-  if (pathname.startsWith('/groups')) return 'cca'
-  return 'lesson'
 }
 
 export function TagQueueProvider({ children }: { children: React.ReactNode }) {

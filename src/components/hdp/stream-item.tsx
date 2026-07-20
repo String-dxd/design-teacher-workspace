@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { TagPill } from './tag-pill'
-import type { HdpTag, TagContext } from '@/types/hdp'
+import type { HdpTag } from '@/types/hdp'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
@@ -13,21 +13,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-
-const CONTEXT_LABELS: Record<TagContext, string> = {
-  lesson: 'during lesson',
-  marking: 'while marking',
-  cca: 'CCA',
-  'form-time': 'form time',
-  other: 'other',
-}
-
-const DISPOSITION_LABELS: Record<HdpTag['disposition'], string> = {
-  perseverance: 'Perseverance',
-  curiosity: 'Curiosity',
-  collaboration: 'Collaboration',
-  'self-direction': 'Self-direction',
-}
+import { CONTEXT_PHRASES, DISPOSITION_LABELS } from '@/lib/hdp-labels'
 
 interface StreamItemProps {
   tag: HdpTag
@@ -80,7 +66,7 @@ export function StreamItem({
           <span className="text-sm font-medium">{authorName}</span>
           <TagPill disposition={tag.disposition} />
           <span className="text-muted-foreground text-xs">
-            {CONTEXT_LABELS[tag.context]}
+            {CONTEXT_PHRASES[tag.context]}
           </span>
         </div>
         {tag.note && (

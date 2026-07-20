@@ -7,9 +7,10 @@ import type {
   FormingPattern,
   HdpReportBook,
   StudentReflection,
-  TagContext,
   TrendDirection,
 } from '@/types/hdp'
+import { CONTEXT_LABELS } from '@/lib/hdp-labels'
+import { formatDate } from '@/lib/format'
 import { MOCK_STAFF } from '@/data/mock-staff'
 import {
   AlertDialog,
@@ -60,27 +61,11 @@ function staffName(id: string): string {
   return MOCK_STAFF.find((s) => s.id === id)?.name ?? 'Unknown teacher'
 }
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-SG', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })
-}
-
 const DIRECTION_WORDS: Record<TrendDirection, string> = {
   climbing: 'Climbing',
   steady: 'Steady',
   recovering: 'Recovering',
   easing: 'Easing',
-}
-
-const CONTEXT_LABELS: Record<TagContext, string> = {
-  lesson: 'Lesson',
-  marking: 'Marking',
-  cca: 'CCA',
-  'form-time': 'Form time',
-  other: 'Other',
 }
 
 /** Family-facing provenance, first honest slice (PRD B.4, plan 040): a

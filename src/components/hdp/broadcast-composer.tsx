@@ -1,8 +1,8 @@
 import * as React from 'react'
-import { format } from 'date-fns'
 import { XIcon } from 'lucide-react'
 import type { CanBroadcastResult } from '@/lib/hdp-store'
 import { BROADCAST_COOLDOWN_DAYS, createBroadcast } from '@/lib/hdp-store'
+import { formatDate } from '@/lib/format'
 import { CURRENT_TEACHER, HDP_COLLEAGUES } from '@/data/hdp'
 import { teachersForStudents } from '@/data/timetable'
 import { Button } from '@/components/ui/button'
@@ -37,10 +37,6 @@ function staffName(id: string): string {
 interface TeacherOption {
   id: string
   name: string
-}
-
-function formatDate(iso: string): string {
-  return format(new Date(iso), 'd MMM')
 }
 
 interface BroadcastComposerProps {
@@ -113,7 +109,7 @@ export function BroadcastComposer({
 
   if (!blocked.ok) {
     const sentDate = lastBroadcastCreatedAt
-      ? formatDate(lastBroadcastCreatedAt)
+      ? formatDate(lastBroadcastCreatedAt, { year: false })
       : undefined
     const cooldownDate = lastBroadcastCreatedAt
       ? formatDate(
@@ -121,6 +117,7 @@ export function BroadcastComposer({
             new Date(lastBroadcastCreatedAt).getTime() +
               BROADCAST_COOLDOWN_DAYS * 24 * 60 * 60 * 1000,
           ).toISOString(),
+          { year: false },
         )
       : undefined
     return (

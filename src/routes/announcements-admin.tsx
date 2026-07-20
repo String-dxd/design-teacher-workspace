@@ -39,6 +39,7 @@ import {
 } from '@/components/ui/table'
 import { usePagination } from '@/hooks/use-pagination'
 import { cn } from '@/lib/utils'
+import { formatDate } from '@/lib/format'
 
 type PostTab = 'with-responses' | 'view-only'
 
@@ -49,15 +50,6 @@ export const Route = createFileRoute('/announcements-admin')({
   }),
   component: AdminPostsExperiment,
 })
-
-function formatDate(iso: string | undefined): string {
-  if (!iso) return '—'
-  return new Date(iso).toLocaleDateString('en-SG', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })
-}
 
 function AdminBanner({ scope }: { scope: 'my' | 'school' }) {
   const navigate = useNavigate()
@@ -212,8 +204,8 @@ function AdminPostsExperiment() {
               {isSchoolWide ? 'School posts' : 'My posts'}
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Send posts to parents via Parents Gateway. Choose whether
-              parents need to respond.
+              Send posts to parents via Parents Gateway. Choose whether parents
+              need to respond.
             </p>
           </div>
           <Button size="sm" render={<Link to="/create" />}>

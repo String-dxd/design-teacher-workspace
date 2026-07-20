@@ -156,7 +156,7 @@ export function NotificationPopover() {
       .slice(0, 10)
     // hdpEntries is a fresh array each render (localStorage-backed, not
     // React state), so this recomputes on every popover open — cheap given
-    // the feed is capped at MAX_ENTRIES.
+    // the feed size in practice.
   }, [open])
 
   const handleSelect = () => {

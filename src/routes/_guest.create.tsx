@@ -116,8 +116,8 @@ function CreateCard({ option }: { option: CreateOption }) {
 }
 
 function CreatePage() {
-  const { flags } = useFeatureFlags()
-  const formsEnabled = flags.forms
+  const { isEnabled } = useFeatureFlags()
+  const formsEnabled = isEnabled('forms')
   const navigate = useNavigate()
 
   const options = formsEnabled

@@ -43,6 +43,7 @@ import {
   isSubjectSubmitted,
 } from '@/data/mock-cockpit-submissions'
 import { cn, stripSalutation } from '@/lib/utils'
+import { getInitials } from '@/lib/format'
 
 // Shared P1 report renderer — used by the builder's live preview (editable) and the
 // parent-facing guest view (read-only). Renders the ordered, enabled blocks of a
@@ -489,16 +490,6 @@ function maskNric(nric: string): string {
   return `${nric.slice(0, 1)}XXXX${nric.slice(5)}`
 }
 
-function getInitials(name: string): string {
-  return name
-    .split(' ')
-    .filter((part) => part.length > 0)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join('')
-    .toUpperCase()
-}
-
 /** Single best subject for the "Best Subject" tile: the submitted subject
  * with the highest average LO stage. Ties are named together. Returns null
  * when fewer than two subjects have data (nothing meaningful to compare). */
@@ -522,9 +513,7 @@ function deriveBestSubject(report: HolisticReport): string | null {
 /** White bordered card split into two halves by a vertical divider — the
  * "Term at a glance" hero is two of these, side by side. */
 function GlanceCard({ children }: { children: ReactNode }) {
-  return (
-    <div className="bg-card divide-x rounded-xl border">{children}</div>
-  )
+  return <div className="bg-card divide-x rounded-xl border">{children}</div>
 }
 
 /** One half of a GlanceCard: optional icon + label header, then arbitrary
@@ -600,9 +589,7 @@ function TermAtAGlance({ report }: { report: HolisticReport }) {
         </GlanceHalf>
         <GlanceHalf label="Best Subject">
           {bestSubject ? (
-            <p className="text-sm leading-tight font-semibold">
-              {bestSubject}
-            </p>
+            <p className="text-sm leading-tight font-semibold">{bestSubject}</p>
           ) : (
             <p className="text-muted-foreground text-sm italic">
               Not yet available
@@ -614,7 +601,7 @@ function TermAtAGlance({ report }: { report: HolisticReport }) {
   )
 }
 
-export interface ReportPreviewProps {
+interface ReportPreviewProps {
   report: HolisticReport
   blocks: Array<ReportBlock>
   /** When true, the comments block is editable (builder). When false, read-only (parent view). */
@@ -778,9 +765,7 @@ function PreviewBlock({
             </p>
             {report.coFormTeacher && (
               <p className="text-sm">
-                <span className="text-muted-foreground">
-                  Co-form teacher:{' '}
-                </span>
+                <span className="text-muted-foreground">Co-form teacher: </span>
                 <span className="font-medium">
                   {stripSalutation(report.coFormTeacher)}
                 </span>
@@ -914,9 +899,7 @@ function PreviewBlock({
           <div className="bg-card rounded-xl border px-3.5 py-4">
             <div className="flex flex-col items-center gap-1 pb-3 text-center">
               <SectionIllustration slug="cca" alt="" />
-              <p className="text-sm font-semibold">
-                Co-curricular Activities
-              </p>
+              <p className="text-sm font-semibold">Co-curricular Activities</p>
             </div>
             <div className="border-t pt-1.5">
               {report.holistic.cca.length ? (
