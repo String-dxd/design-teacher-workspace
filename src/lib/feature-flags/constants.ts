@@ -137,11 +137,11 @@ export const FEATURE_FLAG_REGISTRY: Record<FeatureFlagKey, FeatureFlagMeta> = {
     defaultValue: false,
   },
   'msf-uplift-data': {
-    label: 'MSF data',
+    label: 'Familial risk data from Uplift Office',
     description:
       'Show student data sourced from MSF via Uplift Office when this flag is enabled',
     stage: 'Experiment',
-    module: 'contextual-intelligence',
+    module: 'student-insights',
     defaultValue: false,
   },
   'agency-reports': {
