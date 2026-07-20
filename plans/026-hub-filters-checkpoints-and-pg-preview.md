@@ -22,7 +22,7 @@
 4. **Staggered auto-acknowledge** after sending — most parents acknowledge over a visible staggered window; a designated one or two never do.
 5. **One shared Parents-Gateway-framed dialog** (phone frame, PG header, report document, tappable **Acknowledge**) used by both the layout page and the write page.
 
-Confirmed assumptions: sibling classes in a level view are **read-only** (statuses visible, actions disabled — the user is only P1-A's form teacher); the six-state pipeline *display* extends to other primary classes, but the interactive end-to-end flow stays on P1-A; secondary keeps the legacy view.
+Confirmed assumptions: sibling classes in a level view are **read-only** (statuses visible, actions disabled — the user is only P1-A's form teacher); the six-state pipeline _display_ extends to other primary classes, but the interactive end-to-end flow stays on P1-A; secondary keeps the legacy view.
 
 ## Hard constraints
 
@@ -82,15 +82,15 @@ New `src/data/mock-report-classes.ts` (data module, not a component):
 
 Replace the fixed "Write" button (pipeline mode) with one stage-driven action:
 
-| Row stage | Button | Behaviour |
-|---|---|---|
-| awaiting_results | "Enter comments" **disabled**, title "Waiting on results from School Cockpit" | — |
-| pending_comments | "Enter comments" | link to write page |
-| draft | "Review & submit" | link to write page (submit lives there) |
-| in_review | "Enter comments"-slot shows **disabled** "Awaiting approval" | — |
-| approved | **"Send to parents"** (primary variant) | per-row send: reuse the exact bulk-share commit path (`commitCycleReport` + `saveShareMessage` + `patchStudent sentAt`) for this one student, confirm via the existing `AlertDialog` copy |
-| sent | "View" | link to write page (read state) |
-| sibling-class rows | disabled "View only", title "You're not this class's form teacher" | — |
+| Row stage          | Button                                                                        | Behaviour                                                                                                                                                                                 |
+| ------------------ | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| awaiting_results   | "Enter comments" **disabled**, title "Waiting on results from School Cockpit" | —                                                                                                                                                                                         |
+| pending_comments   | "Enter comments"                                                              | link to write page                                                                                                                                                                        |
+| draft              | "Review & submit"                                                             | link to write page (submit lives there)                                                                                                                                                   |
+| in_review          | "Enter comments"-slot shows **disabled** "Awaiting approval"                  | —                                                                                                                                                                                         |
+| approved           | **"Send to parents"** (primary variant)                                       | per-row send: reuse the exact bulk-share commit path (`commitCycleReport` + `saveShareMessage` + `patchStudent sentAt`) for this one student, confirm via the existing `AlertDialog` copy |
+| sent               | "View"                                                                        | link to write page (read state)                                                                                                                                                           |
+| sibling-class rows | disabled "View only", title "You're not this class's form teacher"            | —                                                                                                                                                                                         |
 
 Legacy classes keep the current Write button. **Verify (browser)**: walk one student through the whole ladder — each stage shows exactly one action; per-row Send flips only that row to Sent; bulk Share still works.
 

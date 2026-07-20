@@ -2929,8 +2929,8 @@ function ReportForm({
         <div className="text-center">
           <p className="text-sm font-medium">Auto-filling fields…</p>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            Pulling {studentName}'s data from EduHub, School Cockpit, TCI &
-            Case Sync
+            Pulling {studentName}'s data from EduHub, School Cockpit, TCI & Case
+            Sync
           </p>
         </div>
       </div>

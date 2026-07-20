@@ -107,8 +107,7 @@ export function draftTeacherComment(
   const cca = has('cca') ? report.holistic.cca.at(0) : undefined
   if (has('attendance')) {
     const attendancePct = Math.round(
-      (report.attendance.daysPresent / report.attendance.totalSchoolDays) *
-        100,
+      (report.attendance.daysPresent / report.attendance.totalSchoolDays) * 100,
     )
     if (attendancePct >= 90) {
       sentences.push(

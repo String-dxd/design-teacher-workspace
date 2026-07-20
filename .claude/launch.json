@@ -4,20 +4,29 @@
     {
       "name": "pg-frontend",
       "runtimeExecutable": "sh",
-      "runtimeArgs": ["-c", "cd /Users/gracechan/Documents/Prototypes/teacher-workspace-pg-frontend && exec pnpm dev"],
+      "runtimeArgs": [
+        "-c",
+        "cd /Users/gracechan/Documents/Prototypes/teacher-workspace-pg-frontend && exec pnpm dev"
+      ],
       "port": 3001,
       "autoPort": true
     },
     {
       "name": "blueprint-builder",
       "runtimeExecutable": "sh",
-      "runtimeArgs": ["-c", "cd /Users/leemunyee/Downloads/blueprint-builder && exec /Users/leemunyee/.local/share/mise/installs/node/24.14.1/bin/npm run dev"],
+      "runtimeArgs": [
+        "-c",
+        "cd /Users/leemunyee/Downloads/blueprint-builder && exec /Users/leemunyee/.local/share/mise/installs/node/24.14.1/bin/npm run dev"
+      ],
       "port": 5173
     },
     {
       "name": "Dev",
       "runtimeExecutable": "sh",
-      "runtimeArgs": ["-c", "exec /opt/homebrew/bin/bun run vite dev --port \"${PORT:-3000}\""],
+      "runtimeArgs": [
+        "-c",
+        "exec /opt/homebrew/bin/bun run vite dev --port \"${PORT:-3000}\""
+      ],
       "port": 3000,
       "autoPort": true
     },
@@ -30,7 +39,10 @@
     {
       "name": "Preview",
       "runtimeExecutable": "sh",
-      "runtimeArgs": ["-c", "exec /opt/homebrew/bin/bun run vite dev --port \"${PORT:-3000}\""],
+      "runtimeArgs": [
+        "-c",
+        "exec /opt/homebrew/bin/bun run vite dev --port \"${PORT:-3000}\""
+      ],
       "port": 3000,
       "autoPort": true
     }
