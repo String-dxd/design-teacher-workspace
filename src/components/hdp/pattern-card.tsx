@@ -1,15 +1,9 @@
-import type { DispositionId, FormingPattern } from '@/types/hdp'
+import type { FormingPattern } from '@/types/hdp'
 import { MOCK_STAFF } from '@/data/mock-staff'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { cn } from '@/lib/utils'
-
-const DISPOSITION_LABELS: Record<DispositionId, string> = {
-  perseverance: 'Perseverance',
-  curiosity: 'Curiosity',
-  collaboration: 'Collaboration',
-  'self-direction': 'Self-direction',
-}
+import { DISPOSITION_LABELS } from '@/lib/hdp-labels'
 
 function staffName(id: string): string {
   return MOCK_STAFF.find((s) => s.id === id)?.name ?? 'a colleague'

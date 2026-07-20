@@ -1,12 +1,6 @@
 import type { DispositionId, HdpTag } from '@/types/hdp'
 import { dispositionMix } from '@/lib/hdp-store'
-
-const DISPOSITION_LABELS: Record<DispositionId, string> = {
-  perseverance: 'Perseverance',
-  curiosity: 'Curiosity',
-  collaboration: 'Collaboration',
-  'self-direction': 'Self-direction',
-}
+import { DISPOSITION_LABELS } from '@/lib/hdp-labels'
 
 // Largest slice gets the one accent; the rest step down in a muted scale.
 // No numeric axis, no percentages, no legend counts (P6) — proportions only.
