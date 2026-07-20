@@ -24,9 +24,7 @@ export function TermSelector({
   className,
 }: TermSelectorProps) {
   const displayValue =
-    value === CURRENT_TERM
-      ? `${value} (Current)`
-      : value || 'All terms'
+    value === CURRENT_TERM ? `${value} (Current)` : value || 'All terms'
 
   return (
     <Select
