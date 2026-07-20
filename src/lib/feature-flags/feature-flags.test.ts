@@ -102,4 +102,14 @@ describe('loadFlags analytics reconcile (via readEffectiveFlags)', () => {
     expect(effective['student-analytics-basic']).toBe(true)
     expect(effective['student-analytics']).toBe(true)
   })
+
+  it('does not override an explicit stored student-analytics-basic: false', () => {
+    setStoredFlags({
+      'student-analytics': true,
+      'student-analytics-basic': false,
+    })
+    const effective = readEffectiveFlags()
+    expect(effective['student-analytics-basic']).toBe(false)
+    expect(effective['student-analytics']).toBe(false)
+  })
 })

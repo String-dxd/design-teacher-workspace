@@ -36,8 +36,15 @@ function loadFlags(): FeatureFlags {
       }
 
       // Migration (plan 043): pre-hierarchy, 'student-analytics' alone implied
-      // the analytics pages. Under parent/child it needs its parent on.
-      if (merged['student-analytics'] && !merged['student-analytics-basic']) {
+      // the analytics pages. Under parent/child it needs its parent on. Gate
+      // on the KEY BEING ABSENT from the stored payload, not on its merged
+      // (default-backfilled) value — otherwise a user who explicitly turns
+      // the parent off (stored { 'student-analytics-basic': false }) would
+      // have it flipped back on at every reload.
+      if (
+        merged['student-analytics'] &&
+        typeof parsed['student-analytics-basic'] !== 'boolean'
+      ) {
         merged['student-analytics-basic'] = true
       }
 
