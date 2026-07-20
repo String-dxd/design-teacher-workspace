@@ -10,7 +10,9 @@ import {
   parseSeedCookie,
   readEffectiveFlags,
   resolveEffective,
+  saveFlags,
 } from './context'
+import type { FeatureFlagKey, FeatureFlags } from './types'
 
 // Under this repo's vitest/jsdom/Node combination, `globalThis.localStorage`
 // occasionally comes back `undefined` in a worker (see draft-storage.test.ts
@@ -173,6 +175,11 @@ describe('mergeStoredFlags (shared by localStorage load and SSR cookie seed)', (
     )
   })
 
+  it('never carries the _v version marker through into its output', () => {
+    const merged = mergeStoredFlags({ posts: false, _v: 2 })
+    expect('_v' in merged).toBe(false)
+  })
+
   it('ignores junk-typed values and non-object input', () => {
     expect(mergeStoredFlags({ posts: 'yes', meetings: 1 })).toEqual(
       DEFAULT_FEATURE_FLAGS,
@@ -251,7 +258,7 @@ describe('resolveEffective (shared by isEnabled and readEffectiveFlags)', () => 
     expect(resolveEffective('reports-hdp-future', flagsOff)).toBe(false)
   })
 
-  it('is exactly what readEffectiveFlags produces for every key, given the same stored payload', () => {
+  it('applies parent-gating for every key, checked against an independent oracle', () => {
     setStoredFlags({
       'reports-hdp': false,
       'reports-hdp-future': true,
@@ -266,11 +273,60 @@ describe('resolveEffective (shared by isEnabled and readEffectiveFlags)', () => 
     ) as Record<string, unknown>
     const merged = mergeStoredFlags(stored)
     const effective = readEffectiveFlags()
+
+    // Independent re-statement of the parent-gating spec (does NOT call
+    // resolveEffective) — readEffectiveFlags is implemented in terms of
+    // resolveEffective over the same merged flags, so asserting against
+    // resolveEffective itself could never catch a bug shared by both.
+    function expectedEffective(
+      key: FeatureFlagKey,
+      flags: FeatureFlags,
+    ): boolean {
+      const parent = FEATURE_FLAG_REGISTRY[key].parent
+      return parent ? flags[parent] && flags[key] : flags[key]
+    }
+
     for (const key of Object.keys(FEATURE_FLAG_REGISTRY) as Array<
       keyof typeof FEATURE_FLAG_REGISTRY
     >) {
-      expect(effective[key], key).toBe(resolveEffective(key, merged))
+      expect(effective[key], key).toBe(expectedEffective(key, merged))
     }
+  })
+})
+
+describe('saveFlags version marker', () => {
+  it('stamps a real write with _v: 2 and round-trips through mergeStoredFlags as non-legacy', () => {
+    saveFlags({
+      ...DEFAULT_FEATURE_FLAGS,
+      'student-analytics': true,
+      'student-analytics-basic': false,
+    })
+
+    const raw = localStorage.getItem(FEATURE_FLAGS_STORAGE_KEY)
+    expect(raw).not.toBeNull()
+    const parsed = JSON.parse(raw!) as Record<string, unknown>
+
+    expect(parsed._v).toBe(2)
+    expect(parsed['student-analytics']).toBe(true)
+    expect(parsed['student-analytics-basic']).toBe(false)
+
+    // Because _v is present, mergeStoredFlags must treat this as an
+    // already-migrated payload and NOT flip the explicit basic: false back
+    // on via the legacy analytics reconcile.
+    const merged = mergeStoredFlags(parsed)
+    expect(merged['student-analytics-basic']).toBe(false)
+
+    // saveFlags also mirrors the write into a cookie (for SSR seeding) —
+    // verified directly against document.cookie under jsdom.
+    expect(document.cookie).toContain(FEATURE_FLAGS_STORAGE_KEY)
+    const cookieMatch = document.cookie.match(
+      new RegExp(`${FEATURE_FLAGS_STORAGE_KEY}=([^;]+)`),
+    )
+    expect(cookieMatch).not.toBeNull()
+    const cookieParsed = JSON.parse(
+      decodeURIComponent(cookieMatch![1]),
+    ) as Record<string, unknown>
+    expect(cookieParsed._v).toBe(2)
   })
 })
 

@@ -115,7 +115,13 @@ export function readEffectiveFlags(): FeatureFlags {
   return effective
 }
 
-function saveFlags(flags: FeatureFlags): void {
+/**
+ * Persist flags to localStorage (and mirror to a cookie for SSR seeding),
+ * stamping the payload with the `_v: 2` version marker consumed by
+ * `mergeStoredFlags`'s legacy-migration check. Exported so tests can
+ * exercise the real write path instead of hand-authoring `_v` in fixtures.
+ */
+export function saveFlags(flags: FeatureFlags): void {
   if (typeof window === 'undefined') return
 
   // Stamp every write with a version marker so a future stored payload can

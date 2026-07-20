@@ -18,4 +18,5 @@ export {
   mergeStoredFlags,
   resolveEffective,
   parseSeedCookie,
+  saveFlags,
 } from './context'
