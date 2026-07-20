@@ -15,6 +15,16 @@ describe('formatDate', () => {
   it("returns '—' for undefined", () => {
     expect(formatDate(undefined)).toBe('—')
   })
+
+  it('renders September as "Sept" or "Sep" depending on ICU data', () => {
+    expect(formatDate('2026-09-17T11:30:00+08:00', { year: false })).toMatch(
+      /^17 Sept?$/,
+    )
+  })
+
+  it('renders September with year as "Sept" or "Sep" depending on ICU data', () => {
+    expect(formatDate('2026-09-17T11:30:00+08:00')).toMatch(/^17 Sept? 2026$/)
+  })
 })
 
 describe('getInitials', () => {

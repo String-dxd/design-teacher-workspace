@@ -180,7 +180,7 @@ export interface HolisticData {
 // it as the shared definition. P1 renders its curated sections as-is; secondary bulk
 // (out of the test-track scope) renders layout ∩ available-data.
 export interface ReportBlock {
-  key: string // matches a P1_SECTION_DEFS key in src/data/report-layouts.ts
+  key: string // report section key, e.g. 'pupilInfo', 'termAtAGlance', 'subjects'
   enabled: boolean
   order: number
 }
