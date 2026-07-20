@@ -700,7 +700,7 @@ function DraftProse({
             ? resolveTag(claim.source.tagId)
             : undefined
           return (
-            <React.Fragment key={index}>
+            <React.Fragment key={claim.id ?? `claim-${index}`}>
               {claim.text.trim()}{' '}
               <SourceTag
                 source={claim.source}

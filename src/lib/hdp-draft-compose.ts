@@ -110,6 +110,7 @@ export function composeDraft(
     if (seenDispositions.has(tag.disposition)) continue
     seenDispositions.add(tag.disposition)
     claims.push({
+      id: crypto.randomUUID(),
       text: claimTextForTag(tag, studentName),
       source: { tagId: tag.id, label: sourceLabel(tag) },
     })
@@ -126,6 +127,7 @@ export function composeDraft(
     )
     const anchorTag = patternTags[0] ?? ordered[0]
     claims.push({
+      id: crypto.randomUUID(),
       text: crossContextClaimText(confirmedPattern, studentName),
       source: { tagId: anchorTag.id, label: sourceLabel(anchorTag) },
     })
@@ -218,6 +220,7 @@ export function composeFromInsights(
   void kind
 
   return insights.map((insight, index) => ({
+    id: crypto.randomUUID(),
     text: insightClaimText(insight, studentName),
     source: {
       tagId: insightRecordId(insight),
