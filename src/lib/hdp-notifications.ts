@@ -3,7 +3,7 @@
 // bell alongside Posts announcements. Modeled on hdp-cycle-store.ts's own
 // defensive-load pattern — mock data, not a real notification service.
 
-export interface HdpNotification {
+interface HdpNotification {
   id: string
   title: string
   description: string
@@ -12,7 +12,6 @@ export interface HdpNotification {
 }
 
 const STORAGE_KEY = 'hdp_notifications'
-const MAX_ENTRIES = 20
 
 export function getHdpNotifications(): Array<HdpNotification> {
   if (typeof window === 'undefined') return []
@@ -33,23 +32,6 @@ export function getHdpNotifications(): Array<HdpNotification> {
     )
   } catch {
     return []
-  }
-}
-
-export function pushHdpNotification(
-  entry: Omit<HdpNotification, 'id' | 'read'>,
-): void {
-  if (typeof window === 'undefined') return
-  try {
-    const next: HdpNotification = {
-      ...entry,
-      id: crypto.randomUUID(),
-      read: false,
-    }
-    const updated = [next, ...getHdpNotifications()].slice(0, MAX_ENTRIES)
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
-  } catch {
-    // Quota exceeded or localStorage unavailable — silently ignore
   }
 }
 

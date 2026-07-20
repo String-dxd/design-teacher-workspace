@@ -133,7 +133,7 @@ const readingStudents = mockStudents
   .sort((a, b) => a.indexNumber - b.indexNumber)
   .slice(4, 10)
 
-export const MOCK_SHARED_GROUPS: Array<StudentGroup> = [
+const MOCK_SHARED_GROUPS: Array<StudentGroup> = [
   {
     id: 'cg-bright-sparks',
     kind: 'regular',

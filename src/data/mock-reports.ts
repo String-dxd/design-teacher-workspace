@@ -977,12 +977,6 @@ export function getStudentGradeCounts(
   return { distinctions, passes, total: subjects.length }
 }
 
-export function addReport(report: HolisticReport): void {
-  if (!mockReports.find((r) => r.id === report.id)) {
-    mockReports.push(report)
-  }
-}
-
 /**
  * Insert or replace a report by id. `generateAllReports` pre-generates deterministic
  * ids for most students/terms, so `addReport`'s "push if absent" no-ops for them —
@@ -1011,27 +1005,6 @@ export function getAdjacentReportIds(id: string): {
     prevId: index > 0 ? mockReports[index - 1].id : null,
     nextId: index < mockReports.length - 1 ? mockReports[index + 1].id : null,
   }
-}
-
-interface ReportFilters {
-  studentId?: string
-  term?: Term
-  academicYear?: number
-}
-
-export function filterReports(filters: ReportFilters): Array<HolisticReport> {
-  return mockReports.filter((report) => {
-    if (filters.studentId && report.studentId !== filters.studentId) {
-      return false
-    }
-    if (filters.term && report.term !== filters.term) {
-      return false
-    }
-    if (filters.academicYear && report.academicYear !== filters.academicYear) {
-      return false
-    }
-    return true
-  })
 }
 
 export { TERMS, CURRENT_ACADEMIC_YEAR, CURRENT_TERM }

@@ -47,7 +47,7 @@ const CONTEXT_LABELS: Record<TagContext, string> = {
  *  handful of records, not just the funnel's staged three. Every value is
  *  a plain, positively-or-neutrally framed fact — no trait words, no
  *  comparisons across students. */
-export interface StaticFacts {
+interface StaticFacts {
   attendance: string
   cca: string
   conduct: string
@@ -189,7 +189,7 @@ const CCA_REMARK_TEMPLATES: Array<(cca: string) => string> = [
     `Shows steady commitment to ${cca}, volunteering for roles during school events and following through on them.`,
 ]
 
-export interface SlipViaRow {
+interface SlipViaRow {
   type: string
   title: string
   partner: string
@@ -197,7 +197,7 @@ export interface SlipViaRow {
   hours: number
 }
 
-export interface SlipDetails {
+interface SlipDetails {
   age: number
   serialNo: number
   idNo: string
@@ -350,7 +350,7 @@ const GRADE_PCTL: Record<string, string> = {
   C5: '20–40',
 }
 
-export interface SlipResultRow {
+interface SlipResultRow {
   subject: string
   sem1: { mark: number; grade: string }
   sem2: { mark: number; grade: string }

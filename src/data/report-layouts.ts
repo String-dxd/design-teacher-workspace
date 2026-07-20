@@ -13,73 +13,6 @@
 
 import type { ReportBlock, ReportLayout } from '@/types/report'
 
-export interface SectionDef {
-  key: string
-  label: string
-  description: string
-  /** Required sections cannot be toggled off (e.g. pupil particulars). */
-  required?: boolean
-  /**
-   * false → not applicable at P1: ships off by default and is labelled
-   * "Not applicable at P1" in the builder.
-   */
-  applicableAtP1?: boolean
-}
-
-/** The authentic HDP section set, scoped to P1. Order is the default report order. */
-export const P1_SECTION_DEFS: Array<SectionDef> = [
-  {
-    key: 'pupilInfo',
-    label: 'Pupil particulars',
-    description: 'Name, class, age, identification, form teacher',
-    required: true,
-    applicableAtP1: true,
-  },
-  {
-    key: 'termAtAGlance',
-    label: 'Term at a glance',
-    description: 'Strongest and growing subjects, conduct, and attendance',
-    applicableAtP1: true,
-  },
-  {
-    key: 'subjects',
-    label: 'Subjects',
-    description:
-      'Learning outcomes and qualitative descriptors for each subject',
-    applicableAtP1: true,
-  },
-  {
-    key: 'personalQualities',
-    label: 'Personal qualities',
-    description: 'School-set qualities with descriptors',
-    applicableAtP1: true,
-  },
-  {
-    key: 'conduct',
-    label: 'Form teacher comments',
-    description: 'The form teacher’s written note on the term',
-    applicableAtP1: true,
-  },
-  {
-    key: 'cca',
-    label: 'Co-curricular activities',
-    description: 'CCA involvement — where applicable',
-    applicableAtP1: false,
-  },
-  {
-    key: 'via',
-    label: 'Values in Action',
-    description: 'Community involvement — where applicable',
-    applicableAtP1: false,
-  },
-  {
-    key: 'physicalFitness',
-    label: 'Physical fitness',
-    description: 'BMI indicator and NAPFA award — where applicable',
-    applicableAtP1: false,
-  },
-]
-
 function block(key: string, order: number): ReportBlock {
   return { key, enabled: true, order }
 }
@@ -88,7 +21,7 @@ function block(key: string, order: number): ReportBlock {
  * P1 low-hanging-fruit default template: the authentic universal P1 sections only.
  * CCA/VIA/physical-fitness are omitted (off by default, "where applicable").
  */
-export const P1_DEFAULT_LAYOUT: ReportLayout = {
+const P1_DEFAULT_LAYOUT: ReportLayout = {
   blocks: [
     block('pupilInfo', 0),
     // Attendance and conduct live inside "Term at a glance" — no separate
@@ -103,11 +36,6 @@ export const P1_DEFAULT_LAYOUT: ReportLayout = {
     { key: 'via', enabled: false, order: 6 },
     { key: 'physicalFitness', enabled: false, order: 7 },
   ],
-}
-
-/** A fresh, mutable copy of the P1 default layout for a new build. */
-export function defaultP1Layout(): ReportLayout {
-  return { blocks: P1_DEFAULT_LAYOUT.blocks.map((b) => ({ ...b })) }
 }
 
 /**
@@ -128,26 +56,4 @@ export function withDefaultBlocks(
   return merged
     .sort((a, b) => a.order - b.order)
     .map((b, i) => ({ ...b, order: i }))
-}
-
-/** Built-in templates a teacher can start from (definitions are not teacher-editable). */
-export interface BuiltInTemplate {
-  id: string
-  name: string
-  description: string
-  layout: ReportLayout
-}
-
-export const BUILT_IN_TEMPLATES: Array<BuiltInTemplate> = [
-  {
-    id: 'p1-default',
-    name: 'Primary Holistic Development',
-    description:
-      'Lower-primary default — learning outcomes, conduct, attendance, and personal qualities',
-    layout: P1_DEFAULT_LAYOUT,
-  },
-]
-
-export function getTemplateById(id: string): BuiltInTemplate | undefined {
-  return BUILT_IN_TEMPLATES.find((t) => t.id === id)
 }

@@ -2,7 +2,7 @@ import * as React from 'react'
 
 const AUTH_STORAGE_KEY = 'tw_mock_auth'
 
-export interface User {
+interface User {
   name: string
   email: string
   role: string

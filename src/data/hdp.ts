@@ -64,7 +64,7 @@ export const HDP_COLLEAGUES = [
 // in mock-students.ts rather than growing it (recorded tradeoff, plan 028).
 // Exported so the store and later plans (e.g. 030's class list) don't have
 // to re-derive the roster from mock-students themselves.
-export const CLASS_3A_STUDENT_IDS = mockStudents
+const CLASS_3A_STUDENT_IDS = mockStudents
   .filter((s) => s.class === '3A')
   .map((s) => s.id)
 
