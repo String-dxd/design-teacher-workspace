@@ -332,4 +332,23 @@ describe('composeFromInsights', () => {
     expect(claims[0].source?.tagId).toBe('insight-x')
     expect(claims[0].source?.label).toBe('Insight 1 · attendance')
   })
+
+  it('every claim gets a truthy, unique id', () => {
+    const insights: Array<HdpInsight> = [
+      makeInsight({ id: 'insight-a' }),
+      makeInsight({
+        id: 'insight-b',
+        kind: 'attendance',
+        label: '96% attendance this term',
+        sourceRef: { system: 'cockpit', recordId: 'attendance-1' },
+      }),
+    ]
+    const claims = composeFromInsights(insights, 'overall', 'Chen Jun Kai')
+    expect(claims.length).toBeGreaterThan(0)
+    for (const claim of claims) {
+      expect(claim.id).toBeTruthy()
+    }
+    const ids = new Set(claims.map((c) => c.id))
+    expect(ids.size).toBe(claims.length)
+  })
 })
