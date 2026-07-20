@@ -42,17 +42,10 @@ import {
 } from '@/lib/hdp-store'
 import { trendsForEntries } from '@/lib/hdp-trends'
 import { useFeatureFlag } from '@/hooks/use-feature-flag'
+import { formatDate } from '@/lib/format'
 
 function staffName(id: string): string {
   return MOCK_STAFF.find((s) => s.id === id)?.name ?? 'Unknown teacher'
-}
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-SG', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })
 }
 
 function draftStatusLabel(studentId: string): string {

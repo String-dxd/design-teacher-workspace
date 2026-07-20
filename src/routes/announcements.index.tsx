@@ -22,6 +22,7 @@ import type { FormStatus } from '@/types/form'
 import type { AnnouncementFilters } from '@/components/comms/announcement-filter-bar'
 import { usePagination } from '@/hooks/use-pagination'
 import { clearDraft, loadDraft } from '@/lib/draft-storage'
+import { formatDate } from '@/lib/format'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
 import {
   mockPGAnnouncements,
@@ -94,15 +95,6 @@ function AdminPostsPage() {
 // RegularPostsPage — regular teacher view (amend this for regular users)
 function RegularPostsPage() {
   return <ParentsGatewayPage />
-}
-
-function formatDate(iso: string | undefined): string {
-  if (!iso) return '—'
-  return new Date(iso).toLocaleDateString('en-SG', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })
 }
 
 function isLowReadRate(

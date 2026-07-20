@@ -10,6 +10,7 @@ import type {
   TrendDirection,
 } from '@/types/hdp'
 import { CONTEXT_LABELS } from '@/lib/hdp-labels'
+import { formatDate } from '@/lib/format'
 import { MOCK_STAFF } from '@/data/mock-staff'
 import {
   AlertDialog,
@@ -58,14 +59,6 @@ function reactionMetaLine(
 
 function staffName(id: string): string {
   return MOCK_STAFF.find((s) => s.id === id)?.name ?? 'Unknown teacher'
-}
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-SG', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })
 }
 
 const DIRECTION_WORDS: Record<TrendDirection, string> = {

@@ -1,12 +1,6 @@
 import { StreamItem } from './stream-item'
 import type { BroadcastResponse, HdpTag } from '@/types/hdp'
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-SG', {
-    day: 'numeric',
-    month: 'short',
-  })
-}
+import { formatDate } from '@/lib/format'
 
 interface BroadcastResponderCardProps {
   response: BroadcastResponse
@@ -44,7 +38,7 @@ export function BroadcastResponderCard({
           </span>
           <p className="text-muted-foreground text-xs">
             Marks {studentName} reviewed — nothing noted ({responderName},{' '}
-            {formatDate(response.respondedAt)})
+            {formatDate(response.respondedAt, { year: false })})
           </p>
         </div>
       )}

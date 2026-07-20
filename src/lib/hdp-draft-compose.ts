@@ -6,6 +6,7 @@ import type {
   InsightKind,
 } from '@/types/hdp'
 import { CONTEXT_NOUNS, DISPOSITION_LABELS } from '@/lib/hdp-labels'
+import { formatDate } from '@/lib/format'
 
 // Pure composition — no store reads, no randomness. Turns a student's tags
 // (already filtered by the caller for kind: 'subject' vs 'overall', and by
@@ -22,15 +23,8 @@ import { CONTEXT_NOUNS, DISPOSITION_LABELS } from '@/lib/hdp-labels'
 // code path here that can produce a sourceless claim — "your addition"
 // claims are only ever created by the teacher, in the editor.
 
-function formatDateShort(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-SG', {
-    day: 'numeric',
-    month: 'short',
-  })
-}
-
 function sourceLabel(tag: HdpTag): string {
-  return `${DISPOSITION_LABELS[tag.disposition]} · ${CONTEXT_NOUNS[tag.context]} · ${formatDateShort(tag.createdAt)}`
+  return `${DISPOSITION_LABELS[tag.disposition]} · ${CONTEXT_NOUNS[tag.context]} · ${formatDate(tag.createdAt, { year: false })}`
 }
 
 /**

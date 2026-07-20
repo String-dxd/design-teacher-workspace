@@ -9,6 +9,7 @@ import {
   seedIfEmpty,
 } from '@/lib/hdp-store'
 import { trendForSubject } from '@/lib/hdp-trends'
+import { formatDate } from '@/lib/format'
 import {
   Table,
   TableBody,
@@ -30,14 +31,6 @@ const DIRECTION_WORDS: Record<TrendDirection, string> = {
   steady: 'Steady',
   recovering: 'Recovering',
   easing: 'Easing',
-}
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-SG', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })
 }
 
 interface MarksGridProps {
