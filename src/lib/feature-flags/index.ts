@@ -11,4 +11,12 @@ export {
   FEATURE_FLAG_MODULES,
   FEATURE_FLAG_REGISTRY,
 } from './constants'
-export { FeatureFlagProvider, useFeatureFlags } from './context'
+export {
+  FeatureFlagProvider,
+  useFeatureFlags,
+  readEffectiveFlags,
+  mergeStoredFlags,
+  resolveEffective,
+  parseSeedCookie,
+  saveFlags,
+} from './context'

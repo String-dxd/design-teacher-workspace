@@ -35,12 +35,27 @@ const STAGE_ORDER: Record<FeatureFlagStage, number> = {
   Experiment: 2,
 }
 
-const flagGroups = FEATURE_FLAG_MODULES.map((module) => ({
-  ...module,
-  flags: flagEntries
-    .filter(([, meta]) => meta.module === module.id)
-    .sort(([, a], [, b]) => STAGE_ORDER[a.stage] - STAGE_ORDER[b.stage]),
-}))
+const flagGroups = FEATURE_FLAG_MODULES.map((module) => {
+  const moduleEntries = flagEntries.filter(
+    ([, meta]) => meta.module === module.id,
+  )
+  const parents = moduleEntries
+    .filter(([, meta]) => !meta.parent)
+    .sort(([, a], [, b]) => STAGE_ORDER[a.stage] - STAGE_ORDER[b.stage])
+  const children = moduleEntries.filter(([, meta]) => meta.parent)
+
+  // Each top-level entry followed by its children (registry order),
+  // preserving the existing per-module stage ordering for parents.
+  const ordered = parents.flatMap((entry) => {
+    const [parentKey] = entry
+    const childEntries = children.filter(
+      ([, meta]) => meta.parent === parentKey,
+    )
+    return [entry, ...childEntries]
+  })
+
+  return { ...module, flags: ordered }
+})
 
 function FeatureFlagsPage() {
   const { flags, setFlag } = useFeatureFlags()
@@ -63,38 +78,50 @@ function FeatureFlagsPage() {
                 <CardDescription>{group.description}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                {group.flags.map(([key, meta]) => (
-                  <div
-                    key={key}
-                    className="flex items-center justify-between gap-4"
-                  >
-                    <div className="space-y-0.5">
-                      <div className="flex items-center gap-1.5">
-                        <Label htmlFor={key} className="text-sm font-medium">
-                          {meta.label}
-                        </Label>
-                        <Badge
-                          variant="outline"
-                          className={
-                            meta.stage === 'Experiment'
-                              ? 'border-violet-6 bg-violet-3 text-violet-11'
-                              : undefined
-                          }
-                        >
-                          {meta.stage}
-                        </Badge>
+                {group.flags.map(([key, meta]) => {
+                  const parentOff = meta.parent ? !flags[meta.parent] : false
+                  return (
+                    <div
+                      key={key}
+                      className={
+                        meta.parent
+                          ? 'ml-6 flex items-center justify-between gap-4 border-l pl-4'
+                          : 'flex items-center justify-between gap-4'
+                      }
+                    >
+                      <div
+                        className={
+                          parentOff ? 'space-y-0.5 opacity-50' : 'space-y-0.5'
+                        }
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <Label htmlFor={key} className="text-sm font-medium">
+                            {meta.label}
+                          </Label>
+                          <Badge
+                            variant="outline"
+                            className={
+                              meta.stage === 'Experiment'
+                                ? 'border-violet-6 bg-violet-3 text-violet-11'
+                                : undefined
+                            }
+                          >
+                            {meta.stage}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {meta.description}
+                        </p>
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        {meta.description}
-                      </p>
+                      <Switch
+                        id={key}
+                        checked={flags[key]}
+                        disabled={parentOff}
+                        onCheckedChange={(checked) => setFlag(key, checked)}
+                      />
                     </div>
-                    <Switch
-                      id={key}
-                      checked={flags[key]}
-                      onCheckedChange={(checked) => setFlag(key, checked)}
-                    />
-                  </div>
-                ))}
+                  )
+                })}
               </CardContent>
             </Card>
           ),

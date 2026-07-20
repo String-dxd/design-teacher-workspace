@@ -43,4 +43,6 @@ export interface FeatureFlagMeta {
   stage: FeatureFlagStage
   module: FeatureFlagModule
   defaultValue: boolean
+  /** One level only — a parent flag must not itself have a parent. */
+  parent?: FeatureFlagKey
 }

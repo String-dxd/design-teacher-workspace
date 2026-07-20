@@ -3,10 +3,7 @@ import { createFileRoute, redirect } from '@tanstack/react-router'
 import { Clock } from 'lucide-react'
 
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
-import {
-  DEFAULT_FEATURE_FLAGS,
-  FEATURE_FLAGS_STORAGE_KEY,
-} from '@/lib/feature-flags'
+import { readEffectiveFlags } from '@/lib/feature-flags'
 import { useFeatureFlag } from '@/hooks/use-feature-flag'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { MonitoringAcademicAnalytics } from '@/components/students/academic-analytics'
@@ -23,11 +20,8 @@ const ANALYTICS_PROMPTS = [
 export const Route = createFileRoute('/student-analytics')({
   beforeLoad: () => {
     if (typeof window === 'undefined') return
-    const stored = localStorage.getItem(FEATURE_FLAGS_STORAGE_KEY)
-    const flags = stored
-      ? { ...DEFAULT_FEATURE_FLAGS, ...JSON.parse(stored) }
-      : DEFAULT_FEATURE_FLAGS
-    if (!flags['student-analytics'] && !flags['student-analytics-basic'])
+    const flags = readEffectiveFlags()
+    if (!flags['student-analytics-basic'] && !flags['student-analytics'])
       throw redirect({ to: '/' })
   },
   component: StudentAnalyticsPage,

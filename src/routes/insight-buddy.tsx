@@ -12,10 +12,7 @@ import {
   YAxis,
 } from 'recharts'
 import type { KeyboardEvent } from 'react'
-import {
-  DEFAULT_FEATURE_FLAGS,
-  FEATURE_FLAGS_STORAGE_KEY,
-} from '@/lib/feature-flags'
+import { readEffectiveFlags } from '@/lib/feature-flags'
 
 import { PRESENT_RING, SERIES_BLUE } from '@/lib/chart-colors'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
@@ -43,10 +40,7 @@ import { cn } from '@/lib/utils'
 export const Route = createFileRoute('/insight-buddy')({
   beforeLoad: () => {
     if (typeof window === 'undefined') return
-    const stored = localStorage.getItem(FEATURE_FLAGS_STORAGE_KEY)
-    const flags = stored
-      ? { ...DEFAULT_FEATURE_FLAGS, ...JSON.parse(stored) }
-      : DEFAULT_FEATURE_FLAGS
+    const flags = readEffectiveFlags()
     if (!flags['student-analytics']) throw redirect({ to: '/' })
   },
   component: InsightBuddyPage,
