@@ -23,3 +23,6 @@ reference/
 
 # Superpowers plugin runtime state — do not commit
 .superpowers/
+
+# AI subagent scratch (transcripts, artifacts) — do not commit
+.pi-subagents/
