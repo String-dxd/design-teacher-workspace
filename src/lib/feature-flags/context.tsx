@@ -18,6 +18,41 @@ const FeatureFlagContext = React.createContext<FeatureFlagContextValue | null>(
   null,
 )
 
+/**
+ * Merge an arbitrary (untrusted) partial flags payload over the defaults,
+ * validating each value is a boolean, then apply the plan-043 analytics
+ * migration. Shared by the localStorage load path and the SSR cookie seed
+ * path so both go through identical reconcile logic.
+ */
+export function mergeStoredFlags(parsed: unknown): FeatureFlags {
+  const merged: FeatureFlags = { ...DEFAULT_FEATURE_FLAGS }
+  if (!parsed || typeof parsed !== 'object') {
+    return merged
+  }
+  const record = parsed as Partial<Record<string, boolean>>
+  for (const key of Object.keys(
+    DEFAULT_FEATURE_FLAGS,
+  ) as Array<FeatureFlagKey>) {
+    const value = record[key]
+    if (typeof value === 'boolean') merged[key] = value
+  }
+
+  // Migration (plan 043): pre-hierarchy, 'student-analytics' alone implied
+  // the analytics pages. Under parent/child it needs its parent on. Gate
+  // on the KEY BEING ABSENT from the stored payload, not on its merged
+  // (default-backfilled) value — otherwise a user who explicitly turns
+  // the parent off (stored { 'student-analytics-basic': false }) would
+  // have it flipped back on at every reload.
+  if (
+    merged['student-analytics'] &&
+    typeof record['student-analytics-basic'] !== 'boolean'
+  ) {
+    merged['student-analytics-basic'] = true
+  }
+
+  return merged
+}
+
 function loadFlags(): FeatureFlags {
   if (typeof window === 'undefined') {
     return DEFAULT_FEATURE_FLAGS
@@ -26,29 +61,7 @@ function loadFlags(): FeatureFlags {
   try {
     const stored = localStorage.getItem(FEATURE_FLAGS_STORAGE_KEY)
     if (stored) {
-      const parsed = JSON.parse(stored) as Partial<Record<string, boolean>>
-      const merged: FeatureFlags = { ...DEFAULT_FEATURE_FLAGS }
-      for (const key of Object.keys(
-        DEFAULT_FEATURE_FLAGS,
-      ) as Array<FeatureFlagKey>) {
-        const value = parsed[key]
-        if (typeof value === 'boolean') merged[key] = value
-      }
-
-      // Migration (plan 043): pre-hierarchy, 'student-analytics' alone implied
-      // the analytics pages. Under parent/child it needs its parent on. Gate
-      // on the KEY BEING ABSENT from the stored payload, not on its merged
-      // (default-backfilled) value — otherwise a user who explicitly turns
-      // the parent off (stored { 'student-analytics-basic': false }) would
-      // have it flipped back on at every reload.
-      if (
-        merged['student-analytics'] &&
-        typeof parsed['student-analytics-basic'] !== 'boolean'
-      ) {
-        merged['student-analytics-basic'] = true
-      }
-
-      return merged
+      return mergeStoredFlags(JSON.parse(stored))
     }
   } catch {
     // Ignore parse errors, use defaults
@@ -76,14 +89,38 @@ function saveFlags(flags: FeatureFlags): void {
   } catch {
     // Ignore storage errors
   }
+
+  try {
+    // Mirror into a cookie so the server-rendered first paint (and the
+    // client's first render before hydration) can seed from the same
+    // values instead of always starting from registry defaults. This is a
+    // render-seed mirror, not a source of truth — localStorage remains
+    // authoritative on the client.
+    document.cookie = `${FEATURE_FLAGS_STORAGE_KEY}=${encodeURIComponent(
+      JSON.stringify(flags),
+    )}; path=/; max-age=31536000; samesite=lax`
+  } catch {
+    // Ignore cookie write errors
+  }
 }
 
 export function FeatureFlagProvider({
   children,
+  initialFlags,
 }: {
   children: React.ReactNode
+  /**
+   * Server-computed seed (from the root loader's cookie read) used to
+   * initialize state so the first client render matches the SSR HTML —
+   * no post-mount flag flash. `undefined`/`null` falls back to defaults.
+   */
+  initialFlags?: unknown
 }) {
-  const [flags, setFlags] = React.useState<FeatureFlags>(DEFAULT_FEATURE_FLAGS)
+  const [flags, setFlags] = React.useState<FeatureFlags>(() =>
+    initialFlags != null
+      ? mergeStoredFlags(initialFlags)
+      : DEFAULT_FEATURE_FLAGS,
+  )
   const [isHydrated, setIsHydrated] = React.useState(false)
 
   React.useEffect(() => {

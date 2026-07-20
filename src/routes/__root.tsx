@@ -5,6 +5,7 @@ import {
   createRootRoute,
   useRouterState,
 } from '@tanstack/react-router'
+import { createServerFn } from '@tanstack/react-start'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import * as React from 'react'
 
@@ -21,8 +22,11 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar'
 import { Toaster } from '@/components/ui/sonner'
-import { FeatureFlagProvider } from '@/lib/feature-flags'
-import { AuthProvider } from '@/lib/auth'
+import {
+  FEATURE_FLAGS_STORAGE_KEY,
+  FeatureFlagProvider,
+} from '@/lib/feature-flags'
+import { AUTH_COOKIE_KEY, AuthProvider } from '@/lib/auth'
 import { BreadcrumbProvider } from '@/hooks/use-breadcrumbs'
 import { HeyTaliaPanel } from '@/components/heytalia/heytalia-panel'
 import { HeyTaliaProvider } from '@/components/heytalia/heytalia-context'
@@ -58,7 +62,53 @@ function SidebarAutoCollapse() {
   return null
 }
 
+interface RootLoaderSeed {
+  /**
+   * Raw parsed cookie payload — an arbitrary, untrusted partial flags
+   * object (or null). `mergeStoredFlags` on the client validates every
+   * value before it reaches state.
+   */
+  flags: Partial<Record<string, boolean>> | null
+  loggedIn: boolean
+}
+
+// Server-only cookie read, extracted into a createServerFn handler so the
+// dynamic `@tanstack/react-start/server` import stays out of the client
+// bundle (a plain dynamic import in a client-reachable module trips this
+// project's import-protection Vite plugin even when runtime-guarded).
+const readSeedCookies = createServerFn({ method: 'GET' }).handler(
+  async (_ctx): Promise<RootLoaderSeed> => {
+    const { getCookie } = await import('@tanstack/react-start/server')
+    let flags: Partial<Record<string, boolean>> | null = null
+    try {
+      const raw = getCookie(FEATURE_FLAGS_STORAGE_KEY)
+      flags = raw ? JSON.parse(decodeURIComponent(raw)) : null
+    } catch {
+      flags = null
+    }
+
+    return {
+      flags,
+      loggedIn: getCookie(AUTH_COOKIE_KEY) === 'true',
+    }
+  },
+)
+
 export const Route = createRootRoute({
+  loader: async (
+    _ctx,
+  ): Promise<{
+    seed: RootLoaderSeed | null
+  }> => {
+    // Only run the cookie read on the server. On the client (e.g. a later
+    // client-side navigation re-running this loader) there is nothing to
+    // seed — the providers are already mounted — so short-circuit rather
+    // than round-tripping the server function over RPC.
+    if (typeof document !== 'undefined') return { seed: null }
+
+    const seed = await readSeedCookies()
+    return { seed }
+  },
   notFoundComponent: NotFoundPage,
   head: () => ({
     meta: [
@@ -149,13 +199,14 @@ function RootComponent() {
   const isNotFoundRoute =
     matches.some((m) => m.routeId === '/$') ||
     matches.at(-1)?.status === 'notFound'
+  const { seed } = Route.useLoaderData()
 
   if (isGuestRoute || isGlowRoute || isNotFoundRoute) {
     return (
       <ErrorBoundary>
         <QueryClientProvider client={queryClient}>
-          <AuthProvider>
-            <FeatureFlagProvider>
+          <AuthProvider initialLoggedIn={seed?.loggedIn}>
+            <FeatureFlagProvider initialFlags={seed?.flags}>
               <ErrorBoundary>
                 <Outlet />
               </ErrorBoundary>
@@ -169,8 +220,8 @@ function RootComponent() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <FeatureFlagProvider>
+        <AuthProvider initialLoggedIn={seed?.loggedIn}>
+          <FeatureFlagProvider initialFlags={seed?.flags}>
             <BreadcrumbProvider>
               <HeyTaliaProvider>
                 <HdpCaptureProvider>

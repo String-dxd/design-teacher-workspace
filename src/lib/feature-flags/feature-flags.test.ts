@@ -1,7 +1,11 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 
-import { FEATURE_FLAGS_STORAGE_KEY, FEATURE_FLAG_REGISTRY } from './constants'
-import { readEffectiveFlags } from './context'
+import {
+  DEFAULT_FEATURE_FLAGS,
+  FEATURE_FLAGS_STORAGE_KEY,
+  FEATURE_FLAG_REGISTRY,
+} from './constants'
+import { mergeStoredFlags, readEffectiveFlags } from './context'
 
 // Under this repo's vitest/jsdom/Node combination, `globalThis.localStorage`
 // occasionally comes back `undefined` in a worker (see draft-storage.test.ts
@@ -111,5 +115,41 @@ describe('loadFlags analytics reconcile (via readEffectiveFlags)', () => {
     const effective = readEffectiveFlags()
     expect(effective['student-analytics-basic']).toBe(false)
     expect(effective['student-analytics']).toBe(false)
+  })
+})
+
+describe('mergeStoredFlags (shared by localStorage load and SSR cookie seed)', () => {
+  it('merges a valid partial payload over the defaults', () => {
+    const merged = mergeStoredFlags({ posts: false, meetings: true })
+    expect(merged.posts).toBe(false)
+    expect(merged.meetings).toBe(true)
+    // Untouched keys fall back to their registry defaults.
+    expect(merged['import-data']).toBe(
+      FEATURE_FLAG_REGISTRY['import-data'].defaultValue,
+    )
+  })
+
+  it('ignores junk-typed values and non-object input', () => {
+    expect(mergeStoredFlags({ posts: 'yes', meetings: 1 })).toEqual(
+      DEFAULT_FEATURE_FLAGS,
+    )
+    expect(mergeStoredFlags(null)).toEqual(DEFAULT_FEATURE_FLAGS)
+    expect(mergeStoredFlags('garbage')).toEqual(DEFAULT_FEATURE_FLAGS)
+    expect(mergeStoredFlags(42)).toEqual(DEFAULT_FEATURE_FLAGS)
+  })
+
+  it('applies the analytics reconcile to a seeded (cookie) input', () => {
+    const merged = mergeStoredFlags({ 'student-analytics': true })
+    expect(merged['student-analytics-basic']).toBe(true)
+    expect(merged['student-analytics']).toBe(true)
+  })
+
+  it('keeps an explicit student-analytics-basic: false from a seeded input', () => {
+    const merged = mergeStoredFlags({
+      'student-analytics': true,
+      'student-analytics-basic': false,
+    })
+    expect(merged['student-analytics-basic']).toBe(false)
+    expect(merged['student-analytics']).toBe(true)
   })
 })

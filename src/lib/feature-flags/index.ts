@@ -15,4 +15,5 @@ export {
   FeatureFlagProvider,
   useFeatureFlags,
   readEffectiveFlags,
+  mergeStoredFlags,
 } from './context'
