@@ -4,10 +4,9 @@ import { DraftStudio } from '@/components/hdp/draft-studio'
 import { MarksGrid } from '@/components/hdp/marks-grid'
 import { StudentSwitcher } from '@/components/hdp/student-switcher'
 import { getStudentById } from '@/data/mock-students'
-import { useFeatureFlag } from '@/hooks/use-feature-flag'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
-import { Button, buttonVariants } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import { HdpFlagGate, HdpStudentNotFound } from '@/components/hdp/hdp-shell'
 
 export const Route = createFileRoute('/reports/drafts/$studentId')({
   component: DraftStudioPage,
@@ -20,7 +19,6 @@ export const Route = createFileRoute('/reports/drafts/$studentId')({
 // sit in the right rail. A compact select in the header switches students.
 function DraftStudioPage() {
   const { studentId } = Route.useParams()
-  const enabled = useFeatureFlag('reports-hdp')
   const student = getStudentById(studentId)
 
   useSetBreadcrumbs([
@@ -32,76 +30,54 @@ function DraftStudioPage() {
     },
   ])
 
-  if (!enabled) {
-    return (
-      <main className="mx-auto flex max-w-md flex-col items-center gap-4 px-4 py-16 text-center">
-        <h1 className="text-xl font-semibold">Reports is off</h1>
-        <p className="text-muted-foreground text-sm">
-          Turn on “HDP Reports module” to use this page.
-        </p>
-        <Link
-          to="/flags"
-          className={cn(buttonVariants({ variant: 'outline' }))}
-        >
-          Open feature flags
-        </Link>
-      </main>
-    )
-  }
-
-  if (!student) {
-    return (
-      <main className="mx-auto flex max-w-md flex-col items-center gap-4 px-4 py-16 text-center">
-        <h1 className="text-xl font-semibold">Student not found</h1>
-        <Link to="/reports" className={cn(buttonVariants())}>
-          Back to Reports
-        </Link>
-      </main>
-    )
-  }
-
   // One column, one task (the old draft-left / marks-rail-right split left a
   // tall floating card and dead space): the draft leads, evidence sits under
   // its disclosure, and marks follow as a reference section — all on the
   // same readable measure.
   return (
-    <main className="flex flex-col gap-6 px-6 py-6">
-      <div className="flex max-w-3xl flex-wrap items-start justify-between gap-4">
-        <div className="flex items-start gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="Back to Drafting"
-            className="mt-0.5"
-            render={<Link to="/reports" search={{ tab: 'drafting' }} />}
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div className="flex flex-col gap-1">
-            <h1 className="text-2xl font-semibold">{student.name}</h1>
-            <p className="text-muted-foreground text-sm">
-              {student.class} · Draft an evidence-grounded comment.
-            </p>
+    <HdpFlagGate>
+      {!student ? (
+        <HdpStudentNotFound />
+      ) : (
+        <main className="flex flex-col gap-6 px-6 py-6">
+          <div className="flex max-w-3xl flex-wrap items-start justify-between gap-4">
+            <div className="flex items-start gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Back to Drafting"
+                className="mt-0.5"
+                render={<Link to="/reports" search={{ tab: 'drafting' }} />}
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <div className="flex flex-col gap-1">
+                <h1 className="text-2xl font-semibold">{student.name}</h1>
+                <p className="text-muted-foreground text-sm">
+                  {student.class} · Draft an evidence-grounded comment.
+                </p>
+              </div>
+            </div>
+            <StudentSwitcher currentStudentId={studentId} />
           </div>
-        </div>
-        <StudentSwitcher currentStudentId={studentId} />
-      </div>
 
-      <div className="flex max-w-3xl flex-col gap-6">
-        <DraftStudio studentId={studentId} />
+          <div className="flex max-w-3xl flex-col gap-6">
+            <DraftStudio studentId={studentId} />
 
-        <section className="border-border border-t pt-4">
-          {/* Keyed remount on studentId: the grid's per-cell <Input
-              defaultValue> is intentionally uncontrolled (autosave-on-blur,
-              no per-keystroke re-render) — without a key, switching students
-              would leave stale DOM input values from the previous student. */}
-          <MarksGrid
-            key={studentId}
-            studentId={studentId}
-            studentName={student.name}
-          />
-        </section>
-      </div>
-    </main>
+            <section className="border-border border-t pt-4">
+              {/* Keyed remount on studentId: the grid's per-cell <Input
+                  defaultValue> is intentionally uncontrolled (autosave-on-blur,
+                  no per-keystroke re-render) — without a key, switching students
+                  would leave stale DOM input values from the previous student. */}
+              <MarksGrid
+                key={studentId}
+                studentId={studentId}
+                studentName={student.name}
+              />
+            </section>
+          </div>
+        </main>
+      )}
+    </HdpFlagGate>
   )
 }
