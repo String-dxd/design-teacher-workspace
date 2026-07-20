@@ -16,12 +16,13 @@ import {
   respondToBroadcast,
   seedIfEmpty,
 } from '@/lib/hdp-store'
+import { DISPOSITIONS } from '@/lib/hdp-labels'
 
 function staffName(id: string): string {
   return MOCK_STAFF.find((s) => s.id === id)?.name ?? 'Unknown teacher'
 }
 
-export interface PendingRequest {
+interface PendingRequest {
   broadcast: BroadcastRequest
   studentId: string
 }
@@ -30,11 +31,8 @@ export interface PendingRequest {
 // broadcast that still has at least one unanswered pair for them. Rows the
 // teacher has already answered stay in the list and render collapsed
 // ("Responded (…)") rather than disappearing — the broadcast only drops out
-// once every pair is answered. Exported so the Students hub page can derive
-// the "Requests (n)" tab-label count without duplicating this scan.
-export function pendingRequestsForTeacher(
-  teacherId: string,
-): Array<PendingRequest> {
+// once every pair is answered.
+function pendingRequestsForTeacher(teacherId: string): Array<PendingRequest> {
   const requests: Array<PendingRequest> = []
   for (const broadcast of loadBroadcasts()) {
     if (!broadcast.recipientIds.includes(teacherId)) continue
@@ -52,7 +50,7 @@ export function pendingRequestsForTeacher(
   return requests
 }
 
-export function openRequestCount(
+function openRequestCount(
   requests: Array<PendingRequest>,
   teacherId: string,
 ): number {
@@ -63,13 +61,6 @@ export function openRequestCount(
       ),
   ).length
 }
-
-const DISPOSITIONS: Array<{ id: DispositionId; label: string }> = [
-  { id: 'perseverance', label: 'Perseverance' },
-  { id: 'curiosity', label: 'Curiosity' },
-  { id: 'collaboration', label: 'Collaboration' },
-  { id: 'self-direction', label: 'Self-direction' },
-]
 
 function responseLabel(
   response: BroadcastRequest['responses'][number],

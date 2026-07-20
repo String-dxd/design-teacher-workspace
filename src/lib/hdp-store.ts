@@ -207,10 +207,6 @@ export function tagsForStudent(studentId: string): Array<HdpTag> {
   return loadTags().filter((t) => t.studentId === studentId)
 }
 
-export function tagsByAuthor(authorId: string): Array<HdpTag> {
-  return loadTags().filter((t) => t.authorId === authorId)
-}
-
 // ── Forming patterns ─────────────────────────────────────────────────────
 
 export function loadPatterns(): Array<FormingPattern> {
@@ -475,7 +471,7 @@ export function dispositionMix(
 
 // ── Term Summary ─────────────────────────────────────────────────────────
 
-export interface ClassSummary {
+interface ClassSummary {
   classId: string
   isFormClass: boolean
   studentCount: number
@@ -642,7 +638,7 @@ export function loadBroadcasts(): Array<BroadcastRequest> {
   return readArray<BroadcastRequest>(BROADCASTS_KEY)
 }
 
-export function saveBroadcast(broadcast: BroadcastRequest): void {
+function saveBroadcast(broadcast: BroadcastRequest): void {
   const broadcasts = loadBroadcasts()
   const index = broadcasts.findIndex((b) => b.id === broadcast.id)
   if (index === -1) {
@@ -839,7 +835,6 @@ export function logEvent(
 // pass never has to hunt through the function body for a magic number.
 
 export const BROADCAST_COOLDOWN_DAYS = 7
-export const MAX_OUTSTANDING_PER_CLASS = 1
 
 const SEVEN_DAYS_MS = BROADCAST_COOLDOWN_DAYS * 24 * 60 * 60 * 1000
 
@@ -873,8 +868,8 @@ function latestBroadcastForClass(
 /**
  * Guardrail from docs/decisions/reports-hdp.md: 1 outstanding broadcast per
  * form class with a 7-day cooldown. Checked against the class's most recent
- * broadcast only — MAX_OUTSTANDING_PER_CLASS is always 1 in this prototype,
- * so "the latest one is still open" is equivalent to "the limit is hit".
+ * broadcast only — the limit is always 1 in this prototype, so "the latest
+ * one is still open" is equivalent to "the limit is hit".
  */
 export function canBroadcast(formClassId: string): CanBroadcastResult {
   const latest = latestBroadcastForClass(formClassId)
@@ -900,7 +895,7 @@ function newBroadcastId(): string {
   return `broadcast-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 }
 
-export interface CreateBroadcastInput {
+interface CreateBroadcastInput {
   formClassId: string
   requesterId: string
   studentIds: Array<string>
@@ -931,7 +926,7 @@ export function createBroadcast(input: CreateBroadcastInput): BroadcastRequest {
   return broadcast
 }
 
-export type BroadcastResponseResult =
+type BroadcastResponseResult =
   | { kind: 'tag'; tagInput: Omit<AddTagInput, 'source'> }
   | { kind: 'nothing-stood-out' }
 

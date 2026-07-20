@@ -9,13 +9,13 @@ import type { HdpMarkEntry, TrendDirection } from '@/types/hdp'
 // and the marks-grid inline sparkline both call this same function.
 
 /** A rising last-semester delta above this many points reads as "climbing". */
-export const TREND_CLIMB_THRESHOLD = 2
+const TREND_CLIMB_THRESHOLD = 2
 /** A falling last-semester delta below the negative of this many points reads
  *  as "easing". */
-export const TREND_EASE_THRESHOLD = -2
+const TREND_EASE_THRESHOLD = -2
 /** How far above its dip the last point must sit for a mid-series dip to
  *  read as "recovering" rather than noise. */
-export const TREND_RECOVER_MARGIN = 2
+const TREND_RECOVER_MARGIN = 2
 
 interface TrendResult {
   direction: TrendDirection

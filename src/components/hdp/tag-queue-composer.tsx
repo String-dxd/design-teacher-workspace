@@ -13,13 +13,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
-
-const DISPOSITIONS: Array<{ id: DispositionId; label: string }> = [
-  { id: 'perseverance', label: 'Perseverance' },
-  { id: 'curiosity', label: 'Curiosity' },
-  { id: 'collaboration', label: 'Collaboration' },
-  { id: 'self-direction', label: 'Self-direction' },
-]
+import { DISPOSITIONS } from '@/lib/hdp-labels'
 
 const CONTEXTS: Array<{ id: TagContext; label: string }> = [
   { id: 'lesson', label: 'During lesson' },

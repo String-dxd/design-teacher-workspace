@@ -1,12 +1,6 @@
 import type { DispositionId } from '@/types/hdp'
 import { cn } from '@/lib/utils'
-
-const DISPOSITION_LABELS: Record<DispositionId, string> = {
-  perseverance: 'Perseverance',
-  curiosity: 'Curiosity',
-  collaboration: 'Collaboration',
-  'self-direction': 'Self-direction',
-}
+import { DISPOSITION_LABELS } from '@/lib/hdp-labels'
 
 interface TagPillProps {
   disposition?: DispositionId

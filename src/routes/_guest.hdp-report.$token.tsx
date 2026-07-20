@@ -29,6 +29,7 @@ import {
   seedIfEmpty,
 } from '@/lib/hdp-store'
 import { trendsForEntries } from '@/lib/hdp-trends'
+import { formatDate } from '@/lib/format'
 import { useFeatureFlag } from '@/hooks/use-feature-flag'
 
 export const Route = createFileRoute('/_guest/hdp-report/$token')({
@@ -40,14 +41,6 @@ const ACKNOWLEDGE_LATENCY_MS = 400
 
 function staffName(id: string): string {
   return MOCK_STAFF.find((s) => s.id === id)?.name ?? 'Unknown teacher'
-}
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-SG', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })
 }
 
 function GuestHdpReportPage() {

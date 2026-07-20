@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
+import { getInitials } from '@/lib/format'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -23,15 +24,6 @@ export const Route = createFileRoute('/attendance')({
 })
 
 type AttendanceStatus = 'present' | 'late' | 'absent'
-
-function getInitials(name: string): string {
-  return name
-    .split(' ')
-    .map((n) => n[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase()
-}
 
 function AttendancePage() {
   useSetBreadcrumbs([{ label: 'Attendance', href: '/attendance' }])

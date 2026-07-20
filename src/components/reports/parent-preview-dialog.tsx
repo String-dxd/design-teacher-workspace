@@ -12,16 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-
-function getInitials(name: string): string {
-  return name
-    .split(' ')
-    .filter((part) => part.length > 0)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join('')
-    .toUpperCase()
-}
+import { getInitials } from '@/lib/format'
 
 interface ParentPreviewDialogProps {
   report: HolisticReport

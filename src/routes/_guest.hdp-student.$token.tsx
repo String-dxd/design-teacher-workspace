@@ -29,6 +29,7 @@ import {
   submitStudentReflection,
 } from '@/lib/hdp-store'
 import { trendsForEntries } from '@/lib/hdp-trends'
+import { formatDate } from '@/lib/format'
 import { useFeatureFlag } from '@/hooks/use-feature-flag'
 
 export const Route = createFileRoute('/_guest/hdp-student/$token')({
@@ -36,14 +37,6 @@ export const Route = createFileRoute('/_guest/hdp-student/$token')({
 })
 
 const REFLECTION_MAX_LENGTH = 600
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-SG', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })
-}
 
 function GuestHdpStudentPage() {
   const { token } = Route.useParams()

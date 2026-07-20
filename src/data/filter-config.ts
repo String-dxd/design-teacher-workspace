@@ -124,15 +124,6 @@ export const groupOrder: Array<FieldGroup> = [
   'family',
 ]
 
-export const textOperators: Array<OperatorOption> = [
-  { value: 'contains', label: 'contains' },
-  { value: 'not_contains', label: 'does not contain' },
-  { value: 'is', label: 'is' },
-  { value: 'is_not', label: 'is not' },
-  { value: 'is_empty', label: 'is empty' },
-  { value: 'is_not_empty', label: 'is not empty' },
-]
-
 // Note: numericOperators and booleanOperators include icons that need to be
 // rendered with React components, so they are defined in the component file
 // to avoid importing React components in this data file.

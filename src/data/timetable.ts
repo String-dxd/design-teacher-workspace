@@ -2,7 +2,7 @@ import { mockStudents } from './mock-students'
 
 // Which teachers are timetabled to which students (mock). Used by broadcast
 // recipient resolution (plan 031) and Tag Queue search scoping (plan 029).
-export interface TimetableEntry {
+interface TimetableEntry {
   teacherId: string
   classId: string
   subject: string

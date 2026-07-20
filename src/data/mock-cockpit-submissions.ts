@@ -27,9 +27,6 @@ const MISSING_BY_STUDENT = new Map<string, Array<string>>([
 
 const SUBMITTED_AT = '2026-07-03T09:00:00.000Z'
 
-/** When TW last pulled from School Cockpit — shown as a freshness line on the report. */
-export const COCKPIT_LAST_SYNCED = SUBMITTED_AT
-
 export function getCockpitSubmissions(
   studentId: string,
 ): Array<CockpitSubjectSubmission> {
@@ -66,8 +63,4 @@ export function hasAnyResults(studentId: string): boolean {
   return getCockpitSubmissions(studentId).some(
     (s) => s.submittedAt !== undefined,
   )
-}
-
-export function getSubjectTeacher(subject: string): string | undefined {
-  return P1_SUBJECT_TEACHERS.get(subject)
 }
