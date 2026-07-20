@@ -16,6 +16,7 @@ import {
   respondToBroadcast,
   seedIfEmpty,
 } from '@/lib/hdp-store'
+import { DISPOSITIONS } from '@/lib/hdp-labels'
 
 function staffName(id: string): string {
   return MOCK_STAFF.find((s) => s.id === id)?.name ?? 'Unknown teacher'
@@ -60,13 +61,6 @@ function openRequestCount(
       ),
   ).length
 }
-
-const DISPOSITIONS: Array<{ id: DispositionId; label: string }> = [
-  { id: 'perseverance', label: 'Perseverance' },
-  { id: 'curiosity', label: 'Curiosity' },
-  { id: 'collaboration', label: 'Collaboration' },
-  { id: 'self-direction', label: 'Self-direction' },
-]
 
 function responseLabel(
   response: BroadcastRequest['responses'][number],
