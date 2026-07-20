@@ -5,6 +5,7 @@ import type {
   HdpTag,
   InsightKind,
 } from '@/types/hdp'
+import { CONTEXT_NOUNS, DISPOSITION_LABELS } from '@/lib/hdp-labels'
 
 // Pure composition — no store reads, no randomness. Turns a student's tags
 // (already filtered by the caller for kind: 'subject' vs 'overall', and by
@@ -21,21 +22,6 @@ import type {
 // code path here that can produce a sourceless claim — "your addition"
 // claims are only ever created by the teacher, in the editor.
 
-const CONTEXT_LABELS: Record<HdpTag['context'], string> = {
-  lesson: 'lesson',
-  marking: 'marking',
-  cca: 'CCA',
-  'form-time': 'form time',
-  other: 'other',
-}
-
-const DISPOSITION_LABELS: Record<HdpTag['disposition'], string> = {
-  perseverance: 'Perseverance',
-  curiosity: 'Curiosity',
-  collaboration: 'Collaboration',
-  'self-direction': 'Self-direction',
-}
-
 function formatDateShort(iso: string): string {
   return new Date(iso).toLocaleDateString('en-SG', {
     day: 'numeric',
@@ -44,7 +30,7 @@ function formatDateShort(iso: string): string {
 }
 
 function sourceLabel(tag: HdpTag): string {
-  return `${DISPOSITION_LABELS[tag.disposition]} · ${CONTEXT_LABELS[tag.context]} · ${formatDateShort(tag.createdAt)}`
+  return `${DISPOSITION_LABELS[tag.disposition]} · ${CONTEXT_NOUNS[tag.context]} · ${formatDateShort(tag.createdAt)}`
 }
 
 /**
@@ -59,14 +45,14 @@ function claimTextForTag(tag: HdpTag, studentName: string): string {
     const lower = note.charAt(0).toLowerCase() + note.slice(1)
     return `${studentName} ${lower}`
   }
-  return `${studentName} showed ${DISPOSITION_LABELS[tag.disposition].toLowerCase()} during ${CONTEXT_LABELS[tag.context]}.`
+  return `${studentName} showed ${DISPOSITION_LABELS[tag.disposition].toLowerCase()} during ${CONTEXT_NOUNS[tag.context]}.`
 }
 
 function crossContextClaimText(
   pattern: FormingPattern,
   studentName: string,
 ): string {
-  const contexts = pattern.contexts.map((c) => CONTEXT_LABELS[c]).join(' and ')
+  const contexts = pattern.contexts.map((c) => CONTEXT_NOUNS[c]).join(' and ')
   return `${studentName} has shown ${DISPOSITION_LABELS[pattern.disposition].toLowerCase()} across ${contexts}, not just once.`
 }
 

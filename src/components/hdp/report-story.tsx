@@ -7,9 +7,9 @@ import type {
   FormingPattern,
   HdpReportBook,
   StudentReflection,
-  TagContext,
   TrendDirection,
 } from '@/types/hdp'
+import { CONTEXT_LABELS } from '@/lib/hdp-labels'
 import { MOCK_STAFF } from '@/data/mock-staff'
 import {
   AlertDialog,
@@ -73,14 +73,6 @@ const DIRECTION_WORDS: Record<TrendDirection, string> = {
   steady: 'Steady',
   recovering: 'Recovering',
   easing: 'Easing',
-}
-
-const CONTEXT_LABELS: Record<TagContext, string> = {
-  lesson: 'Lesson',
-  marking: 'Marking',
-  cca: 'CCA',
-  'form-time': 'Form time',
-  other: 'Other',
 }
 
 /** Family-facing provenance, first honest slice (PRD B.4, plan 040): a
