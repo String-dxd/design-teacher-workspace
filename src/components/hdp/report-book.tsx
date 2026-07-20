@@ -501,7 +501,7 @@ function CommentSection({
       )}
       <p className="text-sm leading-relaxed">
         {claims.map((claim, index) => (
-          <React.Fragment key={index}>
+          <React.Fragment key={claim.id ?? `claim-${index}`}>
             <span>{claim.text} </span>
             {showSourceTags && (
               <>

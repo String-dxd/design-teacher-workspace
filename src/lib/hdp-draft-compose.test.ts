@@ -5,6 +5,12 @@ import type { FormingPattern, HdpInsight, HdpTag } from '@/types/hdp'
 const DENYLIST = ['resilient', 'gifted', 'weak', 'lazy', 'brilliant', 'natural']
 const COMPARATIVE_WORDS = ['best', 'better than', 'top']
 
+/** Strips the per-composition `id` (plan 048) so determinism assertions
+ *  compare provenance/text/order, not the random id each call mints. */
+function withoutIds<T extends { id?: string }>(claims: Array<T>) {
+  return claims.map(({ id: _id, ...rest }) => rest)
+}
+
 function makeTag(overrides: Partial<HdpTag> = {}): HdpTag {
   return {
     id: 'tag-1',
@@ -131,7 +137,7 @@ describe('composeDraft', () => {
     ]
     const claimsA = composeDraft(tags, [], 'overall', 'Chen Jun Kai')
     const claimsB = composeDraft(tags, [], 'overall', 'Chen Jun Kai')
-    expect(claimsA).toEqual(claimsB)
+    expect(withoutIds(claimsA)).toEqual(withoutIds(claimsB))
 
     const authorsUsed = new Set(
       claimsA
@@ -177,6 +183,31 @@ describe('composeDraft', () => {
     )
     expect(crossContextClaim).toBeDefined()
     expect(tagIds.has(crossContextClaim!.source!.tagId)).toBe(true)
+  })
+
+  it('composed claims each carry a unique id (plan 048 — stable React keys)', () => {
+    const tags: Array<HdpTag> = [
+      makeTag({
+        id: 'tag-a',
+        disposition: 'perseverance',
+        note: 'returned to failed problems during lessons',
+      }),
+      makeTag({
+        id: 'tag-b',
+        disposition: 'curiosity',
+        context: 'cca',
+        note: "kept asking 'what if' during the case study discussion",
+        createdAt: '2026-07-10T11:30:00+08:00',
+        editableUntil: '2026-07-11T11:30:00+08:00',
+      }),
+    ]
+    const claims = composeDraft(tags, [], 'overall', 'Chen Jun Kai')
+    expect(claims.length).toBeGreaterThan(0)
+    for (const claim of claims) {
+      expect(claim.id).toBeTruthy()
+    }
+    const ids = new Set(claims.map((c) => c.id))
+    expect(ids.size).toBe(claims.length)
   })
 })
 
@@ -284,7 +315,7 @@ describe('composeFromInsights', () => {
     ]
     const a = composeFromInsights(insights, 'overall', 'Chen Jun Kai')
     const b = composeFromInsights(insights, 'overall', 'Chen Jun Kai')
-    expect(a).toEqual(b)
+    expect(withoutIds(a)).toEqual(withoutIds(b))
   })
 
   it('sources a non-tw-river insight to itself (no fabricated tag id)', () => {
@@ -300,5 +331,24 @@ describe('composeFromInsights', () => {
     // cockpit recordId, which the app has no way to look up).
     expect(claims[0].source?.tagId).toBe('insight-x')
     expect(claims[0].source?.label).toBe('Insight 1 · attendance')
+  })
+
+  it('every claim gets a truthy, unique id', () => {
+    const insights: Array<HdpInsight> = [
+      makeInsight({ id: 'insight-a' }),
+      makeInsight({
+        id: 'insight-b',
+        kind: 'attendance',
+        label: '96% attendance this term',
+        sourceRef: { system: 'cockpit', recordId: 'attendance-1' },
+      }),
+    ]
+    const claims = composeFromInsights(insights, 'overall', 'Chen Jun Kai')
+    expect(claims.length).toBeGreaterThan(0)
+    for (const claim of claims) {
+      expect(claim.id).toBeTruthy()
+    }
+    const ids = new Set(claims.map((c) => c.id))
+    expect(ids.size).toBe(claims.length)
   })
 })

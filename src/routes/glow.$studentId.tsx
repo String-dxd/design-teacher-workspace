@@ -1,3 +1,4 @@
+import * as React from 'react'
 import { createFileRoute, notFound, useNavigate } from '@tanstack/react-router'
 
 import { GlowStudentSupportPage } from '@/components/students/lta-dialog'
@@ -17,11 +18,15 @@ function GlowPage() {
   const { student } = Route.useLoaderData()
   const navigate = useNavigate()
   const { isEnabled } = useFeatureFlags()
+  const ltaEnabled = isEnabled('lta-intervention')
 
-  if (!isEnabled('lta-intervention')) {
-    navigate({ to: '/students/$id', params: { id: student.id } })
-    return null
-  }
+  React.useEffect(() => {
+    if (!ltaEnabled) {
+      navigate({ to: '/students/$id', params: { id: student.id } })
+    }
+  }, [ltaEnabled, navigate, student.id])
+
+  if (!ltaEnabled) return null
 
   return (
     <GlowStudentSupportPage

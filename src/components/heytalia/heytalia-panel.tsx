@@ -213,7 +213,9 @@ export function HeyTaliaPanel() {
   }, [messages, isTyping])
 
   useEffect(() => {
-    if (view === 'chat') setTimeout(() => inputRef.current?.focus(), 150)
+    if (view !== 'chat') return
+    const id = setTimeout(() => inputRef.current?.focus(), 150)
+    return () => clearTimeout(id)
   }, [view])
 
   // ── Drag-to-resize ──────────────────────────────────────────────────────

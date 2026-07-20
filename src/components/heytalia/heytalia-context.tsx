@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useMemo, useState } from 'react'
 
 type HeyTaliaView = 'closed' | 'picker' | 'chat'
 
@@ -11,7 +11,8 @@ const HeyTaliaContext = createContext<HeyTaliaContextValue | null>(null)
 
 export function HeyTaliaProvider({ children }: { children: React.ReactNode }) {
   const [view, setView] = useState<HeyTaliaView>('closed')
-  return <HeyTaliaContext value={{ view, setView }}>{children}</HeyTaliaContext>
+  const value = useMemo(() => ({ view, setView }), [view])
+  return <HeyTaliaContext value={value}>{children}</HeyTaliaContext>
 }
 
 export function useHeyTalia() {

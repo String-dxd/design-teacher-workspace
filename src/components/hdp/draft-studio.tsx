@@ -161,7 +161,11 @@ export function DraftStudio({ studentId }: DraftStudioProps) {
       kind === 'subject' ? subject : undefined,
     )
     const loadedStatus = existing?.status ?? 'draft'
-    setClaims(existing?.claims ?? [])
+    setClaims(
+      (existing?.claims ?? []).map((c) =>
+        c.id ? c : { ...c, id: crypto.randomUUID() },
+      ),
+    )
     setStatus(loadedStatus)
     setSelectedInsightIds(new Set(existing?.insightIds ?? []))
     setExistingDraftId(existing?.id ?? null)
@@ -700,7 +704,7 @@ function DraftProse({
             ? resolveTag(claim.source.tagId)
             : undefined
           return (
-            <React.Fragment key={index}>
+            <React.Fragment key={claim.id ?? `claim-${index}`}>
               {claim.text.trim()}{' '}
               <SourceTag
                 source={claim.source}

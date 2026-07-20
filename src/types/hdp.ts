@@ -77,6 +77,7 @@ export interface BroadcastResponse {
 }
 
 export interface DraftClaim {
+  id?: string // stable React key across reorders (plan 048) — absent on legacy stored/snapshotted claims
   text: string
   source?: { tagId: string; label: string } // absent ⇒ rendered "your addition"
   edited?: boolean // teacher edited a sourced sentence — popover notes it (plan 032)

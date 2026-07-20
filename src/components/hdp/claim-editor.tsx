@@ -59,7 +59,7 @@ export function ClaimEditor({
   }
 
   function addSentence() {
-    onChange([...claims, { text: '' }])
+    onChange([...claims, { id: crypto.randomUUID(), text: '' }])
   }
 
   return (
@@ -70,7 +70,10 @@ export function ClaimEditor({
             ? resolveTag?.(claim.source.tagId)
             : undefined
           return (
-            <li key={index} className="flex items-start gap-2">
+            <li
+              key={claim.id ?? `claim-${index}`}
+              className="flex items-start gap-2"
+            >
               <span
                 aria-hidden
                 className="text-muted-foreground mt-2 w-4 shrink-0 text-xs tabular-nums"

@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { X } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -85,6 +85,8 @@ const CREATE_OPTIONS: Array<CreateOption> = [
 ]
 
 function CreateCard({ option }: { option: CreateOption }) {
+  const navigate = useNavigate()
+
   return (
     <button
       type="button"
@@ -92,7 +94,7 @@ function CreateCard({ option }: { option: CreateOption }) {
         const searchStr = option.search
           ? '?' + new URLSearchParams(option.search).toString()
           : ''
-        window.location.href = option.to + searchStr
+        navigate({ href: option.to + searchStr })
       }}
       className="group flex flex-col overflow-hidden rounded-xl border-2 border-border bg-card text-left transition-all duration-150 ease-out hover:border-slate-8 hover:shadow-sm active:scale-[0.98]"
     >
@@ -116,6 +118,7 @@ function CreateCard({ option }: { option: CreateOption }) {
 function CreatePage() {
   const { isEnabled } = useFeatureFlags()
   const formsEnabled = isEnabled('forms')
+  const navigate = useNavigate()
 
   const options = formsEnabled
     ? CREATE_OPTIONS
@@ -131,7 +134,7 @@ function CreatePage() {
           size="icon"
           className="rounded-full"
           onClick={() => {
-            window.location.href = '/announcements'
+            navigate({ href: '/announcements' })
           }}
         >
           <X className="h-4 w-4" />
