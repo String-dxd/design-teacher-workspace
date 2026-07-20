@@ -43,18 +43,19 @@ export const FEATURE_FLAG_REGISTRY: Record<FeatureFlagKey, FeatureFlagMeta> = {
   'student-analytics-basic': {
     label: 'Analytics',
     description:
-      'Show Analytics and Profiles pages in the sidebar — attendance cohort analytics, academic analytics, and export CSV. Insight Buddy is not included.',
+      'Show Analytics and Profiles pages in the sidebar — attendance cohort analytics, academic analytics, and export CSV.',
     stage: 'Experiment',
     module: 'student-insights',
     defaultValue: false,
   },
   'student-analytics': {
-    label: 'Analytics with Insight Buddy',
+    label: 'Insight Buddy',
     description:
-      'Show Student Analytics and Insight Buddy in the sidebar — attendance cohort analytics, academic analytics, export CSV, and AI-powered student insights',
+      'Add the AI-powered Insight Buddy to Analytics — the Insight Buddy sidebar entry and AI student insights.',
     stage: 'Experiment',
     module: 'student-insights',
     defaultValue: false,
+    parent: 'student-analytics-basic',
   },
   'import-data': {
     label: 'Import data',
@@ -159,6 +160,7 @@ export const FEATURE_FLAG_REGISTRY: Record<FeatureFlagKey, FeatureFlagMeta> = {
     stage: 'Experiment',
     module: 'reports',
     defaultValue: true,
+    parent: 'agency-reports',
   },
   posts: {
     label: 'Posts',
@@ -174,6 +176,7 @@ export const FEATURE_FLAG_REGISTRY: Record<FeatureFlagKey, FeatureFlagMeta> = {
     stage: 'Release 2',
     module: 'communications',
     defaultValue: false,
+    parent: 'posts',
   },
   forms: {
     label: 'Custom forms',
@@ -181,6 +184,7 @@ export const FEATURE_FLAG_REGISTRY: Record<FeatureFlagKey, FeatureFlagMeta> = {
     stage: 'Release 3',
     module: 'communications',
     defaultValue: true,
+    parent: 'posts',
   },
   meetings: {
     label: 'Meetings',
@@ -218,6 +222,7 @@ export const FEATURE_FLAG_REGISTRY: Record<FeatureFlagKey, FeatureFlagMeta> = {
     stage: 'Experiment',
     module: 'reports',
     defaultValue: false,
+    parent: 'reports-hdp',
   },
   'reports-hdp-future': {
     label: 'Future state (Prototype B)',
@@ -226,6 +231,7 @@ export const FEATURE_FLAG_REGISTRY: Record<FeatureFlagKey, FeatureFlagMeta> = {
     stage: 'Experiment',
     module: 'reports',
     defaultValue: false,
+    parent: 'reports-hdp',
   },
 }
 

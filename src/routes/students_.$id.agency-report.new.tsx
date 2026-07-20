@@ -3610,10 +3610,10 @@ function AgencyReportWizardPage() {
     },
   ])
 
-  // Report Generation on its own is sufficient to reach the wizard —
-  // Agency Reports isn't required, so any other flag combination that
-  // hides the section on the profile still lets the flow work if the
-  // YH lands here directly (e.g. via a deep-link).
+  // Since plan 043, 'report-generation' is a sub-toggle of 'agency-reports':
+  // useFeatureFlag returns the EFFECTIVE value (parent && child), so the
+  // wizard needs both on. The pre-043 deep-link path (generation on, agency
+  // reports off) no longer exists.
   if (!reportGenerationEnabled) {
     const featureLabel = 'Report Generation'
     return (
