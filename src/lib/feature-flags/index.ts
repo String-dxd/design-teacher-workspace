@@ -16,4 +16,6 @@ export {
   useFeatureFlags,
   readEffectiveFlags,
   mergeStoredFlags,
+  resolveEffective,
+  parseSeedCookie,
 } from './context'

@@ -25,6 +25,7 @@ import { Toaster } from '@/components/ui/sonner'
 import {
   FEATURE_FLAGS_STORAGE_KEY,
   FeatureFlagProvider,
+  parseSeedCookie,
 } from '@/lib/feature-flags'
 import { AUTH_COOKIE_KEY, AuthProvider } from '@/lib/auth'
 import { BreadcrumbProvider } from '@/hooks/use-breadcrumbs'
@@ -79,13 +80,10 @@ interface RootLoaderSeed {
 const readSeedCookies = createServerFn({ method: 'GET' }).handler(
   async (_ctx): Promise<RootLoaderSeed> => {
     const { getCookie } = await import('@tanstack/react-start/server')
-    let flags: Partial<Record<string, boolean>> | null = null
-    try {
-      const raw = getCookie(FEATURE_FLAGS_STORAGE_KEY)
-      flags = raw ? JSON.parse(decodeURIComponent(raw)) : null
-    } catch {
-      flags = null
-    }
+    const raw = getCookie(FEATURE_FLAGS_STORAGE_KEY)
+    const flags = parseSeedCookie(raw) as Partial<
+      Record<string, boolean>
+    > | null
 
     return {
       flags,
