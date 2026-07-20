@@ -12,13 +12,14 @@ export const Route = createFileRoute('/meetings/')({
   component: MeetingsPage,
 })
 
-const TODAY = new Date().toISOString().slice(0, 10)
-
-function getMeetingStatus(m: MeetingEvent): 'ongoing' | 'upcoming' | 'past' {
+function getMeetingStatus(
+  m: MeetingEvent,
+  today: string,
+): 'ongoing' | 'upcoming' | 'past' {
   const first = m.meetingDays.at(0)?.date ?? ''
   const last = m.meetingDays.at(-1)?.date ?? ''
-  if (last < TODAY) return 'past'
-  if (first > TODAY) return 'upcoming'
+  if (last < today) return 'past'
+  if (first > today) return 'upcoming'
   return 'ongoing'
 }
 
@@ -30,8 +31,7 @@ function formatShortDate(dateStr: string) {
   }
 }
 
-function getBookingStatusLabel(m: MeetingEvent): string {
-  const now = new Date().toISOString()
+function getBookingStatusLabel(m: MeetingEvent, now: string): string {
   if (now < m.bookingOpens) {
     const d = new Date(m.bookingOpens)
     return `Booking opens ${d.toLocaleDateString('en-SG', { day: 'numeric', month: 'short', year: 'numeric' })}`
@@ -44,16 +44,18 @@ function getBookingStatusLabel(m: MeetingEvent): string {
 function MeetingCard({
   meeting,
   status,
+  now,
 }: {
   meeting: MeetingEvent
   status: 'ongoing' | 'upcoming' | 'past'
+  now: string
 }) {
   const firstDay = meeting.meetingDays.at(0)
   const lastDay = meeting.meetingDays.at(-1)
   const isMultiDay = meeting.meetingDays.length > 1
   const start = firstDay ? formatShortDate(firstDay.date) : null
   const end = lastDay && isMultiDay ? formatShortDate(lastDay.date) : null
-  const bookingLabel = getBookingStatusLabel(meeting)
+  const bookingLabel = getBookingStatusLabel(meeting, now)
 
   return (
     <div
@@ -140,18 +142,21 @@ function MeetingCard({
 function MeetingsPage() {
   useSetBreadcrumbs([{ label: 'Meetings', href: '/meetings' }])
 
+  const now = new Date().toISOString()
+  const today = now.slice(0, 10)
+
   const { ongoing, upcoming, past } = useMemo(() => {
     const ongoing: Array<MeetingEvent> = []
     const upcoming: Array<MeetingEvent> = []
     const past: Array<MeetingEvent> = []
     for (const m of mockMeetings) {
-      const s = getMeetingStatus(m)
+      const s = getMeetingStatus(m, today)
       if (s === 'ongoing') ongoing.push(m)
       else if (s === 'upcoming') upcoming.push(m)
       else past.push(m)
     }
     return { ongoing, upcoming, past }
-  }, [])
+  }, [today])
 
   const hasAny = ongoing.length + upcoming.length + past.length > 0
 
@@ -189,7 +194,12 @@ function MeetingsPage() {
                 <h2 className="mb-3 font-semibold">Ongoing meeting events</h2>
                 <div className="space-y-2">
                   {ongoing.map((m) => (
-                    <MeetingCard key={m.id} meeting={m} status="ongoing" />
+                    <MeetingCard
+                      key={m.id}
+                      meeting={m}
+                      status="ongoing"
+                      now={now}
+                    />
                   ))}
                 </div>
               </section>
@@ -199,7 +209,12 @@ function MeetingsPage() {
                 <h2 className="mb-3 font-semibold">Upcoming meeting events</h2>
                 <div className="space-y-2">
                   {upcoming.map((m) => (
-                    <MeetingCard key={m.id} meeting={m} status="upcoming" />
+                    <MeetingCard
+                      key={m.id}
+                      meeting={m}
+                      status="upcoming"
+                      now={now}
+                    />
                   ))}
                 </div>
               </section>
@@ -209,7 +224,12 @@ function MeetingsPage() {
                 <h2 className="mb-3 font-semibold">Past meeting events</h2>
                 <div className="space-y-2">
                   {past.map((m) => (
-                    <MeetingCard key={m.id} meeting={m} status="past" />
+                    <MeetingCard
+                      key={m.id}
+                      meeting={m}
+                      status="past"
+                      now={now}
+                    />
                   ))}
                 </div>
               </section>
