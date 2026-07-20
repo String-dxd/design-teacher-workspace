@@ -33,20 +33,11 @@ import { getSchoolLevel } from '@/data/mock-students'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
 import { loadSharedReport } from '@/lib/hdp-template-store'
 import { cn } from '@/lib/utils'
+import { getInitials } from '@/lib/format'
 
 export const Route = createFileRoute('/holistic-reports/$id')({
   component: ReportDetailPage,
 })
-
-function getInitials(name: string): string {
-  return name
-    .split(' ')
-    .filter((part) => part.length > 0)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join('')
-    .toUpperCase()
-}
 
 function getFirstName(name: string): string {
   return name.split(' ').filter((part) => part.length > 0)[0] ?? name

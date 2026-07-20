@@ -43,6 +43,7 @@ import {
   isSubjectSubmitted,
 } from '@/data/mock-cockpit-submissions'
 import { cn, stripSalutation } from '@/lib/utils'
+import { getInitials } from '@/lib/format'
 
 // Shared P1 report renderer — used by the builder's live preview (editable) and the
 // parent-facing guest view (read-only). Renders the ordered, enabled blocks of a
@@ -487,16 +488,6 @@ function spellOutClass(classLabel: string): string {
 function maskNric(nric: string): string {
   if (nric.length < 6) return nric
   return `${nric.slice(0, 1)}XXXX${nric.slice(5)}`
-}
-
-function getInitials(name: string): string {
-  return name
-    .split(' ')
-    .filter((part) => part.length > 0)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join('')
-    .toUpperCase()
 }
 
 /** Single best subject for the "Best Subject" tile: the submitted subject
