@@ -15,6 +15,7 @@
 - **Depends on**: none
 - **Category**: bug (a11y — WCAG 1.3.1 Info & Relationships)
 - **Planned at**: commit `077d669`, 2026-07-06
+- **Status**: REJECTED (reconcile 2026-07-20, HEAD `12af116`) — both cited findings are gone. The `cycle-term` picker was removed by the Round 8 rebuild + plan-034 teardown (`reports.index.tsx` is now 43 lines; the surviving `TermSelector` in `holistic-reports.index.tsx` has no dead `htmlFor`), and the comments control is now a native `<Textarea id="ft-comments">` correctly bound to `<Label htmlFor="ft-comments">` (`report-preview.tsx:395`) rather than a Tiptap contenteditable. The WCAG 1.3.1 gap this plan targeted no longer exists. Kept as a record; do not execute.
 
 ## Why this matters
 
