@@ -55,7 +55,6 @@ import { Route as FormsIdRouteImport } from './routes/forms.$id'
 import { Route as AnnouncementsNewRouteImport } from './routes/announcements.new'
 import { Route as AnnouncementsIdRouteImport } from './routes/announcements.$id'
 import { Route as GuestStudentLoginRouteImport } from './routes/_guest.student-login'
-import { Route as GuestPreviewMenuRouteImport } from './routes/_guest.preview-menu'
 import { Route as GuestLoginRouteImport } from './routes/_guest.login'
 import { Route as GuestCreateRouteImport } from './routes/_guest.create'
 import { Route as ReportsStudentsIndexRouteImport } from './routes/reports.students.index'
@@ -296,11 +295,6 @@ const GuestStudentLoginRoute = GuestStudentLoginRouteImport.update({
   path: '/student-login',
   getParentRoute: () => GuestRoute,
 } as any)
-const GuestPreviewMenuRoute = GuestPreviewMenuRouteImport.update({
-  id: '/preview-menu',
-  path: '/preview-menu',
-  getParentRoute: () => GuestRoute,
-} as any)
 const GuestLoginRoute = GuestLoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -376,7 +370,6 @@ export interface FileRoutesByFullPath {
   '/students': typeof StudentsRouteWithChildren
   '/create': typeof GuestCreateRoute
   '/login': typeof GuestLoginRoute
-  '/preview-menu': typeof GuestPreviewMenuRoute
   '/student-login': typeof GuestStudentLoginRoute
   '/announcements/$id': typeof AnnouncementsIdRoute
   '/announcements/new': typeof AnnouncementsNewRoute
@@ -426,7 +419,6 @@ export interface FileRoutesByTo {
   '/student-analytics': typeof StudentAnalyticsRoute
   '/create': typeof GuestCreateRoute
   '/login': typeof GuestLoginRoute
-  '/preview-menu': typeof GuestPreviewMenuRoute
   '/student-login': typeof GuestStudentLoginRoute
   '/announcements/$id': typeof AnnouncementsIdRoute
   '/announcements/new': typeof AnnouncementsNewRoute
@@ -486,7 +478,6 @@ export interface FileRoutesById {
   '/students': typeof StudentsRouteWithChildren
   '/_guest/create': typeof GuestCreateRoute
   '/_guest/login': typeof GuestLoginRoute
-  '/_guest/preview-menu': typeof GuestPreviewMenuRoute
   '/_guest/student-login': typeof GuestStudentLoginRoute
   '/announcements/$id': typeof AnnouncementsIdRoute
   '/announcements/new': typeof AnnouncementsNewRoute
@@ -546,7 +537,6 @@ export interface FileRouteTypes {
     | '/students'
     | '/create'
     | '/login'
-    | '/preview-menu'
     | '/student-login'
     | '/announcements/$id'
     | '/announcements/new'
@@ -596,7 +586,6 @@ export interface FileRouteTypes {
     | '/student-analytics'
     | '/create'
     | '/login'
-    | '/preview-menu'
     | '/student-login'
     | '/announcements/$id'
     | '/announcements/new'
@@ -655,7 +644,6 @@ export interface FileRouteTypes {
     | '/students'
     | '/_guest/create'
     | '/_guest/login'
-    | '/_guest/preview-menu'
     | '/_guest/student-login'
     | '/announcements/$id'
     | '/announcements/new'
@@ -1041,13 +1029,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GuestStudentLoginRouteImport
       parentRoute: typeof GuestRoute
     }
-    '/_guest/preview-menu': {
-      id: '/_guest/preview-menu'
-      path: '/preview-menu'
-      fullPath: '/preview-menu'
-      preLoaderRoute: typeof GuestPreviewMenuRouteImport
-      parentRoute: typeof GuestRoute
-    }
     '/_guest/login': {
       id: '/_guest/login'
       path: '/login'
@@ -1124,7 +1105,6 @@ declare module '@tanstack/react-router' {
 interface GuestRouteChildren {
   GuestCreateRoute: typeof GuestCreateRoute
   GuestLoginRoute: typeof GuestLoginRoute
-  GuestPreviewMenuRoute: typeof GuestPreviewMenuRoute
   GuestStudentLoginRoute: typeof GuestStudentLoginRoute
   GuestHdpReportTokenRoute: typeof GuestHdpReportTokenRoute
   GuestHdpStudentTokenRoute: typeof GuestHdpStudentTokenRoute
@@ -1133,7 +1113,6 @@ interface GuestRouteChildren {
 const GuestRouteChildren: GuestRouteChildren = {
   GuestCreateRoute: GuestCreateRoute,
   GuestLoginRoute: GuestLoginRoute,
-  GuestPreviewMenuRoute: GuestPreviewMenuRoute,
   GuestStudentLoginRoute: GuestStudentLoginRoute,
   GuestHdpReportTokenRoute: GuestHdpReportTokenRoute,
   GuestHdpStudentTokenRoute: GuestHdpStudentTokenRoute,
