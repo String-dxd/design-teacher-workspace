@@ -15,22 +15,14 @@ function FailingRemote(): React.ReactNode {
   )
 }
 
+// Render the error state directly so the module fills the content area under
+// the app chrome — no preview box, title, or padding gap. The boundary's
+// ModuleLoadError fallback is `flex-1`, so it grows to fill the container just
+// like the students Analytics empty state.
 function ErrorPreviewPage() {
   return (
-    <div className="flex flex-1 flex-col p-6">
-      <div className="mb-4">
-        <h1 className="text-lg font-semibold text-foreground">
-          Module load error — preview
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Panel-scoped: one failed region inside the app chrome.
-        </p>
-      </div>
-      <div className="flex flex-1 rounded-lg border border-border">
-        <ErrorBoundary>
-          <FailingRemote />
-        </ErrorBoundary>
-      </div>
-    </div>
+    <ErrorBoundary>
+      <FailingRemote />
+    </ErrorBoundary>
   )
 }
