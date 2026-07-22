@@ -395,6 +395,14 @@ function StudentsPage() {
         const comparison = String(aVal).localeCompare(String(bVal))
         return sort.direction === 'asc' ? comparison : -comparison
       })
+    } else {
+      // No explicit column sort: default to alphabetical by class (e.g. 4A → 4B),
+      // then alphabetical by name (A→Z) within each class, without marking any
+      // column as actively sorted.
+      result.sort(
+        (a, b) =>
+          a.class.localeCompare(b.class) || a.name.localeCompare(b.name),
+      )
     }
 
     // Then partition by filter matches (matched students first)

@@ -34,6 +34,11 @@ export interface Student {
   overallPercentage: number
   subjectScores?: Array<SubjectScore>
   conduct: ConductGrade
+  /**
+   * Reporting period shown alongside the conduct grade in the profile. When
+   * absent, the profile falls back to the default "2025, Overall".
+   */
+  conductPeriod?: string
   approvedMtl: string | null
   learningSupport: string | null
   postSecEligibility: string
@@ -58,6 +63,11 @@ export interface Student {
   counsellingSessions: number
   /** Severity bucket for the single counselling case, shown in the table/filter. */
   counsellingComplexity?: 'Less complex cases' | 'Complex cases'
+  /**
+   * Per-student counselling remark lines. When present, these override the
+   * default complexity-derived remark shown in the profile side sheet.
+   */
+  counsellingDetails?: Array<OffenceDetail>
   sen: string | null
   fas: string | null
   // Family, Housing, Finance
