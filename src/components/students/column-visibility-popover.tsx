@@ -34,7 +34,11 @@ export interface ColumnConfig {
   imported?: boolean
 }
 
-export const CURRENT_TERM_KEY = 'T1 2026'
+// Current term is T2 2026 (matches the "Term 2, 2026" source labels shown on
+// every temporal column and in the student profile). getTermlyData has no
+// 'T2 2026' case, so this resolves to the base snapshot — the raw student.*
+// fields — keeping the table's default view in sync with the profile.
+export const CURRENT_TERM_KEY = 'T2 2026'
 
 export const defaultColumns: Array<ColumnConfig> = [
   {
