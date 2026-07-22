@@ -79,12 +79,12 @@ the `!isHovered` branch and on unmount).
 
 ## Commands you will need
 
-| Purpose | Command | Expected |
-|---|---|---|
-| Typecheck | `bunx tsc --noEmit` | 0 new vs baseline (see step 5 caveat) |
-| Tests | `bunx vitest run` | no new failures; `hdp-draft-compose.test.ts` green |
-| Build | `bun run build` | exit 0 |
-| Targeted lint | `bunx eslint <files>` / `bunx prettier --check <files>` | clean |
+| Purpose       | Command                                                 | Expected                                           |
+| ------------- | ------------------------------------------------------- | -------------------------------------------------- |
+| Typecheck     | `bunx tsc --noEmit`                                     | 0 new vs baseline (see step 5 caveat)              |
+| Tests         | `bunx vitest run`                                       | no new failures; `hdp-draft-compose.test.ts` green |
+| Build         | `bun run build`                                         | exit 0                                             |
+| Targeted lint | `bunx eslint <files>` / `bunx prettier --check <files>` | clean                                              |
 
 ## Scope
 
@@ -157,7 +157,7 @@ with no console warning.
 3. Key the four render sites on `claim.id ?? \`claim-${index}\`` (fallback
    keeps pre-existing stored drafts and snapshotted shared books rendering;
    they never reorder in read-only views, so the fallback is safe there —
-   the *editor* always sees freshly composed or newly added claims, which
+   the _editor_ always sees freshly composed or newly added claims, which
    now carry ids).
 4. Check `composeDraft`'s determinism tests: if any test asserts deep
    equality on claim objects, exclude `id` from the comparison (or assert

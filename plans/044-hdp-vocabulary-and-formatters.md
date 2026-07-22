@@ -133,17 +133,17 @@ Filtered (correct) version at `src/components/reports/report-preview.tsx:492`,
   `src/lib/hdp-trends.ts` + `hdp-trends.test.ts`).
 - Path alias `@/*` → `src/*`.
 - Repo policy (`AGENTS.md`): consolidation of repeated logic is explicitly
-  sanctioned; creating *components* is not needed here — these are plain
+  sanctioned; creating _components_ is not needed here — these are plain
   modules.
 
 ## Commands you will need
 
-| Purpose | Command | Expected on success |
-|---|---|---|
-| Typecheck | `bunx tsc --noEmit` | 76 pre-existing errors at planning time, 0 new |
-| Tests | `bunx vitest run` | 190 pass / 6 fail baseline (flaky `imported-columns.test.ts`); no new failures |
-| Build | `bun run build` | exit 0 |
-| Targeted format/lint | `bunx prettier --check <files>` / `bunx eslint <files>` | clean |
+| Purpose              | Command                                                 | Expected on success                                                            |
+| -------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Typecheck            | `bunx tsc --noEmit`                                     | 76 pre-existing errors at planning time, 0 new                                 |
+| Tests                | `bunx vitest run`                                       | 190 pass / 6 fail baseline (flaky `imported-columns.test.ts`); no new failures |
+| Build                | `bun run build`                                         | exit 0                                                                         |
+| Targeted format/lint | `bunx prettier --check <files>` / `bunx eslint <files>` | clean                                                                          |
 
 ## Scope
 
@@ -250,7 +250,7 @@ nothing where it includes it. The two announcements sites already accept
 for the test fixtures** (run `bunx vitest run src/lib/hdp-draft-compose.test.ts`
 — it has determinism tests); otherwise keep the local function and note it.
 
-Replace the 4 `getInitials` copies with the shared import (this *fixes* the
+Replace the 4 `getInitials` copies with the shared import (this _fixes_ the
 attendance fork — the only intended output change, and only for
 whitespace-irregular names).
 
@@ -291,7 +291,7 @@ Write the tests (below), then run the full gates.
 
 ## STOP conditions
 
-- Two copies of the *same* label variant disagree on a value (pick-one would
+- Two copies of the _same_ label variant disagree on a value (pick-one would
   silently change rendered output somewhere).
 - `hdp-draft-compose.test.ts` fails after repointing — composed-claim
   provenance strings are load-bearing (P3/P4 guarantees from plan 032);

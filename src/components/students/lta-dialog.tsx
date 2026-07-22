@@ -27,22 +27,6 @@ interface GuidanceAction {
 
 // ── Linear-style priority icons ──────────────────────────────
 
-function PriorityUrgentIcon() {
-  return (
-    <svg
-      width="12"
-      height="12"
-      viewBox="0 0 16 16"
-      fill="currentColor"
-      aria-hidden="true"
-    >
-      <rect width="16" height="16" rx="3" />
-      <rect x="7" y="3" width="2" height="6" rx="1" fill="white" />
-      <rect x="7" y="11" width="2" height="2" rx="1" fill="white" />
-    </svg>
-  )
-}
-
 function PriorityMediumIcon() {
   return (
     <svg
@@ -214,74 +198,59 @@ function getStudentInitials(name: string): string {
 
 const guidanceActions: Array<GuidanceAction> = [
   {
-    title: 'Consider a 1-on-1 check-in within 48 hours',
+    title: 'Consider building on her peer connections',
     description:
-      'Low mood may be the most time-sensitive signal here. Validating feelings first, before addressing the bullying incident, may be more effective.',
+      'Build on her new friendships with Cheryl Ang and Amanda Koh, both from S4 A, through buddy support, peer check ins and clear routines to support her attendance.',
     urgency: {
-      label: 'Urgent',
-      icon: <PriorityUrgentIcon />,
-      textColor: 'text-crimson-11',
-      badgeBg: 'bg-crimson-2 border border-crimson-6',
-    },
-    contacts: ['School Counsellor', 'SEN Officer'],
-    resources: [
-      { label: 'Check-in guide (SwAN-adapted)', href: '#' },
-      { label: 'Low mood red flags', href: '#' },
-    ],
-  },
-  {
-    title: 'Consider consulting the SEN Officer before setting expectations',
-    description:
-      'Before re-engaging CCA or setting behavioural targets, it may help to understand his specific profile. Communication style, expectations, and support approaches may need adjusting.',
-    urgency: {
-      label: 'This week',
+      label: 'Upcoming weeks',
       icon: <PriorityMediumIcon />,
       textColor: 'text-orange-11',
       badgeBg: 'bg-orange-2 border border-orange-6',
     },
-    contacts: ['SEN Officer'],
-    resources: [{ label: 'SwAN differentiation guide', href: '#' }],
+    contacts: ['Form Teacher', 'Year Head'],
+    resources: [{ label: 'Peer support guide', href: '#' }],
   },
   {
-    title: 'Consider a brief SDT/CMT case discussion',
+    title: 'Consider a brief SDT case discussion',
     description:
-      'Review RIOT data (attendance, discipline, teacher observations — past 4 weeks). Consider having a single Case Manager coordinate across all three areas, with YH, SC, and SEN Officer looped in.',
+      'Review RIOT data (attendance, discipline, teacher observations — past 4 weeks). Coordinate both areas, with YH and SC looped in.',
     urgency: {
-      label: 'This week',
+      label: 'Upcoming weeks',
       icon: <PriorityMediumIcon />,
       textColor: 'text-orange-11',
       badgeBg: 'bg-orange-2 border border-orange-6',
     },
-    contacts: ['Year Head', 'School Counsellor', 'SEN Officer'],
-    resources: [
-      { label: 'Case Management Guide', href: '#' },
-      { label: 'Open CaseSync', href: '#', external: true },
-    ],
+    contacts: ['Year Head', 'School Counsellor'],
+    resources: [],
   },
   {
-    title: 'Consider re-engaging CCA with a phased plan',
+    title: 'Consider a 1-on-1 check-in',
     description:
-      'Once low mood and safety have settled, consider meeting with the CCA TIC and student to explore a phased return — buddy system, reduced role, clear expectations. CCA can be a protective factor if the environment is supportive.',
+      'Low mood is worth watching as a longer-term signal. Validate feelings first, before the attendance pattern.',
     urgency: {
       label: 'Monitor',
       icon: <PriorityLowIcon />,
       textColor: 'text-lime-11',
       badgeBg: 'bg-lime-2 border border-lime-6',
     },
-    contacts: ['CCA Teacher-in-Charge', 'Form Teacher'],
-    resources: [{ label: 'CCA re-engagement guide', href: '#' }],
+    contacts: ['School Counsellor'],
+    resources: [
+      { label: 'Check-in guide (SwAN-adapted)', href: '#' },
+      { label: 'Low mood guide', href: '#' },
+    ],
   },
 ]
 
-const caseResources = [
+const caseResources: Array<{
+  label: string
+  href: string
+  external?: boolean
+}> = [
   { label: 'Check-in guide (SwAN-adapted)', href: '#' },
-  { label: 'Low mood red flags', href: '#' },
-  { label: 'Bullying response protocol', href: '#' },
-  { label: 'Incident report template', href: '#' },
-  { label: 'SwAN differentiation guide', href: '#' },
-  { label: 'Case Management Guide', href: '#' },
-  { label: 'CCA re-engagement guide', href: '#' },
-  { label: 'Open CaseSync', href: '#', external: true },
+  { label: 'Low mood guide', href: '#' },
+  { label: 'Attendance support protocol', href: '#' },
+  { label: 'Home engagement guide', href: '#' },
+  { label: 'Peer support guide', href: '#' },
 ]
 
 const learnMoreItems = [
@@ -301,7 +270,7 @@ const learnMoreItems = [
     type: 'article' as const,
     cover: '/learn-cover-2.png',
     description:
-      'Step-by-step protocols for emerging concerns: when to escalate, who to loop in, and how to coordinate across Year Heads, Counsellors, and SEN Officers.',
+      'Step-by-step protocols for emerging concerns: when to escalate, who to loop in, and how to coordinate across Year Heads and Counsellors.',
   },
   {
     title: 'Conducting Safe Check-ins',
@@ -330,7 +299,7 @@ export function GlowStudentSupportPage({
 
   const suggestedQuestions = [
     'Which issue should I tackle first?',
-    `How do I adjust my approach for his SwAN profile?`,
+    `How do I adjust my approach for her SwAN profile?`,
     'When should I loop in the School Counsellor?',
   ]
 
@@ -342,7 +311,9 @@ export function GlowStudentSupportPage({
         <div className="flex items-center gap-2.5">
           <GlowBotIcon size={28} />
           <span className="text-sm font-medium text-foreground">
-            Glow · Student Support
+            {student.id === '118'
+              ? 'Explore student support'
+              : 'Glow · Student Support'}
           </span>
         </div>
         <Button
@@ -385,32 +356,28 @@ export function GlowStudentSupportPage({
 
             {/* Context question */}
             <h2 className="mt-5 text-sm font-semibold leading-snug text-foreground">
-              How to support a SwAN student with multiple concerns?
+              How to support?
             </h2>
             <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-              Co-occurring behavioural, social-emotional, and engagement
+              Co-occurring attendance, social-emotional, and engagement
               challenges require a sequenced, differentiated approach.
             </p>
 
             {/* Divider */}
             <div className="my-5 border-t border-border" />
 
-            {/* Active triggers */}
+            {/* Possible support areas */}
             <p className="text-xs font-medium text-muted-foreground">
-              Active Triggers
+              Possible support areas
             </p>
             <div className="mt-2.5 space-y-1.5">
-              <div className="flex items-center gap-2 rounded-lg bg-crimson-2 px-3 py-2 text-sm font-medium text-crimson-11">
-                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-crimson-9" />
-                Bullying incident
+              <div className="flex items-center gap-2 rounded-lg bg-orange-2 px-3 py-2 text-sm font-medium text-orange-11">
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-orange-9" />
+                Long-Term Absenteeism
               </div>
               <div className="flex items-center gap-2 rounded-lg bg-orange-2 px-3 py-2 text-sm font-medium text-orange-11">
                 <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-orange-9" />
-                {student.ccaMissed} missed CCA sessions
-              </div>
-              <div className="flex items-center gap-2 rounded-lg bg-orange-2 px-3 py-2 text-sm font-medium text-orange-11">
-                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-orange-9" />
-                Low mood in class
+                Low mood
               </div>
             </div>
           </div>
@@ -434,11 +401,10 @@ export function GlowStudentSupportPage({
 
               <div className="min-w-0 flex-1">
                 <p className="text-sm leading-relaxed text-foreground">
-                  Three areas have been flagged for {firstName} at the same time
-                  — a bullying incident, disengagement from CCA, and observed
-                  low mood. Each alone may be manageable; together, they suggest
-                  a pattern worth monitoring with a coordinated approach. Here
-                  are some suggested considerations, organised by priority:
+                  Two areas are flagged for {firstName} at once — long-term
+                  absenteeism and low mood. Manageable alone, but together
+                  they're worth a coordinated watch. Some considerations, by
+                  priority:
                 </p>
 
                 {/* Action cards */}
@@ -491,24 +457,26 @@ export function GlowStudentSupportPage({
                           </div>
 
                           {/* Resources */}
-                          <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
-                            <span className="text-xs font-medium text-muted-foreground">
-                              Resources
-                            </span>
-                            {action.resources.map((r) => (
-                              <a
-                                key={r.label}
-                                href={r.href}
-                                className="inline-flex items-center gap-0.5 text-xs text-foreground underline-offset-2 hover:underline"
-                                onClick={(e) => e.preventDefault()}
-                              >
-                                {r.label}
-                                {r.external && (
-                                  <ExternalLink className="ml-0.5 inline h-3 w-3" />
-                                )}
-                              </a>
-                            ))}
-                          </div>
+                          {action.resources.length > 0 && (
+                            <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
+                              <span className="text-xs font-medium text-muted-foreground">
+                                Resources
+                              </span>
+                              {action.resources.map((r) => (
+                                <a
+                                  key={r.label}
+                                  href={r.href}
+                                  className="inline-flex items-center gap-0.5 text-xs text-foreground underline-offset-2 hover:underline"
+                                  onClick={(e) => e.preventDefault()}
+                                >
+                                  {r.label}
+                                  {r.external && (
+                                    <ExternalLink className="ml-0.5 inline h-3 w-3" />
+                                  )}
+                                </a>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </div>
                     )
@@ -521,9 +489,10 @@ export function GlowStudentSupportPage({
                     To sharpen this plan:
                   </strong>{' '}
                   it would help to know how long the low mood has been observed,
-                  whether the bullying was physical/verbal/cyber and if the
-                  victim is safe, and what {firstName}'s specific SwAN diagnosis
-                  or support needs are. Share what you know in the chat below.
+                  what's behind the recent absences (health, family, or
+                  school-based factors), and what {firstName}'s specific SwAN
+                  diagnosis or support needs are. Share what you know in the
+                  chat below.
                 </p>
               </div>
             </div>

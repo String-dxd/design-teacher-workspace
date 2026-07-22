@@ -84,14 +84,14 @@ beforeLoad: () => {
 
 Parent/child relationships as they exist in code today (verified 2026-07-19):
 
-| Child | Parent | Evidence |
-|---|---|---|
-| `report-generation` | `agency-reports` | registry description says "Agency reports only"; profile section renders on `agencyReportsEnabled \|\| reportGenerationEnabled` (`src/components/students/student-profile.tsx:1707`), button additionally needs the child (`:1725`) |
-| `reports-river-visibility` | `reports-hdp` | river renders only inside HDP surfaces (`src/routes/reports.students.$studentId.tsx:30,77`, `src/components/hdp/reports-home.tsx:192`) |
-| `reports-hdp-future` | `reports-hdp` | all teacher-side consumers live behind `reports-hdp` (`src/components/hdp/draft-studio.tsx:100`, `release-manager.tsx:69`); guest routes read it parent-free (`src/routes/_guest.hdp-report.$token.tsx:55`, `_guest.hdp-student.$token.tsx:50`) |
-| `forms` | `posts` | Custom Forms tab lives on the Posts page (`src/routes/announcements.index.tsx:266`); create-flow option (`src/routes/_guest.create.tsx:118`) |
-| `posts-admin-view` | `posts` | adds a sidebar link to `/announcements?view=admin` (`src/components/app-sidebar.tsx:324`) |
-| `student-analytics` | `student-analytics-basic` | sidebar precedence (`src/components/app-sidebar.tsx:333-341`); either-on predicates in 8 files (e.g. `src/components/app-header.tsx:37-38`, `src/routes/students.index.tsx:110`) |
+| Child                      | Parent                    | Evidence                                                                                                                                                                                                                                        |
+| -------------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `report-generation`        | `agency-reports`          | registry description says "Agency reports only"; profile section renders on `agencyReportsEnabled \|\| reportGenerationEnabled` (`src/components/students/student-profile.tsx:1707`), button additionally needs the child (`:1725`)             |
+| `reports-river-visibility` | `reports-hdp`             | river renders only inside HDP surfaces (`src/routes/reports.students.$studentId.tsx:30,77`, `src/components/hdp/reports-home.tsx:192`)                                                                                                          |
+| `reports-hdp-future`       | `reports-hdp`             | all teacher-side consumers live behind `reports-hdp` (`src/components/hdp/draft-studio.tsx:100`, `release-manager.tsx:69`); guest routes read it parent-free (`src/routes/_guest.hdp-report.$token.tsx:55`, `_guest.hdp-student.$token.tsx:50`) |
+| `forms`                    | `posts`                   | Custom Forms tab lives on the Posts page (`src/routes/announcements.index.tsx:266`); create-flow option (`src/routes/_guest.create.tsx:118`)                                                                                                    |
+| `posts-admin-view`         | `posts`                   | adds a sidebar link to `/announcements?view=admin` (`src/components/app-sidebar.tsx:324`)                                                                                                                                                       |
+| `student-analytics`        | `student-analytics-basic` | sidebar precedence (`src/components/app-sidebar.tsx:333-341`); either-on predicates in 8 files (e.g. `src/components/app-header.tsx:37-38`, `src/routes/students.index.tsx:110`)                                                                |
 
 **Two documented behavior changes this plan makes deliberately** (maintainer
 approved the hierarchy 2026-07-19 — record both in the commit message):
@@ -115,14 +115,14 @@ users' current behavior.
 
 ## Commands you will need
 
-| Purpose | Command | Expected on success |
-|---|---|---|
-| Typecheck | `bunx tsc --noEmit` | 76 pre-existing errors, **0 new** (record baseline first) |
-| Tests | `bunx vitest run` | 190 pass / 6 fail baseline; the 6 are the known-flaky `imported-columns.test.ts` (sometimes passes). **No new failures.** |
-| Build | `bun run build` | exit 0 |
-| Format (targeted) | `bunx prettier --check <changed files>` | exit 0 |
-| Lint (targeted) | `bunx eslint <changed files>` | 0 new errors |
-| Dev server | `bun run dev` | port 3000 |
+| Purpose           | Command                                 | Expected on success                                                                                                       |
+| ----------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Typecheck         | `bunx tsc --noEmit`                     | 76 pre-existing errors, **0 new** (record baseline first)                                                                 |
+| Tests             | `bunx vitest run`                       | 190 pass / 6 fail baseline; the 6 are the known-flaky `imported-columns.test.ts` (sometimes passes). **No new failures.** |
+| Build             | `bun run build`                         | exit 0                                                                                                                    |
+| Format (targeted) | `bunx prettier --check <changed files>` | exit 0                                                                                                                    |
+| Lint (targeted)   | `bunx eslint <changed files>`           | 0 new errors                                                                                                              |
+| Dev server        | `bun run dev`                           | port 3000                                                                                                                 |
 
 ## Scope
 
@@ -272,7 +272,7 @@ when the parent is stored-off:
 ```tsx
 <Switch
   id={key}
-  checked={flags[key]}            // raw stored value — remembered
+  checked={flags[key]} // raw stored value — remembered
   disabled={meta.parent ? !flags[meta.parent] : false}
   onCheckedChange={(checked) => setFlag(key, checked)}
 />
@@ -355,7 +355,7 @@ Stop and report back (do not improvise) if:
 - The `Current state` excerpts don't match the live code (drift).
 - `isEnabled` turning effective breaks a consumer in a way visible in tsc or
   tests — the design assumes child-implies-parent is safe everywhere; if a
-  consumer *requires* child-on/parent-off (other than the two documented
+  consumer _requires_ child-on/parent-off (other than the two documented
   behavior changes above), stop.
 - You find a registry entry needing a parent chain of depth > 1.
 - The `/flags` Switch component does not support `disabled` (check

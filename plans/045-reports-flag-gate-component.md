@@ -66,11 +66,11 @@ exports, kebab-case filenames.
 
 ## Commands you will need
 
-| Purpose | Command | Expected |
-|---|---|---|
-| Typecheck | `bunx tsc --noEmit` | 76 baseline errors, 0 new |
-| Tests | `bunx vitest run` | 190 pass / 6 fail baseline (flaky `imported-columns.test.ts`); no new failures |
-| Build | `bun run build` | exit 0 |
+| Purpose   | Command             | Expected                                                                       |
+| --------- | ------------------- | ------------------------------------------------------------------------------ |
+| Typecheck | `bunx tsc --noEmit` | 76 baseline errors, 0 new                                                      |
+| Tests     | `bunx vitest run`   | 190 pass / 6 fail baseline (flaky `imported-columns.test.ts`); no new failures |
+| Build     | `bun run build`     | exit 0                                                                         |
 
 ## Scope
 
@@ -87,7 +87,7 @@ exports, kebab-case filenames.
 **Out of scope**:
 
 - `src/routes/students.$id.tsx`, `student-profile.tsx`, `student-table.tsx` —
-  they read the flag for *inline* sub-features, not a page gate.
+  they read the flag for _inline_ sub-features, not a page gate.
 - The redirect stub routes (`reports.summary.tsx`, `reports.release.tsx`,
   `reports.broadcast.tsx`, `reports.review.tsx`, `reports.drafts.index.tsx`,
   `reports.students.index.tsx`) — intentional stubs, leave them.

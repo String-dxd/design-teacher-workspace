@@ -259,7 +259,7 @@ export const mockStudents: Array<Student> = [
     // Duplicated from Lam Wei Jie (id '3') as a Secondary 4 record. Mock values
     // mirror Lam Wei Jie for now; adjust as real data becomes available.
     id: '118',
-    name: 'Ang Xin Ling Ruth',
+    name: 'Alice De Silva',
     class: '4A',
     cca: 'Volleyball',
     schoolName: 'Bandung Secondary School',
@@ -278,9 +278,9 @@ export const mockStudents: Array<Student> = [
         latestDate: '29 May 2026',
       },
     ],
-    absences: 6,
-    privateVrAbsences: 5,
-    mcAbsences: 8,
+    absences: 40,
+    privateVrAbsences: 2,
+    mcAbsences: 2,
     lateComing: 3,
     ccaMissed: 3,
     riskIndicators: 4,
@@ -311,19 +311,20 @@ export const mockStudents: Array<Student> = [
       { year: 2026, terms: ['Term 1', 'Term 2'] },
       { year: 2025, terms: ['Term 1'] },
     ],
-    socialLinks: 2,
+    socialLinks: 3,
     selectedBy: [
       { name: 'Cheryl Ang Mei Kuan', class: 'S4-A', closenessRating: 3 },
+      { name: 'Amanada Koh Shu Ling', class: 'S4-A', closenessRating: 4 },
     ],
     selectedFriends: [
-      { name: 'Amanada Koh Shu Ling', class: 'S4-A', closenessRating: 2 },
+      { name: 'Amanada Koh Shu Ling', class: 'S4-A', closenessRating: 4 },
     ],
     counsellingSessions: 3,
     counsellingComplexity: 'Complex cases',
     counsellingDetails: [
       { type: 'Depression', count: 3, latestDate: '5 Jul 2026' },
     ],
-    sen: 'ADHD',
+    sen: 'None',
     fas: 'MOE FAS, School FAS',
     housing: 'HDB 2-room',
     housingType: 'Rented',
@@ -332,7 +333,7 @@ export const mockStudents: Array<Student> = [
     commuterStatus: null,
     afterSchoolArrangement: null,
     siblings: 1,
-    siblingDetails: [{ name: 'Ang Xin De Xavier', class: '3A' }],
+    siblingDetails: [{ name: 'Xavier De Silva', class: '3A' }],
     externalAgencies: 'Fei Yue FSC',
     birthday: '18 Mar 2010',
     citizenship: 'Singapore citizen',
@@ -342,9 +343,9 @@ export const mockStudents: Array<Student> = [
     formTeacher: 'Mrs. Tan Mei Lin',
     coFormTeacher: 'Mr. Wong Kai Ming',
     promotionStatus: 'Retained',
-    // 47 total school days − 19 absent (6 Non-VR + 5 Private VR + 8 MC) = 28
-    // present → 28/47 ≈ 60% attendance.
-    daysPresent: 28,
+    // 47 total school days − 44 absent (40 Non-VR + 2 Private VR + 2 MC) = 3
+    // present → 3/47 ≈ 6% attendance.
+    daysPresent: 3,
     totalSchoolDays: 47,
     teacherObservations: 'Struggles with attendance. Needs intensive support.',
     nextSteps: 'Home visit required, daily check-in system',
