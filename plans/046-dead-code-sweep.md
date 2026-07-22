@@ -38,13 +38,13 @@ maintainer explicitly approved deleting the `/preview-menu` design mockup
 Verified-dead files (each grep run 2026-07-19 with alias `@/` AND relative
 `./` import patterns; all zero importers):
 
-| File | Size | Verification grep (re-run before deleting) |
-|---|---|---|
-| `src/routes/_guest.preview-menu.tsx` | 984 lines | `grep -rn "preview-menu" src/ --include='*.ts*' \| grep -v _guest.preview-menu \| grep -v routeTree` → 0. It is a HeyTalia A/B/C design mockup reachable only by typing the URL; the dev-preview hub `src/routes/settings.tsx` links `skeleton-preview`/`error-preview`/`ds` but deliberately not this. **Maintainer approved deletion.** |
-| `src/data/intervention-config.ts` | 301 lines | `grep -rn "intervention-config\|getInterventions\|interventionRules\|InterventionPackage" src/ --include='*.ts*' \| grep -v "src/data/intervention-config"` → 0 |
-| `src/components/hdp/term-summary-panel.tsx` | 192 lines | `grep -rn "term-summary-panel\|TermSummaryPanel" src/ --include='*.ts*' \| grep -v term-summary-panel.tsx` → 0. Superseded by the IA flatten — `src/routes/reports.summary.tsx` documents that Term Summary content now lives in the `/reports` "My students" tab. |
-| `public/report-templates/msf.docx` | 58 KB | `grep -rn "msf.docx" src/` → 0. The MSF template points at the PDF (`src/data/mock-agency-reports.ts:2178` → `/report-templates/msf.pdf`). Siblings `msf-probation.docx`/`msf-psv.docx` ARE referenced — do not touch them. |
-| `public/avatars/chloe.svg` | 3.5 KB | `grep -rn "chloe.svg\|avatars/" src/` → 0 asset refs (the only "chloe" hits are a test-helper name in `src/lib/hdp-comment-draft.test.ts`, unrelated). Delete the then-empty `public/avatars/` directory too. |
+| File                                        | Size      | Verification grep (re-run before deleting)                                                                                                                                                                                                                                                                                                |
+| ------------------------------------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/routes/_guest.preview-menu.tsx`        | 984 lines | `grep -rn "preview-menu" src/ --include='*.ts*' \| grep -v _guest.preview-menu \| grep -v routeTree` → 0. It is a HeyTalia A/B/C design mockup reachable only by typing the URL; the dev-preview hub `src/routes/settings.tsx` links `skeleton-preview`/`error-preview`/`ds` but deliberately not this. **Maintainer approved deletion.** |
+| `src/data/intervention-config.ts`           | 301 lines | `grep -rn "intervention-config\|getInterventions\|interventionRules\|InterventionPackage" src/ --include='*.ts*' \| grep -v "src/data/intervention-config"` → 0                                                                                                                                                                           |
+| `src/components/hdp/term-summary-panel.tsx` | 192 lines | `grep -rn "term-summary-panel\|TermSummaryPanel" src/ --include='*.ts*' \| grep -v term-summary-panel.tsx` → 0. Superseded by the IA flatten — `src/routes/reports.summary.tsx` documents that Term Summary content now lives in the `/reports` "My students" tab.                                                                        |
+| `public/report-templates/msf.docx`          | 58 KB     | `grep -rn "msf.docx" src/` → 0. The MSF template points at the PDF (`src/data/mock-agency-reports.ts:2178` → `/report-templates/msf.pdf`). Siblings `msf-probation.docx`/`msf-psv.docx` ARE referenced — do not touch them.                                                                                                               |
+| `public/avatars/chloe.svg`                  | 3.5 KB    | `grep -rn "chloe.svg\|avatars/" src/` → 0 asset refs (the only "chloe" hits are a test-helper name in `src/lib/hdp-comment-draft.test.ts`, unrelated). Delete the then-empty `public/avatars/` directory too.                                                                                                                             |
 
 Route files are auto-registered in the generated `src/routeTree.gen.ts` —
 deleting `_guest.preview-menu.tsx` requires the route tree to regenerate,
@@ -84,12 +84,12 @@ test-importer check applies to every symbol above.
 
 ## Commands you will need
 
-| Purpose | Command | Expected |
-|---|---|---|
-| Typecheck | `bunx tsc --noEmit` | 76 baseline errors at planning; 0 new (may DROP if deleted files carried errors — record before/after) |
-| Tests | `bunx vitest run` | 190 pass / 6 fail baseline (flaky `imported-columns.test.ts`); no new failures |
-| Build | `bun run build` | exit 0 |
-| Dead-export re-check | `bunx --bun knip@5 --no-progress` | shrinking "Unused exports" list |
+| Purpose              | Command                           | Expected                                                                                               |
+| -------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Typecheck            | `bunx tsc --noEmit`               | 76 baseline errors at planning; 0 new (may DROP if deleted files carried errors — record before/after) |
+| Tests                | `bunx vitest run`                 | 190 pass / 6 fail baseline (flaky `imported-columns.test.ts`); no new failures                         |
+| Build                | `bun run build`                   | exit 0                                                                                                 |
+| Dead-export re-check | `bunx --bun knip@5 --no-progress` | shrinking "Unused exports" list                                                                        |
 
 ## Scope
 

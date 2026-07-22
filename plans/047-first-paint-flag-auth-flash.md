@@ -51,7 +51,7 @@ a render-seed mirror.
   (line ~47) and `logout` write sessionStorage.
 - `src/routes/__root.tsx` — `createRootRoute` with **no loader**; the non-guest
   tree nests `QueryClientProvider → AuthProvider → FeatureFlagProvider →
-  BreadcrumbProvider → HeyTaliaProvider → HdpCaptureProvider → SidebarProvider`
+BreadcrumbProvider → HeyTaliaProvider → HdpCaptureProvider → SidebarProvider`
   (~lines 169–203).
 - Server cookie API (verified in `node_modules` at planning time):
   `getCookie(name: string): string | undefined` is exported by
@@ -68,12 +68,12 @@ a render-seed mirror.
 
 ## Commands you will need
 
-| Purpose | Command | Expected |
-|---|---|---|
-| Typecheck | `bunx tsc --noEmit` | 0 new errors vs your recorded baseline (76 at planning) |
-| Tests | `bunx vitest run` | no new failures vs 190-pass/6-fail baseline (flaky `imported-columns.test.ts`) |
-| Build | `bun run build` | exit 0 |
-| Dev | `bun run dev` | port 3000 (SSR dev server) |
+| Purpose   | Command             | Expected                                                                       |
+| --------- | ------------------- | ------------------------------------------------------------------------------ |
+| Typecheck | `bunx tsc --noEmit` | 0 new errors vs your recorded baseline (76 at planning)                        |
+| Tests     | `bunx vitest run`   | no new failures vs 190-pass/6-fail baseline (flaky `imported-columns.test.ts`) |
+| Build     | `bun run build`     | exit 0                                                                         |
+| Dev       | `bun run dev`       | port 3000 (SSR dev server)                                                     |
 
 ## Scope
 
@@ -137,10 +137,12 @@ export const Route = createRootRoute({
     try {
       const raw = getCookie(FEATURE_FLAGS_STORAGE_KEY)
       flags = raw ? JSON.parse(decodeURIComponent(raw)) : null
-    } catch { flags = null }
+    } catch {
+      flags = null
+    }
     return {
       seed: {
-        flags,                                     // Partial<FeatureFlags> | null
+        flags, // Partial<FeatureFlags> | null
         loggedIn: getCookie('auth_session') === 'true',
       },
     }
@@ -182,7 +184,7 @@ With `bun run dev`:
    Expected: **no hydration-mismatch warning**, and no visible sidebar pop
    (Posts absent, Meetings present from the first paint — verify by
    screenshotting or by checking the SSR HTML: `curl -s localhost:3000/ |
-   grep -c "Meetings"` → ≥1, `grep -c ">Posts<"` → 0).
+grep -c "Meetings"` → ≥1, `grep -c ">Posts<"` → 0).
 3. Log in (mock login), hard-reload → header renders the logged-in state
    with no "Sign in" flash.
 4. Clear cookies but keep localStorage (devtools → Application) →
