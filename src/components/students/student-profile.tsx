@@ -1117,7 +1117,7 @@ export function StudentProfile({
                   <>
                     {student.conduct}{' '}
                     <span className="font-normal text-muted-foreground">
-                      (2025, Overall)
+                      ({student.conductPeriod ?? '2025, Overall'})
                     </span>
                   </>
                 ) : (
@@ -1186,14 +1186,30 @@ export function StudentProfile({
                       <p className="mb-2 text-sm font-medium">Remarks</p>
                       <div className="rounded-lg bg-muted px-4 py-3">
                         <ul className="space-y-1.5 text-sm">
-                          <li className="flex items-start gap-2">
-                            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-foreground" />
-                            <span>
-                              {student.counsellingComplexity === 'Complex cases'
-                                ? 'Physical Bullying (aggressor) x 1 (latest 15 Aug 2026)'
-                                : 'Disruptive Behaviour x 1 (latest 2 Aug 2025)'}
-                            </span>
-                          </li>
+                          {student.counsellingDetails &&
+                          student.counsellingDetails.length > 0 ? (
+                            student.counsellingDetails.map((d, i) => (
+                              <li
+                                key={i}
+                                className="flex items-start gap-2"
+                              >
+                                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-foreground" />
+                                <span>
+                                  {d.type} x {d.count} (latest {d.latestDate})
+                                </span>
+                              </li>
+                            ))
+                          ) : (
+                            <li className="flex items-start gap-2">
+                              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-foreground" />
+                              <span>
+                                {student.counsellingComplexity ===
+                                'Complex cases'
+                                  ? 'Physical Bullying (aggressor) x 1 (latest 15 Aug 2026)'
+                                  : 'Disruptive Behaviour x 1 (latest 2 Aug 2025)'}
+                              </span>
+                            </li>
+                          )}
                         </ul>
                       </div>
                     </div>
