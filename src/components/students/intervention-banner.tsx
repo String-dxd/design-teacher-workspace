@@ -19,9 +19,9 @@ export function InterventionBanner({ student }: InterventionBannerProps) {
   const copy = isAlice
     ? {
         header: 'Possible support areas',
-        title: 'LTA and Low mood',
+        title: 'LTA and low mood',
         description:
-          'Changes to build on: attendance improved; friends selected increased from 1 to 3.',
+          'Signs to build on: attendance is improving, and Alice now names three friends, up from one.',
         cta: 'Explore support',
       }
     : {
