@@ -40,6 +40,10 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { InterventionBanner } from '@/components/students/intervention-banner'
+import {
+  TrendIndicator,
+  getTrend,
+} from '@/components/students/student-table'
 import { StudentRiver } from '@/components/hdp/student-river'
 import { CURRENT_TEACHER } from '@/data/hdp'
 import { useFeatureFlags } from '@/lib/feature-flags'
@@ -822,15 +826,16 @@ export function StudentProfile({
       <FieldWithDetails
         label="CCA attendance (%)"
         value={
-          <>
-            {primaryCca.attendance}%{' '}
+          <span className="inline-flex items-center gap-1">
+            <span className="tabular-nums">{primaryCca.attendance}%</span>
+            <TrendIndicator trend={getTrend(`${student.id}-cca`)} />
             <span className="font-normal text-muted-foreground">
               ({primaryCca.name})
-            </span>{' '}
+            </span>
             <span className="font-normal text-muted-foreground">
               + {extraCcaCount} more
             </span>
-          </>
+          </span>
         }
         tooltip="School Cockpit • Term 2, 2026"
         sideSheetTitle="CCA attendance (%)"
@@ -854,12 +859,13 @@ export function StudentProfile({
       <Field
         label="CCA attendance (%)"
         value={
-          <>
-            {primaryCca.attendance}%{' '}
+          <span className="inline-flex items-center gap-1">
+            <span className="tabular-nums">{primaryCca.attendance}%</span>
+            <TrendIndicator trend={getTrend(`${student.id}-cca`)} />
             <span className="font-normal text-muted-foreground">
               ({primaryCca.name})
             </span>
-          </>
+          </span>
         }
         tooltip="School Cockpit • Term 2, 2026"
       />
@@ -1014,11 +1020,19 @@ export function StudentProfile({
               <Field
                 label="Attendance (%)"
                 value={
-                  student.totalSchoolDays > 0
-                    ? Math.round(
-                        (student.daysPresent / student.totalSchoolDays) * 100,
-                      )
-                    : 0
+                  <span className="inline-flex items-center gap-1">
+                    <span className="tabular-nums">
+                      {student.totalSchoolDays > 0
+                        ? Math.round(
+                            (student.daysPresent / student.totalSchoolDays) *
+                              100,
+                          )
+                        : 0}
+                    </span>
+                    <TrendIndicator
+                      trend={getTrend(`${student.id}-attendance`)}
+                    />
+                  </span>
                 }
                 tooltip="School Cockpit • Term 2, 2026"
               />
@@ -1079,11 +1093,19 @@ export function StudentProfile({
                 <Field
                   label="Attendance (%)"
                   value={
-                    student.totalSchoolDays > 0
-                      ? Math.round(
-                          (student.daysPresent / student.totalSchoolDays) * 100,
-                        )
-                      : 0
+                    <span className="inline-flex items-center gap-1">
+                      <span className="tabular-nums">
+                        {student.totalSchoolDays > 0
+                          ? Math.round(
+                              (student.daysPresent / student.totalSchoolDays) *
+                                100,
+                            )
+                          : 0}
+                      </span>
+                      <TrendIndicator
+                        trend={getTrend(`${student.id}-attendance`)}
+                      />
+                    </span>
                   }
                   tooltip="School Cockpit • Term 2, 2026"
                 />

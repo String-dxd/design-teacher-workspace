@@ -278,11 +278,13 @@ export const mockStudents: Array<Student> = [
         latestDate: '29 May 2026',
       },
     ],
-    absences: 40,
+    absences: 20,
     privateVrAbsences: 2,
     mcAbsences: 2,
     lateComing: 3,
-    ccaMissed: 3,
+    // CCA attendance renders as 100 − ccaMissed × 5, so 12 → 40% (low, matching
+    // her overall attendance).
+    ccaMissed: 12,
     riskIndicators: 4,
     riskIndicatorHistory: [
       {
@@ -343,10 +345,10 @@ export const mockStudents: Array<Student> = [
     formTeacher: 'Mrs. Tan Mei Lin',
     coFormTeacher: 'Mr. Wong Kai Ming',
     promotionStatus: 'Retained',
-    // 47 total school days − 44 absent (40 Non-VR + 2 Private VR + 2 MC) = 3
-    // present → 3/47 ≈ 6% attendance.
-    daysPresent: 3,
-    totalSchoolDays: 47,
+    // 40 total school days − 24 absent (20 Non-VR + 2 Private VR + 2 MC) = 16
+    // present → 16/40 = 40% attendance.
+    daysPresent: 16,
+    totalSchoolDays: 40,
     teacherObservations: 'Struggles with attendance. Needs intensive support.',
     nextSteps: 'Home visit required, daily check-in system',
     subjectScores: [
