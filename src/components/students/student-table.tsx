@@ -1,6 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { ChevronDown, ChevronLeft, ChevronRight, FileText } from 'lucide-react'
+import {
+  ArrowDownRight,
+  ArrowUpRight,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  FileText,
+  Minus,
+} from 'lucide-react'
 
 import { ColumnHeaderMenu } from './column-header-menu'
 import { CURRENT_TERM_KEY } from './column-visibility-popover'
@@ -35,6 +43,45 @@ import {
   getMatchedCriteria,
 } from '@/lib/profile-group-evaluation'
 import { filterFieldConfigs } from '@/data/filter-config'
+
+export type Trend = 'up' | 'down' | 'stable'
+
+// Deterministic per-student, per-metric trend so the arrows are stable across
+// renders while still showing a realistic mix of increasing/decreasing/stable.
+export function getTrend(seed: string): Trend {
+  // Alice De Silva (id '118') is a curated showcase profile whose narrative is
+  // one of improvement (see InterventionBanner "attendance improved") — force
+  // her attendance and CCA trends to increasing.
+  if (seed === '118-attendance' || seed === '118-cca') return 'up'
+  let h = 0
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0
+  const m = h % 3
+  return m === 0 ? 'up' : m === 1 ? 'down' : 'stable'
+}
+
+// Increasing → lime, decreasing → crimson, no change → neutral flat line (TW DS colors).
+export function TrendIndicator({ trend }: { trend: Trend }) {
+  if (trend === 'up')
+    return (
+      <ArrowUpRight
+        className="h-3.5 w-3.5 shrink-0 text-lime-11"
+        aria-label="Increasing"
+      />
+    )
+  if (trend === 'down')
+    return (
+      <ArrowDownRight
+        className="h-3.5 w-3.5 shrink-0 text-crimson-11"
+        aria-label="Decreasing"
+      />
+    )
+  return (
+    <Minus
+      className="h-3.5 w-3.5 shrink-0 text-slate-11"
+      aria-label="No change"
+    />
+  )
+}
 
 interface StudentTableProps {
   students: Array<Student>
@@ -831,17 +878,25 @@ export function StudentTable({
           const d = getTermlyData(student, selectedTermKey)
           return (
             <TableCell>
-              {d.totalSchoolDays > 0
-                ? Math.round((d.daysPresent / d.totalSchoolDays) * 100)
-                : 0}
-              %
+              <span className="inline-flex items-center gap-1 tabular-nums">
+                {d.totalSchoolDays > 0
+                  ? Math.round((d.daysPresent / d.totalSchoolDays) * 100)
+                  : 0}
+                %
+                <TrendIndicator trend={getTrend(`${student.id}-attendance`)} />
+              </span>
             </TableCell>
           )
         })()}
       {isVisible('lateComing') && <TableCell>{student.lateComing}</TableCell>}
       {isVisible('absences') && <TableCell>{student.absences}</TableCell>}
       {isVisible('ccaMissed') && (
-        <TableCell>{100 - student.ccaMissed * 5}%</TableCell>
+        <TableCell>
+          <span className="inline-flex items-center gap-1 tabular-nums">
+            {100 - student.ccaMissed * 5}%
+            <TrendIndicator trend={getTrend(`${student.id}-cca`)} />
+          </span>
+        </TableCell>
       )}
       {isVisible('conduct') && <TableCell>{student.conduct}</TableCell>}
       {isVisible('offences') && (

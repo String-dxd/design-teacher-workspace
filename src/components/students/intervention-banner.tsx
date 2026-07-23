@@ -3,6 +3,7 @@ import { Link } from '@tanstack/react-router'
 
 import type { Student } from '@/types/student'
 
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 
 interface InterventionBannerProps {
@@ -53,7 +54,14 @@ export function InterventionBanner({ student }: InterventionBannerProps) {
 
       {/* Content */}
       <div className="mt-3">
-        <h3 className="text-sm font-semibold text-foreground">{copy.title}</h3>
+        <h3
+          className={cn(
+            'font-semibold text-foreground',
+            isAlice ? 'text-base' : 'text-sm',
+          )}
+        >
+          {copy.title}
+        </h3>
         <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
           {copy.description}
         </p>
