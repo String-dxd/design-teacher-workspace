@@ -259,7 +259,7 @@ export const mockStudents: Array<Student> = [
     // Duplicated from Lam Wei Jie (id '3') as a Secondary 4 record. Mock values
     // mirror Lam Wei Jie for now; adjust as real data becomes available.
     id: '118',
-    name: 'Alice De Silva',
+    name: 'Alice de Silva',
     class: '4A',
     cca: 'Volleyball',
     schoolName: 'Bandung Secondary School',
