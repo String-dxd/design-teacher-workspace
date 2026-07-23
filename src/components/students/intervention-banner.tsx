@@ -11,10 +11,10 @@ interface InterventionBannerProps {
 }
 
 export function InterventionBanner({ student }: InterventionBannerProps) {
-  // Lam Wei Jie (id '3') and Alice De Silva (id '118', duplicated from Lam Wei Jie)
+  // Lam Wei Jie (id '3') and Alice de Silva (id '118', duplicated from Lam Wei Jie)
   if (student.id !== '3' && student.id !== '118') return null
 
-  // Alice De Silva carries updated copy; Lam Wei Jie keeps the original wording.
+  // Alice de Silva carries updated copy; Lam Wei Jie keeps the original wording.
   const isAlice = student.id === '118'
   const copy = isAlice
     ? {

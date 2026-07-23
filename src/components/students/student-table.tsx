@@ -49,7 +49,7 @@ export type Trend = 'up' | 'down' | 'stable'
 // Deterministic per-student, per-metric trend so the arrows are stable across
 // renders while still showing a realistic mix of increasing/decreasing/stable.
 export function getTrend(seed: string): Trend {
-  // Alice De Silva (id '118') is a curated showcase profile whose narrative is
+  // Alice de Silva (id '118') is a curated showcase profile whose narrative is
   // one of improvement (see InterventionBanner "attendance improved") — force
   // her attendance and CCA trends to increasing.
   if (seed === '118-attendance' || seed === '118-cca') return 'up'
