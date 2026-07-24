@@ -1,6 +1,6 @@
 {
   "project": "moe-teacher-workspace",
-  "lastUpdated": "2026-07-08T11:25:00.000Z",
+  "lastUpdated": "2026-07-24T00:00:00.000Z",
   "todos": [
     {
       "id": "tw-001",
@@ -385,6 +385,14 @@
       "status": "completed",
       "createdAt": "2026-07-09T02:55:37.000Z",
       "completedAt": "2026-07-09T02:55:37.000Z"
+    },
+    {
+      "id": "tw-042",
+      "title": "AI Draft for the post composer (with & without response)",
+      "description": "Add an in-form 'AI Draft' button to the New Post composer (both view-only and with-response) that opens a template picker (Overseas Learning Trip, Local Learning Journey, Event Notice, Term Update Letter) and fills content + settings — title, description, response type, due date, reminder, optional follow-up — never recipients (ADR-0002). Pre-confirm before overwriting a non-empty form (CMP-2); loading/success/error states (CMP-3, ?aiFail=1 hook); focus-to-Title + 'Drafted with AI · Example content' note (A11Y-11, CNT-4); view-only offers Switch-to-Yes/No. Shared engine src/lib/post-ai-draft.ts; HeyTalia delegates to it (ADR-0001). Decision record docs/decisions/post-ai-draft.md.",
+      "status": "completed",
+      "createdAt": "2026-07-24T00:00:00.000Z",
+      "completedAt": "2026-07-24T00:00:00.000Z"
     }
   ]
 }

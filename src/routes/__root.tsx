@@ -33,32 +33,16 @@ import { HeyTaliaPanel } from '@/components/heytalia/heytalia-panel'
 import { HeyTaliaProvider } from '@/components/heytalia/heytalia-context'
 import { HdpCaptureProvider, HdpShell } from '@/components/hdp/hdp-shell'
 
-const AUTO_COLLAPSE_ROUTES = [
-  '/announcements',
-  '/meetings',
-  '/groups',
-  '/reports',
-  '/calendar',
-]
-
-function SidebarAutoCollapse() {
+// Close the off-canvas drawer on phones after navigating. Desktop/tablet
+// keep whatever expand/collapse state the user last set (persisted in
+// localStorage by SidebarProvider), so we never force-collapse here.
+function MobileSidebarAutoClose() {
   const pathname = useRouterState({ select: (s) => s.location.pathname })
-  const { collapseSidebar } = useSidebar()
-  const prevPathnameRef = React.useRef<string | null>(null)
+  const { isMobile, setOpenMobile } = useSidebar()
 
   React.useEffect(() => {
-    const prev = prevPathnameRef.current
-    prevPathnameRef.current = pathname
-
-    const inSection = AUTO_COLLAPSE_ROUTES.some((r) => pathname.startsWith(r))
-    const wasInSection =
-      prev !== null && AUTO_COLLAPSE_ROUTES.some((r) => prev.startsWith(r))
-
-    // Only collapse when crossing into a section from outside
-    if (inSection && !wasInSection) {
-      collapseSidebar()
-    }
-  }, [pathname, collapseSidebar])
+    if (isMobile) setOpenMobile(false)
+  }, [pathname, isMobile, setOpenMobile])
 
   return null
 }
@@ -224,7 +208,7 @@ function RootComponent() {
               <HeyTaliaProvider>
                 <HdpCaptureProvider>
                   <SidebarProvider>
-                    <SidebarAutoCollapse />
+                    <MobileSidebarAutoClose />
                     <AppSidebar />
                     <SidebarInset className="h-screen overflow-hidden">
                       <div

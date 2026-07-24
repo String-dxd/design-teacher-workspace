@@ -18,6 +18,7 @@ import {
   ThumbsUp,
 } from 'lucide-react'
 import { useHeyTalia } from './heytalia-context'
+import type { DraftBlock } from '@/lib/post-ai-draft'
 import { cn } from '@/lib/utils'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { Input } from '@/components/ui/input'
@@ -26,6 +27,11 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
+import {
+  POST_TEMPLATES,
+  buildTopicDraftBlock,
+  templateDraftBlock,
+} from '@/lib/post-ai-draft'
 
 // ---------------------------------------------------------------------------
 // Colour constants
@@ -49,12 +55,6 @@ const W_MAX = 720
 // ---------------------------------------------------------------------------
 type PageContext = 'list' | 'create' | 'detail' | 'other'
 
-interface DraftBlock {
-  title: string
-  body: string
-  warning: string
-}
-
 interface Message {
   role: 'user' | 'assistant'
   text: string
@@ -74,35 +74,9 @@ function usePageContext(): PageContext {
 }
 
 // ---------------------------------------------------------------------------
-// Draft builder
+// Template chips (shared with the composer's AI Draft picker — one engine)
 // ---------------------------------------------------------------------------
-function buildDraft(topic: string): DraftBlock {
-  const t = topic.charAt(0).toUpperCase() + topic.slice(1)
-  return {
-    title: t,
-    body: [
-      `Dear Parents,`,
-      ``,
-      `We would like to inform you about our upcoming **${t}**.`,
-      ``,
-      `Please take note of the following:`,
-      `• Date: [For input: date]`,
-      `• Venue: [For input: location]`,
-      `• Reporting time: [For input: time]`,
-      `• Return time: [For input: time]`,
-      ``,
-      `Students should wear [For input: attire] and bring [For input: items to bring].`,
-      ``,
-      `Please acknowledge by [For input: deadline date].`,
-      ``,
-      `For enquiries, contact [For input: teacher name] at [For input: email].`,
-      ``,
-      `Thank you.`,
-    ].join('\n'),
-    warning:
-      'Your draft is missing some details. Do check out the [For input] fields and use the Edit tool to update them. Hyperlinks are **not supported** in the Description field when using "Use draft".',
-  }
-}
+const TEMPLATE_CHIP_NAMES = POST_TEMPLATES.map((t) => t.name)
 
 // ---------------------------------------------------------------------------
 // Seed
@@ -117,7 +91,7 @@ const SEED: Record<
 > = {
   list: {
     greeting: "Hi! I'm HeyTalia. What would you like to do today?",
-    chips: ['Create announcement', 'Create form'],
+    chips: ['Create announcement', 'Create form', ...TEMPLATE_CHIP_NAMES],
     demoReplies: {
       'Create announcement': '__ask_topic__',
       'Create form':
@@ -127,7 +101,7 @@ const SEED: Record<
   create: {
     greeting:
       'I can help you draft or improve this announcement. What do you need?',
-    chips: ['Create announcement', 'Create form'],
+    chips: ['Create announcement', 'Create form', ...TEMPLATE_CHIP_NAMES],
     demoReplies: {
       'Create announcement': '__ask_topic__',
       'Create form':
@@ -274,7 +248,23 @@ export function HeyTaliaPanel() {
           {
             role: 'assistant',
             text: "Here's your **Announcement** draft:",
-            draft: buildDraft(text),
+            draft: buildTopicDraftBlock(text),
+          },
+        ])
+      }, 1100)
+      return
+    }
+
+    const tpl = POST_TEMPLATES.find((t) => t.name === text)
+    if (tpl) {
+      setTimeout(() => {
+        setIsTyping(false)
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: 'assistant',
+            text: `Here's your **${tpl.name}** draft:`,
+            draft: templateDraftBlock(tpl.id),
           },
         ])
       }, 1100)

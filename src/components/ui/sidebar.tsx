@@ -25,6 +25,7 @@ import {
 import { useIsPhone, useIsTablet } from '@/hooks/use-mobile'
 
 const SIDEBAR_STORAGE_KEY = 'sidebar_state'
+const SIDEBAR_TABLET_STORAGE_KEY = 'sidebar_tablet_state'
 const SIDEBAR_WIDTH = '16rem'
 const SIDEBAR_WIDTH_MOBILE = '18rem'
 const SIDEBAR_WIDTH_ICON = '4.5rem'
@@ -38,7 +39,6 @@ type SidebarContextProps = {
   setOpenMobile: (open: boolean) => void
   isMobile: boolean
   toggleSidebar: () => void
-  collapseSidebar: () => void
 }
 
 const SidebarContext = React.createContext<SidebarContextProps | null>(null)
@@ -69,18 +69,29 @@ function SidebarProvider({
   const isMobile = useIsPhone()
   const isTablet = useIsTablet()
   const [openMobile, setOpenMobile] = React.useState(false)
-  // Tablet shows the icon rail by default but can be expanded on demand,
-  // kept separate from the persisted desktop open/closed preference.
-  const [tabletExpanded, setTabletExpanded] = React.useState(false)
+  // Tablet shows the icon rail by default but can be expanded on demand. The
+  // expand choice is persisted (seeded hydration-safe in the layout effect
+  // below), so once expanded it is remembered across reloads — like the desktop
+  // open/closed preference — and never silently reverts to the rail.
+  const [tabletExpanded, _setTabletExpanded] = React.useState(false)
+  const setTabletExpanded = React.useCallback(
+    (value: boolean | ((prev: boolean) => boolean)) => {
+      const next = typeof value === 'function' ? value(tabletExpanded) : value
+      _setTabletExpanded(next)
+      localStorage.setItem(SIDEBAR_TABLET_STORAGE_KEY, String(next))
+    },
+    [tabletExpanded],
+  )
 
   // This is the internal state of the sidebar.
   // We use openProp and setOpenProp for control from outside the component.
-  const [_open, _setOpen] = React.useState(() => {
-    if (typeof window === 'undefined') return defaultOpen
-    const stored = localStorage.getItem(SIDEBAR_STORAGE_KEY)
-    if (stored === null) return defaultOpen
-    return stored === 'true'
-  })
+  // Always seed with defaultOpen — the same value the server renders — so the
+  // initial client (hydration) render matches. The persisted preference is
+  // applied in the useLayoutEffect below. Reading localStorage in this
+  // initializer instead would make hydration compute a value the server never
+  // rendered; React leaves that attribute mismatch unpatched and the saved
+  // state is silently ignored.
+  const [_open, _setOpen] = React.useState(defaultOpen)
   const open = openProp ?? _open
   const setOpen = React.useCallback(
     (value: boolean | ((value: boolean) => boolean)) => {
@@ -101,23 +112,21 @@ function SidebarProvider({
     if (isMobile) return setOpenMobile((prev) => !prev)
     if (isTablet) return setTabletExpanded((prev) => !prev)
     return setOpen((prev) => !prev)
-  }, [isMobile, isTablet, setOpen, setOpenMobile])
+  }, [isMobile, isTablet, setOpen, setOpenMobile, setTabletExpanded])
 
-  // Collapse without toggling — safe to call even when already collapsed.
-  const collapseSidebar = React.useCallback(() => {
-    if (isMobile) return
-    if (isTablet) setTabletExpanded(false)
-    else setOpen(false)
-  }, [isMobile, isTablet, setOpen])
-
-  // Sync sidebar state from localStorage after hydration (SSR returns defaultOpen,
-  // and React hydration skips re-running useState initializers).
-  // useLayoutEffect runs synchronously before paint, avoiding a visible flash.
+  // Apply the persisted preference after hydration. The initial render uses
+  // defaultOpen (matching the server), so this becomes a real state change
+  // that patches the DOM. useLayoutEffect runs synchronously before paint,
+  // so switching to the stored state never causes a visible flash.
   React.useLayoutEffect(() => {
     if (openProp !== undefined) return
     const stored = localStorage.getItem(SIDEBAR_STORAGE_KEY)
     if (stored !== null) {
       _setOpen(stored === 'true')
+    }
+    const storedTablet = localStorage.getItem(SIDEBAR_TABLET_STORAGE_KEY)
+    if (storedTablet !== null) {
+      _setTabletExpanded(storedTablet === 'true')
     }
   }, [openProp])
 
@@ -153,7 +162,6 @@ function SidebarProvider({
       openMobile,
       setOpenMobile,
       toggleSidebar,
-      collapseSidebar,
     }),
     [
       state,
@@ -163,7 +171,6 @@ function SidebarProvider({
       openMobile,
       setOpenMobile,
       toggleSidebar,
-      collapseSidebar,
     ],
   )
 

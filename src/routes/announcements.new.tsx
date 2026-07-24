@@ -16,12 +16,16 @@ import {
   FileText,
   ImagePlus,
   Info,
+  Loader2,
   Lock,
   MapPin,
   MoreHorizontal,
   Paperclip,
+  Plane,
   Plus,
+  RefreshCw,
   Send,
+  Sparkles,
   User,
   X,
 } from 'lucide-react'
@@ -37,6 +41,7 @@ import type {
 import type { FormQuestion, ReminderType, ResponseType } from '@/types/form'
 import type { SelectedEntity } from '@/components/comms/entity-selector'
 import type { FileMeta } from '@/lib/draft-storage'
+import type { PostTemplateId } from '@/lib/post-ai-draft'
 import { PageHeader } from '@/components/page-header'
 import { QuestionBuilder } from '@/components/comms/question-builder'
 import { useSetBreadcrumbs } from '@/hooks/use-breadcrumbs'
@@ -70,6 +75,27 @@ import {
   loadDraft,
   saveDraft,
 } from '@/lib/draft-storage'
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { Badge } from '@/components/ui/badge'
+import { POST_TEMPLATES, buildPostDraft } from '@/lib/post-ai-draft'
 
 export const Route = createFileRoute('/announcements/new')({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -77,6 +103,12 @@ export const Route = createFileRoute('/announcements/new')({
     responseType:
       typeof search.responseType === 'string' ? search.responseType : undefined,
     resume: search.resume === 'true',
+    // Demo-only hook: ?aiFail=1 forces the AI Draft error state for verification.
+    aiFail:
+      search.aiFail === '1' ||
+      search.aiFail === 1 ||
+      search.aiFail === 'true' ||
+      search.aiFail === true,
   }),
   component: NewAnnouncementPage,
 })
@@ -963,6 +995,7 @@ function NewAnnouncementPage() {
     edit: editId,
     responseType: initialResponseType,
     resume,
+    aiFail,
   } = Route.useSearch()
   const isEditing = Boolean(editId)
   const existingAnnouncement = editId
@@ -1053,6 +1086,91 @@ function NewAnnouncementPage() {
       setEventEnd('')
       setEventEndTime('')
       setVenue('')
+    }
+  }
+
+  // ── AI Draft ──────────────────────────────────────────────────────────────
+  const [showAiDraft, setShowAiDraft] = useState(false)
+  const [aiTemplateId, setAiTemplateId] = useState<PostTemplateId | null>(null)
+  const [aiStatus, setAiStatus] = useState<'idle' | 'loading' | 'error'>('idle')
+  const [aiPendingMode, setAiPendingMode] = useState<'full' | 'text-only'>(
+    'full',
+  )
+  const [aiConfirmOpen, setAiConfirmOpen] = useState(false)
+  const [aiDrafted, setAiDrafted] = useState(false)
+  const [aiNoteDismissed, setAiNoteDismissed] = useState(false)
+
+  const aiSelectedTemplate = POST_TEMPLATES.find((t) => t.id === aiTemplateId)
+  // In view-only, a response template must switch modes — offered explicitly.
+  const aiNeedsSwitch =
+    responseType === 'view-only' &&
+    !!aiSelectedTemplate &&
+    aiSelectedTemplate.responseKind !== 'view-only'
+
+  function addDaysISO(days: number): string {
+    const d = new Date()
+    d.setDate(d.getDate() + days)
+    const pad = (n: number) => String(n).padStart(2, '0')
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+  }
+
+  function aiFormHasContent(): boolean {
+    return (
+      title.trim() !== '' ||
+      !isDescriptionEmpty(description) ||
+      questions.length > 0 ||
+      venue.trim() !== '' ||
+      dueDate !== ''
+    )
+  }
+
+  function applyAiDraft(id: PostTemplateId, mode: 'full' | 'text-only') {
+    const draft = buildPostDraft(id)
+    setTitle(draft.title)
+    setDescription(draft.descriptionHtml)
+    if (mode === 'full' && draft.responseType !== 'view-only') {
+      setResponseType(draft.responseType)
+      setQuestions(draft.questions ?? [])
+      if (draft.dueDateOffsetDays != null) {
+        setDueDate(addDaysISO(draft.dueDateOffsetDays))
+        if (draft.reminderOffsetDaysBeforeDue != null) {
+          setReminderType('one-time')
+          setReminderDate(
+            addDaysISO(
+              draft.dueDateOffsetDays - draft.reminderOffsetDaysBeforeDue,
+            ),
+          )
+        }
+      }
+    }
+  }
+
+  function runAiDraft(id: PostTemplateId, mode: 'full' | 'text-only') {
+    setAiConfirmOpen(false)
+    setAiStatus('loading')
+    setTimeout(() => {
+      if (aiFail) {
+        setAiStatus('error')
+        return
+      }
+      applyAiDraft(id, mode)
+      setAiStatus('idle')
+      setShowAiDraft(false)
+      setAiTemplateId(null)
+      setAiDrafted(true)
+      setAiNoteDismissed(false)
+      // A11Y-11: context replacement — move focus to the start of the filled form.
+      setTimeout(() => document.getElementById('title')?.focus(), 60)
+    }, 1200)
+  }
+
+  function beginAiDraft(mode: 'full' | 'text-only') {
+    if (!aiTemplateId) return
+    setAiPendingMode(mode)
+    if (aiFormHasContent()) {
+      setAiConfirmOpen(true)
+    } else {
+      runAiDraft(aiTemplateId, mode)
     }
   }
 
@@ -1667,8 +1785,8 @@ function NewAnnouncementPage() {
   return (
     <div className="flex min-h-screen flex-col bg-muted">
       {/* Sticky header */}
-      <div className="sticky top-0 z-10 bg-background">
-        {/* Top bar */}
+      <div className="sticky top-14 z-20 bg-background">
+        {/* Top bar — sticks just below the app header (h-14) so the actions stay reachable while scrolling */}
         <PageHeader
           title={isEditing ? 'Edit Post' : 'New Post'}
           onClose={() =>
@@ -1695,6 +1813,22 @@ function NewAnnouncementPage() {
                   <span className="text-muted-foreground">Draft</span>
                 ) : null}
               </div>
+
+              {/* AI Draft — hidden when editing a posted post */}
+              {!isEditingPosted && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setAiStatus('idle')
+                    setShowAiDraft(true)
+                  }}
+                  className="gap-1.5"
+                >
+                  <Sparkles className="h-4 w-4" aria-hidden="true" />
+                  AI Draft
+                </Button>
+              )}
 
               {/* Preview toggle */}
               <Button
@@ -1877,6 +2011,33 @@ function NewAnnouncementPage() {
         >
           {/* Form sections */}
           <div className="space-y-6">
+            {/* AI Draft note — shown after a template fills the form */}
+            {aiDrafted && !aiNoteDismissed && (
+              <div className="flex items-start gap-3 rounded-xl border border-primary/30 bg-primary/[0.04] px-4 py-3 text-xs">
+                <Sparkles
+                  className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary"
+                  aria-hidden="true"
+                />
+                <div className="flex-1">
+                  <p className="font-semibold text-foreground">
+                    Drafted with AI · Example content
+                  </p>
+                  <p className="mt-0.5 text-muted-foreground">
+                    Review and edit the details — including anything marked [For
+                    input] — before you post.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setAiNoteDismissed(true)}
+                  className="-m-1.5 rounded p-1.5 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  aria-label="Dismiss AI draft note"
+                >
+                  <X className="h-3.5 w-3.5" aria-hidden="true" />
+                </button>
+              </div>
+            )}
+
             {/* Locked-fields notice — shown when editing a posted post */}
             {isEditingPosted && (
               <div className="flex items-start gap-3 rounded-xl border border-border bg-muted px-4 py-3 text-xs">
@@ -2737,9 +2898,10 @@ function NewAnnouncementPage() {
             )}
           </div>
 
-          {/* Preview pane — sticky alongside form on lg screens */}
+          {/* Preview pane — sticky alongside form on lg screens, offset below
+              the app header (56px) + the sticky action bar (~69px) */}
           {showPreview && (
-            <div className="lg:sticky lg:top-[60px]">
+            <div className="lg:sticky lg:top-[128px]">
               <AnnouncementPreview
                 title={title}
                 description={description}
@@ -2777,6 +2939,209 @@ function NewAnnouncementPage() {
         responseType={responseType}
         dueDate={dueDate}
       />
+
+      {/* AI Draft — template picker */}
+      <Dialog
+        open={showAiDraft}
+        onOpenChange={(open) => {
+          setShowAiDraft(open)
+          if (!open) {
+            setAiStatus('idle')
+            setAiTemplateId(null)
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>AI Draft</DialogTitle>
+            <DialogDescription>
+              Choose a template. We'll draft the post for you to review and edit
+              before posting.
+            </DialogDescription>
+          </DialogHeader>
+
+          {aiStatus === 'loading' ? (
+            <div className="flex flex-col items-center justify-center gap-3 py-10">
+              <Loader2
+                className="h-6 w-6 animate-spin text-primary"
+                aria-hidden="true"
+              />
+              <p className="text-sm text-muted-foreground" aria-live="polite">
+                Drafting your post…
+              </p>
+            </div>
+          ) : aiStatus === 'error' ? (
+            <div className="flex flex-col items-center gap-4 py-8 text-center">
+              <div role="alert">
+                <p className="text-sm font-semibold text-foreground">
+                  Couldn't draft the post
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Something interrupted the draft. Check your connection and try
+                  again.
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                autoFocus
+                className="gap-1.5"
+                onClick={() =>
+                  aiTemplateId && runAiDraft(aiTemplateId, aiPendingMode)
+                }
+              >
+                <RefreshCw className="h-4 w-4" aria-hidden="true" />
+                Try again
+              </Button>
+            </div>
+          ) : (
+            <>
+              <div
+                role="radiogroup"
+                aria-label="Post templates"
+                className="grid gap-2"
+              >
+                {POST_TEMPLATES.map((tpl) => {
+                  const Icon =
+                    tpl.iconKey === 'plane'
+                      ? Plane
+                      : tpl.iconKey === 'map-pin'
+                        ? MapPin
+                        : tpl.iconKey === 'calendar-days'
+                          ? CalendarDays
+                          : FileText
+                  const tag =
+                    tpl.responseKind === 'view-only'
+                      ? 'View-only'
+                      : tpl.responseKind === 'acknowledge'
+                        ? 'Acknowledge'
+                        : 'Yes or No'
+                  const selected = aiTemplateId === tpl.id
+                  return (
+                    <button
+                      key={tpl.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={selected}
+                      onClick={() => setAiTemplateId(tpl.id)}
+                      className={cn(
+                        'flex items-start gap-3 rounded-xl border p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                        selected
+                          ? 'border-primary bg-primary/[0.04] ring-1 ring-primary/20'
+                          : 'border-border hover:border-input hover:bg-muted',
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          'mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg',
+                          selected
+                            ? 'bg-primary/10 text-primary'
+                            : 'bg-muted text-muted-foreground',
+                        )}
+                      >
+                        <Icon className="h-4 w-4" aria-hidden="true" />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="flex items-center gap-2">
+                          <span className="text-sm font-semibold text-foreground">
+                            {tpl.name}
+                          </span>
+                          <Badge variant="secondary" className="font-medium">
+                            {tag}
+                          </Badge>
+                        </span>
+                        <span className="mt-0.5 block text-xs text-muted-foreground">
+                          {tpl.description}
+                        </span>
+                      </span>
+                      {selected && (
+                        <Check
+                          className="mt-1 h-4 w-4 shrink-0 text-primary"
+                          aria-hidden="true"
+                        />
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+
+              {aiNeedsSwitch && (
+                <p className="text-xs text-muted-foreground">
+                  This template collects parent responses. Drafting it will
+                  switch this post to Yes or No.
+                </p>
+              )}
+
+              <DialogFooter>
+                <DialogClose render={<Button variant="ghost" size="sm" />}>
+                  Cancel
+                </DialogClose>
+                {aiNeedsSwitch ? (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={!aiTemplateId}
+                      onClick={() => beginAiDraft('text-only')}
+                    >
+                      Draft as view-only
+                    </Button>
+                    <Button
+                      size="sm"
+                      disabled={!aiTemplateId}
+                      className="gap-1.5"
+                      onClick={() => beginAiDraft('full')}
+                    >
+                      <Sparkles className="h-4 w-4" aria-hidden="true" />
+                      Switch to Yes or No &amp; draft
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    size="sm"
+                    disabled={!aiTemplateId}
+                    className="gap-1.5"
+                    onClick={() => beginAiDraft('full')}
+                  >
+                    <Sparkles className="h-4 w-4" aria-hidden="true" />
+                    Draft post
+                  </Button>
+                )}
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* AI Draft — overwrite confirmation */}
+      <AlertDialog open={aiConfirmOpen} onOpenChange={setAiConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Replace what you&apos;ve written?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Drafting from a template will replace the title, details
+              {responseType !== 'view-only'
+                ? ', due date and any questions'
+                : ''}{' '}
+              you&apos;ve written. This can&apos;t be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel size="sm">Keep my draft</AlertDialogCancel>
+            <AlertDialogAction
+              size="sm"
+              variant="destructive"
+              onClick={() =>
+                aiTemplateId && runAiDraft(aiTemplateId, aiPendingMode)
+              }
+            >
+              Replace
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
