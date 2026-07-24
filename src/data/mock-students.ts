@@ -20,32 +20,19 @@ export const mockStudents: Array<Student> = [
     postSecEligibility: '572 ITE, 175 Poly',
     offences: 3,
     offenceDetails: [
-      { type: 'Truancy', count: 2, latestDate: '14 Sep 2025' },
-      { type: 'Disruptive behavior', count: 1, latestDate: '3 Mar 2025' },
+      { type: 'Truancy', count: 1, latestDate: '29 May 2026' },
     ],
     absences: 8,
     privateVrAbsences: 2,
     mcAbsences: 5,
     lateComing: 12,
     ccaMissed: 4,
-    riskIndicators: 3,
+    riskIndicators: 1,
     riskIndicatorHistory: [
       {
         year: 2026,
         term: 'Term 1',
-        indicators: [
-          'At risk of low mood',
-          'Lack of support and/or unwilling to seek help',
-          'Lack caring family relationship',
-        ],
-      },
-      {
-        year: 2025,
-        term: 'Term 4',
-        indicators: [
-          'Lack of support and/or unwilling to seek help',
-          'Lack caring family relationship',
-        ],
+        indicators: ['At risk of low mood'],
       },
       {
         year: 2025,
@@ -178,34 +165,24 @@ export const mockStudents: Array<Student> = [
     postSecEligibility: '404 ITE, 105 Poly',
     offences: 1,
     offenceDetails: [
-      { type: 'Bullying (verbal)', count: 1, latestDate: '3 Mar 2026' },
+      { type: 'Truancy', count: 1, latestDate: '29 May 2026' },
     ],
     absences: 15,
     privateVrAbsences: 5,
     mcAbsences: 8,
     lateComing: 5,
     ccaMissed: 3,
-    riskIndicators: 4,
+    riskIndicators: 1,
     riskIndicatorHistory: [
       {
         year: 2025,
         term: 'Term 2',
-        indicators: [
-          'At risk of low mood',
-          'Feeling numb',
-          'Low hope',
-          'Lack of support and/or unwilling to seek help',
-        ],
+        indicators: ['At risk of low mood'],
       },
       {
         year: 2025,
         term: 'Term 1',
-        indicators: [
-          'At risk of low mood',
-          'Feeling numb',
-          'Low hope',
-          'Lack caring family relationship',
-        ],
+        indicators: ['At risk of low mood'],
       },
     ],
     lowMoodFlagged: 'Yes',
@@ -272,11 +249,7 @@ export const mockStudents: Array<Student> = [
     postSecEligibility: '404 ITE, 105 Poly',
     offences: 1,
     offenceDetails: [
-      {
-        type: 'Cheating In Assessments/tests/exams',
-        count: 1,
-        latestDate: '29 May 2026',
-      },
+      { type: 'Truancy', count: 1, latestDate: '29 May 2026' },
     ],
     absences: 20,
     privateVrAbsences: 2,
@@ -285,27 +258,17 @@ export const mockStudents: Array<Student> = [
     // CCA attendance renders as 100 − ccaMissed × 5, so 12 → 40% (low, matching
     // her overall attendance).
     ccaMissed: 12,
-    riskIndicators: 4,
+    riskIndicators: 1,
     riskIndicatorHistory: [
       {
         year: 2025,
         term: 'Term 2',
-        indicators: [
-          'At risk of low mood',
-          'Feeling numb',
-          'Low hope',
-          'Lack of support and/or unwilling to seek help',
-        ],
+        indicators: ['At risk of low mood'],
       },
       {
         year: 2025,
         term: 'Term 1',
-        indicators: [
-          'At risk of low mood',
-          'Feeling numb',
-          'Low hope',
-          'Lack caring family relationship',
-        ],
+        indicators: ['At risk of low mood'],
       },
     ],
     lowMoodFlagged: 'Yes',
@@ -374,8 +337,7 @@ export const mockStudents: Array<Student> = [
     postSecEligibility: '722 ITE, 237 Poly',
     offences: 5,
     offenceDetails: [
-      { type: 'Truancy', count: 4, latestDate: '14 Sep 2025' },
-      { type: 'Theft', count: 1, latestDate: '21 Jan 2025' },
+      { type: 'Truancy', count: 1, latestDate: '29 May 2026' },
     ],
     absences: 2,
     privateVrAbsences: 0,
@@ -596,9 +558,7 @@ export const mockStudents: Array<Student> = [
     postSecEligibility: '470 ITE, 132 Poly',
     offences: 4,
     offenceDetails: [
-      { type: 'Bullying', count: 2, latestDate: '5 Nov 2025' },
-      { type: 'Vandalism', count: 1, latestDate: '14 Sep 2025' },
-      { type: 'Disruptive behavior', count: 1, latestDate: '3 Mar 2025' },
+      { type: 'Truancy', count: 1, latestDate: '29 May 2026' },
     ],
     absences: 5,
     privateVrAbsences: 1,
