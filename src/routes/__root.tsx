@@ -3,6 +3,8 @@ import {
   Outlet,
   Scripts,
   createRootRoute,
+  redirect,
+  useNavigate,
   useRouterState,
 } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
@@ -27,7 +29,12 @@ import {
   FeatureFlagProvider,
   parseSeedCookie,
 } from '@/lib/feature-flags'
-import { AUTH_COOKIE_KEY, AuthProvider } from '@/lib/auth'
+import {
+  AUTH_COOKIE_KEY,
+  AuthProvider,
+  isPublicPath,
+  useAuth,
+} from '@/lib/auth'
 import { BreadcrumbProvider } from '@/hooks/use-breadcrumbs'
 import { HeyTaliaPanel } from '@/components/heytalia/heytalia-panel'
 import { HeyTaliaProvider } from '@/components/heytalia/heytalia-context'
@@ -45,6 +52,26 @@ function MobileSidebarAutoClose() {
   }, [pathname, isMobile, setOpenMobile])
 
   return null
+}
+
+// Client-side counterpart of the loader's redirect: the root loader only
+// runs on the server (full-document loads), so a logged-out user reaching an
+// app route via a client-side navigation (e.g. after signing out) is bounced
+// here. This is a render GATE, not a passive effect — it withholds the
+// protected children until auth is confirmed, so protected content never
+// paints for a frame before the redirect. `replace` keeps the gated entry out
+// of history so Back doesn't oscillate with /login.
+function RequireAuthGate({ children }: { children: React.ReactNode }) {
+  const { isLoggedIn } = useAuth()
+  const navigate = useNavigate()
+
+  React.useEffect(() => {
+    if (!isLoggedIn) navigate({ to: '/login', replace: true })
+  }, [isLoggedIn, navigate])
+
+  if (!isLoggedIn) return null
+
+  return <>{children}</>
 }
 
 interface RootLoaderSeed {
@@ -78,7 +105,7 @@ const readSeedCookies = createServerFn({ method: 'GET' }).handler(
 
 export const Route = createRootRoute({
   loader: async (
-    _ctx,
+    ctx,
   ): Promise<{
     seed: RootLoaderSeed | null
   }> => {
@@ -89,6 +116,11 @@ export const Route = createRootRoute({
     if (typeof document !== 'undefined') return { seed: null }
 
     const seed = await readSeedCookies()
+
+    if (!seed.loggedIn && !isPublicPath(ctx.location.pathname)) {
+      throw redirect({ to: '/login' })
+    }
+
     return { seed }
   },
   notFoundComponent: NotFoundPage,
@@ -174,16 +206,23 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   const [queryClient] = React.useState(() => new QueryClient())
   const matches = useRouterState({ select: (s) => s.matches })
-  const isGuestRoute = matches.some((m) => m.routeId === '/_guest')
-  const isGlowRoute = matches.some((m) =>
-    (m as { pathname: string }).pathname?.startsWith('/glow/'),
-  )
+  // Derive the active pathname from the matched route, NOT location.pathname.
+  // `matches` stays in sync with what <Outlet> renders; location.pathname
+  // updates optimistically at the start of a navigation. Keying the branch on
+  // the latter would flip the provider tree (guest shell vs app shell) a frame
+  // before the Outlet swaps, so the outgoing page could render under the wrong
+  // branch and crash — e.g. StudentsPage losing BreadcrumbProvider on sign-out.
+  const activePathname =
+    (matches.at(-1) as { pathname?: string } | undefined)?.pathname ?? ''
   const isNotFoundRoute =
     matches.some((m) => m.routeId === '/$') ||
     matches.at(-1)?.status === 'notFound'
   const { seed } = Route.useLoaderData()
 
-  if (isGuestRoute || isGlowRoute || isNotFoundRoute) {
+  // Public routes (and the 404 page) render a minimal shell with no auth gate.
+  // Reuse the same isPublicPath predicate the server loader uses so the two
+  // sides can never drift out of sync.
+  if (isPublicPath(activePathname) || isNotFoundRoute) {
     return (
       <ErrorBoundary>
         <QueryClientProvider client={queryClient}>
@@ -203,33 +242,38 @@ function RootComponent() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <AuthProvider initialLoggedIn={seed?.loggedIn}>
-          <FeatureFlagProvider initialFlags={seed?.flags}>
-            <BreadcrumbProvider>
-              <HeyTaliaProvider>
-                <HdpCaptureProvider>
-                  <SidebarProvider>
-                    <MobileSidebarAutoClose />
-                    <AppSidebar />
-                    <SidebarInset className="h-screen overflow-hidden">
-                      <div
-                        data-scroll-container
-                        className="flex min-h-0 flex-1 flex-col overflow-auto bg-slate-1"
-                      >
-                        <AppHeader />
-                        <ErrorBoundary>
-                          <Outlet />
-                        </ErrorBoundary>
-                      </div>
-                    </SidebarInset>
-                    <HeyTaliaPanel />
-                    <HdpShell />
-                    <Toaster position="bottom-right" offset={{ bottom: 88 }} />
-                    <WelcomeModal />
-                  </SidebarProvider>
-                </HdpCaptureProvider>
-              </HeyTaliaProvider>
-            </BreadcrumbProvider>
-          </FeatureFlagProvider>
+          <RequireAuthGate>
+            <FeatureFlagProvider initialFlags={seed?.flags}>
+              <BreadcrumbProvider>
+                <HeyTaliaProvider>
+                  <HdpCaptureProvider>
+                    <SidebarProvider>
+                      <MobileSidebarAutoClose />
+                      <AppSidebar />
+                      <SidebarInset className="h-screen overflow-hidden">
+                        <div
+                          data-scroll-container
+                          className="flex min-h-0 flex-1 flex-col overflow-auto bg-slate-1"
+                        >
+                          <AppHeader />
+                          <ErrorBoundary>
+                            <Outlet />
+                          </ErrorBoundary>
+                        </div>
+                      </SidebarInset>
+                      <HeyTaliaPanel />
+                      <HdpShell />
+                      <Toaster
+                        position="bottom-right"
+                        offset={{ bottom: 88 }}
+                      />
+                      <WelcomeModal />
+                    </SidebarProvider>
+                  </HdpCaptureProvider>
+                </HeyTaliaProvider>
+              </BreadcrumbProvider>
+            </FeatureFlagProvider>
+          </RequireAuthGate>
         </AuthProvider>
       </QueryClientProvider>
     </ErrorBoundary>

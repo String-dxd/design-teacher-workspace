@@ -393,6 +393,14 @@
       "status": "completed",
       "createdAt": "2026-07-24T00:00:00.000Z",
       "completedAt": "2026-07-24T00:00:00.000Z"
+    },
+    {
+      "id": "tw-043",
+      "title": "Demo-password auth gate across the app",
+      "description": "Gate the prototype behind a demo password. Single-page /login demo-password form (replacing the OTP/Edupass mock) plus a matching demo-password check on /student-login so neither guest route is a passwordless side door. Auth persisted in localStorage (shared across tabs, survives restart) with a session cookie mirror for SSR; logout propagates across tabs via the storage event. Non-public routes are gated on both the server root loader and a client-side RequireAuthGate that withholds the protected shell (no protected-content flash) and redirects to /login with replace. One canonical isPublicPath/PUBLIC_PATH_PREFIXES predicate in src/lib/auth.tsx feeds both the loader and the shell.",
+      "status": "completed",
+      "createdAt": "2026-07-24T00:00:00.000Z",
+      "completedAt": "2026-07-24T00:00:00.000Z"
     }
   ]
 }

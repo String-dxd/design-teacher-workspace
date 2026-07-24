@@ -3,6 +3,32 @@ import * as React from 'react'
 const AUTH_STORAGE_KEY = 'tw_mock_auth'
 export const AUTH_COOKIE_KEY = 'auth_session'
 
+// Static password for demo purposes only — this prototype has no real auth.
+// Shared by both guest sign-in routes (/login and /student-login) so the demo
+// password is the single gate, not one screen that enforces it and one that
+// silently lets anyone in.
+export const DEMO_PASSWORD = 'dxd2026'
+
+// Routes reachable without being signed in. Everything else redirects to the
+// login screen until the demo password has been entered. This is the SINGLE
+// source of truth for "is this route public" — the server-side root loader and
+// the client-side shell gate both consume it, so there is no second, hand-synced
+// list to drift out of sync.
+export const PUBLIC_PATH_PREFIXES = [
+  '/login',
+  '/student-login',
+  '/create',
+  '/hdp-report',
+  '/hdp-student',
+  '/glow',
+]
+
+export function isPublicPath(pathname: string): boolean {
+  return PUBLIC_PATH_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  )
+}
+
 interface User {
   name: string
   email: string
@@ -30,7 +56,14 @@ const AuthContext = React.createContext<AuthContextValue | null>(null)
 function loadAuth(): boolean {
   if (typeof window === 'undefined') return false
   try {
-    return sessionStorage.getItem(AUTH_STORAGE_KEY) === 'true'
+    if (localStorage.getItem(AUTH_STORAGE_KEY) === 'true') return true
+  } catch {}
+  try {
+    // localStorage is the client authority — it persists across tabs and
+    // browser restarts. The per-browser session cookie is the SSR-readable
+    // mirror (the server loader cannot read localStorage) and the fallback
+    // when localStorage is unavailable (private mode / blocked storage).
+    return document.cookie.split('; ').includes(`${AUTH_COOKIE_KEY}=true`)
   } catch {
     return false
   }
@@ -53,26 +86,43 @@ export function AuthProvider({
 
   React.useEffect(() => {
     setIsLoggedIn(loadAuth())
+
+    // Propagate login/logout across tabs. A localStorage write fires a
+    // `storage` event in every OTHER tab, so signing out here revokes access
+    // in the other open tabs (and signing in there signs in here). Without
+    // this an already-open tab would keep stale access until reloaded.
+    function onStorage(event: StorageEvent) {
+      if (event.key === AUTH_STORAGE_KEY || event.key === null) {
+        setIsLoggedIn(loadAuth())
+      }
+    }
+
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
   }, [])
 
   const login = React.useCallback(() => {
     setIsLoggedIn(true)
     try {
-      sessionStorage.setItem(AUTH_STORAGE_KEY, 'true')
+      localStorage.setItem(AUTH_STORAGE_KEY, 'true')
     } catch {}
     try {
-      // Session cookie (no max-age) mirrors sessionStorage's session
-      // lifetime, though the scopes differ: sessionStorage is per-tab, a
-      // cookie without max-age is per-browser-session. Acceptable for this
-      // prototype's mock auth — not a security boundary.
-      document.cookie = `${AUTH_COOKIE_KEY}=true; path=/; samesite=lax`
+      // Mirror the login into a cookie so the server loader can gate the first
+      // full-document request. Give it a max-age matching localStorage's
+      // persistence (survives browser restart) — a session cookie would expire
+      // on close while localStorage stayed 'true', bouncing a "still logged in"
+      // user to /login on their next full load. Acceptable for this prototype's
+      // mock auth — not a security boundary.
+      document.cookie = `${AUTH_COOKIE_KEY}=true; path=/; samesite=lax; max-age=${
+        60 * 60 * 24 * 30
+      }`
     } catch {}
   }, [])
 
   const logout = React.useCallback(() => {
     setIsLoggedIn(false)
     try {
-      sessionStorage.removeItem(AUTH_STORAGE_KEY)
+      localStorage.removeItem(AUTH_STORAGE_KEY)
     } catch {}
     try {
       document.cookie = `${AUTH_COOKIE_KEY}=; path=/; samesite=lax; max-age=0`

@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import * as React from 'react'
 
-import { useAuth } from '@/lib/auth'
+import { DEMO_PASSWORD, useAuth } from '@/lib/auth'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -22,9 +22,16 @@ function StudentLoginPage() {
   const { login } = useAuth()
   const [email, setEmail] = React.useState('')
   const [password, setPassword] = React.useState('')
+  const [passwordError, setPasswordError] = React.useState(false)
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    // Same demo-password gate as /login — this route must not be a
+    // passwordless side door into the signed-in app.
+    if (password !== DEMO_PASSWORD) {
+      setPasswordError(true)
+      return
+    }
     login()
     navigate({ to: '/' })
   }
@@ -72,11 +79,18 @@ function StudentLoginPage() {
                   type="password"
                   placeholder="Enter your password"
                   value={password}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                     setPassword(e.target.value)
-                  }
+                    setPasswordError(false)
+                  }}
                   required
+                  aria-invalid={passwordError}
                 />
+                {passwordError && (
+                  <p className="text-sm text-destructive">
+                    Incorrect password. Try again.
+                  </p>
+                )}
               </div>
 
               <Button type="submit" className="mt-3 w-full">
