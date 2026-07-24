@@ -65,3 +65,53 @@ The sidebar destination housing the whole cycle and its tools. Teacher-facing
 name for the module.
 _Avoid_: HDP (policy language — never in UI copy), Report Builder (the legacy
 flag-gated hub it replaces)
+
+## Language — Posts (Parents Gateway)
+
+**Post**:
+A message a teacher sends to parents through Parents Gateway. The teacher-facing
+name for the surface.
+_Avoid_: announcement (code/route identifier only — never in UI copy)
+
+**Response type**:
+How parents reply to a post — View-only, Acknowledge, or Yes/No. The single axis
+that splits a post "with response" from one "without response".
+
+**View-only**:
+A post parents read but do not reply to. The "without response" case.
+
+**Acknowledge**:
+A response type where parents tap once to confirm they have seen the post.
+Cannot be declined.
+
+**Yes/No**:
+A response type where parents choose Yes or No — the only one that can be
+declined. Used to collect consent.
+
+**Consent post**:
+A Yes/No post used to collect parental consent (e.g. for a trip). Consent is the
+Yes/No decision itself, not a separate response type or entity.
+_Avoid_: consent form, consent type
+
+**Draft**:
+An unsent post, saved automatically as the teacher works — the "Saved ·" state
+and the "Draft" status in the posts list. A state of a post, not a separate
+artifact.
+_Avoid_: autosave (that's the mechanism, not the thing)
+
+**AI Draft**:
+The action of generating a post's starting content from a template, for the
+teacher to review and edit. It fills a Draft; it is not a different kind of
+draft. "AI Draft" is the button label.
+_Avoid_: generate, autofill (as UI labels)
+
+**Post template**:
+A named starting pattern for a post (e.g. Overseas Learning Trip) that AI Draft
+expands into title, details, response type, due date, and settings. Distinct
+from an Agency report template (an official external form).
+_Avoid_: example, starter (UI says "template")
+
+**HeyTalia**:
+The assistant that drafts posts and forms from a free-text topic. Shares the
+same drafting engine as AI Draft, reached through a different doorway (chat
+versus the template picker).

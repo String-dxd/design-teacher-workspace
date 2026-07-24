@@ -354,7 +354,7 @@ export function AppSidebar() {
         </div>
       </SidebarHeader>
       <SidebarContent>
-        <SidebarGroup className="pb-0">
+        <SidebarGroup className="pb-0 group-data-[collapsible=icon]:gap-1">
           <SidebarGroupContent>
             <SidebarMenuItems
               items={filteredMainItems}
@@ -363,7 +363,7 @@ export function AppSidebar() {
           </SidebarGroupContent>
           <>
             {(studentAnalyticsEnabled || studentAnalyticsBasicEnabled) && (
-              <SidebarGroupLabel className="mt-2 group-data-[collapsible=icon]:pointer-events-none">
+              <SidebarGroupLabel className="mt-2 group-data-[collapsible=icon]:hidden">
                 Student Insights
               </SidebarGroupLabel>
             )}
@@ -376,8 +376,8 @@ export function AppSidebar() {
           </>
           {filteredParentsItems.length > 0 && (
             <>
-              <SidebarSeparator className="mx-0 mt-3" />
-              <SidebarGroupLabel className="mt-2 group-data-[collapsible=icon]:pointer-events-none">
+              <SidebarSeparator className="mx-0 mt-3 group-data-[collapsible=icon]:hidden" />
+              <SidebarGroupLabel className="mt-2 group-data-[collapsible=icon]:hidden">
                 Communications
               </SidebarGroupLabel>
               <Popover
@@ -388,7 +388,7 @@ export function AppSidebar() {
               >
                 <PopoverTrigger
                   render={
-                    <SidebarGroupContent className="mt-2 focus:outline-none" />
+                    <SidebarGroupContent className="mt-2 focus:outline-none group-data-[collapsible=icon]:mt-0" />
                   }
                 >
                   <SidebarMenuItems
@@ -419,8 +419,8 @@ export function AppSidebar() {
           )}
           {filteredManageItems.length > 0 && (
             <>
-              <SidebarSeparator className="mx-0 mt-3" />
-              <SidebarGroupLabel className="mt-2 group-data-[collapsible=icon]:pointer-events-none">
+              <SidebarSeparator className="mx-0 mt-3 group-data-[collapsible=icon]:hidden" />
+              <SidebarGroupLabel className="mt-2 group-data-[collapsible=icon]:hidden">
                 Manage
               </SidebarGroupLabel>
               <SidebarGroupContent>
